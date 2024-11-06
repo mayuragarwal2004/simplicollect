@@ -1,0 +1,23 @@
+{
+  "name": "simplicollect",
+  "version": "1.0.0",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "npx nodemon app.js",
+    "build": "cd client && npm install && npm run build && cd .."
+  },
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "express": "^4.21.1",
+    "knex": "^3.1.0",
+    "mysql2": "^3.11.4"
+  },
+  "devDependencies": {
+    "eslint": "^9.14.0",
+    "nodemon": "^3.1.7"
+  }
+}
