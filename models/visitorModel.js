@@ -3,7 +3,7 @@ const db = require('../config/db');
 // Function to check if a visitor entry exists within the last 48 hours
 const findVisitorByPhoneAndTime = async (phone) => {
   return db('visitors')
-    .where('mobile', phone)
+    .where('mobileNumber', phone)
     .andWhere('createdAt', '>=', db.raw('NOW() - INTERVAL 48 HOUR'))
     .andWhere((builder) => {
       builder.whereNull('feedbackScore').orWhereNull('feedbackComments');
@@ -16,9 +16,9 @@ const addVisitor = async (visitorData) => {
 };
 
 // Function to update feedback for an existing visitor
-const addFeedback = async (phone, feedbackData) => {
+const addFeedback = async (visitorId, feedbackData) => {
   return db('visitors')
-    .where('mobile', phone)
+    .where('visitorId', visitorId)
     .update(feedbackData);
 };
 

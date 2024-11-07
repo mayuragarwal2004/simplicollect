@@ -1,45 +1,55 @@
-import React, { useState } from 'react';
+import React, { SelectHTMLAttributes } from 'react';
 
-const SelectGroupOne: React.FC = () => {
-  const [selectedOption, setSelectedOption] = useState<string>('');
-  const [isOptionSelected, setIsOptionSelected] = useState<boolean>(false);
+interface SelectGroupOneProps extends SelectHTMLAttributes<HTMLSelectElement> {
+  label?: string;
+  name?: string;
+  options: Array<{ label: string; value: string }>;
+  placeholder?: string;
+  parentClassName?: string;
+  value: string; // Accepts selected value from props
+  onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void; // External change handler
+}
 
-  const changeTextColor = () => {
-    setIsOptionSelected(true);
-  };
+const SelectGroupOne: React.FC<SelectGroupOneProps> = ({
+  label = 'Select an option',
+  name,
+  options,
+  placeholder = 'Please select an option',
+  className = '',
+  parentClassName = '',
+  value,
+  onChange,
+  ...props
+}) => {
+  // Determine if an option is selected based on the value prop
+  const isOptionSelected = value !== '';
 
   return (
-    <div className="mb-4.5">
-      <label className="mb-2.5 block text-black dark:text-white">
-        {' '}
-        Subject{' '}
-      </label>
-
+    <div className={`mb-4.5 ${parentClassName}`}>
+      {label && (
+        <label className="mb-2.5 mt-5 block text-black dark:text-white">
+          {label}
+        </label>
+      )}
       <div className="relative z-20 bg-transparent dark:bg-form-input">
         <select
-          value={selectedOption}
-          onChange={(e) => {
-            setSelectedOption(e.target.value);
-            changeTextColor();
-          }}
+          value={value}
+          name={name}
+          onChange={onChange} // Use external onChange handler
           className={`relative z-20 w-full appearance-none rounded border border-stroke bg-transparent py-3 px-5 outline-none transition focus:border-primary active:border-primary dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary ${
             isOptionSelected ? 'text-black dark:text-white' : ''
-          }`}
+          } ${className}`}
+          {...props}
         >
           <option value="" disabled className="text-body dark:text-bodydark">
-            Select your subject
+            {placeholder}
           </option>
-          <option value="USA" className="text-body dark:text-bodydark">
-            USA
-          </option>
-          <option value="UK" className="text-body dark:text-bodydark">
-            UK
-          </option>
-          <option value="Canada" className="text-body dark:text-bodydark">
-            Canada
-          </option>
+          {options.map((option) => (
+            <option key={option.value} value={option.value} className="text-body dark:text-bodydark">
+              {option.label}
+            </option>
+          ))}
         </select>
-
         <span className="absolute top-1/2 right-4 z-30 -translate-y-1/2">
           <svg
             className="fill-current"

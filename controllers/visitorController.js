@@ -1,4 +1,5 @@
 const visitorModel = require('../models/visitorModel');
+const { v4: uuidv4 } = require("uuid");
 
 // Check if a visitor exists within 48 hours
 const checkVisitor = async (req, res) => {
@@ -17,7 +18,11 @@ const checkVisitor = async (req, res) => {
 
 // Add a new visitor entry
 const addVisitor = async (req, res) => {
-  const visitorData = req.body;
+  let visitorData = req.body;
+  visitorData.visitorId = uuidv4();
+  console.log(visitorData);
+  
+
   try {
     const result = await visitorModel.addVisitor(visitorData);
     res.json({ message: 'Visitor added successfully', visitorId: result[0] });
@@ -28,9 +33,9 @@ const addVisitor = async (req, res) => {
 
 // Add feedback to an existing visitor
 const addFeedback = async (req, res) => {
-  const { mobile, feedbackScore, feedbackComments } = req.body;
+  const { visitorId, ...feedbackData } = req.body;
   try {
-    await visitorModel.addFeedback(mobile, { feedbackScore, feedbackComments });
+    await visitorModel.addFeedback(visitorId, feedbackData);
     res.json({ message: 'Feedback added successfully' });
   } catch (error) {
     res.status(500).json({ error: error.message });
