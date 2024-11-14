@@ -6,21 +6,60 @@ CREATE TABLE chapters (
   state VARCHAR(255),
   country VARCHAR(255),
   meetingDay VARCHAR(255),
-  meetingPaymentType ENUM('weekly', 'monthly', 'yearly') NOT NULL,
-  perMeetingFee DECIMAL(10, 2) NOT NULL
+  meetingPeriodicity ENUM('weekly', 'fortnightly', 'monthly', 'bi-monthly', 'quaterly', '6-monthly', 'yearly') NOT NULL,
+  meetingPaymentType SET('weekly', 'monthly', 'quarterly') NOT NULL, -- Allow multiple choices
+  visitorPerMeetingFee DECIMAL(10, 2) NOT NULL,
+  weeklyFee DECIMAL(10, 2), -- separate fee for weekly
+  monthlyFee DECIMAL(10, 2), -- separate fee for monthly
+  quarterlyFee DECIMAL(10, 2) -- separate fee for quarterly
+  -- ask user if will number of week change the fee for the month? if yes, for 4 week ____ for 5 week ____
+  -- discount for early payment
+  -- grace period for payment
+  -- penalty for late payment
+  -- payable date (1st week of month, grace period another week, means penalty after 2nd week)
 );
-INSERT INTO chapters (chapterId, chapterName, region, city, state, country, meetingDay, meetingPaymentType, perMeetingFee) VALUES ('1', 'Fortune', 'Pune East', 'Pune', 'Maharashtra', 'India', 'Friday', 'monthly', 500.00);
+
+INSERT INTO chapters (chapterId, chapterName, region, city, state, country, meetingDay, meetingPaymentType, visitorPerMeetingFee) VALUES ('1', 'Fortune', 'Pune East', 'Pune', 'Maharashtra', 'India', 'Friday', 'monthly', 500.00);
+
+CREATE TABLE roles (
+  roleId VARCHAR(255) PRIMARY KEY,
+  roleName VARCHAR(255) NOT NULL, -- President, Vice President, Secretary & Treasurer,
+  --  Membership Committee(MC): Growth Coordinator, Attendance Coordinator, Refferal Coordinator, Training Coordinator, Business Coordinator,
+  -- Lead Visitor Host, Visitor Host
+  -- Director Consultant
+  -- Region Admin
+  roleDescription TEXT
+);
+
+CREATE TABLE tasks (
+  taskId VARCHAR(255) PRIMARY KEY,
+  taskName VARCHAR(255) NOT NULL,
+)
+-- add member, remove member, change/update/modify fees, waive off fee, change/update/modify community details, view reports, download reports, accept payment, 
+
+CREATE TABLE rights (
+  chapterId VARCHAR(255) NOT NULL,
+  rightId VARCHAR(255) PRIMARY KEY,
+  taskId VARCHAR(255) NOT NULL,
+  rightName VARCHAR(255) NOT NULL,
+  rightDescription TEXT,
+  FOREIGN KEY (chapterId) REFERENCES chapters(chapterId) ON DELETE CASCADE,
+  FOREIGN KEY (taskId) REFERENCES tasks(taskId) ON DELETE CASCADE
+);
+-- Leadership - allowed to add member, remove member, change/update/modify fees, waive off fee, change/update/modify community details, view reports, download reports, accept payment,
+
 CREATE TABLE members (
   memberId VARCHAR(255) PRIMARY KEY,
   firstName VARCHAR(255) NOT NULL,
   lastName VARCHAR(255) NOT NULL,
   phoneNumber VARCHAR(20) UNIQUE NOT NULL,
-  emailId VARCHAR(255) UNIQUE NOT NULL,
-  chapterId VARCHAR(255) NOT NULL,
+  email VARCHAR(255) UNIQUE NOT NULL,
+  password VARCHAR(255) NOT NULL,
+  chapterId VARCHAR(255),
   role VARCHAR(255),
-  FOREIGN KEY (chapterId) REFERENCES chapters(chapterId)
+  FOREIGN KEY (chapterId) REFERENCES chapters(chapterId) ON DELETE CASCADE
 );
-INSERT INTO members (memberId, firstName, lastName, phoneNumber, emailId, chapterId, role) VALUES ('1', 'Rishikesh', 'Bagade', '9876543210', 'rishikesh.bagade@gmail.com', '1', 'President');
+
 
 CREATE TABLE visitors (
   visitorId VARCHAR(255) NOT NULL PRIMARY KEY,
@@ -32,7 +71,7 @@ CREATE TABLE visitors (
   companyName VARCHAR(255),
   classification VARCHAR(255),
   industry VARCHAR(255),
-  emailId VARCHAR(255) UNIQUE NOT NULL,
+  email VARCHAR(255) UNIQUE NOT NULL,
   mobileNumber VARCHAR(20) UNIQUE NOT NULL,
   
   -- Feedback Fields
@@ -59,9 +98,9 @@ CREATE TABLE visitors (
   createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   
   -- Foreign key constraints
-  FOREIGN KEY (chapterId) REFERENCES chapters(chapterId),
-  FOREIGN KEY (paymentAcceptedMemberId) REFERENCES members(memberId),
-  FOREIGN KEY (assignedMemberId) REFERENCES members(memberId)
+  FOREIGN KEY (chapterId) REFERENCES chapters(chapterId) ON DELETE CASCADE,
+  FOREIGN KEY (paymentAcceptedMemberId) REFERENCES members(memberId) ON DELETE CASCADE,
+  FOREIGN KEY (assignedMemberId) REFERENCES members(memberId) ON DELETE CASCADE
 );
 
 
@@ -76,5 +115,5 @@ CREATE TABLE visitorFollowUps (
   createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
   -- Foreign key constraint
-  FOREIGN KEY (visitorId) REFERENCES visitors(visitorId)
+  FOREIGN KEY (visitorId) REFERENCES visitors(visitorId) ON DELETE CASCADE
 );

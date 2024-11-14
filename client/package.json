@@ -1,5 +1,5 @@
 {
-  "name": "tailadmin-react-free",
+  "name": "simplicollect",
   "private": true,
   "version": "1.3.8",
   "type": "module",
@@ -9,9 +9,9 @@
     "preview": "vite preview"
   },
   "author": {
-    "name": "TailAdmin",
-    "email": "hello@tailadmin.com",
-    "url": "https://tailadmin.com"
+    "name": "Mayur Agarwal",
+    "email": "mayur.m.agarwal@gmail.com",
+    "url": "https://simpliumtechnologies.com/"
   },
   "dependencies": {
     "@date-io/date-fns": "^1.3.13",
