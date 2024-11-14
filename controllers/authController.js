@@ -4,18 +4,18 @@ const bcrypt = require("bcryptjs");
 
 const JWT_SECRET = process.env.JWT_SECRET;
 const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET;
-const ACCESS_TOKEN_EXPIRY = "15m";
-const REFRESH_TOKEN_EXPIRY = "7d";
+const ACCESS_TOKEN_EXPIRY = "10d";
+const REFRESH_TOKEN_EXPIRY = "30d";
 
 // Helper function to generate tokens
 const generateAccessToken = (user) => {
-  return jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, {
+  return jwt.sign({ memberId: user.memberId, email: user.email }, JWT_SECRET, {
     expiresIn: ACCESS_TOKEN_EXPIRY,
   });
 };
 
 const generateRefreshToken = (user) => {
-  return jwt.sign({ id: user.id, email: user.email }, JWT_REFRESH_SECRET, {
+  return jwt.sign({ memberId: user.memberId, email: user.email }, JWT_REFRESH_SECRET, {
     expiresIn: REFRESH_TOKEN_EXPIRY,
   });
 };

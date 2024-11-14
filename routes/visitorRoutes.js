@@ -11,4 +11,7 @@ router.post('/addVisitor', visitorController.addVisitor);
 // Route to add feedback for a visitor
 router.post('/addFeedback', visitorController.addFeedback);
 
+// Route to verify visitor link
+router.get('/verifyVisitorLink/:chapterSlug', visitorController.verifyVisitorLink);
+
 module.exports = router;

@@ -50,6 +50,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setAccessToken(data.accessToken);
         sessionStorage.setItem('accessToken', data.accessToken);
         document.cookie = `refreshToken=${data.refreshToken}; Secure; SameSite=Strict; path=/;`;
+        document.cookie = `token=${data.accessToken}; Secure; SameSite=Strict; path=/;`;
         console.log('User logged in successfully');
       } else {
         console.error('Login failed:', data.message || 'Unknown error');

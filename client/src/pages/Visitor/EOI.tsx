@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Breadcrumb from '../../components/Breadcrumbs/Breadcrumb';
 import Input from '../../components/Forms/Input';
 import Button from '../../components/Forms/Button';
@@ -6,6 +6,7 @@ import SelectGroupOne from '../../components/Forms/SelectGroup/SelectGroupOne';
 import DatePickerOne from '../../components/Forms/DatePicker/DatePickerOne';
 import { useParams } from 'react-router-dom';
 import TimePicker from '../../components/Forms/TimePicker';
+import Alerts from '../UiElements/Alerts';
 
 interface FieldProperties {
   value: any;
@@ -23,7 +24,7 @@ interface VisitorDetails {
   companyName: FieldProperties;
   classification: FieldProperties;
   industry: FieldProperties;
-  emailId: FieldProperties;
+  email: FieldProperties;
   mobileNumber: FieldProperties;
   feedbackScore: FieldProperties;
   feedbackComments: FieldProperties;
@@ -44,7 +45,10 @@ const initialFieldState: FieldProperties = {
 };
 
 const EOI: React.FC = () => {
-  const { chapterId } = useParams<{ chapterId: string }>();
+  const { chapterSlug } = useParams<{ chapterSlug: string }>();
+  const [verifyLink, setVerifyLink] = useState<boolean>();
+  const [verifyLinkMessage, setVerifyLinkMessage] = useState<string>('');
+  const [chapetDetails, setChapterDetails] = useState<any>({});
   const [phoneNumber, setPhoneNumber] = useState<string>('');
   const [visitorExists, setVisitorExists] = useState<boolean>(false);
   const [showFeedback, setShowFeedback] = useState<boolean>(false);
@@ -59,7 +63,7 @@ const EOI: React.FC = () => {
     companyName: { ...initialFieldState },
     classification: { ...initialFieldState },
     industry: { ...initialFieldState },
-    emailId: { ...initialFieldState },
+    email: { ...initialFieldState },
     mobileNumber: { ...initialFieldState },
     feedbackScore: { ...initialFieldState },
     feedbackComments: { ...initialFieldState },
@@ -72,12 +76,38 @@ const EOI: React.FC = () => {
     referralGroupExperience: { ...initialFieldState },
   });
 
+  useEffect(() => {
+    const fetchVerifyLink = async () => {
+      try {
+        const response = await fetch(
+          `/api/visitor/verifyVisitorLink/${chapterSlug}`,
+        );
+        const result = await response.json();
+        if (!response.ok) {
+          throw new Error(result.message);
+        }
+        if (result.chapterId) {
+          setVerifyLink(true);
+          setChapterDetails(result);
+        } else {
+          setVerifyLink(false);
+          setVerifyLinkMessage(result.message);
+        }
+      } catch (error) {
+        console.error('Error fetching verify link:', error);
+      }
+    };
+    fetchVerifyLink();
+  }, []);
+
   // Handle phone number entry
   const handlePhoneSubmit = async (e: any) => {
     e.preventDefault();
     try {
       // Replace this URL with the actual backend endpoint
-      const response = await fetch(`/api/checkVisitor?phone=${phoneNumber}`);
+      const response = await fetch(
+        `/api/visitor/checkVisitor?phone=${phoneNumber}`,
+      );
       const result = await response.json();
       if (!response.ok) {
         throw new Error(result.message);
@@ -97,6 +127,13 @@ const EOI: React.FC = () => {
         }
       } else {
         setPageNo(2);
+        setVisitorDetails((prevDetails) => ({
+          ...prevDetails,
+          mobileNumber: {
+            ...prevDetails.mobileNumber,
+            value: phoneNumber,
+          },
+        }));
         setVisitorExists(false);
       }
     } catch (error) {
@@ -238,12 +275,12 @@ const EOI: React.FC = () => {
       }));
     }
 
-    if (!visitorDetails.emailId.value) {
+    if (!visitorDetails.email.value) {
       isValid = false;
       setVisitorDetails((prevDetails) => ({
         ...prevDetails,
-        emailId: {
-          ...prevDetails.emailId,
+        email: {
+          ...prevDetails.email,
           status: 'error',
           errorMessage: 'Email is required',
         },
@@ -251,8 +288,8 @@ const EOI: React.FC = () => {
     } else {
       setVisitorDetails((prevDetails) => ({
         ...prevDetails,
-        emailId: {
-          ...prevDetails.emailId,
+        email: {
+          ...prevDetails.email,
           status: 'success',
           errorMessage: '',
         },
@@ -300,7 +337,7 @@ const EOI: React.FC = () => {
   // Show QR page after saving details and feedback
   const handleSaveAndPay = async (e: any) => {
     e.preventDefault();
-    // validate form fields and then make a call to /api/saveVisitor
+    // validate form fields and then make a call to /api/visitor/saveVisitor
 
     if (validateForm()) {
       // saveVisitorDetails();
@@ -310,13 +347,29 @@ const EOI: React.FC = () => {
           if (visitorDetails[key as keyof VisitorDetails].value)
             formData[key] = visitorDetails[key as keyof VisitorDetails].value;
         }
-        if (chapterId) {
-          formData['chapterId'] = chapterId;
+        if (chapetDetails.chapterId) {
+          formData['chapterId'] = chapetDetails.chapterId;
         } else {
           console.error('Chapter ID is undefined');
         }
+        if (visitorDetails.chapterVisitDate.value) {
+          formData['chapterVisitDate'] = new Date(
+            visitorDetails.chapterVisitDate.value,
+          )
+            .toISOString()
+            .slice(0, 19)
+            .replace('T', ' ');
+        }
+        if (visitorDetails.arrivalTime.value) {
+          formData['arrivalTime'] = visitorDetails.arrivalTime.value;
+          formData['arrivalTime'] = new Date(
+            `${visitorDetails.chapterVisitDate.value}T${visitorDetails.arrivalTime.value}`,
+          )
+            .toISOString()
+            .slice(11, 19);
+        }
         const response = await fetch(
-          `/api/${visitorExists ? 'addFeedback' : 'addVisitor'}`,
+          `/api/visitor/${visitorExists ? 'addFeedback' : 'addVisitor'}`,
           {
             method: 'POST',
             headers: {
@@ -356,9 +409,25 @@ const EOI: React.FC = () => {
 
   console.log({ visitorExists });
 
+  if (verifyLink === undefined) {
+    return <div>Loading...</div>;
+  } else if (!verifyLink) {
+    return (
+      <Alerts
+        alert={{
+          type: 'error',
+          title: 'Invalid Link',
+          message: verifyLinkMessage,
+        }}
+      />
+    );
+  }
+
   return (
     <div className="app-container">
-      <h2>Fortune - Pune East</h2>
+      <h2>
+        {chapetDetails.chapterName} - {chapetDetails.region}
+      </h2>
       <Breadcrumb pageName="EOI" />
 
       {/* Phone Number Input Section */}
@@ -512,12 +581,12 @@ const EOI: React.FC = () => {
                   <Input
                     label="Email*"
                     type="email"
-                    name="emailId"
+                    name="email"
                     placeholder="john.doe@abc.com"
-                    value={visitorDetails.emailId.value}
+                    value={visitorDetails.email.value}
                     onChange={handleInputChange}
-                    status={visitorDetails.emailId.status}
-                    errorMessage={visitorDetails.emailId.errorMessage}
+                    status={visitorDetails.email.status}
+                    errorMessage={visitorDetails.email.errorMessage}
                   />
                   <Input
                     label="Mobile Number*"
@@ -528,6 +597,7 @@ const EOI: React.FC = () => {
                     onChange={handleInputChange}
                     status={visitorDetails.mobileNumber.status}
                     errorMessage={visitorDetails.mobileNumber.errorMessage}
+                    disabled={!visitorExists}
                   />
                   <div className="flex justify-between mt-10">
                     <Button onClick={() => setShowFeedback(true)}>

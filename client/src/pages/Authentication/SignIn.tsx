@@ -44,7 +44,7 @@ const SignIn: React.FC = () => {
               <img className="dark:hidden mx-auto" src={LogoDark} alt="Logo" />
             </Link>
             <p className="mt-3 text-gray-500">
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+              Collect and manage meeting fees with ease
             </p>
           </div>
 
@@ -100,14 +100,14 @@ const SignIn: React.FC = () => {
             </Link>
           </div>
 
-          <div className="mt-4 text-center">
+          {/* <div className="mt-4 text-center">
             <span className="text-gray-600 dark:text-gray-400">
               Don't have an account?{' '}
             </span>
             <Link to="/signup" className="text-blue-500 hover:underline">
               Sign Up
             </Link>
-          </div>
+          </div> */}
         </div>
       </div>
     </>

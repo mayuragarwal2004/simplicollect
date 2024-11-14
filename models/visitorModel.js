@@ -22,8 +22,16 @@ const addFeedback = async (visitorId, feedbackData) => {
     .update(feedbackData);
 };
 
+const getChapterDetailsFromSlug = async (chapterSlug) => {
+  return db('chapters')
+    .where('chapterSlug', chapterSlug)
+    .select('*')
+    .first();
+};
+
 module.exports = {
   findVisitorByPhoneAndTime,
   addVisitor,
   addFeedback,
+  getChapterDetailsFromSlug,
 };
