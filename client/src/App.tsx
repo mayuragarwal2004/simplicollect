@@ -14,7 +14,7 @@ import FormLayout from './pages/Form/FormLayout';
 import Profile from './pages/Profile';
 import Settings from './pages/Settings';
 import Tables from './pages/Tables';
-import Alerts from './pages/UiElements/Alerts';
+import AlertsPage from './pages/UiElements/AlertsPage';
 import Buttons from './pages/UiElements/Buttons';
 import DefaultLayout from './layout/DefaultLayout';
 
@@ -72,24 +72,6 @@ function App() {
           }
         />
         <Route
-          path="/forms/form-elements"
-          element={
-            <>
-              <PageTitle title="Form Elements | SimpliCollect - Meeting Fee Manager" />
-              <FormElements />
-            </>
-          }
-        />
-        <Route
-          path="/forms/form-layout"
-          element={
-            <>
-              <PageTitle title="Form Layout | SimpliCollect - Meeting Fee Manager" />
-              <FormLayout />
-            </>
-          }
-        />
-        <Route
           path="/tables"
           element={
             <>
@@ -121,7 +103,7 @@ function App() {
           element={
             <>
               <PageTitle title="Alerts | SimpliCollect - Meeting Fee Manager" />
-              <Alerts />
+              <AlertsPage />
             </>
           }
         />

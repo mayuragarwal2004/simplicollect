@@ -1,6 +1,7 @@
 CREATE TABLE chapters (
   chapterId VARCHAR(255) PRIMARY KEY,
   chapterName VARCHAR(255) NOT NULL,
+  chapterSlug VARCHAR(255) UNIQUE NOT NULL,
   region VARCHAR(255),
   city VARCHAR(255),
   state VARCHAR(255),
