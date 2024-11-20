@@ -74,6 +74,7 @@ CREATE TABLE visitors (
   industry VARCHAR(255),
   email VARCHAR(255) UNIQUE NOT NULL,
   mobileNumber VARCHAR(20) UNIQUE NOT NULL,
+  chapterId VARCHAR(255) NOT NULL,
   
   -- Feedback Fields
   feedbackScore INT,
@@ -90,7 +91,6 @@ CREATE TABLE visitors (
   visitorStatus ENUM('Approved', 'Preapproved', 'Declined') DEFAULT 'Preapproved',
 
   -- Payment and association information
-  chapterId VARCHAR(255) NOT NULL,
   paymentAcceptedMemberId VARCHAR(255),
   assignedMemberId VARCHAR(255),
   paymentImageLink VARCHAR(255),

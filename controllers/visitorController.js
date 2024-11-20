@@ -59,9 +59,40 @@ const verifyVisitorLink = async (req, res) => {
   }
 };
 
+const visitorList = async (req, res) => {
+  const { chapterId } = req.params;
+  try {
+    const visitors = await visitorModel.getVisitorListByChapterId(chapterId);
+    res.json(visitors);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+const markAsPaid = async (req, res) => {
+  const { visitorId } = req.body;
+  const { memberId } = req.user;
+
+  const data = {
+    paymentAcceptedMemberId: memberId,
+    paymentImageLink: req.body.paymentImageLink || null,
+    paymentAmount: req.body.paymentAmount || null,
+    paymentRecordedDate: new Date(),
+  };
+
+  try {
+    await visitorModel.markAsPaid(visitorId, data);
+    res.json({ message: "Visitor marked as paid" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 module.exports = {
   checkVisitor,
   addVisitor,
   addFeedback,
   verifyVisitorLink,
+  visitorList,
+  markAsPaid,
 };

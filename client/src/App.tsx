@@ -18,6 +18,7 @@ import AlertsPage from './pages/UiElements/AlertsPage';
 import Buttons from './pages/UiElements/Buttons';
 import DefaultLayout from './layout/DefaultLayout';
 import ShareForm from './pages/Visitor/ShareForm';
+import VisitorList from './pages/Visitor/VisitorList';
 
 function App() {
   const [loading, setLoading] = useState<boolean>(true);
@@ -51,6 +52,15 @@ function App() {
             <>
               <PageTitle title="Expression of Interest | SimpliCollect - Meeting Fee Manager" />
               <ShareForm />
+            </>
+          }
+        />
+        <Route
+          path="/visitor/list"
+          element={
+            <>
+              <PageTitle title="Expression of Interest | SimpliCollect - Meeting Fee Manager" />
+              <VisitorList />
             </>
           }
         />
