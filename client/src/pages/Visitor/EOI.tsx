@@ -329,6 +329,8 @@ const EOI: React.FC = () => {
       }
     }
 
+    console.log({ isValid });
+
     return isValid;
   };
 
@@ -353,21 +355,44 @@ const EOI: React.FC = () => {
           console.error('Chapter ID is undefined');
         }
         if (visitorDetails.chapterVisitDate.value) {
+          console.log('check 1');
+
           formData['chapterVisitDate'] = new Date(
             visitorDetails.chapterVisitDate.value,
           )
             .toISOString()
             .slice(0, 19)
             .replace('T', ' ');
+          console.log('check 2');
         }
         if (visitorDetails.arrivalTime.value) {
+          console.log('check 3');
           formData['arrivalTime'] = visitorDetails.arrivalTime.value;
-          formData['arrivalTime'] = new Date(
-            `${visitorDetails.chapterVisitDate.value}T${visitorDetails.arrivalTime.value}`,
-          )
+          // visitorDetails.arrivalTime.value = "12:10 AM"
+          const time = visitorDetails.arrivalTime.value.split(' ');
+          const hours = time[0].split(':')[0];
+          const minutes = time[0].split(':')[1];
+          const ampm = time[1];
+          let hours24 = parseInt(hours);
+          if (ampm === 'PM') {
+            hours24 += 12;
+          }
+          const arrivalTime = `${
+            hours24 < 10 ? `0${hours24}` : hours24
+          }:${minutes}:00`;
+          // add chapterVisitDate to arrival time
+          console.log({ arrivalTime });
+          const finalstr = `${
+            visitorDetails.chapterVisitDate.value.split('T')[0]
+          }T${arrivalTime}`;
+          console.log({ finalstr });
+
+          formData['arrivalTime'] = new Date(finalstr)
             .toISOString()
             .slice(11, 19);
+          console.log('check 4');
         }
+        formData['createdAt'] = undefined;
         const response = await fetch(
           `/api/visitor/${visitorExists ? 'addFeedback' : 'addVisitor'}`,
           {

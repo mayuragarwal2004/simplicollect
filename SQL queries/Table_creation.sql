@@ -79,10 +79,10 @@ CREATE TABLE visitors (
   -- Feedback Fields
   feedbackScore INT,
   feedbackComments TEXT,
-  nextStep VARCHAR(255) CHECK (nextStep IN ('apply', 'questions', 'notReady')),
+  nextStep VARCHAR(255) TEXT,
   arrivalTime TIME,
   feelWelcome BOOLEAN,
-  visitedBniBefore BOOLEAN,
+  visitedBniBefore TEXT,
   referralGroup BOOLEAN,
   referralGroupExperience TEXT,
   
