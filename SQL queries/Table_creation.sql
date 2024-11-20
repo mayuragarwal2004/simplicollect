@@ -20,7 +20,6 @@ CREATE TABLE chapters (
   -- payable date (1st week of month, grace period another week, means penalty after 2nd week)
 );
 
-INSERT INTO chapters (chapterId, chapterName, region, city, state, country, meetingDay, meetingPaymentType, visitorPerMeetingFee) VALUES ('1', 'Fortune', 'Pune East', 'Pune', 'Maharashtra', 'India', 'Friday', 'monthly', 500.00);
 
 CREATE TABLE roles (
   roleId VARCHAR(255) PRIMARY KEY,
@@ -79,10 +78,10 @@ CREATE TABLE visitors (
   -- Feedback Fields
   feedbackScore INT,
   feedbackComments TEXT,
-  nextStep VARCHAR(255) TEXT,
+  nextStep TEXT, -- Changed to TEXT without CHECK constraint
   arrivalTime TIME,
   feelWelcome BOOLEAN,
-  visitedBniBefore TEXT,
+  visitedBniBefore BOOLEAN,
   referralGroup BOOLEAN,
   referralGroupExperience TEXT,
   
@@ -97,7 +96,7 @@ CREATE TABLE visitors (
   paymentAmount DECIMAL(10, 2),
   paymentRecordedDate TIMESTAMP,
   createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  
+
   -- Foreign key constraints
   FOREIGN KEY (chapterId) REFERENCES chapters(chapterId) ON DELETE CASCADE,
   FOREIGN KEY (paymentAcceptedMemberId) REFERENCES members(memberId) ON DELETE CASCADE,
@@ -118,3 +117,11 @@ CREATE TABLE visitorFollowUps (
   -- Foreign key constraint
   FOREIGN KEY (visitorId) REFERENCES visitors(visitorId) ON DELETE CASCADE
 );
+
+
+
+INSERT INTO `chapters` (`chapterId`, `chapterName`, `region`, `city`, `state`, `country`, `meetingDay`, `meetingPeriodicity`, `meetingPaymentType`, `visitorPerMeetingFee`, `weeklyFee`, `monthlyFee`, `quarterlyFee`, `chapterSlug`) VALUES
+('1', 'Fortune', 'Pune East', 'Pune', 'Maharashtra', 'India', 'Friday', 'weekly', 'monthly', 500.00, NULL, NULL, NULL, 'fortune-pune-east');
+
+INSERT INTO `members` (`memberId`, `firstName`, `lastName`, `phoneNumber`, `email`, `password`, `chapterId`, `role`) VALUES
+('1', 'Rishikesh', 'Bagade', '1234567890', 'rishikesh.bagade@gmail.com', '$2a$10$MUcAtSgHW.0VxIa794PRhevN7Nhmqr3zARwEm/hCGH5y2JwETT4aa', '1', 'president');
