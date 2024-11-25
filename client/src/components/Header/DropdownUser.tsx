@@ -3,10 +3,12 @@ import { Link } from 'react-router-dom';
 import ClickOutside from '../ClickOutside';
 import UserOne from '../../images/user/user-01.png';
 import { useAuth } from '../../context/AuthContext';
+import { useData } from '../../context/DataContext';
 
 const DropdownUser = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const { isAuthenticated, logout } = useAuth();
+  const { memberData } = useData();
 
   if (!isAuthenticated) {
     return null;
@@ -21,9 +23,9 @@ const DropdownUser = () => {
       >
         <span className="hidden text-right lg:block">
           <span className="block text-sm font-medium text-black dark:text-white">
-            Thomas Anree
+            {memberData?.firstName + ' ' + memberData?.lastName}
           </span>
-          <span className="block text-xs">UX Designer</span>
+          <span className="block text-xs">{memberData?.role}</span>
         </span>
 
         <span className="h-12 w-12 rounded-full">
