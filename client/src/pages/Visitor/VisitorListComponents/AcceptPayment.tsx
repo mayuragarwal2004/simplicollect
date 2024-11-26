@@ -1,6 +1,14 @@
 import React, { useState } from 'react';
 import { Visitor } from '../../../models/Visitor';
-import { Button, IconButton } from '@mui/material';
+import {
+  Button,
+  IconButton,
+  Radio,
+  RadioGroup,
+  FormControlLabel,
+  FormControl,
+  FormLabel,
+} from '@mui/material';
 import DoneAllIcon from '@mui/icons-material/DoneAll';
 import CloseIcon from '@mui/icons-material/Close';
 import { axiosInstance } from '../../../utils/config';
@@ -24,6 +32,7 @@ const AcceptPayment: React.FC<AcceptPaymentProps> = ({
   const [paymentAmount, setPaymentAmount] = useState(
     selectedVisitor.paymentAmount || chapterData?.visitorPerMeetingFee || 0,
   );
+  const [paymentType, setPaymentType] = useState('cash');
 
   console.log(chapterData);
 
@@ -56,6 +65,7 @@ const AcceptPayment: React.FC<AcceptPaymentProps> = ({
         visitorId: selectedVisitor.visitorId,
         paymentImageLink: imageURL,
         paymentAmount: selectedVisitor.paymentAmount || 0,
+        paymentType,
       });
       setBackDropOpen(false);
       fetchVisitors();
@@ -67,7 +77,7 @@ const AcceptPayment: React.FC<AcceptPaymentProps> = ({
   };
 
   return (
-    <div className="bg-white text-black p-5 rounded dark:bg-boxdark">
+    <div className="bg-white text-black p-5 rounded dark:bg-boxdark dark:text-white">
       <h1 className="font-medium text-black dark:text-white">
         Accept payment for {selectedVisitor.firstName}{' '}
         {selectedVisitor.lastName}
@@ -134,6 +144,29 @@ const AcceptPayment: React.FC<AcceptPaymentProps> = ({
         disabled
         onChange={(e) => setPaymentAmount(Number(e.target.value))}
       />
+
+      <div>
+        <FormControl component="fieldset" className="mb-4">
+          <FormLabel component="legend" className="dark:text-white">
+            Payment Type
+          </FormLabel>
+          <RadioGroup
+            row
+            aria-label="paymentType"
+            name="paymentType"
+            value={paymentType}
+            onChange={(e) => setPaymentType(e.target.value)}
+          >
+            <FormControlLabel value="cash" control={<Radio />} label="Cash" />
+            <FormControlLabel
+              value="online"
+              control={<Radio />}
+              label="Online"
+            />
+          </RadioGroup>
+        </FormControl>
+      </div>
+
       <Button
         color="success"
         variant="contained"

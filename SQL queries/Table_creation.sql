@@ -95,6 +95,7 @@ CREATE TABLE visitors (
   paymentImageLink VARCHAR(255),
   paymentAmount DECIMAL(10, 2),
   paymentRecordedDate TIMESTAMP,
+  paymentType ENUM('cash', 'online'),
   createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
   -- Foreign key constraints

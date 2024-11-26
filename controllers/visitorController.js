@@ -78,6 +78,7 @@ const markAsPaid = async (req, res) => {
     paymentImageLink: req.body.paymentImageLink || null,
     paymentAmount: req.body.paymentAmount || null,
     paymentRecordedDate: new Date(),
+    paymentType: req.body.paymentType || null,
   };
 
   try {

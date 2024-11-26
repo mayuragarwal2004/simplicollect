@@ -84,11 +84,11 @@ const ExportVisitorData: React.FC<ExportVisitorDataProps> = ({ data }) => {
 
   return (
     <div className="bg-white text-black p-5 m-5 rounded w-3/4 dark:bg-boxdark">
-      <h2 className="text-xl font-bold mb-4">Export Visitor Data</h2>
+      <h2 className="text-xl font-bold mb-4 dark:text-white">Export Visitor Data</h2>
 
       {/* Column Selection using FilterTags */}
       <div className="mb-4">
-        <h3 className="font-semibold mb-2">Select Columns:</h3>
+        <h3 className="font-semibold mb-2 dark:text-white">Select Columns:</h3>
         <FilterTags
           filters={allVisibleColumns.map(
             (col) => columnConfig[col]?.displayName,
