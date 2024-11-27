@@ -40,6 +40,7 @@ function a11yProps(index: number) {
   return {
     id: `simple-tab-${index}`,
     'aria-controls': `simple-tabpanel-${index}`,
+    className: 'dark:text-white',
   };
 }
 
@@ -64,18 +65,110 @@ const ViewVisitor: React.FC<ViewVisitorProps> = ({
           aria-label="basic tabs example"
         >
           <Tab label="Details" {...a11yProps(0)} />
-          <Tab label="Feedback" {...a11yProps(1)} />
+          {/* <Tab label="Feedback" {...a11yProps(1)} /> */}
           <Tab label="Payment" {...a11yProps(2)} />
         </Tabs>
       </Box>
       <CustomTabPanel value={value} index={0}>
-        Visitor Details
+        <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+          <tbody className="bg-white divide-y divide-gray-200 dark:bg-gray-800 dark:divide-gray-700">
+            <tr>
+              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
+                First Name
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
+                {selectedVisitor.firstName}
+              </td>
+            </tr>
+            <tr>
+              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
+                Last Name
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
+                {selectedVisitor.lastName}
+              </td>
+            </tr>
+            <tr>
+              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
+                Email
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
+                {selectedVisitor.email}
+              </td>
+            </tr>
+            <tr>
+              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
+                Phone Number
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
+                {selectedVisitor.mobileNumber}
+              </td>
+            </tr>
+            <tr>
+              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
+                Invited By
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
+                {selectedVisitor.invitedBy}
+              </td>
+            </tr>
+            <tr>
+              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
+                Company Name
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
+                {selectedVisitor.companyName}
+              </td>
+            </tr>
+            <tr>
+              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
+                Classification
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
+                {selectedVisitor.classification}
+              </td>
+            </tr>
+            <tr>
+              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
+                Industry
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
+                {selectedVisitor.industry}
+              </td>
+            </tr>
+            <tr>
+              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
+                How Heard About BNI
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
+                {selectedVisitor.heardAboutBni}
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </CustomTabPanel>
       <CustomTabPanel value={value} index={1}>
-        Feedback
+        {/* Payment */}
+        <div className="space-y-4">
+          <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
+            Status: 
+            <span className={selectedVisitor.paymentAcceptedMemberId ? 'text-green-500' : 'text-red-500'}>
+              {selectedVisitor.paymentAcceptedMemberId ? 'Paid' : 'Unpaid'}
+            </span>
+          </div>
+          <div className="text-sm text-gray-500 dark:text-gray-300">
+            Amount: {selectedVisitor.paymentAmount || 'Not Available'}
+          </div>
+          {selectedVisitor.paymentImageLink && (
+            <div className="text-sm text-gray-500 dark:text-gray-300">
+              Image: 
+              <img src={selectedVisitor.paymentImageLink} alt="Payment" className="mt-2 rounded shadow-md" />
+            </div>
+          )}
+        </div>
       </CustomTabPanel>
       <CustomTabPanel value={value} index={2}>
-        Payment
+        Feedback
       </CustomTabPanel>
     </div>
   );

@@ -79,6 +79,14 @@ const VisitorList: React.FC = () => {
     let filteredVisitors = visitors;
 
     if (activeFilters.length > 0) {
+      if (activeFilters.includes('Today')) {
+        filteredVisitors = filteredVisitors.filter((visitor) => {
+          const today = new Date();
+          return new Date(visitor.chapterVisitDate).toDateString() === today.toDateString();
+        });
+      }
+
+
       if (activeFilters.includes('Paid')) {
         filteredVisitors = filteredVisitors.filter(
           (visitor) => visitor.paymentAcceptedMemberId,

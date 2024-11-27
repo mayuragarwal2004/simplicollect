@@ -18,7 +18,7 @@ export const columnConfig: ColumnConfig = {
   classification: { displayName: 'Classification', hidden: false },
 
   paymentAcceptedMemberId: { displayName: 'Payment Accepted By', hidden: true }, // Hidden - DataBase Features
-  paymentImageLink: { displayName: 'Payment Image', hidden: true }, // Hidden - DataBase Features
+  paymentImageLink: { displayName: 'Payment Image', hidden: false },
   paymentAmount: { displayName: 'Payment Amount', hidden: false },
   paymentRecordedDate: { displayName: 'Payment Date', hidden: false },
 
