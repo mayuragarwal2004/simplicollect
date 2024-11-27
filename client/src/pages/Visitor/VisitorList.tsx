@@ -67,13 +67,33 @@ const VisitorList: React.FC = () => {
   }, [chapterData]);
 
   useEffect(() => {
-    if (filterVisitors.length === 0) {
+    if (activeFilters.length === 0) {
       setFilteredVisitors(visitors);
       return;
     }
     const filteredVisitors = filterVisitors(visitors);
     setFilteredVisitors(filteredVisitors);
   }, [activeFilters, visitors]);
+
+  useEffect(() => {
+    // check if today there is atleat 1 visitor, then set the default filter to today
+    const filteredVisitors = visitors.filter((visitor) => {
+      const today = new Date();
+      return (
+        new Date(visitor.chapterVisitDate).toDateString() ===
+        today.toDateString()
+      );
+    });
+    if (filteredVisitors.length > 0) {
+      console.log('Setting default filter to Today');
+      
+      setActiveFilters(['Today']);
+    } else {
+      console.log('Setting default filter to All');
+      
+      setActiveFilters([]);
+    }
+  }, []);
 
   const filterVisitors = (visitors: Visitor[]) => {
     let filteredVisitors = visitors;
@@ -82,10 +102,12 @@ const VisitorList: React.FC = () => {
       if (activeFilters.includes('Today')) {
         filteredVisitors = filteredVisitors.filter((visitor) => {
           const today = new Date();
-          return new Date(visitor.chapterVisitDate).toDateString() === today.toDateString();
+          return (
+            new Date(visitor.chapterVisitDate).toDateString() ===
+            today.toDateString()
+          );
         });
       }
-
 
       if (activeFilters.includes('Paid')) {
         filteredVisitors = filteredVisitors.filter(
