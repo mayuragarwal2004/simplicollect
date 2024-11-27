@@ -89,6 +89,16 @@ const markAsPaid = async (req, res) => {
   }
 };
 
+const deleteVisitor = async (req, res) => {
+  const { visitorId } = req.params;
+  try {
+    await visitorModel.deleteVisitor(visitorId);
+    res.json({ message: "Visitor deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 module.exports = {
   checkVisitor,
   addVisitor,
@@ -96,4 +106,5 @@ module.exports = {
   verifyVisitorLink,
   visitorList,
   markAsPaid,
+  deleteVisitor,
 };

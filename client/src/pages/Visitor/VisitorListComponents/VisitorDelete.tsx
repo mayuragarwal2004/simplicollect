@@ -1,7 +1,7 @@
 import React from 'react';
-import { Backdrop, Box, Button, Modal, Typography } from '@mui/material';
-import axios from 'axios';
+import { Box, Button, Typography } from '@mui/material';
 import { Visitor } from '../../../models/Visitor';
+import { axiosInstance } from '../../../utils/config';
 
 interface VisitorDeleteProps {
   setBackDropOpen: (open: boolean) => void;
@@ -16,7 +16,9 @@ const VisitorDelete: React.FC<VisitorDeleteProps> = ({
 }) => {
   const handleDelete = async () => {
     try {
-      await axios.delete(`/api/visitors/${selectedVisitor.userId}`);
+      await axiosInstance.delete(
+        `/api/visitor/deleteVisitor/${selectedVisitor.visitorId}`,
+      );
       fetchVisitors();
       setBackDropOpen(false);
     } catch (error) {

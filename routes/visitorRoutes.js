@@ -28,4 +28,11 @@ router.post(
   visitorController.markAsPaid
 );
 
+// Delete visitor by visitor id
+router.delete(
+  "/deleteVisitor/:visitorId",
+  authenticateToken,
+  visitorController.deleteVisitor
+);
+
 module.exports = router;

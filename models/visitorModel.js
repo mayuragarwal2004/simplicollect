@@ -32,6 +32,10 @@ const markAsPaid = async (visitorId, data) => {
   return db("visitors").where("visitorId", visitorId).update(data);
 };
 
+const deleteVisitor = async (visitorId) => {
+  return db("visitors").where("visitorId", visitorId).del();
+}
+
 module.exports = {
   findVisitorByPhoneAndTime,
   addVisitor,
@@ -39,4 +43,5 @@ module.exports = {
   getChapterDetailsFromSlug,
   getVisitorListByChapterId,
   markAsPaid,
+  deleteVisitor,
 };
