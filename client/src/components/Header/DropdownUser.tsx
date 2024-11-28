@@ -28,8 +28,11 @@ const DropdownUser = () => {
           <span className="block text-xs">{memberData?.role}</span>
         </span>
 
-        <span className="h-12 w-12 rounded-full">
-          <img src={UserOne} alt="User" />
+        <span
+          className="flex h-12 w-12 items-center justify-center rounded-full text-white"
+          style={{ backgroundColor: `#${Math.floor(Math.random() * 16777215).toString(16)}` }}
+        >
+          {memberData?.firstName.charAt(0).toUpperCase()}
         </span>
 
         <svg

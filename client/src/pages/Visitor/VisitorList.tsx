@@ -209,6 +209,9 @@ const VisitorList: React.FC = () => {
             </IconButton>
           </div>
         </div>
+        <div className="dark:text-white">
+          Number of visitors: {filteredVisitors.length}
+        </div>
 
         {width > 700 ? (
           <div className="max-w-full overflow-x-auto">
@@ -348,82 +351,89 @@ const VisitorList: React.FC = () => {
           </div>
         ) : (
           <>
-          <div className="flex flex-col space-y-4">
-            {filteredVisitors.length === 0 && (
-              <>
-                <div className="text-center py-5 text-black dark:text-white">
-                  No visitors found
-                </div>
-                <div className="text-center py-5 text-black dark:text-white">
-                  <Link to="/visitor/shareform">
-                    Share the link to invite visitors
-                  </Link>
-                </div>
-              </>
-            )}
-            {filteredVisitors.map((visitor_i, key) => (
-              <div key={key} className="border border-stroke dark:border-strokedark rounded-lg p-4 shadow-default bg-white dark:bg-boxdark">
-                <div className="flex justify-between items-center mb-2">
-                  <h5 className="font-medium text-black dark:text-white">
-                    {visitor_i.firstName} {visitor_i.lastName}
-                  </h5>
-                  <div className="flex items-center space-x-3.5">
-                    <IconButton
-                      aria-label="accept payment"
-                      onClick={() => {
-                        setBackDropOpen(true);
-                        setSelectedAction('accept_payment');
-                        setSelectedVisitor(visitor_i);
-                      }}
+            <div className="flex flex-col space-y-4">
+              {filteredVisitors.length === 0 && (
+                <>
+                  <div className="text-center py-5 text-black dark:text-white">
+                    No visitors found
+                  </div>
+                  <div className="text-center py-5 text-black dark:text-white">
+                    <Link to="/visitor/shareform">
+                      Share the link to invite visitors
+                    </Link>
+                  </div>
+                </>
+              )}
+              {filteredVisitors.map((visitor_i, key) => (
+                <div
+                  key={key}
+                  className="border border-stroke dark:border-strokedark rounded-lg p-4 shadow-default bg-white dark:bg-boxdark"
+                >
+                  <div className="flex justify-between items-center mb-2">
+                    <h5 className="font-medium text-black dark:text-white">
+                      {visitor_i.firstName} {visitor_i.lastName}
+                    </h5>
+                    <div className="flex items-center space-x-3.5">
+                      <IconButton
+                        aria-label="accept payment"
+                        onClick={() => {
+                          setBackDropOpen(true);
+                          setSelectedAction('accept_payment');
+                          setSelectedVisitor(visitor_i);
+                        }}
+                      >
+                        <CurrencyRupee className="dark:text-white" />
+                      </IconButton>
+                      <IconButton
+                        aria-label="view edit"
+                        onClick={() => {
+                          setBackDropOpen(true);
+                          setSelectedAction('view_edit');
+                          setSelectedVisitor(visitor_i);
+                        }}
+                      >
+                        <VisibilityIcon className="dark:text-white" />
+                      </IconButton>
+                      <IconButton
+                        aria-label="delete"
+                        onClick={() => {
+                          setBackDropOpen(true);
+                          setSelectedAction('delete');
+                          setSelectedVisitor(visitor_i);
+                        }}
+                      >
+                        <DeleteForeverIcon className="dark:text-white" />
+                      </IconButton>
+                    </div>
+                  </div>
+                  <div className="mb-2">
+                    <p className="text-black dark:text-white">
+                      {new Date(
+                        visitor_i.chapterVisitDate,
+                      ).toLocaleDateString()}
+                    </p>
+                  </div>
+                  <div>
+                    <p
+                      className={`inline-flex rounded-full bg-opacity-10 py-1 px-3 text-sm font-medium ${
+                        visitor_i.paymentAcceptedMemberId
+                          ? 'bg-success text-success'
+                          : 'bg-danger text-danger'
+                      }`}
                     >
-                      <CurrencyRupee className="dark:text-white" />
-                    </IconButton>
-                    <IconButton
-                      aria-label="view edit"
-                      onClick={() => {
-                        setBackDropOpen(true);
-                        setSelectedAction('view_edit');
-                        setSelectedVisitor(visitor_i);
-                      }}
-                    >
-                      <VisibilityIcon className="dark:text-white" />
-                    </IconButton>
-                    <IconButton
-                      aria-label="delete"
-                      onClick={() => {
-                        setBackDropOpen(true);
-                        setSelectedAction('delete');
-                        setSelectedVisitor(visitor_i);
-                      }}
-                    >
-                      <DeleteForeverIcon className="dark:text-white" />
-                    </IconButton>
+                      {visitor_i.paymentAcceptedMemberId ? 'Paid' : 'Unpaid'}
+                    </p>
+                    {visitor_i.paymentAcceptedMemberId && (
+                      <p
+                        className={`inline-flex rounded-full bg-opacity-10 py-1 px-3 text-sm font-medium ${'bg-warning text-warning'}`}
+                      >
+                        {visitor_i.paymentType}
+                      </p>
+                    )}
                   </div>
                 </div>
-                <div className="mb-2">
-                  <p className="text-black dark:text-white">
-                    {new Date(visitor_i.chapterVisitDate).toLocaleDateString()}
-                  </p>
-                </div>
-                <div>
-                  <p
-                    className={`inline-flex rounded-full bg-opacity-10 py-1 px-3 text-sm font-medium ${
-                      visitor_i.paymentAcceptedMemberId ? 'bg-success text-success' : 'bg-danger text-danger'
-                    }`}
-                  >
-                    {visitor_i.paymentAcceptedMemberId ? 'Paid' : 'Unpaid'}
-                  </p>
-                  {visitor_i.paymentAcceptedMemberId && (
-                    <p
-                      className={`inline-flex rounded-full bg-opacity-10 py-1 px-3 text-sm font-medium ${'bg-warning text-warning'}`}
-                    >
-                      {visitor_i.paymentType}
-                    </p>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
           </>
         )}
       </div>

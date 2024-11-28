@@ -20,6 +20,7 @@ import DefaultLayout from './layout/DefaultLayout';
 import ShareForm from './pages/Visitor/ShareForm';
 import VisitorList from './pages/Visitor/VisitorList';
 import MemberList from './pages/Member/MemberList';
+import RequireAuth from './utils/RequireAut';
 
 function App() {
   const [loading, setLoading] = useState<boolean>(true);
@@ -47,33 +48,55 @@ function App() {
             </>
           }
         />
+        <Route path="" element={<RequireAuth />}>
+          <Route
+            path="/member/list"
+            element={
+              <>
+                <PageTitle title="Member List | SimpliCollect - Meeting Fee Manager" />
+                <MemberList />
+              </>
+            }
+          />
+          <Route
+            path="/visitor/shareform"
+            element={
+              <>
+                <PageTitle title="Expression of Interest | SimpliCollect - Meeting Fee Manager" />
+                <ShareForm />
+              </>
+            }
+          />
+          <Route
+            path="/visitor/list"
+            element={
+              <>
+                <PageTitle title="Expression of Interest | SimpliCollect - Meeting Fee Manager" />
+                <VisitorList />
+              </>
+            }
+          />
+        </Route>
+
         <Route
-          path="/member/list"
+          path="/auth/signin"
           element={
             <>
-              <PageTitle title="Member List | SimpliCollect - Meeting Fee Manager" />
-              <MemberList />
+              <PageTitle title="Signin | SimpliCollect - Meeting Fee Manager" />
+              <SignIn />
             </>
           }
         />
         <Route
-          path="/visitor/shareform"
+          path="/auth/signup"
           element={
             <>
-              <PageTitle title="Expression of Interest | SimpliCollect - Meeting Fee Manager" />
-              <ShareForm />
+              <PageTitle title="Signup | SimpliCollect - Meeting Fee Manager" />
+              <SignUp />
             </>
           }
         />
-        <Route
-          path="/visitor/list"
-          element={
-            <>
-              <PageTitle title="Expression of Interest | SimpliCollect - Meeting Fee Manager" />
-              <VisitorList />
-            </>
-          }
-        />
+
         <Route
           path="/eoi/:chapterSlug"
           element={
@@ -83,6 +106,8 @@ function App() {
             </>
           }
         />
+
+        {/* template pages */}
         <Route
           path="/calendar"
           element={
@@ -143,24 +168,6 @@ function App() {
             <>
               <PageTitle title="Buttons | SimpliCollect - Meeting Fee Manager" />
               <Buttons />
-            </>
-          }
-        />
-        <Route
-          path="/auth/signin"
-          element={
-            <>
-              <PageTitle title="Signin | SimpliCollect - Meeting Fee Manager" />
-              <SignIn />
-            </>
-          }
-        />
-        <Route
-          path="/auth/signup"
-          element={
-            <>
-              <PageTitle title="Signup | SimpliCollect - Meeting Fee Manager" />
-              <SignUp />
             </>
           }
         />
