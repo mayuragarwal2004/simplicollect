@@ -98,6 +98,16 @@ const EOI: React.FC = () => {
       }
     };
     fetchVerifyLink();
+
+    // set chapter visit date to today
+    const today = new Date();
+    setVisitorDetails((prevDetails) => ({
+      ...prevDetails,
+      chapterVisitDate: {
+        ...prevDetails.chapterVisitDate,
+        value: today.toISOString().split('T')[0],
+      },
+    }));
   }, []);
 
   // Handle phone number entry
@@ -254,26 +264,27 @@ const EOI: React.FC = () => {
       }));
     }
 
-    if (!visitorDetails.industry.value) {
-      isValid = false;
-      setVisitorDetails((prevDetails) => ({
-        ...prevDetails,
-        industry: {
-          ...prevDetails.industry,
-          status: 'error',
-          errorMessage: 'Industry is required',
-        },
-      }));
-    } else {
-      setVisitorDetails((prevDetails) => ({
-        ...prevDetails,
-        industry: {
-          ...prevDetails.industry,
-          status: 'success',
-          errorMessage: '',
-        },
-      }));
-    }
+    // disabled industry option
+    // if (!visitorDetails.industry.value) {
+    //   isValid = false;
+    //   setVisitorDetails((prevDetails) => ({
+    //     ...prevDetails,
+    //     industry: {
+    //       ...prevDetails.industry,
+    //       status: 'error',
+    //       errorMessage: 'Industry is required',
+    //     },
+    //   }));
+    // } else {
+    //   setVisitorDetails((prevDetails) => ({
+    //     ...prevDetails,
+    //     industry: {
+    //       ...prevDetails.industry,
+    //       status: 'success',
+    //       errorMessage: '',
+    //     },
+    //   }));
+    // }
 
     if (!visitorDetails.email.value) {
       isValid = false;
@@ -406,7 +417,7 @@ const EOI: React.FC = () => {
         const result = await response.json();
 
         if (response.ok) {
-          alert(result.message);
+          // alert(result.message);
           setShowQRPage(true);
           setPageNo(3);
         } else {
@@ -449,8 +460,8 @@ const EOI: React.FC = () => {
   }
 
   return (
-    <div className="app-container">
-      <h2>
+    <div className="app-container p-6 bg-gray-100 dark:bg-gray-900 min-h-screen">
+      <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200 mb-4">
         {chapetDetails.chapterName} - {chapetDetails.region}
       </h2>
       <Breadcrumb pageName="EOI" />
@@ -516,9 +527,11 @@ const EOI: React.FC = () => {
                         handleDateChange(selectedDate)
                       }
                       dateFormat="Y-m-d"
-                      parentClassName="w-auto flex-1 whitespace-nowrap"
+                      parentClassName="w-auto flex-1 whitespace-nowrap mb-4.5"
+                      value={new Date(visitorDetails.chapterVisitDate.value)}
+                      disabled
                     />
-                    <SelectGroupOne
+                    {/* <SelectGroupOne
                       label="How did you first hear about BNI?"
                       placeholder="Select an option"
                       parentClassName="w-auto flex-1 whitespace-nowrap"
@@ -542,7 +555,7 @@ const EOI: React.FC = () => {
                         { label: 'Email', value: 'Email' },
                       ]}
                       onChange={handleInputChange}
-                    />
+                    /> */}
                   </div>
                   <hr />
                   <div className="sm:flex justify-evenly flex-wrap gap-x-5">
@@ -594,16 +607,6 @@ const EOI: React.FC = () => {
                     />
                   </div>
                   <Input
-                    label="Industry*"
-                    type="text"
-                    name="industry"
-                    placeholder="eg. Manufacturing, Hospitality, Healthcare"
-                    value={visitorDetails.industry.value}
-                    onChange={handleInputChange}
-                    status={visitorDetails.industry.status}
-                    errorMessage={visitorDetails.industry.errorMessage}
-                  />
-                  <Input
                     label="Email*"
                     type="email"
                     name="email"
@@ -624,10 +627,7 @@ const EOI: React.FC = () => {
                     errorMessage={visitorDetails.mobileNumber.errorMessage}
                     disabled={!visitorExists}
                   />
-                  <div className="flex justify-between mt-10">
-                    <Button onClick={() => setShowFeedback(true)}>
-                      Fill Feedback Now
-                    </Button>
+                  <div className="flex justify-center mt-10">
                     <Button onClick={handleSaveAndPay}>Save & Pay</Button>
                   </div>
                 </div>
@@ -771,25 +771,21 @@ const EOI: React.FC = () => {
         </div>
       )}
 
+      {/* Confirmation Message */}
+      {showQRPage && pageNo === 3 && (
+        <div className="mb-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded dark:bg-green-900 dark:border-green-700 dark:text-green-200">
+          Form has been filled successfully and recorded.
+        </div>
+      )}
+
       {/* QR Payment Page */}
       {showQRPage && pageNo === 3 && (
         <div className="qr-payment">
-          <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
-            <div className="border-b border-stroke py-4 px-6.5 dark:border-strokedark">
-              <h3 className="font-medium text-black dark:text-white">
-                Please scan the QR code below to pay:
-              </h3>
-            </div>
-            <p></p>
-            <img
-              src="https://picsum.photos/200"
-              alt="QR Code for Payment"
-              className="m-10"
-            />
-            <p className="ml-2">Note: </p>
-            <ul className="list-disc ml-10">
+          <div className="rounded-sm border border-stroke bg-white p-5 shadow-default dark:border-strokedark dark:bg-boxdark">
+            <p className="ml-2 text-gray-800 dark:text-gray-200">Note: </p>
+            <ul className="list-disc ml-10 text-gray-800 dark:text-gray-200">
               <li>
-                <strong>Amount:</strong> ₹ 850
+                <strong>Amount:</strong> ₹ {chapetDetails.visitorPerMeetingFee}
               </li>
               <li>
                 To confirm your payment, please show the payment proof on the

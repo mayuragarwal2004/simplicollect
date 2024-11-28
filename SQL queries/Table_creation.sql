@@ -71,8 +71,8 @@ CREATE TABLE visitors (
   companyName VARCHAR(255),
   classification VARCHAR(255),
   industry VARCHAR(255),
-  email VARCHAR(255) UNIQUE NOT NULL,
-  mobileNumber VARCHAR(20) UNIQUE NOT NULL,
+  email VARCHAR(255) NOT NULL,
+  mobileNumber VARCHAR(20) NOT NULL,
   chapterId VARCHAR(255) NOT NULL,
   
   -- Feedback Fields
