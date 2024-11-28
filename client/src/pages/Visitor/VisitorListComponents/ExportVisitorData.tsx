@@ -22,10 +22,10 @@ const ExportVisitorData: React.FC<ExportVisitorDataProps> = ({ data }) => {
   );
 
   console.log({ allVisibleColumns });
-  
 
   // Default columns based on role
-  const [selectedColumns, setSelectedColumns] = useState<string[]>([]
+  const [selectedColumns, setSelectedColumns] = useState<string[]>(
+    exportConfig[userRole],
   );
 
   // Handle active filter updates
@@ -33,10 +33,23 @@ const ExportVisitorData: React.FC<ExportVisitorDataProps> = ({ data }) => {
     setSelectedColumns(filters);
   };
 
+  const colNameToId = (colNames) => {
+    const colIds = [];
+
+    Object.keys(columnConfig).forEach((key) => {
+      if (colNames.includes(columnConfig[key].displayName)) {
+        colIds.push(key);
+      }
+    });
+
+    return colIds;
+  };
+
   // Export as CSV
   const exportToCSV = () => {
+    const selectedColIds = colNameToId(selectedColumns);
     const filteredData = data.map((row) =>
-      selectedColumns.reduce(
+      selectedColIds.reduce(
         (acc, key) => ({
           ...acc,
           [columnConfig[key].displayName]: row[key as keyof Visitor],
@@ -52,8 +65,9 @@ const ExportVisitorData: React.FC<ExportVisitorDataProps> = ({ data }) => {
 
   // Export as Excel
   const exportToExcel = () => {
+    const selectedColIds = colNameToId(selectedColumns);
     const filteredData = data.map((row) =>
-      selectedColumns.reduce(
+      selectedColIds.reduce(
         (acc, key) => ({
           ...acc,
           [columnConfig[key].displayName]: row[key as keyof Visitor],
@@ -69,12 +83,13 @@ const ExportVisitorData: React.FC<ExportVisitorDataProps> = ({ data }) => {
 
   // Export as PDF
   const exportToPDF = () => {
+    const selectedColIds = colNameToId(selectedColumns);
     const filteredData = data.map((row) =>
-      selectedColumns.map((key) => row[key as keyof Visitor]),
+      selectedColIds.map((key) => row[key as keyof Visitor]),
     );
     const doc = new jsPDF();
     autoTable(doc, {
-      head: [selectedColumns.map((key) => columnConfig[key].displayName)],
+      head: [selectedColIds.map((key) => columnConfig[key].displayName)],
       body: filteredData,
     });
     doc.save('visitor_data.pdf');
@@ -84,7 +99,9 @@ const ExportVisitorData: React.FC<ExportVisitorDataProps> = ({ data }) => {
 
   return (
     <div className="bg-white text-black p-5 m-5 rounded w-3/4 dark:bg-boxdark">
-      <h2 className="text-xl font-bold mb-4 dark:text-white">Export Visitor Data</h2>
+      <h2 className="text-xl font-bold mb-4 dark:text-white">
+        Export Visitor Data
+      </h2>
 
       {/* Column Selection using FilterTags */}
       <div className="mb-4">

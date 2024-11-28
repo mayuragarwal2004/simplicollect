@@ -1,6 +1,6 @@
 {
-    "admin": ["visitorId", "firstName", "lastName", "email", "mobileNumber", "feedbackScore", "chapterId"],
-    "member": ["firstName", "lastName", "email", "companyName", "classification", "industry"],
-    "guest": ["firstName", "lastName", "email", "companyName"]
+    "admin": ["First Name", "Last Name", "Email Address", "Mobile Number", "Payment Type"],
+    "member": ["First Name", "Last Name", "Email Address", "Company Name", "Classification", "Industry", "Payment Type"],
+    "guest": ["First Name", "Last Name", "Email Address", "Company Name", "Payment Type"]
   }
   

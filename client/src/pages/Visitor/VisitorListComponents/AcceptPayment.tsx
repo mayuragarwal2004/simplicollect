@@ -64,7 +64,7 @@ const AcceptPayment: React.FC<AcceptPaymentProps> = ({
       await axiosInstance.post('/api/visitor/mark-as-paid', {
         visitorId: selectedVisitor.visitorId,
         paymentImageLink: imageURL,
-        paymentAmount: selectedVisitor.paymentAmount || 0,
+        paymentAmount: selectedVisitor.paymentAmount || paymentAmount || 0,
         paymentType,
       });
       setBackDropOpen(false);

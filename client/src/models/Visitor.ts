@@ -21,6 +21,7 @@ export const columnConfig: ColumnConfig = {
   paymentImageLink: { displayName: 'Payment Image', hidden: false },
   paymentAmount: { displayName: 'Payment Amount', hidden: false },
   paymentRecordedDate: { displayName: 'Payment Date', hidden: false },
+  paymentType: { displayName: 'Payment Type', hidden: false },
 
   heardAboutBni: { displayName: 'How Heard About BNI', hidden: false },
   chapterVisitDate: { displayName: 'Visit Date', hidden: false },

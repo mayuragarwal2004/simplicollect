@@ -15,7 +15,20 @@ const findMemberById = async (memberId) => {
     .first();
 };
 
+// Add member
+const addMember = async (memberData) => {
+  return db("members").insert(memberData);
+};
+
+const getMembers = async (chapterId) => {
+  return db("members")
+    .where("chapterId", chapterId)
+    .select("*");
+};
+
 module.exports = {
   findMemberByEmail,
   findMemberById,
+  addMember,
+  getMembers,
 };

@@ -8,6 +8,8 @@ import { Link } from 'react-router-dom';
 import Breadcrumb from '../../components/Breadcrumbs/Breadcrumb';
 import FilterTags from '../../components/FilterTags';
 import ExportVisitorData from './VisitorListComponents/ExportVisitorData';
+import VisitorDelete from './VisitorListComponents/VisitorDelete';
+import useWindowDimensions from '../../utils/useWindowDimensions';
 
 import { IconButton, Backdrop } from '@mui/material';
 import {
@@ -17,7 +19,6 @@ import {
   Visibility as VisibilityIcon,
   DeleteForever as DeleteForeverIcon,
 } from '@mui/icons-material';
-import VisitorDelete from './VisitorListComponents/VisitorDelete';
 
 const VisitorList: React.FC = () => {
   const [visitors, setVisitors] = useState<Visitor[]>([]);
@@ -27,6 +28,7 @@ const VisitorList: React.FC = () => {
   const [backDropOpen, setBackDropOpen] = useState(false);
   const [selectedVisitor, setSelectedVisitor] = useState<Visitor | null>(null);
   const [activeFilters, setActiveFilters] = useState<string[]>(['Today']);
+  const { width } = useWindowDimensions();
 
   const allFilters = [
     'Today',
@@ -86,11 +88,11 @@ const VisitorList: React.FC = () => {
     });
     if (filteredVisitors.length > 0) {
       console.log('Setting default filter to Today');
-      
+
       setActiveFilters(['Today']);
     } else {
       console.log('Setting default filter to All');
-      
+
       setActiveFilters([]);
     }
   }, []);
@@ -208,73 +210,81 @@ const VisitorList: React.FC = () => {
           </div>
         </div>
 
-        <div className="max-w-full overflow-x-auto">
-          <table className="w-full table-auto">
-            <thead>
-              <tr className="bg-gray-2 text-left dark:bg-meta-4">
-                <th className="min-w-[220px] py-4 px-4 font-medium text-black dark:text-white xl:pl-11">
-                  Visitor Name
-                </th>
-                <th className="min-w-[150px] py-4 px-4 font-medium text-black dark:text-white">
-                  Date
-                </th>
-                <th className="min-w-[120px] py-4 px-4 font-medium text-black dark:text-white">
-                  Status
-                </th>
-                <th className="py-4 px-4 font-medium text-black dark:text-white">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredVisitors.length === 0 && (
-                <>
-                  <tr>
-                    <td
-                      colSpan={4}
-                      className="text-center py-5 text-black dark:text-white"
-                    >
-                      No visitors found
+        {width > 700 ? (
+          <div className="max-w-full overflow-x-auto">
+            <table className="w-full table-auto">
+              <thead>
+                <tr className="bg-gray-2 text-left dark:bg-meta-4">
+                  <th className="min-w-[220px] py-4 px-4 font-medium text-black dark:text-white xl:pl-11">
+                    Visitor Name
+                  </th>
+                  <th className="min-w-[150px] py-4 px-4 font-medium text-black dark:text-white">
+                    Date
+                  </th>
+                  <th className="min-w-[120px] py-4 px-4 font-medium text-black dark:text-white">
+                    Status
+                  </th>
+                  <th className="py-4 px-4 font-medium text-black dark:text-white">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredVisitors.length === 0 && (
+                  <>
+                    <tr>
+                      <td
+                        colSpan={4}
+                        className="text-center py-5 text-black dark:text-white"
+                      >
+                        No visitors found
+                      </td>
+                    </tr>
+                    <tr>
+                      <td
+                        colSpan={4}
+                        className="text-center py-5 text-black dark:text-white"
+                      >
+                        <Link to="/visitor/shareform">
+                          Share the link to invite visitors
+                        </Link>
+                      </td>
+                    </tr>
+                  </>
+                )}
+                {filteredVisitors.map((visitor_i, key) => (
+                  <tr key={key}>
+                    <td className="border-b border-[#eee] py-5 px-4 pl-9 dark:border-strokedark xl:pl-11">
+                      <h5 className="font-medium text-black dark:text-white">
+                        {visitor_i.firstName} {visitor_i.lastName}
+                      </h5>
+                      {/* <p className="text-sm">${visitor_i.price}</p> */}
                     </td>
-                  </tr>
-                  <tr>
-                    <td
-                      colSpan={4}
-                      className="text-center py-5 text-black dark:text-white"
-                    >
-                      <Link to="/visitor/shareform">
-                        Share the link to invite visitors
-                      </Link>
+                    <td className="border-b border-[#eee] py-5 px-4 dark:border-strokedark">
+                      <p className="text-black dark:text-white">
+                        {new Date(
+                          visitor_i.chapterVisitDate,
+                        ).toLocaleDateString()}
+                      </p>
                     </td>
-                  </tr>
-                </>
-              )}
-              {filteredVisitors.map((visitor_i, key) => (
-                <tr key={key}>
-                  <td className="border-b border-[#eee] py-5 px-4 pl-9 dark:border-strokedark xl:pl-11">
-                    <h5 className="font-medium text-black dark:text-white">
-                      {visitor_i.firstName} {visitor_i.lastName}
-                    </h5>
-                    {/* <p className="text-sm">${visitor_i.price}</p> */}
-                  </td>
-                  <td className="border-b border-[#eee] py-5 px-4 dark:border-strokedark">
-                    <p className="text-black dark:text-white">
-                      {new Date(
-                        visitor_i.chapterVisitDate,
-                      ).toLocaleDateString()}
-                    </p>
-                  </td>
-                  <td className="border-b border-[#eee] py-5 px-4 dark:border-strokedark">
-                    <p
-                      className={`inline-flex rounded-full bg-opacity-10 py-1 px-3 text-sm font-medium ${
-                        visitor_i.paymentAcceptedMemberId
-                          ? 'bg-success text-success'
-                          : 'bg-danger text-danger'
-                      }`}
-                    >
-                      {visitor_i.paymentAcceptedMemberId ? 'Paid' : 'Unpaid'}
-                    </p>
-                    <p
+                    <td className="border-b border-[#eee] py-5 px-4 dark:border-strokedark">
+                      <p
+                        className={`inline-flex rounded-full bg-opacity-10 py-1 px-3 text-sm font-medium ${
+                          visitor_i.paymentAcceptedMemberId
+                            ? 'bg-success text-success'
+                            : 'bg-danger text-danger'
+                        }`}
+                      >
+                        {visitor_i.paymentAcceptedMemberId ? 'Paid' : 'Unpaid'}
+                      </p>
+                      {visitor_i.paymentAcceptedMemberId && (
+                        <p
+                          className={`inline-flex rounded-full bg-opacity-10 py-1 px-3 text-sm font-medium ${'bg-warning text-warning'}`}
+                        >
+                          {visitor_i.paymentType}
+                        </p>
+                      )}
+                      {/* <p
                       className={`inline-flex rounded-full bg-opacity-10 py-1 px-3 text-sm font-medium ${
                         visitor_i.feedbackScore
                           ? 'bg-success text-success'
@@ -284,8 +294,8 @@ const VisitorList: React.FC = () => {
                       {visitor_i.feedbackScore
                         ? 'Feedback Filled'
                         : 'Feedback Not Filled'}
-                    </p>
-                    {/* <p
+                    </p> */}
+                      {/* <p
                     className={`inline-flex rounded-full bg-opacity-10 py-1 px-3 text-sm font-medium ${
                       visitor_i.status === 'Paid'
                         ? 'bg-success text-success'
@@ -296,46 +306,126 @@ const VisitorList: React.FC = () => {
                   >
                     {visitor_i.status}
                   </p> */}
-                  </td>
-                  <td className="border-b border-[#eee] py-5 px-4 dark:border-strokedark">
-                    <div className="flex items-center space-x-3.5">
-                      <IconButton
-                        aria-label="accept payment"
-                        onClick={() => {
-                          setBackDropOpen(true);
-                          setSelectedAction('accept_payment');
-                          setSelectedVisitor(visitor_i);
-                        }}
-                      >
-                        <CurrencyRupee className="dark:text-white" />
-                      </IconButton>
-                      <IconButton
-                        aria-label="accept payment"
-                        onClick={() => {
-                          setBackDropOpen(true);
-                          setSelectedAction('view_edit');
-                          setSelectedVisitor(visitor_i);
-                        }}
-                      >
-                        <VisibilityIcon className="dark:text-white" />
-                      </IconButton>
-                      <IconButton
-                        aria-label="accept payment"
-                        onClick={() => {
-                          setBackDropOpen(true);
-                          setSelectedAction('delete');
-                          setSelectedVisitor(visitor_i);
-                        }}
-                      >
-                        <DeleteForeverIcon className="dark:text-white" />
-                      </IconButton>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                    </td>
+                    <td className="border-b border-[#eee] py-5 px-4 dark:border-strokedark">
+                      <div className="flex items-center space-x-3.5">
+                        <IconButton
+                          aria-label="accept payment"
+                          onClick={() => {
+                            setBackDropOpen(true);
+                            setSelectedAction('accept_payment');
+                            setSelectedVisitor(visitor_i);
+                          }}
+                        >
+                          <CurrencyRupee className="dark:text-white" />
+                        </IconButton>
+                        <IconButton
+                          aria-label="accept payment"
+                          onClick={() => {
+                            setBackDropOpen(true);
+                            setSelectedAction('view_edit');
+                            setSelectedVisitor(visitor_i);
+                          }}
+                        >
+                          <VisibilityIcon className="dark:text-white" />
+                        </IconButton>
+                        <IconButton
+                          aria-label="accept payment"
+                          onClick={() => {
+                            setBackDropOpen(true);
+                            setSelectedAction('delete');
+                            setSelectedVisitor(visitor_i);
+                          }}
+                        >
+                          <DeleteForeverIcon className="dark:text-white" />
+                        </IconButton>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <>
+          <div className="flex flex-col space-y-4">
+            {filteredVisitors.length === 0 && (
+              <>
+                <div className="text-center py-5 text-black dark:text-white">
+                  No visitors found
+                </div>
+                <div className="text-center py-5 text-black dark:text-white">
+                  <Link to="/visitor/shareform">
+                    Share the link to invite visitors
+                  </Link>
+                </div>
+              </>
+            )}
+            {filteredVisitors.map((visitor_i, key) => (
+              <div key={key} className="border border-stroke dark:border-strokedark rounded-lg p-4 shadow-default bg-white dark:bg-boxdark">
+                <div className="flex justify-between items-center mb-2">
+                  <h5 className="font-medium text-black dark:text-white">
+                    {visitor_i.firstName} {visitor_i.lastName}
+                  </h5>
+                  <div className="flex items-center space-x-3.5">
+                    <IconButton
+                      aria-label="accept payment"
+                      onClick={() => {
+                        setBackDropOpen(true);
+                        setSelectedAction('accept_payment');
+                        setSelectedVisitor(visitor_i);
+                      }}
+                    >
+                      <CurrencyRupee className="dark:text-white" />
+                    </IconButton>
+                    <IconButton
+                      aria-label="view edit"
+                      onClick={() => {
+                        setBackDropOpen(true);
+                        setSelectedAction('view_edit');
+                        setSelectedVisitor(visitor_i);
+                      }}
+                    >
+                      <VisibilityIcon className="dark:text-white" />
+                    </IconButton>
+                    <IconButton
+                      aria-label="delete"
+                      onClick={() => {
+                        setBackDropOpen(true);
+                        setSelectedAction('delete');
+                        setSelectedVisitor(visitor_i);
+                      }}
+                    >
+                      <DeleteForeverIcon className="dark:text-white" />
+                    </IconButton>
+                  </div>
+                </div>
+                <div className="mb-2">
+                  <p className="text-black dark:text-white">
+                    {new Date(visitor_i.chapterVisitDate).toLocaleDateString()}
+                  </p>
+                </div>
+                <div>
+                  <p
+                    className={`inline-flex rounded-full bg-opacity-10 py-1 px-3 text-sm font-medium ${
+                      visitor_i.paymentAcceptedMemberId ? 'bg-success text-success' : 'bg-danger text-danger'
+                    }`}
+                  >
+                    {visitor_i.paymentAcceptedMemberId ? 'Paid' : 'Unpaid'}
+                  </p>
+                  {visitor_i.paymentAcceptedMemberId && (
+                    <p
+                      className={`inline-flex rounded-full bg-opacity-10 py-1 px-3 text-sm font-medium ${'bg-warning text-warning'}`}
+                    >
+                      {visitor_i.paymentType}
+                    </p>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+          </>
+        )}
       </div>
     </>
   );

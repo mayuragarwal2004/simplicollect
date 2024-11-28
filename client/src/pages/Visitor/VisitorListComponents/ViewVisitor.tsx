@@ -159,6 +159,13 @@ const ViewVisitor: React.FC<ViewVisitorProps> = ({
           <div className="text-sm text-gray-500 dark:text-gray-300">
             Amount: {selectedVisitor.paymentAmount || 'Not Available'}
           </div>
+          <div className="text-sm text-gray-500 dark:text-gray-300">
+            Date: {selectedVisitor.paymentRecordedDate ? new Date(selectedVisitor.paymentRecordedDate).toLocaleDateString() : 'Not Available'}
+          </div>
+          <div className="text-sm text-gray-500 dark:text-gray-300">
+            Mode: {selectedVisitor.paymentType || 'Not Available'}
+          </div>
+
           {selectedVisitor.paymentImageLink && (
             <div className="text-sm text-gray-500 dark:text-gray-300">
               Image: 
