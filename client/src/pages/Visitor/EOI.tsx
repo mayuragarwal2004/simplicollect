@@ -782,10 +782,34 @@ const EOI: React.FC = () => {
       {showQRPage && pageNo === 3 && (
         <div className="qr-payment">
           <div className="rounded-sm border border-stroke bg-white p-5 shadow-default dark:border-strokedark dark:bg-boxdark">
+            {chapetDetails.chapterName.startsWith('ABC') && (
+              <>
+                <div className="border-b border-stroke py-4 px-6.5 dark:border-strokedark">
+                  <h3 className="font-medium text-black dark:text-white">
+                    Please scan the QR code below to pay:
+                  </h3>
+                </div>
+                <p></p>
+                <img
+                  src="https://simplicollect.s3.ap-south-1.amazonaws.com/web_app/abc.jpg"
+                  alt="QR Code for Payment"
+                />
+              </>
+            )}
             <p className="ml-2 text-gray-800 dark:text-gray-200">Note: </p>
             <ul className="list-disc ml-10 text-gray-800 dark:text-gray-200">
               <li>
-                <strong>Amount:</strong> ₹ {chapetDetails.visitorPerMeetingFee}
+                {!chapetDetails.chapterName.startsWith('ABC') && (
+                  <>
+                    <strong>Amount:</strong> ₹{' '}
+                    {chapetDetails.visitorPerMeetingFee}
+                  </>
+                )}
+                {chapetDetails.chapterName.startsWith('ABC') && (
+                  <>
+                    <strong>Amount:</strong> ₹ 600/800
+                  </>
+                )}
               </li>
               <li>
                 To confirm your payment, please show the payment proof on the
