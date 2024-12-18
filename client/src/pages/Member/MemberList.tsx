@@ -2,18 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { axiosInstance } from '../../utils/config';
 import { useData } from '../../context/DataContext';
 import Breadcrumb from '../../components/Breadcrumbs/Breadcrumb';
-import FilterTags from '../../components/FilterTags';
-
-import { IconButton, Backdrop } from '@mui/material';
+import { IconButton, Modal, TextField, Button } from '@mui/material';
 import {
-  FileDownload as FileDownloadIcon,
-  CurrencyRupee,
-  Refresh as RefreshIcon,
   Visibility as VisibilityIcon,
   DeleteForever as DeleteForeverIcon,
 } from '@mui/icons-material';
-import ViewVisitor from '../Visitor/VisitorListComponents/ViewVisitor';
-import ExportVisitorData from '../Visitor/VisitorListComponents/ExportVisitorData';
 import { Member } from '../../models/Member';
 
 const MemberList: React.FC = () => {
@@ -21,13 +14,22 @@ const MemberList: React.FC = () => {
   const [members, setMembers] = useState<Member[]>([]);
   const [filteredMembers, setFilteredMembers] = useState<Member[]>([]);
   const [search, setSearch] = useState('');
-  const [backDropOpen, setBackDropOpen] = useState(false);
-  const [selectedMember, setSelectedMember] = useState<Member | null>(null);
+  const [openModal, setOpenModal] = useState(false);
+  const [newMember, setNewMember] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    phoneNumber: '',
+    role: '',
+    chapterId: chapterData.chapterId, // Example chapterId
+    password: '',  // Added password to the state
+  });
+
   useEffect(() => {
     const fetchMembers = async () => {
       try {
         const response = await axiosInstance.post('/api/member/memberList', {
-          chapterId: 1,
+          chapterId: chapterData.chapterId,
         });
         setMembers(response.data);
         setFilteredMembers(response.data);
@@ -51,12 +53,15 @@ const MemberList: React.FC = () => {
     setSearch(e.target.value);
   };
 
-  const handleDeleteMember = async (memberId: string) => {
+  const handleAddMember = async () => {
     try {
-      await axiosInstance.delete(`/members/${memberId}`);
-      setMembers(members.filter((member) => member.id !== memberId));
+      const response = await axiosInstance.post('/api/member/add', [newMember]);
+      setMembers([...members, response.data]); // Add new member to the list
+      setFilteredMembers([...members, response.data]);
+      setOpenModal(false);
+      setNewMember({ firstName: '', lastName: '', email: '', phoneNumber: '', role: '', chapterId: chapterData.chapterId, password: '' });
     } catch (error) {
-      console.error('Error deleting member:', error);
+      console.error('Error adding member:', error);
     }
   };
 
@@ -73,38 +78,31 @@ const MemberList: React.FC = () => {
             onChange={handleSearchChange}
             className="px-4 py-2 border rounded dark:bg-gray-700 dark:border-gray-600"
           />
-          <IconButton onClick={() => setBackDropOpen(true)}>
-            <FileDownloadIcon />
-          </IconButton>
+          <Button variant="contained" color="primary" onClick={() => setOpenModal(true)}>
+            Add Member
+          </Button>
         </div>
       </div>
-      {/* <FilterTags  /> */}
       <div className="overflow-x-auto">
         <table className="min-w-full bg-white dark:bg-gray-700">
           <thead>
             <tr>
               <th className="py-2 px-4 border-b dark:border-gray-600">Name</th>
               <th className="py-2 px-4 border-b dark:border-gray-600">Email</th>
-              <th className="py-2 px-4 border-b dark:border-gray-600">
-                Actions
-              </th>
+              <th className="py-2 px-4 border-b dark:border-gray-600">Actions</th>
             </tr>
           </thead>
           <tbody>
             {filteredMembers.map((member) => (
               <tr key={member.memberId}>
-                <td className="py-2 px-4 border-b dark:border-gray-600">
-                  {member.firstName}
-                </td>
-                <td className="py-2 px-4 border-b dark:border-gray-600">
-                  {member.email}
-                </td>
+                <td className="py-2 px-4 border-b dark:border-gray-600">{member.firstName}</td>
+                <td className="py-2 px-4 border-b dark:border-gray-600">{member.email}</td>
                 <td className="py-2 px-4 border-b dark:border-gray-600">
                   <div className="flex space-x-2">
-                    <IconButton onClick={() => setSelectedMember(member)}>
+                    <IconButton>
                       <VisibilityIcon />
                     </IconButton>
-                    <IconButton onClick={() => handleDeleteMember(member.id)}>
+                    <IconButton>
                       <DeleteForeverIcon />
                     </IconButton>
                   </div>
@@ -114,18 +112,68 @@ const MemberList: React.FC = () => {
           </tbody>
         </table>
       </div>
-      <Backdrop open={backDropOpen} onClick={() => setBackDropOpen(false)}>
-        {/* <ExportVisitorData /> */}
-      </Backdrop>
-      {/* {selectedMember && (
-        <ViewVisitor
-          member={selectedMember}
-          onClose={() => setSelectedMember(null)}
-        />
-      )} */}
+
+      {/* Add Member Modal */}
+      <Modal open={openModal} onClose={() => setOpenModal(false)}>
+        <div className="modal-content p-6 bg-white rounded shadow-md max-w-lg mx-auto mt-24">
+          <h2 className="text-xl mb-4 text-center">Add New Member</h2>
+          <TextField
+            label="First Name"
+            fullWidth
+            value={newMember.firstName}
+            onChange={(e) => setNewMember({ ...newMember, firstName: e.target.value })}
+            margin="normal"
+          />
+          <TextField
+            label="Last Name"
+            fullWidth
+            value={newMember.lastName}
+            onChange={(e) => setNewMember({ ...newMember, lastName: e.target.value })}
+            margin="normal"
+          />
+          <TextField
+            label="Email"
+            fullWidth
+            value={newMember.email}
+            onChange={(e) => setNewMember({ ...newMember, email: e.target.value })}
+            margin="normal"
+          />
+          <TextField
+            label="Password"
+            type="password" // Make the input type "password"
+            fullWidth
+            value={newMember.password}
+            onChange={(e) => setNewMember({ ...newMember, password: e.target.value })} // Corrected to handle password change
+            margin="normal"
+          />
+          <TextField
+            label="Phone Number"
+            fullWidth
+            value={newMember.phoneNumber}
+            onChange={(e) => setNewMember({ ...newMember, phoneNumber: e.target.value })}
+            margin="normal"
+          />
+          <TextField
+            label="Role"
+            fullWidth
+            value={newMember.role}
+            onChange={(e) => setNewMember({ ...newMember, role: e.target.value })}
+            margin="normal"
+          />
+          <div className="flex justify-center mt-4">
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={handleAddMember}
+              className="w-1/2"
+            >
+              Add Member
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
-  return <></>;
 };
 
 export default MemberList;

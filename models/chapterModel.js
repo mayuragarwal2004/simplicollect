@@ -8,6 +8,11 @@ const findChapterById = async (chapterId) => {
     .first();
 };
 
+const updateChapter = async (chapterId, chapterData) => {
+  return db("chapters")
+    .where("chapterId", chapterId).update(chapterData)
+}
 module.exports = {
   findChapterById,
+  updateChapter
 };
