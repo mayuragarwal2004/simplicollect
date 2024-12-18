@@ -6,7 +6,7 @@ const memberController = require("../controllers/memberControllers");
 router.get("/me", memberController.getMemberById);
 
 // add members
-router.post("/addMember", memberController.addMember);
+router.post("/add", memberController.addMember);
 
 // list of all members
 router.post("/memberList", memberController.memberList);
