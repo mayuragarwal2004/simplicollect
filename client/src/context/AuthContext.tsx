@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import { toast } from 'react-toastify';
 
 interface AuthContextType {
   accessToken: string | null;
@@ -53,6 +54,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         document.cookie = `token=${data.accessToken}; Secure; SameSite=Strict; path=/;`;
         console.log('User logged in successfully');
       } else {
+        toast.error(data.message || 'Unknown error');
         console.error('Login failed:', data.message || 'Unknown error');
       }
     } catch (error) {

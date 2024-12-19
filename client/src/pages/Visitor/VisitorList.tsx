@@ -82,7 +82,7 @@ const VisitorList: React.FC = () => {
     const filteredVisitors = visitors.filter((visitor) => {
       const today = new Date();
       return (
-        new Date(visitor.chapterVisitDate).toDateString() ===
+        new Date(visitor.chapterVisitDate as string | number).toDateString() ===
         today.toDateString()
       );
     });
@@ -105,8 +105,9 @@ const VisitorList: React.FC = () => {
         filteredVisitors = filteredVisitors.filter((visitor) => {
           const today = new Date();
           return (
-            new Date(visitor.chapterVisitDate).toDateString() ===
-            today.toDateString()
+            new Date(
+              visitor.chapterVisitDate as string | number,
+            ).toDateString() === today.toDateString()
           );
         });
       }
@@ -127,7 +128,9 @@ const VisitorList: React.FC = () => {
         filteredVisitors = filteredVisitors.filter((visitor) => {
           const sixMonthsAgo = new Date();
           sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
-          return new Date(visitor.chapterVisitDate) > sixMonthsAgo;
+          return (
+            new Date(visitor.chapterVisitDate as string | number) > sixMonthsAgo
+          );
         });
       }
 
@@ -266,7 +269,7 @@ const VisitorList: React.FC = () => {
                     <td className="border-b border-[#eee] py-5 px-4 dark:border-strokedark">
                       <p className="text-black dark:text-white">
                         {new Date(
-                          visitor_i.chapterVisitDate,
+                          visitor_i.chapterVisitDate as string | number,
                         ).toLocaleDateString()}
                       </p>
                     </td>
@@ -409,7 +412,7 @@ const VisitorList: React.FC = () => {
                   <div className="mb-2">
                     <p className="text-black dark:text-white">
                       {new Date(
-                        visitor_i.chapterVisitDate,
+                        visitor_i.chapterVisitDate as string | number,
                       ).toLocaleDateString()}
                     </p>
                   </div>

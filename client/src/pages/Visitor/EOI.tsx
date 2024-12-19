@@ -464,7 +464,7 @@ const EOI: React.FC = () => {
       <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200 mb-4">
         {chapetDetails.chapterName} - {chapetDetails.region}
       </h2>
-      <Breadcrumb pageName="EOI" />
+      <Breadcrumb pageName="Visitor Registration" />
 
       {/* Phone Number Input Section */}
       {!visitorExists && !showQRPage && pageNo === 1 && (

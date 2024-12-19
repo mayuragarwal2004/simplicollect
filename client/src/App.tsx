@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Route, Routes, useLocation } from 'react-router-dom';
+import 'react-toastify/dist/ReactToastify.css';
 
 import Loader from './common/Loader';
 import PageTitle from './components/PageTitle';
@@ -21,6 +22,7 @@ import ShareForm from './pages/Visitor/ShareForm';
 import VisitorList from './pages/Visitor/VisitorList';
 import MemberList from './pages/Member/MemberList';
 import RequireAuth from './utils/RequireAut';
+import { Bounce, ToastContainer } from 'react-toastify';
 
 function App() {
   const [loading, setLoading] = useState<boolean>(true);
@@ -38,6 +40,19 @@ function App() {
     <Loader />
   ) : (
     <DefaultLayout>
+      <ToastContainer
+        position="top-right"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick={false}
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+        transition={Bounce}
+      />
       <Routes>
         <Route
           index
