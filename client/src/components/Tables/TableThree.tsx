@@ -1,4 +1,4 @@
-import { Package } from '../../types/package';
+import { Package } from '../../models/template_data/package';
 
 const packageData: Package[] = [
   {
