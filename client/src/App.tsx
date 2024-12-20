@@ -171,6 +171,15 @@ function App() {
             </>
           }
         />
+        <Route
+            path="/chapter/list"
+            element={
+              <>
+                <PageTitle title="Expression of Interest | SimpliCollect - Meeting Fee Manager" />
+                <VisitorList />
+              </>
+            }
+          />
       </Routes>
     </DefaultLayout>
   );
