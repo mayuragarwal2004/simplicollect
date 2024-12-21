@@ -1,6 +1,7 @@
 // controllers/memberControllers.js
 const memberModel = require("../models/memberModel");
 const { v4: uuidv4 } = require("uuid");
+const bcrypt = require('bcrypt');
 
 // Get member details by memberId
 const getMemberById = async (req, res) => {
@@ -20,27 +21,50 @@ const getMemberById = async (req, res) => {
 };
 
 const addMember = async (req, res) => {
-  const membersData = req.body;
+  let membersData = req.body;
+
+  // Ensure membersData is an array
+  if (!Array.isArray(membersData)) {
+    return res.status(400).json({ message: "Invalid input. Expected an array." });
+  }
+
   console.log(membersData);
 
-  membersData.filter((member) => {
-    return !member.memberId;
-  });
-
-  membersData.forEach((member) => {
-    if (!member.email || !member.firstName || !member.lastName) {
-      return res.status(400).json({ message: "Email and name are required" });
-    }
-    if (!member.role) {
-      member.role = "Member";
-    }
-    member.memberId = uuidv4();
-  });
-
   try {
+    membersData = await Promise.all(
+      membersData.map(async (member) => {
+        // Validate required fields
+        if (!member.email || !member.firstName || !member.lastName) {
+          throw new Error("Email, first name, and last name are required.");
+        }
+
+        // Set default role if not provided
+        if (!member.role) {
+          member.role = "Member";
+        }
+
+        // Generate unique member ID
+        member.memberId = member.memberId || uuidv4();
+
+        // Hash password if provided
+        if (member.password) {
+          const hashedPassword = await bcrypt.hash(member.password, 10);
+          member.password = hashedPassword;
+        }
+
+        return member;
+      })
+    );
+
+    // Add members to the database
     const result = await memberModel.addMember(membersData);
-    res.json({ message: "Member added successfully", memberId: result[0] });
+
+    res.json({
+      message: "Members added successfully",
+      memberIds: result.map((r) => r.memberId),
+    });
   } catch (error) {
+    console.error("Error adding members:", error);
     res.status(500).json({ error: error.message });
   }
 };

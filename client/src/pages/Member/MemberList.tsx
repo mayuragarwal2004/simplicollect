@@ -44,7 +44,7 @@ const MemberList: React.FC = () => {
   useEffect(() => {
     setFilteredMembers(
       members.filter((member) =>
-        member.firstName.toLowerCase().includes(search.toLowerCase()),
+        member.firstName?.toLowerCase().includes(search.toLowerCase()),
       ),
     );
   }, [search, members]);
