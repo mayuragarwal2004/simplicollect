@@ -20,4 +20,6 @@ export interface Chapter {
   weeklyFee?: number;
   monthlyFee?: number;
   quarterlyFee?: number;
+  organisationId?: string;
+  organisationName?: string;
 }

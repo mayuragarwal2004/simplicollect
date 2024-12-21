@@ -1,17 +1,21 @@
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import DropdownMessage from './DropdownMessage';
 import DropdownNotification from './DropdownNotification';
 import DropdownUser from './DropdownUser';
 import LogoIcon from '../../images/logo/logo-icon.svg';
 import DarkModeSwitcher from './DarkModeSwitcher';
+import { useData } from '../../context/DataContext';
 
 const Header = (props: {
   sidebarOpen: string | boolean | undefined;
   setSidebarOpen: (arg0: boolean) => void;
 }) => {
+  const { chapterData, allChaptersData, switchChapter } = useData();
+
   return (
     <header className="sticky top-0 z-999 flex w-full bg-white drop-shadow-1 dark:bg-boxdark dark:drop-shadow-none">
-      <div className="flex flex-grow items-center justify-end px-4 py-4 shadow-2 md:px-6 2xl:px-11">
+      <div className="flex flex-grow items-center justify-between px-4 py-4 shadow-2 md:px-6 2xl:px-11">
         <div className="flex items-center gap-2 sm:gap-4 lg:hidden">
           {/* <!-- Hamburger Toggle BTN --> */}
           <button
@@ -98,6 +102,25 @@ const Header = (props: {
           </form>
         </div>
 
+        {/* choose chapter */}
+        <div>
+          {allChaptersData?.length > 1 && (
+            <select
+              className="hidden lg:block w-48 h-10 px-4 py-2 bg-white border border-stroke rounded-md shadow-sm dark:bg-boxdark dark:border-strokedark dark:text-white"
+              onChange={(e) => {
+                switchChapter(e.target.value);
+              }}
+              value={chapterData?.chapterId}
+            >
+              {allChaptersData?.map((chapter) => (
+                <option key={chapter.chapterId} value={chapter.chapterId}>
+                  {chapter.chapterName} - {chapter.organisationName}
+                </option>
+              ))}
+            </select>
+          )}
+        </div>
+
         <div className="flex items-center gap-3 2xsm:gap-7">
           <ul className="flex items-center gap-2 2xsm:gap-4">
             {/* <!-- Dark Mode Toggler --> */}
@@ -118,6 +141,7 @@ const Header = (props: {
           {/* <!-- User Area --> */}
         </div>
       </div>
+
     </header>
   );
 };

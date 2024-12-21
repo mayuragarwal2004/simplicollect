@@ -19,6 +19,9 @@ app.use("/api/visitor", visitorRoutes);
 app.use("/api/chapter", authenticateToken, chapterRoutes);
 app.use("/api/member", authenticateToken, memberRoutes);
 app.use("/api/image-upload", authenticateToken, imageUploadRoutes)
+app.use("/api/*", (req, res) => {
+  res.status(404).send("Not Found - Please check the URL and try again");
+});
 
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "client", "dist", "index.html"));

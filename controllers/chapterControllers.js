@@ -33,7 +33,21 @@ const updateChapterDetails = async (req, res) => {
   }
 };
 
+const getAllChaptersController = async (req, res) => {
+  const { memberId } = req.user;
+  try {
+    console.log({memberId});
+    
+    const chapters = await chapterModel.getAllChapters(memberId);
+    res.json(chapters);
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: error.message });
+  }
+}
+
 module.exports = {
   getChapterById,
   updateChapterDetails,
+  getAllChaptersController,
 };

@@ -1,7 +1,13 @@
+CREATE TABLE organisations (
+  organisationId VARCHAR(255) PRIMARY KEY,
+  organisationName VARCHAR(255) NOT NULL
+)
+
 CREATE TABLE chapters (
   chapterId VARCHAR(255) PRIMARY KEY,
   chapterName VARCHAR(255) NOT NULL,
   chapterSlug VARCHAR(255) UNIQUE NOT NULL,
+  organisationId VARCHAR(255) NOT NULL,
   region VARCHAR(255),
   city VARCHAR(255),
   state VARCHAR(255),
@@ -12,12 +18,13 @@ CREATE TABLE chapters (
   visitorPerMeetingFee DECIMAL(10, 2) NOT NULL,
   weeklyFee DECIMAL(10, 2), -- separate fee for weekly
   monthlyFee DECIMAL(10, 2), -- separate fee for monthly
-  quarterlyFee DECIMAL(10, 2) -- separate fee for quarterly
+  quarterlyFee DECIMAL(10, 2), -- separate fee for quarterly
   -- ask user if will number of week change the fee for the month? if yes, for 4 week ____ for 5 week ____
   -- discount for early payment
   -- grace period for payment
   -- penalty for late payment
   -- payable date (1st week of month, grace period another week, means penalty after 2nd week)
+  FOREIGN KEY (organisationId) REFERENCES organisation(organisationId) ON DELETE CASCADE
 );
 
 
@@ -33,8 +40,8 @@ CREATE TABLE roles (
 
 CREATE TABLE tasks (
   taskId VARCHAR(255) PRIMARY KEY,
-  taskName VARCHAR(255) NOT NULL,
-)
+  taskName VARCHAR(255) NOT NULL
+);
 -- add member, remove member, change/update/modify fees, waive off fee, change/update/modify community details, view reports, download reports, accept payment, 
 
 CREATE TABLE rights (
@@ -48,6 +55,13 @@ CREATE TABLE rights (
 );
 -- Leadership - allowed to add member, remove member, change/update/modify fees, waive off fee, change/update/modify community details, view reports, download reports, accept payment,
 
+CREATE TABLE memberChapterMapping (
+  memberId VARCHAR(255) NOT NULL,
+  chapterId VARCHAR(255) NOT NULL,
+  FOREIGN KEY (memberId) REFERENCES members(memberId) ON DELETE CASCADE,
+  FOREIGN KEY (chapterId) REFERENCES chapters(chapterId) ON DELETE CASCADE
+);
+
 CREATE TABLE members (
   memberId VARCHAR(255) PRIMARY KEY,
   firstName VARCHAR(255) NOT NULL,
@@ -55,9 +69,8 @@ CREATE TABLE members (
   phoneNumber VARCHAR(20) UNIQUE NOT NULL,
   email VARCHAR(255) UNIQUE NOT NULL,
   password VARCHAR(255) NOT NULL,
-  chapterId VARCHAR(255),
-  role VARCHAR(255),
-  FOREIGN KEY (chapterId) REFERENCES chapters(chapterId) ON DELETE CASCADE
+  superAdmin BOOLEAN DEFAULT FALSE,
+  role VARCHAR(255)
 );
 
 

@@ -9,7 +9,9 @@ import { useAuth } from './AuthContext';
 interface DataContextProps {
   memberData: Member | null;
   chapterData: Chapter | null;
+  allChaptersData: Chapter[] | null;
   getChapterDetails: (chapterId: string) => Promise<void>;
+  switchChapter: (chapterId: string) => void;
 }
 
 // Create the context with an initial default value
@@ -21,7 +23,28 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const { isAuthenticated } = useAuth();
   const [memberData, setMemberData] = useState<Member | null>(null);
+  const [allChaptersData, setAllChaptersData] = useState<Chapter[] | null>(
+    null,
+  );
   const [chapterData, setChapterData] = useState<Chapter | null>(null);
+
+  const fetchAllChapters = async () => {
+    try {
+      const response = await axiosInstance('/api/chapter');
+      const data = await response.data;
+      if (data.length === 1) {
+        setChapterData(data[0]);
+      }
+      setAllChaptersData(data);
+    } catch (error) {
+      console.error('Fetching all chapters failed:', error);
+    }
+  };
+
+  const switchChapter = (chapterId: string) => {
+    const chapter = allChaptersData?.find((c) => c.chapterId === chapterId);
+    setChapterData(chapter || null);
+  }
 
   // Function to fetch chapter details
   const getChapterDetails = async (chapterId: string) => {
@@ -45,17 +68,27 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
+  console.log({ chapterData });
+
+  
+
   useEffect(() => {
+    console.log('I am called');
+
     if (isAuthenticated) {
       if (!memberData) fetchMember();
-      if (memberData?.chapterId) {
-        getChapterDetails(memberData.chapterId);
-      }
+      if (!allChaptersData) fetchAllChapters();
+    } else {
+      setMemberData(null);
+      setAllChaptersData(null);
+      setChapterData(null);
     }
-  }, [isAuthenticated, memberData]);
+  }, [isAuthenticated]);
 
   return (
-    <DataContext.Provider value={{ memberData, chapterData, getChapterDetails }}>
+    <DataContext.Provider
+      value={{ memberData, chapterData, allChaptersData, switchChapter, getChapterDetails }}
+    >
       {children}
     </DataContext.Provider>
   );
