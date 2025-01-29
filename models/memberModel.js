@@ -21,7 +21,7 @@ const addMember = async (memberData) => {
 };
 
 const getMembers = async (chapterId) => {
-  return db("members")
+  return db("memberchaptermapping")
     .where("chapterId", chapterId)
     .select("*");
 };
