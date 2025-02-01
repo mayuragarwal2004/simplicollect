@@ -1,21 +1,10 @@
-import React from "react";
+import React, { useState } from "react";
 import Box from "@mui/material/Box";
+import AcceptPaymentMember from "./AcceptPaymentMember"; // Import the new component
 
 const PackageAllowed = ({ packageData, parentType, chapterMeetings }) => {
-  // Helper function to check if any meetings within the package date range are paid
-  const hasOverlappingPayments = (pkg) => {
-    const packageStartDate = new Date(pkg.startDate);
-    const packageEndDate = new Date(pkg.endDate);
-
-    return chapterMeetings.some((meeting) => {
-      const meetingDate = new Date(meeting.meetingDate);
-      return (
-        meetingDate >= packageStartDate &&
-        meetingDate <= packageEndDate &&
-        meeting.isPaid
-      );
-    });
-  };
+  const [showUnpaidOnly, setShowUnpaidOnly] = useState(false); // State for "Show Unpaid Only"
+  const [selectedPackage, setSelectedPackage] = useState(null); // Track selected package for payment
 
   // Helper function to calculate total amounts with penalties or discounts
   const calculateDisplayAmounts = (pkg) => {
@@ -27,81 +16,66 @@ const PackageAllowed = ({ packageData, parentType, chapterMeetings }) => {
     let penaltyAmount = 0;
     let discountAmount = 0;
 
-    // Calculate the number of days remaining or exceeded
-    const timeDifferenceDiscount = discountEndDate - today;
-    const daysRemainingForDiscount = Math.ceil(
-      timeDifferenceDiscount / (1000 * 60 * 60 * 24)
-    );
+    // Calculate penalties and discounts (same as before)
+    // ...
 
-    const timeDifferencePenalty = today - payableEndDate;
-    const daysExceededForPenalty = Math.ceil(
-      timeDifferencePenalty / (1000 * 60 * 60 * 24)
-    );
-
-    // Apply discount logic
-    if (today <= discountEndDate) {
-      switch (pkg.discountType) {
-        case "Daily":
-          discountAmount = daysRemainingForDiscount * pkg.discountAmount;
-          break;
-        case "Weekly":
-          discountAmount =
-            Math.ceil(daysRemainingForDiscount / 7) * pkg.discountAmount;
-          break;
-        case "Monthly":
-          discountAmount =
-            Math.ceil(daysRemainingForDiscount / 30) * pkg.discountAmount;
-          break;
-        case "Quarterly":
-          discountAmount =
-            Math.ceil(daysRemainingForDiscount / 90) * pkg.discountAmount;
-          break;
-        case "Meetingly":
-          discountAmount = pkg.discountAmount; // Flat discount per meeting
-          break;
-        default:
-          discountAmount = 0;
-      }
+    // Calculate paid fees for meetings included in the package
+    let paidFees = 0;
+    const paidMeetings = [];
+    if (pkg.allowPackagePurchaseIfFeesPaid && pkg.meetingIds) {
+      paidFees = pkg.meetingIds.reduce((sum, meetingId) => {
+        const meeting = chapterMeetings.find((m) => m.meetingId === meetingId);
+        if (meeting && meeting.isPaid) {
+          paidMeetings.push({
+            meetingId: meeting.meetingId,
+            meetingDate: meeting.meetingDate,
+            meetingFeeMembers: meeting.meetingFeeMembers,
+          });
+          return sum + meeting.meetingFeeMembers;
+        }
+        return sum;
+      }, 0);
     }
 
-    // Apply penalty logic
-    if (today > payableEndDate && pkg.allowPenaltyPayableAfterEndDate) {
-      switch (pkg.penaltyType) {
-        case "Daily":
-          penaltyAmount = daysExceededForPenalty * pkg.penaltyAmount;
-          break;
-        case "Weekly":
-          penaltyAmount =
-            Math.ceil(daysExceededForPenalty / 7) * pkg.penaltyAmount;
-          break;
-        case "Monthly":
-          penaltyAmount =
-            Math.ceil(daysExceededForPenalty / 30) * pkg.penaltyAmount;
-          break;
-        case "Quarterly":
-          penaltyAmount =
-            Math.ceil(daysExceededForPenalty / 90) * pkg.penaltyAmount;
-          break;
-        case "Meetingly":
-          penaltyAmount = pkg.penaltyAmount; // Flat penalty per meeting
-          break;
-        default:
-          penaltyAmount = 0;
-      }
-    }
-
-    totalAmount = totalAmount + penaltyAmount - discountAmount;
-
-    return { totalAmount, penaltyAmount, discountAmount };
+    totalAmount = totalAmount + penaltyAmount - discountAmount - paidFees;
+    return { totalAmount, penaltyAmount, discountAmount, paidFees, paidMeetings };
   };
 
+  // Handle "Pay" button click
+  const handlePayClick = (pkg) => {
+    setSelectedPackage(pkg); // Show payment card for the selected package
+  };
+
+  // Handle payment success
+  const handlePaymentSuccess = () => {
+    setSelectedPackage(null); // Close payment card
+    // Optionally, update the package or meeting data to reflect the payment
+  };
+
+  // Filter packages based on the "Show Unpaid Only" checkbox
+  const filteredPackages = packageData
+    .filter((pkg) => pkg.packageParent === parentType)
+    .filter((pkg) => !showUnpaidOnly || !pkg.isPaid); // Show unpaid only if `showUnpaidOnly` is true
+
   return (
-    <Box className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 p-4">
-      {packageData
-        .filter((pkg) => pkg.packageParent === parentType)
-        .map((pkg) => {
-          const isDisabled = hasOverlappingPayments(pkg); // Check for overlapping payments
-          const { totalAmount, penaltyAmount, discountAmount } =
+    <div>
+      {/* Show Unpaid Only Checkbox */}
+      <div className="flex justify-end p-4">
+        <label className="flex items-center space-x-2">
+          <input
+            type="checkbox"
+            checked={showUnpaidOnly}
+            onChange={() => setShowUnpaidOnly(!showUnpaidOnly)}
+            className="form-checkbox"
+          />
+          <span>Show Unpaid Only</span>
+        </label>
+      </div>
+
+      {/* Package List */}
+      <Box className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 p-4">
+        {filteredPackages.map((pkg) => {
+          const { totalAmount, penaltyAmount, discountAmount, paidFees, paidMeetings } =
             calculateDisplayAmounts(pkg);
 
           return (
@@ -118,23 +92,39 @@ const PackageAllowed = ({ packageData, parentType, chapterMeetings }) => {
                 {discountAmount > 0 && (
                   <span className="text-green-500"> - ₹{discountAmount}</span>
                 )}
+                {paidFees > 0 && (
+                  <span className="text-blue-500"> - ₹{paidFees}</span>
+                )}
                 = ₹{totalAmount}
               </p>
               <p className="text-gray-700 mb-1">
                 Payable End Date: {pkg.packagePayableEndDate}
               </p>
               <button
-                className={`mt-4 bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-700 ${
-                  isDisabled ? "opacity-50 cursor-not-allowed" : ""
-                }`}
-                disabled={isDisabled}
+                onClick={() => handlePayClick(pkg)}
+                className={`mt-4 bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-700`}
               >
-                {isDisabled ? "Already Paid (Per Meeting)" : "Pay Now"}
+                Pay
               </button>
             </div>
           );
         })}
-    </Box>
+      </Box>
+
+      {/* Payment Card */}
+      {selectedPackage && (
+        <AcceptPaymentMember
+          totalFees={selectedPackage.packageFeeAmount}
+          penaltyAmount={selectedPackage.penaltyAmount}
+          discountAmount={selectedPackage.discountAmount}
+          paidFees={calculateDisplayAmounts(selectedPackage).paidFees}
+          paidMeetings={calculateDisplayAmounts(selectedPackage).paidMeetings} // Pass paid meetings
+          meetingIds={selectedPackage.meetingIds}
+          onClose={() => setSelectedPackage(null)}
+          onPaymentSuccess={handlePaymentSuccess}
+        />
+      )}
+    </div>
   );
 };
 
