@@ -36,6 +36,7 @@ const PackageAllowed = ({ packageData, parentType, chapterMeetings }) => {
           return Math.ceil(days / 30);
         case "Quarterly":
           return Math.ceil(days / 90);
+        case "lumpsum":
         case "Meetingly":
           return 1; // Fixed for meeting-based penalty/discount
         default:

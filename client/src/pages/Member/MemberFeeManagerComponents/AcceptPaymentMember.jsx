@@ -46,7 +46,7 @@ const AcceptPaymentMember = ({
   };
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-[1000]">
       <div className="bg-white rounded-lg p-6 w-full max-w-lg shadow-xl relative">
         {/* Close Button */}
         <button
