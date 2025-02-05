@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import Box from "@mui/material/Box";
 import AcceptPaymentMember from "./AcceptPaymentMember";
 
-const PackageAllowed = ({ packageData, parentType, chapterMeetings }) => {
+const PackageAllowed = ({ todayDate, packageData, parentType, chapterMeetings }) => {
   const [showUnpaidOnly, setShowUnpaidOnly] = useState(false);
   const [selectedPackage, setSelectedPackage] = useState(null);
 
@@ -14,11 +14,14 @@ const PackageAllowed = ({ packageData, parentType, chapterMeetings }) => {
     });
   };
 
+  console.log({ todayDate});
+  
+
   // Helper function to calculate total amounts with penalties or discounts
   const calculateDisplayAmounts = (pkg) => {
     if (pkg.isDisabled) return { totalAmount: null, penaltyAmount: null, discountAmount: null };
 
-    const today = new Date();
+    const today = todayDate || new Date();
     const payableEndDate = new Date(pkg.packagePayableEndDate);
     const discountEndDate = new Date(pkg.discountEndDate);
 
