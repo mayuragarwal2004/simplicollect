@@ -17,49 +17,30 @@ const MemberFeeManager = () => {
 
   // Meeting fee data
   const [chapterMeetings] = React.useState([
-      {
-        chapterId: 'ijoivedvs',
-        meetingId: 'svijnvi1',
-        meetingDate: '2025-01-03',
-        meetingTime: '10:00',
-        meetingFeeMembers: 850,
-        meetingFeeVisitors: 1000,
-        isPaid: true,
-        payableStartDate: '2025-01-01', // New field
-        payableEndDate: '2025-01-10', // New field
-        allowAfterEndDate: true, // New field
-        allowPenaltyPayableAfterEndDate: true, // New field
-        penaltyType: 'Daily', // New field
-        penaltyAmount: 100, // New field
-        penaltyFrequency: 'Per', // New field
-        discountType: 'Daily', // New field
-        discountAmount: 50, // New field
-        discountFrequency: 'Per', // New field
-        discountEndDate: '2025-01-05', // New field
-      },
-      {
-        chapterId: 'ijoivedvs',
-        meetingId: 'svijnvi2',
-        meetingDate: '2025-01-10',
-        meetingTime: '10:00',
-        meetingFeeMembers: 850,
-        meetingFeeVisitors: 1000,
-        isPaid: false,
-        payableStartDate: '2025-01-08', // New field
-        payableEndDate: '2025-01-17', // New field
-        allowAfterEndDate: true, // New field
-        allowPenaltyPayableAfterEndDate: true, // New field
-        penaltyType: 'Weekly', // New field
-        penaltyAmount: 200, // New field
-        penaltyFrequency: 'Twice', // New field
-        discountType: 'Weekly', // New field
-        discountAmount: 100, // New field
-        discountFrequency: 'Per', // New field
-        discountEndDate: '2025-01-12', // New field
-      },
-      // Add more meetings as needed
     {
       chapterId: 'ijoivedvs',
+      meetingName: 'Meeting 1',
+      meetingId: 'svijnvi1',
+      meetingDate: '2025-01-03',
+      meetingTime: '10:00',
+      meetingFeeMembers: 850,
+      meetingFeeVisitors: 1000,
+      isPaid: false,
+    },
+    {
+      chapterId: 'ijoivedvs',
+      meetingName: 'Meeting 2',
+      meetingId: 'svijnvi2',
+      meetingDate: '2025-01-10',
+      meetingTime: '10:00',
+      meetingFeeMembers: 850,
+      meetingFeeVisitors: 1000,
+      isPaid: false,
+    },
+    // Add more meetings as needed
+    {
+      chapterId: 'ijoivedvs',
+      meetingName: 'Meeting 3',
       meetingId: 'svijnvi3',
       meetingDate: '2025-01-17',
       meetingTime: '10:00',
@@ -70,6 +51,7 @@ const MemberFeeManager = () => {
     {
       chapterId: 'ijoivedvs',
       meetingId: 'svijnvi4',
+      meetingName: 'Meeting 4',
       meetingDate: '2025-01-24',
       meetingTime: '10:00',
       meetingFeeMembers: 850,
@@ -79,6 +61,7 @@ const MemberFeeManager = () => {
     {
       chapterId: 'ijoivedvs',
       meetingId: 'svijnvi5',
+      meetingName: 'Meeting 5',
       meetingDate: '2025-01-31',
       meetingTime: '10:00',
       meetingFeeMembers: 850,
@@ -89,6 +72,7 @@ const MemberFeeManager = () => {
     {
       chapterId: 'ijoivedvs',
       meetingId: 'svijnvi6',
+      meetingName: 'Meeting 6',
       meetingDate: '2025-02-07',
       meetingTime: '10:00',
       meetingFeeMembers: 850,
@@ -98,6 +82,7 @@ const MemberFeeManager = () => {
     {
       chapterId: 'ijoivedvs',
       meetingId: 'svijnvi7',
+      meetingName: 'Meeting 7',
       meetingDate: '2025-02-14',
       meetingTime: '10:00',
       meetingFeeMembers: 850,
@@ -107,6 +92,7 @@ const MemberFeeManager = () => {
     {
       chapterId: 'ijoivedvs',
       meetingId: 'svijnvi8',
+      meetingName: 'Meeting 8',
       meetingDate: '2025-02-21',
       meetingTime: '10:00',
       meetingFeeMembers: 850,
@@ -116,6 +102,7 @@ const MemberFeeManager = () => {
     {
       chapterId: 'ijoivedvs',
       meetingId: 'svijnvi9',
+      meetingName: 'Meeting 9',
       meetingDate: '2025-02-28',
       meetingTime: '10:00',
       meetingFeeMembers: 850,
@@ -126,6 +113,7 @@ const MemberFeeManager = () => {
     {
       chapterId: 'ijoivedvs',
       meetingId: 'svijnvi10',
+      meetingName: 'Meeting 10',
       meetingDate: '2025-03-07',
       meetingTime: '10:00',
       meetingFeeMembers: 850,
@@ -135,6 +123,7 @@ const MemberFeeManager = () => {
     {
       chapterId: 'ijoivedvs',
       meetingId: 'svijnvi11',
+      meetingName: 'Meeting 11',
       meetingDate: '2025-03-14',
       meetingTime: '10:00',
       meetingFeeMembers: 850,
@@ -144,6 +133,7 @@ const MemberFeeManager = () => {
     {
       chapterId: 'ijoivedvs',
       meetingId: 'svijnvi12',
+      meetingName: 'Meeting 12',
       meetingDate: '2025-03-21',
       meetingTime: '10:00',
       meetingFeeMembers: 850,
@@ -153,6 +143,7 @@ const MemberFeeManager = () => {
     {
       chapterId: 'ijoivedvs',
       meetingId: 'svijnvi13',
+      meetingName: 'Meeting 13',
       meetingDate: '2025-03-28',
       meetingTime: '10:00',
       meetingFeeMembers: 850,
@@ -163,6 +154,7 @@ const MemberFeeManager = () => {
     {
       chapterId: 'ijoivedvs',
       meetingId: 'svijnvi14',
+      meetingName: 'Meeting 14',
       meetingDate: '2025-04-04',
       meetingTime: '10:00',
       meetingFeeMembers: 850,
@@ -172,6 +164,7 @@ const MemberFeeManager = () => {
     {
       chapterId: 'ijoivedvs',
       meetingId: 'svijnvi15',
+      meetingName: 'Meeting 15',
       meetingDate: '2025-04-11',
       meetingTime: '10:00',
       meetingFeeMembers: 850,
@@ -181,6 +174,7 @@ const MemberFeeManager = () => {
     {
       chapterId: 'ijoivedvs',
       meetingId: 'svijnvi16',
+      meetingName: 'Meeting 16',
       meetingDate: '2025-04-18',
       meetingTime: '10:00',
       meetingFeeMembers: 850,
@@ -190,6 +184,7 @@ const MemberFeeManager = () => {
     {
       chapterId: 'ijoivedvs',
       meetingId: 'svijnvi17',
+      meetingName: 'Meeting 17',
       meetingDate: '2025-04-25',
       meetingTime: '10:00',
       meetingFeeMembers: 850,
@@ -200,6 +195,7 @@ const MemberFeeManager = () => {
     {
       chapterId: 'ijoivedvs',
       meetingId: 'svijnvi18',
+      meetingName: 'Meeting 18',
       meetingDate: '2025-05-02',
       meetingTime: '10:00',
       meetingFeeMembers: 850,
@@ -209,6 +205,7 @@ const MemberFeeManager = () => {
     {
       chapterId: 'ijoivedvs',
       meetingId: 'svijnvi19',
+      meetingName: 'Meeting 19',
       meetingDate: '2025-05-09',
       meetingTime: '10:00',
       meetingFeeMembers: 850,
@@ -218,6 +215,7 @@ const MemberFeeManager = () => {
     {
       chapterId: 'ijoivedvs',
       meetingId: 'svijnvi20',
+      meetingName: 'Meeting 20',
       meetingDate: '2025-05-16',
       meetingTime: '10:00',
       meetingFeeMembers: 850,
@@ -227,6 +225,7 @@ const MemberFeeManager = () => {
     {
       chapterId: 'ijoivedvs',
       meetingId: 'svijnvi21',
+      meetingName: 'Meeting 21',
       meetingDate: '2025-05-23',
       meetingTime: '10:00',
       meetingFeeMembers: 850,
@@ -236,6 +235,7 @@ const MemberFeeManager = () => {
     {
       chapterId: 'ijoivedvs',
       meetingId: 'svijnvi22',
+      meetingName: 'Meeting 22',
       meetingDate: '2025-05-30',
       meetingTime: '10:00',
       meetingFeeMembers: 850,
@@ -247,27 +247,7 @@ const MemberFeeManager = () => {
 
   // Package data
   const [packageData] = React.useState([
-    {
-      packageId: 1,
-      packageName: 'meeting#1',
-      packageParent: 'meetingly',
-      packageFeeType: 'Default',
-      packageFeeAmount: 850,
-      packagePayableStartDate: '2025-01-01',
-      packagePayableEndDate: '2025-01-10',
-      allowAfterEndDate: true,
-      allowPenaltyPayableAfterEndDate: true,
-      penaltyType: 'Weekly',
-      penaltyAmount: 500,
-      penaltyFrequency: 'Per',
-      discountType: 'Weekly',
-      discountAmount: 300,
-      discountFrequency: 'Per',
-      discountEndDate: '2025-01-10',
-      allowPackagePurchaseIfFeesPaid: true, // New key
-      meetingIds: ["svijnvi1"],
-      isPaid: true,
-    },
+
     {
       packageId: 1,
       packageName: 'January',
@@ -275,7 +255,7 @@ const MemberFeeManager = () => {
       packageFeeType: 'Default',
       packageFeeAmount: 2500,
       packagePayableStartDate: '2025-01-01',
-      packagePayableEndDate: '2025-01-10',
+      packagePayableEndDate: '2025-01-5',
       allowAfterEndDate: true,
       allowPenaltyPayableAfterEndDate: true,
       penaltyType: 'Weekly',
@@ -286,7 +266,7 @@ const MemberFeeManager = () => {
       discountFrequency: 'Per',
       discountEndDate: '2025-01-10',
       allowPackagePurchaseIfFeesPaid: true, // New key
-      meetingIds: ["svijnvi1", "svijnvi2", "svijnvi3", "svijnvi4"," svijnvi5"],
+      meetingIds: ["svijnvi1", "svijnvi2", "svijnvi3", "svijnvi4", "svijnvi5"],
       isPaid: true,
     },
     {
@@ -307,7 +287,7 @@ const MemberFeeManager = () => {
       discountFrequency: 'Twice',
       discountEndDate: '2025-02-14',
       allowPackagePurchaseIfFeesPaid: true, // New key
-      meetingIds: ["svijnvi6"," svijnvi7"," svijnvi8"," svijnvi9"],
+      meetingIds: ["svijnvi6", "svijnvi7", "svijnvi8", "svijnvi9"],
       isPaid: true,
     },
     {
@@ -328,7 +308,7 @@ const MemberFeeManager = () => {
       discountFrequency: 'Per',
       discountEndDate: '2025-03-14',
       allowPackagePurchaseIfFeesPaid: true, // New key
-      meetingIds: ["svijnvi10"," svijnvi11"," svijnvi12"," svijnvi13"],
+      meetingIds: ["svijnvi10", "svijnvi11", "svijnvi12", "svijnvi13"],
       isPaid: false,
     },
     {
@@ -349,7 +329,7 @@ const MemberFeeManager = () => {
       discountFrequency: 'Per',
       discountEndDate: '2025-01-31',
       allowPackagePurchaseIfFeesPaid: true, // New key
-      meetingIds: ["svijnvi1"," svijnvi2"," svijnvi3"," svijnvi4"," svijnvi5"," svijnvi6"," svijnvi7"," svijnvi8"," svijnvi9"," svijnvi10"," svijnvi11"," svijnvi12"," svijnvi13"," svijnvi14"," svijnvi15"," svijnvi16"," svijnvi17"," svijnvi18"," svijnvi19"," svijnvi20"," svijnvi21"," svijnvi22"],
+      meetingIds: ["svijnvi1", "svijnvi2", "svijnvi3", "svijnvi4", "svijnvi5", "svijnvi6", "svijnvi7", "svijnvi8", "svijnvi9", "svijnvi10", "svijnvi11", "svijnvi12", "svijnvi13", "svijnvi14", "svijnvi15", "svijnvi16", "svijnvi17", "svijnvi18", "svijnvi19", "svijnvi20", "svijnvi21", "svijnvi22"],
       isPaid: false,
     },
     {
@@ -370,10 +350,11 @@ const MemberFeeManager = () => {
       discountFrequency: 'Twice',
       discountEndDate: '2025-02-14',
       allowPackagePurchaseIfFeesPaid: true, // New key
-      meetingIds: ["svijnvi18"," svijnvi19"," svijnvi20"," svijnvi21"," svijnvi22"],
+      meetingIds: ["svijnvi18", "svijnvi19", "svijnvi20", "svijnvi21", "svijnvi22"],
       isPaid: false,
     },
   ]);
+  const uniqueParentTypes = [...new Set(packageData.map((pkg) => pkg.packageParent))];
 
   const handleChange = (event, newValue) => {
     setTabValue(newValue);
@@ -396,12 +377,12 @@ const MemberFeeManager = () => {
         )}
         {chapterFeeConfig.isMonthlyAllowed && (
           <CustomTabPanel value={tabValue} index={1}>
-          <PackageAllowed
-            packageData={packageData}
-            parentType="Monthly"
-            chapterMeetings={chapterMeetings} // Pass chapterMeetings
-          />
-        </CustomTabPanel>
+            <PackageAllowed
+              packageData={packageData}
+              parentType="Monthly"
+              chapterMeetings={chapterMeetings} // Pass chapterMeetings
+            />
+          </CustomTabPanel>
         )}
         {chapterFeeConfig.isQuarterlyAllowed && (
           <CustomTabPanel value={tabValue} index={2}>

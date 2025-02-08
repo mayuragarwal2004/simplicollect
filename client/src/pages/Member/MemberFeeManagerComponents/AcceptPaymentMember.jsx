@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Check, Upload, X, ChevronDown, ChevronUp } from "lucide-react";
 
 const AcceptPaymentMember = ({
@@ -6,9 +6,12 @@ const AcceptPaymentMember = ({
   penaltyAmount,
   discountAmount,
   paidFees,
+  unpaidFeesFromEarlierPackages,
+  gatewayFee,
   meetingIds,
   onClose,
   onPaymentSuccess,
+  chapterMeetings,
 }) => {
   const [paymentType, setPaymentType] = useState("cash"); // cash or online
   const [selectedCashReceiver, setSelectedCashReceiver] = useState(""); // Admin receiving cash
@@ -16,16 +19,50 @@ const AcceptPaymentMember = ({
   const [paymentProof, setPaymentProof] = useState(null); // Online payment proof
   const [paymentDate] = useState(new Date().toLocaleDateString()); // Current date
   const [showMeetings, setShowMeetings] = useState(false); // Toggle meeting details
+  const [selectedMeetings, setSelectedMeetings] = useState([]);
+  const [amountPaid, setAmountPaid] = useState(0); // Amount paid by the member
+  const [minimumPayable, setMinimumPayable] = useState(0); // Minimum payable amount
+  const [loggedInAdmins, setLoggedInAdmins] = useState(["Admin1", "Admin2", "Admin3"]);
 
-  // Temporary arrays for cash and QR receivers
-  const cashReceivers = ["Admin1", "Admin2", "Admin3"];
-  const qrReceivers = [
-    { name: "Admin1" },
-    { name: "Admin2" },
-  ];
+  const [refreshAdmins, setRefreshAdmins] = useState(false);
 
+
+
+  const handleRefreshAdmins = () => {
+
+    // Simulate fetching logged-in admins
+
+    setRefreshAdmins(true);
+
+    setTimeout(() => {
+
+      setLoggedInAdmins(["Admin1", "Admin3"]); // Example update
+
+      setRefreshAdmins(false);
+
+    }, 1000);
+
+  };
+   // Temporary arrays for cash and QR receivers
+
+   const cashReceivers = ["Admin1", "Admin2", "Admin3"];
+
+   const qrReceivers = [
+ 
+     { name: "Admin1" },
+ 
+     { name: "Admin2" },
+ 
+   ];
   // Calculate the final amount
-  const finalAmount = totalFees + penaltyAmount - discountAmount - paidFees;
+  const finalAmount = totalFees + penaltyAmount - discountAmount - paidFees + unpaidFeesFromEarlierPackages + gatewayFee;
+
+  useEffect(() => {
+    if (meetingIds && chapterMeetings) {
+      const filteredMeetings = chapterMeetings.filter(meeting => meetingIds.includes(meeting.meetingId));
+      setSelectedMeetings(filteredMeetings);
+    }
+  }, [meetingIds, chapterMeetings]);
 
   const handlePaymentProofUpload = (e) => {
     const file = e.target.files[0];
@@ -35,12 +72,15 @@ const AcceptPaymentMember = ({
   };
 
   const handlePaymentSubmit = () => {
+    const dueAmount = finalAmount - amountPaid;
     console.log("Payment submitted:", {
       paymentType,
       selectedCashReceiver,
       selectedQRReceiver,
       paymentProof,
       paymentDate,
+      amountPaid,
+      dueAmount,
     });
     onPaymentSuccess(); // Notify parent component of successful payment
   };
@@ -67,8 +107,31 @@ const AcceptPaymentMember = ({
             <p>₹{totalFees} (Original Amount)</p>
             {penaltyAmount > 0 && <p className="text-red-500">+ ₹{penaltyAmount} (Penalty)</p>}
             {discountAmount > 0 && <p className="text-green-500">- ₹{discountAmount} (Discount)</p>}
-            {paidFees > 0 && <p className="text-gray-500">- ₹{paidFees} (Paid Previously)</p>}
+            {paidFees > 0 && <p className="text-blue-500">- ₹{paidFees} (Paid Previously)</p>}
+            {unpaidFeesFromEarlierPackages > 0 && (
+              <p className="text-orange-500">+ ₹{unpaidFeesFromEarlierPackages} (Unpaid Fees)</p>
+            )}
+            {gatewayFee > 0 && (
+              <p className="text-purple-500">+ ₹{gatewayFee} (Gateway Fee)</p>
+            )}
           </div>
+        </div>
+
+        {/* Partial Payment */}
+        <div className="mb-4">
+          <p className="text-gray-700 font-semibold">Amount to Pay:</p>
+          <input
+            type="number"
+            value={amountPaid}
+            onChange={(e) => setAmountPaid(Number(e.target.value))}
+            className="w-full p-2 border rounded-lg mt-2"
+            placeholder="Enter amount to pay"
+          />
+          {amountPaid < finalAmount && (
+            <p className="text-sm text-red-500 mt-2">
+              Due Amount: ₹{finalAmount - amountPaid}
+            </p>
+          )}
         </div>
 
         {/* Meetings Included */}
@@ -82,13 +145,18 @@ const AcceptPaymentMember = ({
             {showMeetings ? <ChevronUp className="ml-2" size={18} /> : <ChevronDown className="ml-2" size={18} />}
           </button>
           {showMeetings && (
-            <ul className="mt-2 text-gray-600 border-t pt-2">
-              {meetingIds.map((meeting, index) => (
-                <li key={index} className="text-sm">
-                  {meeting.date} - {meeting.time}
-                </li>
-              ))}
-            </ul>
+            <div className="mt-2">
+              {selectedMeetings.length > 0 ? (
+                selectedMeetings.map(meeting => (
+                  <div key={meeting.meetingId} className="border p-2 rounded mb-2">
+                    <p><strong>{meeting.meetingName}</strong></p>
+                    <p>{meeting.meetingDate} at {meeting.meetingTime}</p>
+                  </div>
+                ))
+              ) : (
+                <p>No meetings found</p>
+              )}
+            </div>
           )}
         </div>
 
@@ -117,26 +185,29 @@ const AcceptPaymentMember = ({
         {paymentType === "cash" && (
           <div className="mb-4">
             <p className="text-gray-700 font-semibold">Submitted Cash to:</p>
-            <select
-              className="w-full p-2 border rounded-lg mt-2"
-              value={selectedCashReceiver}
-              onChange={(e) => setSelectedCashReceiver(e.target.value)}
-            >
-              <option value="">Select Admin</option>
-              {cashReceivers.map((admin, index) => (
-                <option key={index} value={admin}>
-                  {admin}
-                </option>
-              ))}
-            </select>
-            {selectedCashReceiver && (
-              <p className="text-sm text-gray-600 mt-2">
-                Waiting for <strong>{selectedCashReceiver}</strong> to confirm the payment.
-              </p>
-            )}
+            <div className="flex items-center space-x-2">
+              <select
+                className="w-full p-2 border rounded-lg mt-2"
+                value={selectedCashReceiver}
+                onChange={(e) => setSelectedCashReceiver(e.target.value)}
+              >
+                <option value="">Select Admin</option>
+                {loggedInAdmins.map((admin, index) => (
+                  <option key={index} value={admin}>
+                    {admin}
+                  </option>
+                ))}
+              </select>
+              <button
+                onClick={handleRefreshAdmins}
+                className="p-2 bg-gray-200 rounded-lg hover:bg-gray-300"
+                disabled={refreshAdmins}
+              >
+                {refreshAdmins ? "Refreshing..." : "Refresh"}
+              </button>
+            </div>
           </div>
         )}
-
         {/* Online Payment Selection */}
         {paymentType === "online" && (
           <div className="mb-4">
@@ -145,11 +216,12 @@ const AcceptPaymentMember = ({
               {qrReceivers.map((receiver, index) => (
                 <div
                   key={index}
-                  className={`flex items-center space-x-4 p-2 border rounded-lg cursor-pointer ${selectedQRReceiver === receiver.name ? "border-blue-500" : "border-gray-300"
+                  className={`flex items-center space-x-4 p-2 border rounded-lg cursor-pointer m-1 ${selectedQRReceiver === receiver.name ? "border-blue-500" : "border-gray-300"
                     }`}
                   onClick={() => setSelectedQRReceiver(receiver.name)}
                 >
                   <span className="text-gray-700">{receiver.name}</span>
+                  <img src={receiver.qrImage} alt="QR Code" className="w-20 h-20" />
                 </div>
               ))}
             </div>
@@ -185,7 +257,6 @@ const AcceptPaymentMember = ({
             <Check size={18} />
             <span>Submit Payment</span>
           </button>
-
         </div>
       </div>
     </div>
