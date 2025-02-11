@@ -1,15 +1,23 @@
-import React, { useState } from "react";
-import Box from "@mui/material/Box";
-import AcceptPaymentMember from "./AcceptPaymentMember";
+import React, { useState } from 'react';
+import Box from '@mui/material/Box';
+import AcceptPaymentMember from './AcceptPaymentMember';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { TextField } from '@mui/material';
 
-const PackageAllowed = ({ packageData, parentType, chapterMeetings }) => {
+const PackageAllowed = ({
+  pendingPayments,
+  packageData,
+  parentType,
+  chapterMeetings,
+  paymentSuccessHandler,
+}) => {
   const [showUnpaidOnly, setShowUnpaidOnly] = useState(false);
   const [selectedPackage, setSelectedPackage] = useState(null);
   const [calculationDate, setCalculationDate] = useState(new Date());
+
+  console.log({ selectedPackage });
 
   // Helper function to check if any meetings within the package are paid
   const hasOverlappingPayments = (pkg) => {
@@ -21,7 +29,9 @@ const PackageAllowed = ({ packageData, parentType, chapterMeetings }) => {
 
   // Helper function to calculate unpaid fees from earlier packages
   const calculateUnpaidFeesFromEarlierPackages = (currentPackage) => {
-    const currentPackageIndex = packageData.findIndex((pkg) => pkg.packageId === currentPackage.packageId);
+    const currentPackageIndex = packageData.findIndex(
+      (pkg) => pkg.packageId === currentPackage.packageId,
+    );
     let unpaidFees = 0;
 
     // Loop through earlier packages
@@ -41,7 +51,12 @@ const PackageAllowed = ({ packageData, parentType, chapterMeetings }) => {
 
     // Disable package if allowAfterEndDate is false and calculationDate is after payableEndDate
     if (!pkg.allowAfterEndDate && calculationDate > payableEndDate) {
-      return { totalAmount: null, penaltyAmount: null, discountAmount: null, isDisabled: true };
+      return {
+        totalAmount: null,
+        penaltyAmount: null,
+        discountAmount: null,
+        isDisabled: true,
+      };
     }
 
     // Calculate penalty and discount as before
@@ -51,16 +66,16 @@ const PackageAllowed = ({ packageData, parentType, chapterMeetings }) => {
 
     const getDuration = (type, days) => {
       switch (type) {
-        case "Daily":
+        case 'Daily':
           return days;
-        case "Weekly":
+        case 'Weekly':
           return Math.ceil(days / 7);
-        case "Monthly":
+        case 'Monthly':
           return Math.ceil(days / 30);
-        case "Quarterly":
+        case 'Quarterly':
           return Math.ceil(days / 90);
-        case "lumpsum":
-        case "Meetingly":
+        case 'lumpsum':
+        case 'Meetingly':
           return 1; // Fixed for meeting-based penalty/discount
         default:
           return 0;
@@ -69,14 +84,26 @@ const PackageAllowed = ({ packageData, parentType, chapterMeetings }) => {
 
     // Calculate discount
     if (calculationDate <= new Date(pkg.discountEndDate)) {
-      const daysRemainingForDiscount = Math.ceil((new Date(pkg.discountEndDate) - calculationDate) / (1000 * 60 * 60 * 24));
-      discountAmount = getDuration(pkg.discountType, daysRemainingForDiscount) * pkg.discountAmount;
+      const daysRemainingForDiscount = Math.ceil(
+        (new Date(pkg.discountEndDate) - calculationDate) /
+          (1000 * 60 * 60 * 24),
+      );
+      discountAmount =
+        getDuration(pkg.discountType, daysRemainingForDiscount) *
+        pkg.discountAmount;
     }
 
     // Calculate penalty
-    if (calculationDate > payableEndDate && pkg.allowPenaltyPayableAfterEndDate) {
-      const daysExceededForPenalty = Math.ceil((calculationDate - payableEndDate) / (1000 * 60 * 60 * 24));
-      penaltyAmount = getDuration(pkg.penaltyType, daysExceededForPenalty) * pkg.penaltyAmount;
+    if (
+      calculationDate > payableEndDate &&
+      pkg.allowPenaltyPayableAfterEndDate
+    ) {
+      const daysExceededForPenalty = Math.ceil(
+        (calculationDate - payableEndDate) / (1000 * 60 * 60 * 24),
+      );
+      penaltyAmount =
+        getDuration(pkg.penaltyType, daysExceededForPenalty) *
+        pkg.penaltyAmount;
     }
 
     // Adjust based on already paid meetings
@@ -85,14 +112,18 @@ const PackageAllowed = ({ packageData, parentType, chapterMeetings }) => {
 
     paidFees = Array.isArray(pkg.meetingIds)
       ? pkg.meetingIds.reduce((sum, meetingId) => {
-        const meeting = chapterMeetings.find((m) => m.meetingId === meetingId);
-        return sum + (meeting && meeting.isPaid ? meeting.meetingFeeMembers : 0);
-      }, 0)
+          const meeting = chapterMeetings.find(
+            (m) => m.meetingId === meetingId,
+          );
+          return (
+            sum + (meeting && meeting.isPaid ? meeting.meetingFeeMembers : 0)
+          );
+        }, 0)
       : 0;
 
-
     // Add unpaid fees from earlier packages
-    const unpaidFeesFromEarlierPackages = calculateUnpaidFeesFromEarlierPackages(pkg);
+    const unpaidFeesFromEarlierPackages =
+      calculateUnpaidFeesFromEarlierPackages(pkg);
     adjustedPackageFee += unpaidFeesFromEarlierPackages;
 
     // Add service fee (2.5%)
@@ -106,7 +137,8 @@ const PackageAllowed = ({ packageData, parentType, chapterMeetings }) => {
       paidFees,
       unpaidFeesFromEarlierPackages,
       serviceFee,
-      isDisabled: (!pkg.allowAfterEndDate && calculationDate > payableEndDate) ||
+      isDisabled:
+        (!pkg.allowAfterEndDate && calculationDate > payableEndDate) ||
         (!pkg.allowPackagePurchaseIfFeesPaid && hasOverlappingPayments(pkg)),
     };
   };
@@ -117,6 +149,7 @@ const PackageAllowed = ({ packageData, parentType, chapterMeetings }) => {
 
   const handlePaymentSuccess = () => {
     setSelectedPackage(null);
+    paymentSuccessHandler();
   };
 
   const filteredPackages = packageData
@@ -156,14 +189,21 @@ const PackageAllowed = ({ packageData, parentType, chapterMeetings }) => {
       {/* Package Cards */}
       <Box className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 p-4">
         {filteredPackages.map((pkg) => {
-          const { totalAmount, penaltyAmount, discountAmount, unpaidFeesFromEarlierPackages, serviceFee, isDisabled } =
-            calculateDisplayAmounts(pkg);
+          const {
+            totalAmount,
+            penaltyAmount,
+            discountAmount,
+            unpaidFeesFromEarlierPackages,
+            serviceFee,
+            isDisabled,
+          } = calculateDisplayAmounts(pkg);
 
           return (
             <div
               key={pkg.packageId}
-              className={`bg-white shadow-md rounded-lg p-6 border border-gray-200 hover:shadow-lg ${isDisabled ? "opacity-50 cursor-not-allowed" : ""
-                }`}
+              className={`bg-white shadow-md rounded-lg p-6 border border-gray-200 hover:shadow-lg ${
+                isDisabled ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
             >
               <h2 className="text-xl font-bold mb-2">{pkg.packageName}</h2>
               {!isDisabled && totalAmount !== null ? (
@@ -174,13 +214,22 @@ const PackageAllowed = ({ packageData, parentType, chapterMeetings }) => {
                       <span className="text-red-500"> + ₹{penaltyAmount}</span>
                     )}
                     {discountAmount > 0 && (
-                      <span className="text-green-500"> - ₹{discountAmount}</span>
+                      <span className="text-green-500">
+                        {' '}
+                        - ₹{discountAmount}
+                      </span>
                     )}
                     {unpaidFeesFromEarlierPackages > 0 && (
-                      <span className="text-orange-500"> + ₹{unpaidFeesFromEarlierPackages} (Unpaid Fees)</span>
+                      <span className="text-orange-500">
+                        {' '}
+                        + ₹{unpaidFeesFromEarlierPackages} (Unpaid Fees)
+                      </span>
                     )}
                     {serviceFee > 0 && (
-                      <span className="text-purple-500"> + ₹{serviceFee} (Service Fee)</span>
+                      <span className="text-purple-500">
+                        {' '}
+                        + ₹{serviceFee} (Service Fee)
+                      </span>
                     )}
                     = ₹{totalAmount}
                   </p>
@@ -190,7 +239,7 @@ const PackageAllowed = ({ packageData, parentType, chapterMeetings }) => {
                   <button
                     className="mt-4 bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-700"
                     onClick={() => handlePayClick(pkg)}
-                    disabled={isDisabled}
+                    disabled={isDisabled || pendingPayments.length > 0}
                   >
                     Pay Now
                   </button>
@@ -206,11 +255,17 @@ const PackageAllowed = ({ packageData, parentType, chapterMeetings }) => {
       {/* Payment Component */}
       {selectedPackage && (
         <AcceptPaymentMember
+          selectedPackage={selectedPackage}
           totalFees={selectedPackage.packageFeeAmount}
           penaltyAmount={calculateDisplayAmounts(selectedPackage).penaltyAmount}
-          discountAmount={calculateDisplayAmounts(selectedPackage).discountAmount}
+          discountAmount={
+            calculateDisplayAmounts(selectedPackage).discountAmount
+          }
           paidFees={calculateDisplayAmounts(selectedPackage).paidFees}
-          unpaidFeesFromEarlierPackages={calculateDisplayAmounts(selectedPackage).unpaidFeesFromEarlierPackages}
+          unpaidFeesFromEarlierPackages={
+            calculateDisplayAmounts(selectedPackage)
+              .unpaidFeesFromEarlierPackages
+          }
           serviceFee={calculateDisplayAmounts(selectedPackage).serviceFee}
           meetingIds={selectedPackage.meetingIds}
           onClose={() => setSelectedPackage(null)}

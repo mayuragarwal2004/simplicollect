@@ -4,7 +4,7 @@ const meetingController = require("../controllers/meetingController");
 
 const router = express.Router();
 
-router.get("/meetings", meetingController.getAllMeetings);
+router.get("/meetings/:chapterId", meetingController.getAllMeetings);
 router.put("/:meetingId/pay", meetingController.updatePaymentStatus);
 
 module.exports = router;

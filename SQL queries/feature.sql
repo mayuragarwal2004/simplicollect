@@ -30,7 +30,13 @@ CREATE TABLE simplicollect.roles (
   FOREIGN KEY (chapterId) REFERENCES chapters(chapterId) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 
-INSERT INTO simplicollect.roles (roleId, roleName, removeable, roleDescription, chapterId) VALUES ('1', 'President', 0, 'President', '1'), ('2', 'Vice President', 0, 'Vice President', '1'), ('3', 'Secretary', 0, 'Secretary', '1'), ('4', 'Treasurer', 0, 'Treasurer', '1'), ('5', 'Member', 0, 'Member', '1'), ('6', 'Visitor', 0, 'Visitor', '1');
+INSERT INTO simplicollect.roles (roleId, roleName, removeable, roleDescription, chapterId) VALUES 
+('1', 'President', 0, 'President', '1', "member_fees,member_list,perosnal_profile,visitor_approval_list,visitor_reports,chapter_settings"), 
+('2', 'Vice President', 0, 'Vice President', '1', "member_fees,member_list,perosnal_profile,visitor_approval_list,visitor_reports,chapter_settings"),
+('3', 'Secretary', 0, 'Secretary', '1', "member_fees,member_list,perosnal_profile,visitor_approval_list,visitor_reports,chapter_settings"), 
+('4', 'Treasurer', 0, 'Treasurer', '1', "member_fees,member_list,perosnal_profile,visitor_approval_list,visitor_reports,chapter_settings"), 
+('5', 'Member', 0, 'Member', '1', "member_fees,member_list,perosnal_profile,visitor_approval_list,visitor_reports,chapter_settings"), 
+('6', 'Visitor', 0, 'Visitor', '1', "member_fees,member_list,perosnal_profile,visitor_approval_list,visitor_reports,chapter_settings"),;
 
 
 

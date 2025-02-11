@@ -2,8 +2,11 @@
 const Meeting = require("../models/meetingModel");
 
 const getAllMeetings = async (req, res) => {
+  const { memberId } = req.user;
+  const { chapterId } = req.query;
+
   try {
-    const meetings = await Meeting.getAllMeetings();
+    const meetings = await Meeting.getAllMeetingsUsingMemberIdAndChapterId(memberId, chapterId);
     res.json(meetings);
   } catch (error) {
     console.error("Error fetching meetings:", error);

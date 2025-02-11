@@ -11,6 +11,14 @@ const getAllMeetings = async () => {
         .select("*");
 }
 
+const getAllMeetingsUsingMemberIdAndChapterId = async (memberId, chapterId) => {
+    return db("meetings")
+        .join("membersmeetingmapping", "meetings.meetingId", "membersmeetingmapping.meetingId")
+        .where("membersmeetingmapping.memberId", memberId)
+        .andWhere("meetings.chapterId", chapterId)
+        .select("*");
+}
+
 const updatePaymentStatus= async (meetingId, paymentStatus) => {
     return db("meetings")
         .where("meetingId", meetingId)
@@ -21,5 +29,6 @@ const updatePaymentStatus= async (meetingId, paymentStatus) => {
 module.exports = {
     getMeetingById,
     getAllMeetings,
+    getAllMeetingsUsingMemberIdAndChapterId,
     updatePaymentStatus
 };

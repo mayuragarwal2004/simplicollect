@@ -7,6 +7,7 @@ const memberRoutes = require("./routes/memberRoutes");
 const rightsRoutes = require("./routes/rightsRoutes");
 const imageUploadRoutes = require("./routes/imageUploadRoutes");
 const packageRoutes = require("./routes/packageRoutes");
+const paymentRoutes = require("./routes/paymentRoutes");
 const meetingRoutes = require("./routes/meetingRoutes");
 
 const { authenticateToken } = require("./middlewares/authMiddleware");
@@ -23,8 +24,9 @@ app.use("/api/visitor", visitorRoutes);
 app.use("/api/chapter", authenticateToken, chapterRoutes);
 app.use("/api/member", authenticateToken, memberRoutes);
 app.use("/api/rights", authenticateToken, rightsRoutes);
-app.use("/api/image-upload", authenticateToken, imageUploadRoutes)
+app.use("/api/image-upload", authenticateToken, imageUploadRoutes);
 app.use("/api/packages", packageRoutes);
+app.use("/api/payment", authenticateToken, paymentRoutes);
 app.use("/api/meetings", meetingRoutes);
 
 app.use("/api/*", (req, res) => {

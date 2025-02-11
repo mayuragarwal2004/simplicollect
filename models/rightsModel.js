@@ -15,25 +15,16 @@ const getRightsByMemberIdAndChapterId = async (memberId, chapterId) => {
     fm.featureUrl,
     fm.featureIcon,
     fm.featureOrder,
-    fm.featureDisabled,
-    r.rightId,
-    r.rightName,
-    r.rightDescription,
-    r.rightDisabled,
-    ro.roleId,
-    ro.roleName,
-    ro.roleDescription
+    fm.featureDisabled
 FROM 
     memberChapterMapping mcm
 JOIN 
     roles ro ON mcm.roleId = ro.roleId
 JOIN 
-    rights r ON ro.roleId = r.roleId
-JOIN 
-    featuresMaster fm ON r.featureId = fm.featureId
+    featuresMaster fm ON FIND_IN_SET(fm.featureId, ro.rights) > 0
 WHERE 
     mcm.memberId = ? 
-    AND mcm.chapterId = ?;`,
+    AND mcm.chapterId = ? ;`,
     [memberId, chapterId]
   );
 };
