@@ -28,38 +28,13 @@ CREATE TABLE chapters (
 );
 
 
-CREATE TABLE roles (
-  roleId VARCHAR(255) PRIMARY KEY,
-  roleName VARCHAR(255) NOT NULL, -- President, Vice President, Secretary & Treasurer,
-  --  Membership Committee(MC): Growth Coordinator, Attendance Coordinator, Refferal Coordinator, Training Coordinator, Business Coordinator,
-  -- Lead Visitor Host, Visitor Host
-  -- Director Consultant
-  -- Region Admin
-  roleDescription TEXT
-);
-
-CREATE TABLE tasks (
-  taskId VARCHAR(255) PRIMARY KEY,
-  taskName VARCHAR(255) NOT NULL
-);
--- add member, remove member, change/update/modify fees, waive off fee, change/update/modify community details, view reports, download reports, accept payment, 
-
-CREATE TABLE rights (
-  chapterId VARCHAR(255) NOT NULL,
-  rightId VARCHAR(255) PRIMARY KEY,
-  taskId VARCHAR(255) NOT NULL,
-  rightName VARCHAR(255) NOT NULL,
-  rightDescription TEXT,
-  FOREIGN KEY (chapterId) REFERENCES chapters(chapterId) ON DELETE CASCADE,
-  FOREIGN KEY (taskId) REFERENCES tasks(taskId) ON DELETE CASCADE
-);
--- Leadership - allowed to add member, remove member, change/update/modify fees, waive off fee, change/update/modify community details, view reports, download reports, accept payment,
-
 CREATE TABLE memberChapterMapping (
   memberId VARCHAR(255) NOT NULL,
   chapterId VARCHAR(255) NOT NULL,
+  roleId VARCHAR(255) NOT NULL,
   FOREIGN KEY (memberId) REFERENCES members(memberId) ON DELETE CASCADE,
-  FOREIGN KEY (chapterId) REFERENCES chapters(chapterId) ON DELETE CASCADE
+  FOREIGN KEY (chapterId) REFERENCES chapters(chapterId) ON DELETE CASCADE,
+  FOREIGN KEY (roleId) REFERENCES roles(roleId) ON DELETE CASCADE
 );
 
 CREATE TABLE members (
