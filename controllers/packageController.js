@@ -1,5 +1,6 @@
 // controllers/packageController.js
 const Package = require("../models/packageModel");
+const { getPendingMeetings, approveMeeting } = require("../models/packageModel");
 
 const getAllPackages = async (req, res) => {
   try {
@@ -36,8 +37,35 @@ const getPackageById = async (req, res) => {
   }
 };
 
+
+
+const fetchPendingMeetings = async (req, res) => {
+  try {
+    const pendingMeetings = await getPendingMeetings();
+    res.status(200).json({ success: true, data: pendingMeetings });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: "Server Error" });
+  }
+};
+
+const approvedMeeting = async (req, res) => {
+  const { memberId } = req.body; // Use req.body for POST requests
+  try {
+    const updatedRows = await approveMeeting(memberId);
+    if (!updatedRows) {
+      return res.status(404).json({ success: false, message: "Member not found" });
+    }
+    res.status(200).json({ success: true, message: "Meeting approved successfully" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: "Server Error" });
+  }
+};
 module.exports = {
   getAllPackages,
   getPackagesByParentType,
   getPackageById,
+  fetchPendingMeetings,
+  approveMeeting,
 };

@@ -22,6 +22,7 @@ import ShareForm from './pages/Visitor/ShareForm';
 import VisitorList from './pages/Visitor/VisitorList';
 import MemberList from './pages/Member/MemberList';
 import MemberFeeManager from './pages/Member/MemberFeeManager';
+import MemberFeeApproval from './pages/Member/MemberFeeApproval';
 import RequireAuth from './utils/RequireAut';
 import { Bounce, ToastContainer } from 'react-toastify';
 
@@ -80,6 +81,15 @@ function App() {
               <>
                 <PageTitle title="Member List | SimpliCollect - Meeting Fee Manager" />
                 <MemberFeeManager />
+              </>
+            }
+          />
+          <Route
+            path="/member/fee_approval"
+            element={
+              <>
+                <PageTitle title="Member Fee Approval | SimpliCollect - Meeting Fee Manager" />
+                <MemberFeeApproval />
               </>
             }
           />

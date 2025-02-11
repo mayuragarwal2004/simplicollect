@@ -105,9 +105,9 @@ const AcceptPaymentMember = ({
           </div>
         </div>
 
-        {/* Partial Payment */}
+        {/* Partial Payment
         <div className="mb-4">
-          <p className="text-gray-700 font-semibold">Amount to Pay:</p>
+          <p className="text-gray-700 font-semibold">Amount Being Paid:</p>
           <input
             type="number"
             value={amountPaid}
@@ -120,7 +120,7 @@ const AcceptPaymentMember = ({
               Due Amount: ₹{finalAmount - amountPaid}
             </p>
           )}
-        </div>
+        </div> */}
 
         {/* Meetings Included */}
         <div className="mb-4">
