@@ -83,21 +83,21 @@ const PackageAllowed = ({ packageData, parentType, chapterMeetings }) => {
     let adjustedPackageFee = totalAmount + penaltyAmount - discountAmount;
     let paidFees = 0;
 
-    if (pkg.allowPackagePurchaseIfFeesPaid && pkg.meetingIds) {
-      paidFees = pkg.meetingIds.reduce((sum, meetingId) => {
+    paidFees = Array.isArray(pkg.meetingIds)
+      ? pkg.meetingIds.reduce((sum, meetingId) => {
         const meeting = chapterMeetings.find((m) => m.meetingId === meetingId);
         return sum + (meeting && meeting.isPaid ? meeting.meetingFeeMembers : 0);
-      }, 0);
-      adjustedPackageFee -= paidFees;
-    }
+      }, 0)
+      : 0;
+
 
     // Add unpaid fees from earlier packages
     const unpaidFeesFromEarlierPackages = calculateUnpaidFeesFromEarlierPackages(pkg);
     adjustedPackageFee += unpaidFeesFromEarlierPackages;
 
-    // Add gateway fee (2.5%)
-    const gatewayFee = adjustedPackageFee * 0.025;
-    const totalPayableAmount = adjustedPackageFee + gatewayFee;
+    // Add service fee (2.5%)
+    const serviceFee = adjustedPackageFee * 0.025;
+    const totalPayableAmount = adjustedPackageFee + serviceFee;
 
     return {
       totalAmount: totalPayableAmount,
@@ -105,7 +105,7 @@ const PackageAllowed = ({ packageData, parentType, chapterMeetings }) => {
       discountAmount,
       paidFees,
       unpaidFeesFromEarlierPackages,
-      gatewayFee,
+      serviceFee,
       isDisabled: (!pkg.allowAfterEndDate && calculationDate > payableEndDate) ||
         (!pkg.allowPackagePurchaseIfFeesPaid && hasOverlappingPayments(pkg)),
     };
@@ -156,15 +156,14 @@ const PackageAllowed = ({ packageData, parentType, chapterMeetings }) => {
       {/* Package Cards */}
       <Box className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 p-4">
         {filteredPackages.map((pkg) => {
-          const { totalAmount, penaltyAmount, discountAmount, unpaidFeesFromEarlierPackages, gatewayFee, isDisabled } =
+          const { totalAmount, penaltyAmount, discountAmount, unpaidFeesFromEarlierPackages, serviceFee, isDisabled } =
             calculateDisplayAmounts(pkg);
 
           return (
             <div
               key={pkg.packageId}
-              className={`bg-white shadow-md rounded-lg p-6 border border-gray-200 hover:shadow-lg ${
-                isDisabled ? "opacity-50 cursor-not-allowed" : ""
-              }`}
+              className={`bg-white shadow-md rounded-lg p-6 border border-gray-200 hover:shadow-lg ${isDisabled ? "opacity-50 cursor-not-allowed" : ""
+                }`}
             >
               <h2 className="text-xl font-bold mb-2">{pkg.packageName}</h2>
               {!isDisabled && totalAmount !== null ? (
@@ -180,8 +179,8 @@ const PackageAllowed = ({ packageData, parentType, chapterMeetings }) => {
                     {unpaidFeesFromEarlierPackages > 0 && (
                       <span className="text-orange-500"> + ₹{unpaidFeesFromEarlierPackages} (Unpaid Fees)</span>
                     )}
-                    {gatewayFee > 0 && (
-                      <span className="text-purple-500"> + ₹{gatewayFee} (Gateway Fee)</span>
+                    {serviceFee > 0 && (
+                      <span className="text-purple-500"> + ₹{serviceFee} (Service Fee)</span>
                     )}
                     = ₹{totalAmount}
                   </p>
@@ -212,7 +211,7 @@ const PackageAllowed = ({ packageData, parentType, chapterMeetings }) => {
           discountAmount={calculateDisplayAmounts(selectedPackage).discountAmount}
           paidFees={calculateDisplayAmounts(selectedPackage).paidFees}
           unpaidFeesFromEarlierPackages={calculateDisplayAmounts(selectedPackage).unpaidFeesFromEarlierPackages}
-          gatewayFee={calculateDisplayAmounts(selectedPackage).gatewayFee}
+          serviceFee={calculateDisplayAmounts(selectedPackage).serviceFee}
           meetingIds={selectedPackage.meetingIds}
           onClose={() => setSelectedPackage(null)}
           onPaymentSuccess={handlePaymentSuccess}

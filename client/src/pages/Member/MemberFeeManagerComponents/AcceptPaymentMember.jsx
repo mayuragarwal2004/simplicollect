@@ -30,30 +30,18 @@ const AcceptPaymentMember = ({
 
   const handleRefreshAdmins = () => {
 
-    // Simulate fetching logged-in admins
-
     setRefreshAdmins(true);
-
     setTimeout(() => {
-
       setLoggedInAdmins(["Admin1", "Admin3"]); // Example update
-
       setRefreshAdmins(false);
-
     }, 1000);
 
   };
-   // Temporary arrays for cash and QR receivers
-
-   const cashReceivers = ["Admin1", "Admin2", "Admin3"];
-
-   const qrReceivers = [
- 
-     { name: "Admin1" },
- 
-     { name: "Admin2" },
- 
-   ];
+  const cashReceivers = ["Admin1", "Admin2", "Admin3"];
+  const qrReceivers = [
+    { name: "Admin1" },
+    { name: "Admin2" },
+  ];
   // Calculate the final amount
   const finalAmount = totalFees + penaltyAmount - discountAmount - paidFees + unpaidFeesFromEarlierPackages + gatewayFee;
 
