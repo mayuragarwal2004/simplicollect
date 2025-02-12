@@ -6,6 +6,7 @@ import { ChevronDown } from 'lucide-react';
 import iconMap from './IconMap';
 import { useData } from '../../context/DataContext';
 import { axiosInstance } from '../../utils/config';
+import { useAuth } from '../../context/AuthContext';
 
 interface SidebarProps {
   sidebarOpen: boolean;
@@ -14,6 +15,7 @@ interface SidebarProps {
 
 const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
   const { chapterData } = useData();
+  const { isAuthenticated } = useAuth();
   const [rightsData, setRightsData] = useState<any>([]);
   const location = useLocation();
   const { pathname } = location;
@@ -63,10 +65,9 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
 
   useEffect(() => {
     getRightData();
-  }, []);
+  }, [isAuthenticated]);
 
   console.log({ rightsData });
-  
 
   const getRightData = async () => {
     try {
