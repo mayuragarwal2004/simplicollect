@@ -2,24 +2,26 @@
 const db = require("../config/db");
 
 const getPackageById = async (packageId) => {
-    return db("packages")
-        .where("packageId", packageId)
-        .select("*");
-}
+  return db("packages")
+    .where("packageId", packageId)
+    .leftJoin("transactions", "packages.packageId", "transactions.packageId")
+    .select("*");
+};
 
 const getPackagesByParentType = async (parentType) => {
-    return db("packages")
-        .where("packageParent", parentType) // Ensure the column name matches your database schema
-        .select("*");
+  return db("packages")
+    .where("packageParent", parentType)
+    .leftJoin("transactions", "packages.packageId", "transactions.packageId")
+    .select("*");
 };
 const getAllPackages = async () => {
-    return db("packages")
-        .select("*");
-}
-
+  return db("packages")
+    .leftJoin("transactions", "packages.packageId", "transactions.packageId")
+    .select("*");
+};
 
 module.exports = {
-    getPackageById,
-    getAllPackages,
-    getPackagesByParentType,
+  getPackageById,
+  getAllPackages,
+  getPackagesByParentType,
 };
