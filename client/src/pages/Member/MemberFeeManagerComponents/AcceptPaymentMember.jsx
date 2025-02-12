@@ -14,6 +14,8 @@ const AcceptPaymentMember = ({
   onPaymentSuccess,
   chapterMeetings,
   selectedPackage,
+  cashReceivers,
+  qrReceivers,
 }) => {
   const [paymentType, setPaymentType] = useState('cash'); // cash or online
   const [selectedCashReceiver, setSelectedCashReceiver] = useState(''); // Admin receiving cash
@@ -33,37 +35,15 @@ const AcceptPaymentMember = ({
 
   const [amountPaid, setAmountPaid] = useState(finalAmount); // Amount paid by the member
   const [minimumPayable, setMinimumPayable] = useState(0); // Minimum payable amount
-  const [loggedInAdmins, setLoggedInAdmins] = useState([
-    { memberId: '1', name: 'Rishikesh' },
-    { memberId: 'efvelvhubrerikbjv', name: 'Manoj' },
-    { memberId: 'ekgvrjennivrnnienbiv', name: 'Khushboo' },
-  ]);
-  const [qrCodeReceivers, setQrCodeReceivers] = useState([
-    {
-      memberId: '1',
-      name: "Rishikesh's QR",
-      qrImage: 'https://via.placeholder.com/150',
-    },
-    {
-      memberId: 'efvelvhubrerikbjv',
-      name: "Manoj's QR",
-      qrImage: 'https://via.placeholder.com/150',
-    },
-    {
-      memberId: 'ekgvrjennivrnnienbiv',
-      name: "Khushboo's QR",
-      qrImage: 'https://via.placeholder.com/150',
-    },
-  ]); // QR code receivers
 
   const [refreshAdmins, setRefreshAdmins] = useState(false);
 
   const handleRefreshAdmins = () => {
-    setRefreshAdmins(true);
-    setTimeout(() => {
-      setLoggedInAdmins(['Admin1', 'Admin3']); // Example update
-      setRefreshAdmins(false);
-    }, 1000);
+    // setRefreshAdmins(true);
+    // setTimeout(() => {
+    //   setLoggedInAdmins(['Admin1', 'Admin3']); // Example update
+    //   setRefreshAdmins(false);
+    // }, 1000);
   };
   // Calculate the final amount
 
@@ -130,14 +110,14 @@ const AcceptPaymentMember = ({
       paymentImageLink: paymentProofLink,
       cashPaymentReceivedById: selectedCashReceiver,
       cashPaymentReceivedByName: selectedCashReceiver
-        ? loggedInAdmins.find(
-            (admin) => admin.memberId === selectedCashReceiver,
-          )?.name
+        ? cashReceivers.find(
+            (receiver) => receiver.memberId === selectedCashReceiver,
+          )?.cashRecieverName
         : '',
       onlinePaymentReceivedById: selectedQRReceiver,
       onlinePaymentReceivedByName: selectedQRReceiver
-        ? qrCodeReceivers.find((admin) => admin.memberId === selectedQRReceiver)
-            ?.name
+        ? qrReceivers.find((receiver) => receiver.memberId === selectedQRReceiver)
+            ?.qrCodeName
         : '',
     };
     const response = await axiosInstance
@@ -293,9 +273,9 @@ const AcceptPaymentMember = ({
                 <option disabled value="">
                   Select Admin
                 </option>
-                {loggedInAdmins.map((adminValue, index) => (
+                {cashReceivers.map((adminValue, index) => (
                   <option key={adminValue.memberId} value={adminValue.memberId}>
-                    {adminValue.name}
+                    {adminValue.cashRecieverName}
                   </option>
                 ))}
               </select>
@@ -314,19 +294,19 @@ const AcceptPaymentMember = ({
           <div className="mb-4">
             <p className="text-gray-700 font-semibold">Paid Online to:</p>
             <div className="mt-2">
-              {qrCodeReceivers.map((receiver, index) => (
+              {qrReceivers.map((receiver, index) => (
                 <div
                   key={index}
                   className={`flex items-center space-x-4 p-2 border rounded-lg cursor-pointer m-1 ${
-                    selectedQRReceiver === receiver.name
+                    selectedQRReceiver === receiver.qrCodeName
                       ? 'border-blue-500'
                       : 'border-gray-300'
                   }`}
-                  onClick={() => setSelectedQRReceiver(receiver.name)}
+                  onClick={() => setSelectedQRReceiver(receiver.qrCodeName)}
                 >
-                  <span className="text-gray-700">{receiver.name}</span>
+                  <span className="text-gray-700">{receiver.qrCodeName}</span>
                   <img
-                    src={receiver.qrImage}
+                    src={receiver.qrImageLink}
                     alt="QR Code"
                     className="w-20 h-20"
                   />

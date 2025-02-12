@@ -12,6 +12,8 @@ const MemberFeeManager = () => {
   const [chapterMeetings, setChapterMeetings] = useState([]);
   const [packageData, setPackageData] = useState([]);
   const [pendingPayments, setPendingPayments] = useState([]);
+  const [cashReceivers, setCashReceivers] = useState([]);
+  const [qrReceivers, setQrReceivers] = useState([]);
   const { chapterData } = useData();
 
   const [chapterFeeConfig] = React.useState({
@@ -22,7 +24,8 @@ const MemberFeeManager = () => {
 
   // Fetch meetings data
   useEffect(() => {
-    axiosInstance.get(`/api/meetings/meetings/${chapterData.chapterId}`)
+    axiosInstance
+      .get(`/api/meetings/meetings/${chapterData.chapterId}`)
       .then((data) => {
         console.log('Fetched Meetings:', data.data);
         setChapterMeetings(data.data);
@@ -47,7 +50,8 @@ const MemberFeeManager = () => {
     }
 
     // Fetch packages by parentType
-    axiosInstance.get(`/api/packages/parent/${parentType}`)
+    axiosInstance
+      .get(`/api/packages/parent/${parentType}`)
       .then((data) => {
         console.log(`Fetched ${parentType} Packages:`, data.data);
         setPackageData(data.data);
@@ -70,8 +74,32 @@ const MemberFeeManager = () => {
       );
   };
 
+  const fetchCurrentCashReceivers = () => {
+    // Fetch cash receivers
+    axiosInstance
+      .get(`/api/feeReciever/currentCashReceivers/${chapterData.chapterId}`)
+      .then((data) => {
+        console.log('Fetched Cash Receivers:', data.data);
+        setCashReceivers(data.data);
+      })
+      .catch((error) => console.error('Error fetching cash receivers:', error));
+  };
+
+  const fetchCurrentQrReceivers = () => {
+    // Fetch QR receivers
+    axiosInstance
+      .get(`/api/feeReciever/currentQRReceivers/${chapterData.chapterId}`)
+      .then((data) => {
+        console.log('Fetched QR Receivers:', data.data);
+        setQrReceivers(data.data);
+      })
+      .catch((error) => console.error('Error fetching QR receivers:', error));
+  };
+
   useEffect(() => {
     fetchPendingPayments();
+    fetchCurrentCashReceivers();
+    fetchCurrentQrReceivers();
   }, []);
 
   const handleDeleteRequest = (transactionId) => {
@@ -169,6 +197,8 @@ const MemberFeeManager = () => {
               paymentSuccessHandler={paymentSuccessHandler}
               parentType="Monthly"
               chapterMeetings={chapterMeetings}
+              cashReceivers={cashReceivers}
+              qrReceivers={qrReceivers}
             />
           </CustomTabPanel>
         )}
@@ -180,6 +210,8 @@ const MemberFeeManager = () => {
               paymentSuccessHandler={paymentSuccessHandler}
               parentType="Quarterly"
               chapterMeetings={chapterMeetings}
+              cashReceivers={cashReceivers}
+              qrReceivers={qrReceivers}
             />
           </CustomTabPanel>
         )}

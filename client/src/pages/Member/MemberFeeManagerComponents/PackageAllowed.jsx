@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Box from '@mui/material/Box';
 import AcceptPaymentMember from './AcceptPaymentMember';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { TextField } from '@mui/material';
+import { axiosInstance } from '../../../utils/config';
+import { useData } from '../../../context/DataContext';
 
 const PackageAllowed = ({
   pendingPayments,
@@ -12,6 +14,8 @@ const PackageAllowed = ({
   parentType,
   chapterMeetings,
   paymentSuccessHandler,
+  cashReceivers,
+  qrReceivers,
 }) => {
   const [showUnpaidOnly, setShowUnpaidOnly] = useState(false);
   const [selectedPackage, setSelectedPackage] = useState(null);
@@ -271,6 +275,8 @@ const PackageAllowed = ({
           onClose={() => setSelectedPackage(null)}
           onPaymentSuccess={handlePaymentSuccess}
           chapterMeetings={chapterMeetings}
+          cashReceivers={cashReceivers}
+          qrReceivers={qrReceivers}
         />
       )}
     </div>
