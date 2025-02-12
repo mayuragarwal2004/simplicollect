@@ -9,4 +9,4 @@ router.get("/id/:packageId", packageController.getPackageById);
 router.get("/pending", packageController.fetchPendingMeetings);    
 // router.get("/aprove/:memberId", packageController.approvedMeeting);
 
-module.exports = router; // Correct export
+module.exports = router;

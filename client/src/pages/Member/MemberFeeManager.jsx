@@ -23,10 +23,9 @@ const MemberFeeManager = () => {
   // Fetch meetings data
   useEffect(() => {
     axiosInstance.get(`/api/meetings/meetings/${chapterData.chapterId}`)
-      .then((response) => response.json())
       .then((data) => {
-        console.log('Fetched Meetings:', data);
-        setChapterMeetings(data);
+        console.log('Fetched Meetings:', data.data);
+        setChapterMeetings(data.data);
       })
       .catch((error) => console.error('Error fetching meetings:', error));
   }, []);
@@ -48,11 +47,10 @@ const MemberFeeManager = () => {
     }
 
     // Fetch packages by parentType
-    fetch(`/api/packages/parent/${parentType}`)
-      .then((response) => response.json())
+    axiosInstance.get(`/api/packages/parent/${parentType}`)
       .then((data) => {
-        console.log(`Fetched ${parentType} Packages:`, data);
-        setPackageData(data);
+        console.log(`Fetched ${parentType} Packages:`, data.data);
+        setPackageData(data.data);
       })
       .catch((error) =>
         console.error(`Error fetching ${parentType} packages:`, error),
@@ -76,9 +74,9 @@ const MemberFeeManager = () => {
     fetchPendingPayments();
   }, []);
 
-  const handleDeleteRequest = (packageId) => {
+  const handleDeleteRequest = (transactionId) => {
     axiosInstance
-      .delete(`/api/payment/deleteRequest/${packageId}`)
+      .delete(`/api/payment/deleteRequest/${transactionId}`)
       .then((response) => {
         console.log('Deleted Request:', response.data);
         fetchPendingPayments(); // Refresh the pending payments list
@@ -139,7 +137,7 @@ const MemberFeeManager = () => {
 
                 <button
                   className="px-3 py-1 mt-2 text-sm font-semibold text-red-800 bg-red-300 rounded-md hover:bg-red-400 dark:text-red-200 dark:bg-red-400"
-                  onClick={() => handleDeleteRequest(payment.packageId)}
+                  onClick={() => handleDeleteRequest(payment.transactionId)}
                 >
                   Delete Request
                 </button>

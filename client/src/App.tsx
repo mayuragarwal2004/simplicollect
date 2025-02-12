@@ -23,6 +23,7 @@ import VisitorList from './pages/Visitor/VisitorList';
 import MemberList from './pages/Member/MemberList';
 import MemberFeeManager from './pages/Member/MemberFeeManager';
 import MemberFeeApproval from './pages/Member/MemberFeeApproval';
+import FeeReciever from './pages/Member/FeeReciever';
 import RequireAuth from './utils/RequireAut';
 import { Bounce, ToastContainer } from 'react-toastify';
 
@@ -90,6 +91,15 @@ function App() {
               <>
                 <PageTitle title="Member Fee Approval | SimpliCollect - Meeting Fee Manager" />
                 <MemberFeeApproval />
+              </>
+            }
+          />
+          <Route
+            path="/fee-reciver-edit"
+            element={
+              <>
+                <PageTitle title="Fee Reciever | SimpliCollect - Meeting Fee Manager" />
+                <FeeReciever />
               </>
             }
           />
@@ -207,14 +217,14 @@ function App() {
           }
         />
         <Route
-            path="/chapter/list"
-            element={
-              <>
-                <PageTitle title="Expression of Interest | SimpliCollect - Meeting Fee Manager" />
-                <VisitorList />
-              </>
-            }
-          />
+          path="/chapter/list"
+          element={
+            <>
+              <PageTitle title="Expression of Interest | SimpliCollect - Meeting Fee Manager" />
+              <VisitorList />
+            </>
+          }
+        />
       </Routes>
     </DefaultLayout>
   );

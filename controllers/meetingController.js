@@ -7,6 +7,8 @@ const getAllMeetings = async (req, res) => {
 
   try {
     const meetings = await Meeting.getAllMeetingsUsingMemberIdAndChapterId(memberId, chapterId);
+    console.log({meetings});
+    
     res.json(meetings);
   } catch (error) {
     console.error("Error fetching meetings:", error);

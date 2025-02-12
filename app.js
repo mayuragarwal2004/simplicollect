@@ -25,9 +25,9 @@ app.use("/api/chapter", authenticateToken, chapterRoutes);
 app.use("/api/member", authenticateToken, memberRoutes);
 app.use("/api/rights", authenticateToken, rightsRoutes);
 app.use("/api/image-upload", authenticateToken, imageUploadRoutes);
-app.use("/api/packages", packageRoutes);
+app.use("/api/packages", authenticateToken, packageRoutes);
 app.use("/api/payment", authenticateToken, paymentRoutes);
-app.use("/api/meetings", meetingRoutes);
+app.use("/api/meetings", authenticateToken, meetingRoutes);
 
 app.use("/api/*", (req, res) => {
   res.status(404).send("Not Found - Please check the URL and try again");

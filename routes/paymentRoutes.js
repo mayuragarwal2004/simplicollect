@@ -13,6 +13,12 @@ router.post("/addPayment", paymentController.addPayment);
 router.get("/pendingPayments", paymentController.checkPendingPayments);
 
 // delete pending payment request
-router.delete("/deleteRequest/:packageId", paymentController.deleteRequest);
+router.delete("/deleteRequest/:transactionId", paymentController.deleteRequest);
+
+// Get pending payments of the chapter
+router.get("/pendingPayments/:chapterId", paymentController.chapterPendingPayments);
+
+// Approve Payment
+router.put("/approvePendingPayment", paymentController.approvePendingPaymentController);
 
 module.exports = router;

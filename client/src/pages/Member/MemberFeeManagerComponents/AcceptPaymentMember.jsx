@@ -34,10 +34,27 @@ const AcceptPaymentMember = ({
   const [amountPaid, setAmountPaid] = useState(finalAmount); // Amount paid by the member
   const [minimumPayable, setMinimumPayable] = useState(0); // Minimum payable amount
   const [loggedInAdmins, setLoggedInAdmins] = useState([
-    'Admin1',
-    'Admin2',
-    'Admin3',
+    { memberId: '1', name: 'Rishikesh' },
+    { memberId: 'efvelvhubrerikbjv', name: 'Manoj' },
+    { memberId: 'ekgvrjennivrnnienbiv', name: 'Khushboo' },
   ]);
+  const [qrCodeReceivers, setQrCodeReceivers] = useState([
+    {
+      memberId: '1',
+      name: "Rishikesh's QR",
+      qrImage: 'https://via.placeholder.com/150',
+    },
+    {
+      memberId: 'efvelvhubrerikbjv',
+      name: "Manoj's QR",
+      qrImage: 'https://via.placeholder.com/150',
+    },
+    {
+      memberId: 'ekgvrjennivrnnienbiv',
+      name: "Khushboo's QR",
+      qrImage: 'https://via.placeholder.com/150',
+    },
+  ]); // QR code receivers
 
   const [refreshAdmins, setRefreshAdmins] = useState(false);
 
@@ -48,8 +65,6 @@ const AcceptPaymentMember = ({
       setRefreshAdmins(false);
     }, 1000);
   };
-  const cashReceivers = ['Admin1', 'Admin2', 'Admin3'];
-  const qrReceivers = [{ name: 'Admin1' }, { name: 'Admin2' }];
   // Calculate the final amount
 
   useEffect(() => {
@@ -71,13 +86,59 @@ const AcceptPaymentMember = ({
   const handlePaymentSubmit = async () => {
     const dueAmount = finalAmount - amountPaid;
     const advanceAmount = amountPaid - dueAmount;
+    let paymentProofLink = '';
+
+    // upload image at /api/image-upload and get link
+    if (paymentProof) {
+      const paymentProofForm = new FormData();
+      paymentProofForm.append('image', paymentProof);
+      paymentProofForm.append('folderName', 'memberPaymentProofs');
+      paymentProofLink = await axiosInstance
+        .post('/api/image-upload', paymentProofForm, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        })
+        .then((response) => {
+          console.log('Payment Proof Uploaded:', response.data);
+          return response.data.imageUrl;
+        });
+
+      console.log('Payment Proof Link:', paymentProofLink);
+    }
+
+    if (paymentType === 'cash' && !selectedCashReceiver) {
+      alert('Please select an admin to receive the cash payment');
+      return;
+    }
+
+    if (paymentType === 'online' && !selectedQRReceiver) {
+      alert('Please select an admin to receive the online payment');
+      return;
+    }
+
     const paymentDetails = {
       packageId: selectedPackage.packageId,
       meetingIds: selectedPackage.meetingIds,
       payableAmount: finalAmount,
       paymentAmount: amountPaid,
       dueAmount: dueAmount,
-      advanceAmount: advanceAmount,
+      paymentType: paymentType,
+      paymentDate: paymentDate,
+      paymentType: paymentType,
+      paymentDate: paymentDate,
+      paymentImageLink: paymentProofLink,
+      cashPaymentReceivedById: selectedCashReceiver,
+      cashPaymentReceivedByName: selectedCashReceiver
+        ? loggedInAdmins.find(
+            (admin) => admin.memberId === selectedCashReceiver,
+          )?.name
+        : '',
+      onlinePaymentReceivedById: selectedQRReceiver,
+      onlinePaymentReceivedByName: selectedQRReceiver
+        ? qrCodeReceivers.find((admin) => admin.memberId === selectedQRReceiver)
+            ?.name
+        : '',
     };
     const response = await axiosInstance
       .post('/api/payment/addPayment', paymentDetails)
@@ -229,10 +290,12 @@ const AcceptPaymentMember = ({
                 value={selectedCashReceiver}
                 onChange={(e) => setSelectedCashReceiver(e.target.value)}
               >
-                <option value="">Select Admin</option>
-                {loggedInAdmins.map((admin, index) => (
-                  <option key={index} value={admin}>
-                    {admin}
+                <option disabled value="">
+                  Select Admin
+                </option>
+                {loggedInAdmins.map((adminValue, index) => (
+                  <option key={adminValue.memberId} value={adminValue.memberId}>
+                    {adminValue.name}
                   </option>
                 ))}
               </select>
@@ -251,7 +314,7 @@ const AcceptPaymentMember = ({
           <div className="mb-4">
             <p className="text-gray-700 font-semibold">Paid Online to:</p>
             <div className="mt-2">
-              {qrReceivers.map((receiver, index) => (
+              {qrCodeReceivers.map((receiver, index) => (
                 <div
                   key={index}
                   className={`flex items-center space-x-4 p-2 border rounded-lg cursor-pointer m-1 ${
@@ -284,6 +347,7 @@ const AcceptPaymentMember = ({
                   </span>
                   <input
                     type="file"
+                    name="file"
                     accept="image/*"
                     onChange={handlePaymentProofUpload}
                     className="hidden"

@@ -1,13 +1,13 @@
-import React, { useState, useEffect } from "react";
-import { axiosInstance } from "../../utils/config";
-import { useData } from "../../context/DataContext";
-import useWindowDimensions from "../../utils/useWindowDimensions";
-import Breadcrumb from "../../components/Breadcrumbs/Breadcrumb";
-import { Checkbox, IconButton } from "@mui/material";
-import RefreshIcon from "@mui/icons-material/Refresh";
+import React, { useState, useEffect } from 'react';
+import { axiosInstance } from '../../utils/config';
+import { useData } from '../../context/DataContext';
+import useWindowDimensions from '../../utils/useWindowDimensions';
+import Breadcrumb from '../../components/Breadcrumbs/Breadcrumb';
+import { Checkbox, IconButton } from '@mui/material';
+import RefreshIcon from '@mui/icons-material/Refresh';
 
 interface MemberFee {
-  memberId: string;
+  transactionId: string;
   firstName: string;
   lastName: string;
   packageName: string;
@@ -15,14 +15,16 @@ interface MemberFee {
   amountPaid: number;
   dues: number;
   advancePayment: number;
-  status: "Pending" | "Confirmed";
+  status: 'Pending' | 'Confirmed';
 }
 
 const MemberFeeApproval: React.FC = () => {
-  const [pendingFees, setPendingFees] = useState<MemberFee[]>([]);
+  const [pendingFees, setPendingFees] = useState<any[]>([]);
   const { chapterData } = useData();
   const { width } = useWindowDimensions();
   const [selectedApprovals, setSelectedApprovals] = useState<string[]>([]);
+
+  console.log({ pendingFees });
 
   useEffect(() => {
     if (chapterData?.chapterId) {
@@ -32,30 +34,41 @@ const MemberFeeApproval: React.FC = () => {
 
   const fetchPendingFees = async () => {
     try {
-      const response = await axiosInstance.get("/api/packages/pending");
-      setPendingFees(response.data.data); // Access the `data` property from the response
+      const response = await axiosInstance.get(
+        `/api/payment/pendingPayments/${chapterData?.chapterId}`,
+      );
+      console.log({response});
+
+      console.log({ got: response.data });
+
+      setPendingFees(response.data); // Access the `data` property from the response
     } catch (error) {
-      console.error("Fetching pending fees failed:", error);
+      console.error('Fetching pending fees failed:', error);
     }
   };
 
-  const handleApprovalChange = (memberId: string) => {
+  const handleApprovalChange = (transactionId: string) => {
     setSelectedApprovals((prev) =>
-      prev.includes(memberId) ? prev.filter((id) => id !== memberId) : [...prev, memberId]
+      prev.includes(transactionId)
+        ? prev.filter((id) => id !== transactionId)
+        : [...prev, transactionId],
     );
   };
 
+  console.log({selectedApprovals});
+  
+
   const confirmSelectedFees = async () => {
     try {
-      await axiosInstance.post("/api/packages/approve", {
-        memberId: selectedApprovals[0], // Send the first selected memberId (or adjust for multiple approvals)
+      await axiosInstance.put('/api/payment/approvePendingPayment', {
+        transactionIds: selectedApprovals, // Send the first selected transactionId (or adjust for multiple approvals)
       });
       setPendingFees((prev) =>
-        prev.filter((fee) => !selectedApprovals.includes(fee.memberId))
+        prev.filter((fee) => !selectedApprovals.includes(fee.transactionId)),
       );
       setSelectedApprovals([]);
     } catch (error) {
-      console.error("Confirming fees failed:", error);
+      console.error('Confirming fees failed:', error);
     }
   };
 
@@ -89,23 +102,26 @@ const MemberFeeApproval: React.FC = () => {
                   </th>
                   <th className="py-3 px-4 text-black dark:text-white">Dues</th>
                   <th className="py-3 px-4 text-black dark:text-white">
-                    Advance Payment
-                  </th>
-                  <th className="py-3 px-4 text-black dark:text-white">
                     Approve
                   </th>
                 </tr>
               </thead>
               <tbody>
-                {pendingFees.length === 0 ? (
+                {pendingFees?.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="text-center py-4 text-black dark:text-white">
+                    <td
+                      colSpan={7}
+                      className="text-center py-4 text-black dark:text-white"
+                    >
                       No pending fees to approve.
                     </td>
                   </tr>
                 ) : (
-                  pendingFees.map((fee) => (
-                    <tr key={fee.memberId} className="border-b border-gray-300 dark:border-strokedark">
+                  pendingFees?.map((fee) => (
+                    <tr
+                      key={fee.transactionId}
+                      className="border-b border-gray-300 dark:border-strokedark"
+                    >
                       <td className="py-3 px-4 text-black dark:text-white">
                         {fee.firstName} {fee.lastName}
                       </td>
@@ -113,19 +129,18 @@ const MemberFeeApproval: React.FC = () => {
                         {fee.packageName}
                       </td>
                       <td className="py-3 px-4 text-black dark:text-white">
-                        {new Date(fee.date).toLocaleDateString()}
+                        {new Date(fee.transactionDate).toLocaleDateString()}
                       </td>
                       <td className="py-3 px-4 text-black dark:text-white">
-                        ₹{fee.amountPaid}
+                        ₹{fee.paidAmount}
                       </td>
-                      <td className="py-3 px-4 text-black dark:text-white">₹{fee.dues}</td>
                       <td className="py-3 px-4 text-black dark:text-white">
-                        ₹{fee.advancePayment}
+                        ₹{fee.dueAmount}
                       </td>
                       <td className="py-3 px-4">
                         <Checkbox
-                          checked={selectedApprovals.includes(fee.memberId)}
-                          onChange={() => handleApprovalChange(fee.memberId)}
+                          checked={selectedApprovals.includes(fee.transactionId)}
+                          onChange={() => handleApprovalChange(fee.transactionId)}
                           color="primary"
                         />
                       </td>
@@ -137,14 +152,14 @@ const MemberFeeApproval: React.FC = () => {
           </div>
         ) : (
           <div className="flex flex-col space-y-4">
-            {pendingFees.length === 0 ? (
+            {pendingFees?.length === 0 ? (
               <p className="text-center text-black dark:text-white">
                 No pending fees to approve.
               </p>
             ) : (
-              pendingFees.map((fee) => (
+              pendingFees?.map((fee) => (
                 <div
-                  key={fee.memberId}
+                  key={fee.transactionId}
                   className="border rounded-lg p-4 shadow-md dark:border-strokedark"
                 >
                   <p className="text-black dark:text-white font-medium">
@@ -154,21 +169,18 @@ const MemberFeeApproval: React.FC = () => {
                     Package: {fee.packageName}
                   </p>
                   <p className="text-sm text-gray-600 dark:text-gray-300">
-                    Date: {new Date(fee.date).toLocaleDateString()}
+                    Date: {new Date(fee.transactionDate).toLocaleDateString()}
                   </p>
                   <p className="text-sm text-gray-600 dark:text-gray-300">
-                    Amount Paid: ₹{fee.amountPaid}
+                    Amount Paid: ₹{fee.paidAmount}
                   </p>
                   <p className="text-sm text-gray-600 dark:text-gray-300">
-                    Dues: ₹{fee.dues}
-                  </p>
-                  <p className="text-sm text-gray-600 dark:text-gray-300">
-                    Advance Payment: ₹{fee.advancePayment}
+                    Dues: ₹{fee.dueAmount}
                   </p>
                   <div className="mt-2">
                     <Checkbox
-                      checked={selectedApprovals.includes(fee.memberId)}
-                      onChange={() => handleApprovalChange(fee.memberId)}
+                      checked={selectedApprovals.includes(fee.transactionId)}
+                      onChange={() => handleApprovalChange(fee.transactionId)}
                       color="primary"
                     />
                     <span className="text-black dark:text-white">Approve</span>
@@ -179,7 +191,7 @@ const MemberFeeApproval: React.FC = () => {
           </div>
         )}
 
-        {selectedApprovals.length > 0 && (
+        {selectedApprovals?.length > 0 && (
           <button
             className="mt-4 bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700"
             onClick={confirmSelectedFees}

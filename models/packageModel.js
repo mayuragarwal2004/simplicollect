@@ -17,34 +17,9 @@ const getAllPackages = async () => {
         .select("*");
 }
 
-const getPendingMeetings = async () => {
-    return db("membersmeetingmapping as mmm")
-        .leftJoin("packages as p", "mmm.packageId", "p.packageId")
-        .leftJoin("members as mem", "mmm.memberId", "mem.memberId")
-        .where("mmm.status", "Pending stage 1")
-        .select(
-            "mmm.memberId",
-            "mem.firstName",
-            "mem.lastName",
-            "mmm.meetingId",
-            "mmm.packageId",
-            "p.packageName",
-            "mmm.status",
-            "mmm.statusUpdateDate"
-        );
-};
-
-const approveMeeting = async (memberId) => {
-    return db("membersmeetingmapping")
-        .where("memberId", memberId)
-        .update({ status: "Confirmed" });
-};
-
 
 module.exports = {
     getPackageById,
     getAllPackages,
     getPackagesByParentType,
-    getPendingMeetings,
-    approveMeeting,
 };
