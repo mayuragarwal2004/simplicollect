@@ -61,6 +61,10 @@ const addPayment = async (req, res) => {
   // make data to insert in db table of membersmeetingmapping
   const newRecords = [];
 
+  if (typeof paymentDetails.meetingIds === "string") {
+    paymentDetails.meetingIds = JSON.parse(paymentDetails.meetingIds);
+  }
+
   paymentDetails.meetingIds.forEach((meetingId) => {
     newRecords.push({
       memberId,
