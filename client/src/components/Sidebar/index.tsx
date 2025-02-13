@@ -64,14 +64,14 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
   }, [sidebarExpanded]);
 
   useEffect(() => {
-    getRightData();
-  }, [isAuthenticated]);
+    if (chapterData?.chapterId) getRightData();
+  }, [chapterData]);
 
   console.log({ rightsData });
 
   const getRightData = async () => {
     try {
-      const response = await axiosInstance(`/api/rights`, {
+      const response = await axiosInstance(`/api/rights/sidebar`, {
         params: {
           chapterId: chapterData?.chapterId,
         },
@@ -203,7 +203,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                         }`}
                       >
                         {iconMap[item.icon]}
-                        {item.title}
+                        {item.links[0].title}
                       </NavLink>
                     </li>
                   );

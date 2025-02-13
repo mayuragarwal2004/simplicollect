@@ -60,22 +60,26 @@ const MemberFeeManager = () => {
       .get(`/api/packages/parent/${parentType}`)
       .then((data) => {
         console.log(`Fetched ${parentType} Packages:`, data.data);
-        const responseData = data.data;
-        console.log("Original Response Data:", responseData);
-
-        for (let i = 0; i < responseData.length; i++) {
-          // responseData[i].meetingIds = JSON.parse(responseData[i].meetingIds);
-          const amountCaluculations = packageAmountCalculations(calculationDate, responseData[i], chapterMeetings );
-          responseData[i] = { ...responseData[i], ...amountCaluculations };
-        }
-
-        console.log("Updated Response Data:", responseData);
+        const responseData = processPackageData(data.data);
         setPackageData(responseData);
       })
       .catch((error) =>
         console.error(`Error fetching ${parentType} packages:`, error),
       );
   }, [tabValue]); // Re-fetch when tabValue changes
+
+  const processPackageData = (packages) => {
+    return packages.map((pkg) => {
+      // Calculate penalty and discount
+      const amountCaluculations = packageAmountCalculations(calculationDate, pkg, chapterMeetings);
+      return { ...pkg, ...amountCaluculations };
+    });
+  };
+
+  useEffect(() => {
+    const new_val = processPackageData(packageData);
+    setPackageData(new_val);
+  }, [calculationDate, chapterMeetings]);
 
   // Fetch pending payments data
   const fetchPendingPayments = () => {

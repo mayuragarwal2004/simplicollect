@@ -206,7 +206,6 @@ const PackageAllowed = ({
           //   serviceFee,
           //   isDisabled,
           // } = calculateDisplayAmounts(pkg);
-
           return (
             <div
               key={pkg.packageId}
@@ -215,12 +214,17 @@ const PackageAllowed = ({
               }`}
             >
               <h2 className="text-xl font-bold mb-2">{pkg.packageName}</h2>
-              {!pkg.isDisabled && pkg.totalAmount !== null ? (
+              {!pkg.isDisabled &&
+              pkg.totalAmount !== null &&
+              pkg.status !== 'approved' ? (
                 <>
                   <p className="text-gray-700 mb-1">
                     {`₹${pkg.packageFeeAmount}`}
                     {pkg.penaltyAmount > 0 && (
-                      <span className="text-red-500"> + ₹{pkg.penaltyAmount}</span>
+                      <span className="text-red-500">
+                        {' '}
+                        + ₹{pkg.penaltyAmount}
+                      </span>
                     )}
                     {pkg.discountAmount > 0 && (
                       <span className="text-green-500">
@@ -247,12 +251,19 @@ const PackageAllowed = ({
                   </p>
                   <Button
                     className="mt-4 bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-700"
-                    variant='contained'
+                    variant="contained"
                     onClick={() => handlePayClick(pkg)}
                     disabled={pkg.isDisabled || pendingPayments?.length > 0}
                   >
                     Pay Now
                   </Button>
+                </>
+              ) : pkg.status === 'approved' ? (
+                <>
+                  <div>
+                    You have paid ₹{pkg.paidAmount} for this package on{' '}
+                    {new Date(pkg.paymentDate).toLocaleDateString()}
+                  </div>
                 </>
               ) : (
                 <p className="text-gray-700 mb-1">Payment Not Allowed</p>

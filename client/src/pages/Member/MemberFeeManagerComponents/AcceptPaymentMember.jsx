@@ -101,8 +101,9 @@ const AcceptPaymentMember = ({
         : '',
       onlinePaymentReceivedById: selectedQRReceiver,
       onlinePaymentReceivedByName: selectedQRReceiver
-        ? qrReceivers.find((receiver) => receiver.memberId === selectedQRReceiver)
-            ?.qrCodeName
+        ? qrReceivers.find(
+            (receiver) => receiver.memberId === selectedQRReceiver,
+          )?.qrCodeName
         : '',
     };
     const response = await axiosInstance
@@ -145,17 +146,25 @@ const AcceptPaymentMember = ({
           <p className="text-gray-700 font-semibold text-lg">
             Total Payable Amount:
           </p>
-          <p className="text-3xl font-bold text-blue-600">₹{selectedPackage.totalAmount}</p>
+          <p className="text-3xl font-bold text-blue-600">
+            ₹{selectedPackage.totalAmount}
+          </p>
           <div className="text-sm text-gray-600 mt-2">
             <p>₹{selectedPackage.packageFeeAmount} (Original Amount)</p>
             {selectedPackage.penaltyAmount > 0 && (
-              <p className="text-red-500">+ ₹{selectedPackage.penaltyAmount} (Penalty)</p>
+              <p className="text-red-500">
+                + ₹{selectedPackage.penaltyAmount} (Penalty)
+              </p>
             )}
             {selectedPackage.discountAmount > 0 && (
-              <p className="text-green-500">- ₹{selectedPackage.discountAmount} (Discount)</p>
+              <p className="text-green-500">
+                - ₹{selectedPackage.discountAmount} (Discount)
+              </p>
             )}
             {selectedPackage.paidFees > 0 && (
-              <p className="text-blue-500">- ₹{selectedPackage.paidFees} (Paid Previously)</p>
+              <p className="text-blue-500">
+                - ₹{selectedPackage.paidFees} (Paid Previously)
+              </p>
             )}
             {/* {selectedPackage.unpaidFeesFromEarlierPackages > 0 && (
               <p className="text-orange-500">
@@ -184,6 +193,17 @@ const AcceptPaymentMember = ({
             </p>
           )}
         </div> */}
+
+        <div className="mb-4">
+          <p className="text-gray-700 font-semibold">Amount Being Paid:</p>
+          <input
+            type="number"
+            value={amountPaid}
+            onChange={(e) => setAmountPaid(Number(e.target.value))}
+            className="w-full p-2 border rounded-lg mt-2"
+            placeholder="Enter amount to pay"
+          />
+        </div>
 
         {/* Meetings Included */}
         <div className="mb-4">

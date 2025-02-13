@@ -1,6 +1,18 @@
 const packageAmountCalculations = (calculationDate, pkg, chapterMeetings) => {
   const payableEndDate = new Date(pkg.packagePayableEndDate);
 
+  if (
+    pkg.packagePayableStartDate &&
+    calculationDate < new Date(pkg.packagePayableStartDate)
+  ) {
+    return {
+      totalAmount: null,
+      penaltyAmount: null,
+      discountAmount: null,
+      isDisabled: true,
+    };
+  }
+
   // Disable package if allowAfterEndDate is false and calculationDate is after payableEndDate
   if (!pkg.allowAfterEndDate && calculationDate > payableEndDate) {
     return {
@@ -67,9 +79,9 @@ const packageAmountCalculations = (calculationDate, pkg, chapterMeetings) => {
     : 0;
 
   // Add unpaid fees from earlier packages
-//   const unpaidFeesFromEarlierPackages =
-//     calculateUnpaidFeesFromEarlierPackages(pkg);
-//   adjustedPackageFee += unpaidFeesFromEarlierPackages;
+  //   const unpaidFeesFromEarlierPackages =
+  //     calculateUnpaidFeesFromEarlierPackages(pkg);
+  //   adjustedPackageFee += unpaidFeesFromEarlierPackages;
 
   // Add service fee (2.5%)
   const serviceFee = adjustedPackageFee * 0.025;
@@ -87,6 +99,5 @@ const packageAmountCalculations = (calculationDate, pkg, chapterMeetings) => {
       (!pkg.allowPackagePurchaseIfFeesPaid && hasOverlappingPayments(pkg)),
   };
 };
-
 
 export default packageAmountCalculations;

@@ -1,11 +1,11 @@
 // controllers/rightsControllers.js
 const rightsModel = require("../models/rightsModel");
 
-const getAllRightsController = async (req, res) => {
+const getSidebarRightsController = async (req, res) => {
   const { memberId } = req.user;
   const { chapterId } = req.query;
   try {
-    const rights_raw = await rightsModel.getRightsByMemberIdAndChapterId(
+    const rights_raw = await rightsModel.getRightsByMemberIdAndChapterIdAndMenu(
       memberId,
       chapterId
     );
@@ -53,5 +53,5 @@ const getAllRightsController = async (req, res) => {
 };
 
 module.exports = {
-  getAllRightsController,
+  getSidebarRightsController,
 };
