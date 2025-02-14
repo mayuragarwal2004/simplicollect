@@ -16,7 +16,7 @@ const ECommerce: React.FC = () => {
     if (!isAuthenticated) {
       navigate('/auth/signin');
     } else {
-      navigate('/visitor/list');
+      navigate('/member/fee');
     }
   }, [isAuthenticated]);
 

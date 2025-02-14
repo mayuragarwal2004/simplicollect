@@ -90,8 +90,6 @@ const AcceptPaymentMember = ({
       dueAmount: dueAmount,
       paymentType: paymentType,
       paymentDate: paymentDate,
-      paymentType: paymentType,
-      paymentDate: paymentDate,
       paymentImageLink: paymentProofLink,
       cashPaymentReceivedById: selectedCashReceiver,
       cashPaymentReceivedByName: selectedCashReceiver

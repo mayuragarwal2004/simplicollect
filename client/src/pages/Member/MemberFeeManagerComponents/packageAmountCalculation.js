@@ -1,4 +1,4 @@
-const packageAmountCalculations = (calculationDate, pkg, chapterMeetings) => {
+const packageAmountCalculations = (calculationDate, pkg, chapterMeetings) => {  
   const payableEndDate = new Date(pkg.packagePayableEndDate);
 
   if (
@@ -84,7 +84,7 @@ const packageAmountCalculations = (calculationDate, pkg, chapterMeetings) => {
   //   adjustedPackageFee += unpaidFeesFromEarlierPackages;
 
   // Add service fee (2.5%)
-  const serviceFee = adjustedPackageFee * 0.025;
+  const serviceFee = adjustedPackageFee * 0;
   const totalPayableAmount = adjustedPackageFee + serviceFee;
 
   return {

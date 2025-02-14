@@ -33,13 +33,36 @@ const MemberFeeApproval: React.FC = () => {
   useEffect(() => {
     if (chapterData?.chapterId) {
       fetchPendingFees();
+      fetchIsAllowedAllMembersApproval();
     }
   }, [chapterData]);
 
-  const fetchPendingFees = async () => {
+  useEffect(() => {
+    if (chapterData?.chapterId) {
+      fetchPendingFees();
+    }
+  }, [config.currentState]);
+
+  const fetchIsAllowedAllMembersApproval = async () => {
     try {
       const response = await axiosInstance.get(
-        `/api/payment/pendingPayments/${chapterData?.chapterId}`,
+        `/api/rights/anyMemberApprovePayment/${chapterData?.chapterId}`,
+      );
+      console.log({ response });
+      setConfig((prev) => ({
+        ...prev,
+        allowAllMembersApproval: response?.data?.allowed,
+      }));
+    } catch (error) {
+      console.error('Fetching rights failed:', error);
+    }
+  };
+
+  const fetchPendingFees = async () => {
+    try {
+      const response = await axiosInstance.post(
+        `/api/payment/pendingPaymentRequests/${chapterData?.chapterId}`,
+        { currentState: config.currentState },
       );
       console.log({ response });
 
@@ -98,19 +121,19 @@ const MemberFeeApproval: React.FC = () => {
                   ? 'bg-blue-600 text-white'
                   : 'bg-gray-300 text-black dark:bg-gray-700 dark:text-white'
               }`}
-              onClick={() =>
+              onClick={() => {
                 setConfig((prev) => ({
                   ...prev,
                   currentState:
                     prev.currentState === 'self_approval'
                       ? 'all_members_approval'
                       : 'self_approval',
-                }))
-              }
+                }));
+              }}
             >
               {config.currentState === 'self_approval'
-                ? 'Self Approval'
-                : 'All Members Approval'}
+                ? 'Switch To All Requests'
+                : 'Switch To My Requests'}
             </button>
           </div>
         )}

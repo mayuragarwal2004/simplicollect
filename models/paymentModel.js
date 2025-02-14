@@ -37,6 +37,32 @@ const getMembersPendingPaymentsWithPackageDetails = async (memberId) => {
   }
 };
 
+const getPendingPaymentRequests = async (
+  memberId,
+  chapterId,
+  getAllRequests
+) => {
+  return db("transactions as t")
+    .join("packages as p", "t.packageId", "p.packageId")
+    .join("members as m", "t.memberId", "m.memberId")
+    .where({ "p.chapterId": chapterId, "t.status": "pending" })
+    .andWhere(function () {
+      if (getAllRequests) return this.where({ "t.status": "pending" });
+      return this.where({ "t.cashPaymentReceivedById": memberId }).orWhere({
+        "t.onlinePaymentReceivedById": memberId,
+      });
+    })
+    .distinct("t.transactionId")
+    .select(
+      "p.*",
+      "t.*",
+      "m.firstName",
+      "m.lastName",
+      "m.email",
+      "m.phoneNumber"
+    );
+};
+
 const getChapterPendingPayments = async (chapterId) => {
   try {
     const pendingPayments = await db("transactions as t")
@@ -107,13 +133,14 @@ const setIsPaid = async (transactionIdsArray) => {
   } catch (error) {
     throw error;
   }
-}
+};
 
 module.exports = {
   addTransaction,
   addPayment,
   getMembersPendingPayments,
   getMembersPendingPaymentsWithPackageDetails,
+  getPendingPaymentRequests,
   deletePendingRequest,
   getChapterPendingPayments,
   getTransactionById,

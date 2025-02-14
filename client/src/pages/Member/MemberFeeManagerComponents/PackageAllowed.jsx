@@ -4,6 +4,7 @@ import AcceptPaymentMember from './AcceptPaymentMember';
 import { axiosInstance } from '../../../utils/config';
 import { useData } from '../../../context/DataContext';
 import { Button } from '@mui/material';
+import formatDateDDMMYYY from '../../../utils/dateUtility';
 
 const PackageAllowed = ({
   pendingPayments,
@@ -182,7 +183,7 @@ const PackageAllowed = ({
       {/* Filters: Show Unpaid Only, DatePicker */}
       <div className="flex justify-between items-center p-4">
         {/* Right Side: Show Unpaid Only */}
-        <div className="flex justify-end">
+        <div className="flex justify-end hidden">
           <label className="flex items-center space-x-2">
             <input
               type="checkbox"
@@ -247,7 +248,7 @@ const PackageAllowed = ({
                     = ₹{pkg.totalAmount}
                   </p>
                   <p className="text-gray-700 mb-1">
-                    Payable End Date: {pkg.packagePayableEndDate}
+                    Payable End Date: {formatDateDDMMYYY(pkg.packagePayableEndDate)}
                   </p>
                   <Button
                     className="mt-4 bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-700"

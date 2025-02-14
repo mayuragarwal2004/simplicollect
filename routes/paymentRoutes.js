@@ -9,7 +9,7 @@ router.post("/addPayment", paymentController.addPayment);
 // Route to get all payments
 // router.get("/allPayments", paymentController.allPayments);
 
-// Route to get all pending payments
+// Route to get a member's all pending payments
 router.get("/pendingPayments", paymentController.checkPendingPayments);
 
 // delete pending payment request
@@ -20,5 +20,8 @@ router.get("/pendingPayments/:chapterId", paymentController.chapterPendingPaymen
 
 // Approve Payment
 router.put("/approvePendingPayment", paymentController.approvePendingPaymentController);
+
+// Route to get all payment requests of a member
+router.post("/pendingPaymentRequests/:chapterId", paymentController.getPendingPaymentRequestsController);
 
 module.exports = router;

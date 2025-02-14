@@ -3,16 +3,12 @@ const db = require("../config/db");
 
 // Function to find a member by email
 const findMemberByEmail = async (email) => {
-  return db("members")
-    .where("email", email)
-    .first();
+  return db("members").where("email", email).first();
 };
 
 // Function to find a member by ID
 const findMemberById = async (memberId) => {
-  return db("members")
-    .where("memberId", memberId)
-    .first();
+  return db("members").where("memberId", memberId).first();
 };
 
 // Add member
@@ -22,9 +18,18 @@ const addMember = async (memberData) => {
 
 const getMembers = async (chapterId) => {
   return db("memberchaptermapping as mmm")
-    .where("chapterId", chapterId)
+    .where("mmm.chapterId", chapterId)
     .join("members as m", "mmm.memberId", "m.memberId")
-    .select("m.memberId", "m.firstName", "m.lastName", "m.phoneNumber", "m.email", "m.role", "mmm.*");
+    .leftJoin("roles as r", "mmm.roleId", "r.roleId")
+    .select(
+      "r.*",
+      "m.memberId",
+      "m.firstName",
+      "m.lastName",
+      "m.phoneNumber",
+      "m.email",
+      "mmm.*"
+    );
 };
 
 module.exports = {

@@ -1,6 +1,9 @@
 // controllers/packageController.js
 const Package = require("../models/packageModel");
-const { getPendingMeetings, approveMeeting } = require("../models/packageModel");
+const {
+  getPendingMeetings,
+  approveMeeting,
+} = require("../models/packageModel");
 
 const getAllPackages = async (req, res) => {
   try {
@@ -37,8 +40,6 @@ const getPackageById = async (req, res) => {
   }
 };
 
-
-
 const fetchPendingMeetings = async (req, res) => {
   try {
     const pendingMeetings = await getPendingMeetings();
@@ -54,18 +55,34 @@ const approvedMeeting = async (req, res) => {
   try {
     const updatedRows = await approveMeeting(memberId);
     if (!updatedRows) {
-      return res.status(404).json({ success: false, message: "Member not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Member not found" });
     }
-    res.status(200).json({ success: true, message: "Meeting approved successfully" });
+    res
+      .status(200)
+      .json({ success: true, message: "Meeting approved successfully" });
   } catch (error) {
     console.error(error);
     res.status(500).json({ success: false, message: "Server Error" });
   }
 };
+
+const getPackagesByChapterController = async (req, res) => {
+  const { chapterId } = req.params;
+  try {
+    const packages = await Package.getPackagesByChapterId(chapterId);
+    res.json(packages);
+  } catch (error) {
+    console.error("Error fetching packages by chapter:", error);
+    res.status(500).json({ error: "Failed to fetch packages" });
+  }
+};
+
 module.exports = {
   getAllPackages,
   getPackagesByParentType,
   getPackageById,
   fetchPendingMeetings,
-  approveMeeting,
+  getPackagesByChapterController,
 };

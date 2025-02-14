@@ -89,6 +89,7 @@ const MemberList: React.FC = () => {
             <tr>
               <th className="py-2 px-4 border-b dark:border-gray-600">Name</th>
               <th className="py-2 px-4 border-b dark:border-gray-600">Email</th>
+              <th className="py-2 px-4 border-b dark:border-gray-600">Role</th>
               <th className="py-2 px-4 border-b dark:border-gray-600">Actions</th>
             </tr>
           </thead>
@@ -97,6 +98,7 @@ const MemberList: React.FC = () => {
               <tr key={member.memberId}>
                 <td className="py-2 px-4 border-b dark:border-gray-600">{member.firstName}</td>
                 <td className="py-2 px-4 border-b dark:border-gray-600">{member.email}</td>
+                <td className="py-2 px-4 border-b dark:border-gray-600">{member.roleName}</td>
                 <td className="py-2 px-4 border-b dark:border-gray-600">
                   <div className="flex space-x-2">
                     <IconButton>
