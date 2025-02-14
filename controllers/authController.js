@@ -1,5 +1,5 @@
 const db = require("../config/db");
-const { sendOTP, verifyOTP } = require("../config/smtp");
+const { sendOTP, verifyOTP } = require("../models/authModel");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 
@@ -218,6 +218,7 @@ const verifyOtpLogin = async (req, res) => {
     // return res.status(500).json({ message: "Internal server error" });
   }
 };
+
 module.exports = {
   login,
   register,
