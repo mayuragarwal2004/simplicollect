@@ -6,6 +6,11 @@ import PerMeetingAllowed from './MemberFeeManagerComponents/PerMeetingAllowed';
 import PackageAllowed from './MemberFeeManagerComponents/PackageAllowed';
 import { axiosInstance } from '../../utils/config';
 import { useData } from '../../context/DataContext';
+import packageAmountCalculations from './MemberFeeManagerComponents/packageAmountCalculation';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { TextField } from '@mui/material';
 
 const MemberFeeManager = () => {
   const [tabValue, setTabValue] = React.useState(0);
@@ -14,6 +19,7 @@ const MemberFeeManager = () => {
   const [pendingPayments, setPendingPayments] = useState([]);
   const [cashReceivers, setCashReceivers] = useState([]);
   const [qrReceivers, setQrReceivers] = useState([]);
+  const [calculationDate, setCalculationDate] = useState(new Date());
   const { chapterData } = useData();
 
   const [chapterFeeConfig] = React.useState({
@@ -54,12 +60,26 @@ const MemberFeeManager = () => {
       .get(`/api/packages/parent/${parentType}`)
       .then((data) => {
         console.log(`Fetched ${parentType} Packages:`, data.data);
-        setPackageData(data.data);
+        const responseData = processPackageData(data.data);
+        setPackageData(responseData);
       })
       .catch((error) =>
         console.error(`Error fetching ${parentType} packages:`, error),
       );
   }, [tabValue]); // Re-fetch when tabValue changes
+
+  const processPackageData = (packages) => {
+    return packages.map((pkg) => {
+      // Calculate penalty and discount
+      const amountCaluculations = packageAmountCalculations(calculationDate, pkg, chapterMeetings);
+      return { ...pkg, ...amountCaluculations };
+    });
+  };
+
+  useEffect(() => {
+    const new_val = processPackageData(packageData);
+    setPackageData(new_val);
+  }, [calculationDate, chapterMeetings]);
 
   // Fetch pending payments data
   const fetchPendingPayments = () => {
@@ -174,6 +194,18 @@ const MemberFeeManager = () => {
           </div>
         </div>
       )}
+      {/* Left Side: DatePicker */}
+      <div className="flex items-center space-x-4">
+        <LocalizationProvider dateAdapter={AdapterDateFns}>
+          <DatePicker
+            label="Calculation Date"
+            value={calculationDate}
+            onChange={(newDate) => setCalculationDate(newDate)}
+            renderInput={(params) => <TextField {...params} />}
+          />
+        </LocalizationProvider>
+      </div>
+
       <Box sx={{ width: '100%' }}>
         <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
           <Tabs value={tabValue} onChange={handleChange} aria-label="fee tabs">
@@ -194,6 +226,7 @@ const MemberFeeManager = () => {
             <PackageAllowed
               pendingPayments={pendingPayments}
               packageData={packageData}
+              setPackageData={setPackageData}
               paymentSuccessHandler={paymentSuccessHandler}
               parentType="Monthly"
               chapterMeetings={chapterMeetings}
@@ -207,6 +240,7 @@ const MemberFeeManager = () => {
             <PackageAllowed
               pendingPayments={pendingPayments}
               packageData={packageData}
+              setPackageData={setPackageData}
               paymentSuccessHandler={paymentSuccessHandler}
               parentType="Quarterly"
               chapterMeetings={chapterMeetings}

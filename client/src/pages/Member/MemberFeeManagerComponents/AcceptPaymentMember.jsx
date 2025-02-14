@@ -3,17 +3,12 @@ import { Check, Upload, X, ChevronDown, ChevronUp } from 'lucide-react';
 import { axiosInstance } from '../../../utils/config';
 
 const AcceptPaymentMember = ({
-  totalFees,
-  penaltyAmount,
-  discountAmount,
-  paidFees,
-  unpaidFeesFromEarlierPackages,
-  gatewayFee,
-  meetingIds,
+  selectedPackage,
   onClose,
   onPaymentSuccess,
   chapterMeetings,
-  selectedPackage,
+  cashReceivers,
+  qrReceivers,
 }) => {
   const [paymentType, setPaymentType] = useState('cash'); // cash or online
   const [selectedCashReceiver, setSelectedCashReceiver] = useState(''); // Admin receiving cash
@@ -22,16 +17,8 @@ const AcceptPaymentMember = ({
   const [paymentDate] = useState(new Date().toLocaleDateString()); // Current date
   const [showMeetings, setShowMeetings] = useState(false); // Toggle meeting details
   const [selectedMeetings, setSelectedMeetings] = useState([]);
-  const finalAmount =
-    totalFees ||
-    0 + penaltyAmount ||
-    0 - discountAmount ||
-    // 0 - paidFees ||
-    // 0 + unpaidFeesFromEarlierPackages ||
-    // 0 + gatewayFee ||
-    0;
 
-  const [amountPaid, setAmountPaid] = useState(finalAmount); // Amount paid by the member
+  const [amountPaid, setAmountPaid] = useState(selectedPackage.totalAmount); // Amount paid by the member
   const [minimumPayable, setMinimumPayable] = useState(0); // Minimum payable amount
   const [loggedInAdmins, setLoggedInAdmins] = useState([
     { memberId: '1', name: 'Rishikesh' },
@@ -68,13 +55,13 @@ const AcceptPaymentMember = ({
   // Calculate the final amount
 
   useEffect(() => {
-    if (meetingIds && chapterMeetings) {
+    if (selectedPackage.meetingIds && chapterMeetings) {
       const filteredMeetings = chapterMeetings.filter((meeting) =>
-        meetingIds.includes(meeting.meetingId),
+        selectedPackage.meetingIds.includes(meeting.meetingId),
       );
       setSelectedMeetings(filteredMeetings);
     }
-  }, [meetingIds, chapterMeetings]);
+  }, [selectedPackage.meetingIds, chapterMeetings]);
 
   const handlePaymentProofUpload = (e) => {
     const file = e.target.files[0];
@@ -84,7 +71,7 @@ const AcceptPaymentMember = ({
   };
 
   const handlePaymentSubmit = async () => {
-    const dueAmount = finalAmount - amountPaid;
+    const dueAmount = selectedPackage.totalAmount - amountPaid;
     const advanceAmount = amountPaid - dueAmount;
     let paymentProofLink = '';
 
@@ -120,7 +107,7 @@ const AcceptPaymentMember = ({
     const paymentDetails = {
       packageId: selectedPackage.packageId,
       meetingIds: selectedPackage.meetingIds,
-      payableAmount: finalAmount,
+      payableAmount: selectedPackage.totalAmount,
       paymentAmount: amountPaid,
       dueAmount: dueAmount,
       paymentType: paymentType,
@@ -136,8 +123,9 @@ const AcceptPaymentMember = ({
         : '',
       onlinePaymentReceivedById: selectedQRReceiver,
       onlinePaymentReceivedByName: selectedQRReceiver
-        ? qrCodeReceivers.find((admin) => admin.memberId === selectedQRReceiver)
-            ?.name
+        ? qrReceivers.find(
+            (receiver) => receiver.memberId === selectedQRReceiver,
+          )?.qrCodeName
         : '',
     };
     const response = await axiosInstance
@@ -180,26 +168,34 @@ const AcceptPaymentMember = ({
           <p className="text-gray-700 font-semibold text-lg">
             Total Payable Amount:
           </p>
-          <p className="text-3xl font-bold text-blue-600">₹{finalAmount}</p>
+          <p className="text-3xl font-bold text-blue-600">
+            ₹{selectedPackage.totalAmount}
+          </p>
           <div className="text-sm text-gray-600 mt-2">
-            <p>₹{totalFees} (Original Amount)</p>
-            {penaltyAmount > 0 && (
-              <p className="text-red-500">+ ₹{penaltyAmount} (Penalty)</p>
-            )}
-            {discountAmount > 0 && (
-              <p className="text-green-500">- ₹{discountAmount} (Discount)</p>
-            )}
-            {paidFees > 0 && (
-              <p className="text-blue-500">- ₹{paidFees} (Paid Previously)</p>
-            )}
-            {unpaidFeesFromEarlierPackages > 0 && (
-              <p className="text-orange-500">
-                + ₹{unpaidFeesFromEarlierPackages} (Unpaid Fees)
+            <p>₹{selectedPackage.packageFeeAmount} (Original Amount)</p>
+            {selectedPackage.penaltyAmount > 0 && (
+              <p className="text-red-500">
+                + ₹{selectedPackage.penaltyAmount} (Penalty)
               </p>
             )}
-            {gatewayFee > 0 && (
-              <p className="text-purple-500">+ ₹{gatewayFee} (Gateway Fee)</p>
+            {selectedPackage.discountAmount > 0 && (
+              <p className="text-green-500">
+                - ₹{selectedPackage.discountAmount} (Discount)
+              </p>
             )}
+            {selectedPackage.paidFees > 0 && (
+              <p className="text-blue-500">
+                - ₹{selectedPackage.paidFees} (Paid Previously)
+              </p>
+            )}
+            {/* {selectedPackage.unpaidFeesFromEarlierPackages > 0 && (
+              <p className="text-orange-500">
+                + ₹{selectedPackage.unpaidFeesFromEarlierPackages} (Unpaid Fees)
+              </p>
+            )} */}
+            {/* {selectedPackage.gatewayFee > 0 && (
+              <p className="text-purple-500">+ ₹{selectedPackage.gatewayFee} (Gateway Fee)</p>
+            )} */}
           </div>
         </div>
 
@@ -213,12 +209,23 @@ const AcceptPaymentMember = ({
             className="w-full p-2 border rounded-lg mt-2"
             placeholder="Enter amount to pay"
           />
-          {amountPaid < finalAmount && (
+          {amountPaid < selectedPackage.totalAmount && (
             <p className="text-sm text-red-500 mt-2">
-              Due Amount: ₹{finalAmount - amountPaid}
+              Due Amount: ₹{selectedPackage.totalAmount - amountPaid}
             </p>
           )}
         </div> */}
+
+        <div className="mb-4">
+          <p className="text-gray-700 font-semibold">Amount Being Paid:</p>
+          <input
+            type="number"
+            value={amountPaid}
+            onChange={(e) => setAmountPaid(Number(e.target.value))}
+            className="w-full p-2 border rounded-lg mt-2"
+            placeholder="Enter amount to pay"
+          />
+        </div>
 
         {/* Meetings Included */}
         <div className="mb-4">
@@ -227,7 +234,7 @@ const AcceptPaymentMember = ({
             onClick={() => setShowMeetings(!showMeetings)}
             className="flex items-center text-lg font-medium text-blue-500 hover:underline focus:outline-none"
           >
-            {selectedMeetings.length} Meetings
+            {selectedPackage.meetingIds.length} Meetings
             {showMeetings ? (
               <ChevronUp className="ml-2" size={18} />
             ) : (

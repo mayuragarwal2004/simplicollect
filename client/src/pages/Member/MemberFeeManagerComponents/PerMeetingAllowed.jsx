@@ -145,13 +145,13 @@
                   )}
                   = ₹{totalAmount}
                 </p>
-                <button
+                {/* <button
                   onClick={() => handlePayment(meeting.meetingId)}
                   className="mt-4 bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-700"
                   disabled={meeting.isPaid}
                 >
                   {meeting.isPaid ? 'Paid' : 'Pay'}
-                </button>
+                </button> */}
               </div>
             );
           })}

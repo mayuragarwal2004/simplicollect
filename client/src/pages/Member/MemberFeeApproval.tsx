@@ -23,6 +23,10 @@ const MemberFeeApproval: React.FC = () => {
   const { chapterData } = useData();
   const { width } = useWindowDimensions();
   const [selectedApprovals, setSelectedApprovals] = useState<string[]>([]);
+  const [config, setConfig] = useState<any>({
+    allowAllMembersApproval: false,
+    currentState: 'self_approval', // all_members_approval
+  });
 
   console.log({ pendingFees });
 
@@ -37,7 +41,7 @@ const MemberFeeApproval: React.FC = () => {
       const response = await axiosInstance.get(
         `/api/payment/pendingPayments/${chapterData?.chapterId}`,
       );
-      console.log({response});
+      console.log({ response });
 
       console.log({ got: response.data });
 
@@ -55,8 +59,7 @@ const MemberFeeApproval: React.FC = () => {
     );
   };
 
-  console.log({selectedApprovals});
-  
+  console.log({ selectedApprovals });
 
   const confirmSelectedFees = async () => {
     try {
@@ -84,6 +87,33 @@ const MemberFeeApproval: React.FC = () => {
             <RefreshIcon className="dark:text-white" />
           </IconButton>
         </div>
+        {config.allowAllMembersApproval && (
+          <div className="flex items-center mb-4">
+            <label className="mr-2 text-black dark:text-white">
+              Approval Mode:
+            </label>
+            <button
+              className={`px-4 py-2 rounded ${
+                config.currentState === 'self_approval'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-300 text-black dark:bg-gray-700 dark:text-white'
+              }`}
+              onClick={() =>
+                setConfig((prev) => ({
+                  ...prev,
+                  currentState:
+                    prev.currentState === 'self_approval'
+                      ? 'all_members_approval'
+                      : 'self_approval',
+                }))
+              }
+            >
+              {config.currentState === 'self_approval'
+                ? 'Self Approval'
+                : 'All Members Approval'}
+            </button>
+          </div>
+        )}
 
         {width > 700 ? (
           <div className="overflow-x-auto">
@@ -139,8 +169,12 @@ const MemberFeeApproval: React.FC = () => {
                       </td>
                       <td className="py-3 px-4">
                         <Checkbox
-                          checked={selectedApprovals.includes(fee.transactionId)}
-                          onChange={() => handleApprovalChange(fee.transactionId)}
+                          checked={selectedApprovals.includes(
+                            fee.transactionId,
+                          )}
+                          onChange={() =>
+                            handleApprovalChange(fee.transactionId)
+                          }
                           color="primary"
                         />
                       </td>

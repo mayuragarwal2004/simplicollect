@@ -1,16 +1,14 @@
 import React, { useState } from 'react';
 import Box from '@mui/material/Box';
 import AcceptPaymentMember from './AcceptPaymentMember';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import { TextField } from '@mui/material';
 import { axiosInstance } from '../../../utils/config';
 import { useData } from '../../../context/DataContext';
+import { Button } from '@mui/material';
 
 const PackageAllowed = ({
   pendingPayments,
   packageData,
+  setPackageData,
   parentType,
   chapterMeetings,
   paymentSuccessHandler,
@@ -19,7 +17,6 @@ const PackageAllowed = ({
 }) => {
   const [showUnpaidOnly, setShowUnpaidOnly] = useState(false);
   const [selectedPackage, setSelectedPackage] = useState(null);
-  const [calculationDate, setCalculationDate] = useState(new Date());
 
   console.log({ selectedPackage });
 
@@ -132,8 +129,28 @@ const PackageAllowed = ({
 
 
     // Add service fee (2.5%)
-    // const serviceFee = adjustedPackageFee * 0.025;
-    const totalPayableAmount = adjustedPackageFee;
+    const serviceFee = adjustedPackageFee * 0.025;
+    const totalPayableAmount = adjustedPackageFee + serviceFee;
+
+    // setPackageData((prevData) =>
+    //   prevData.map((p) =>
+    //     p.packageId === pkg.packageId
+    //       ? {
+    //           ...p,
+    //           totalAmount: totalPayableAmount,
+    //           penaltyAmount,
+    //           discountAmount,
+    //           paidFees,
+    //           unpaidFeesFromEarlierPackages,
+    //           serviceFee,
+    //           isDisabled:
+    //             (!pkg.allowAfterEndDate && calculationDate > payableEndDate) ||
+    //             (!pkg.allowPackagePurchaseIfFeesPaid &&
+    //               hasOverlappingPayments(pkg)),
+    //         }
+    //       : p,
+    //   ),
+    // );
 
     return {
       totalAmount: totalPayableAmount,
@@ -165,18 +182,6 @@ const PackageAllowed = ({
     <div>
       {/* Filters: Show Unpaid Only, DatePicker */}
       <div className="flex justify-between items-center p-4">
-        {/* Left Side: DatePicker */}
-        <div className="flex items-center space-x-4">
-          <LocalizationProvider dateAdapter={AdapterDateFns}>
-            <DatePicker
-              label="Calculation Date"
-              value={calculationDate}
-              onChange={(newDate) => setCalculationDate(newDate)}
-              renderInput={(params) => <TextField {...params} />}
-            />
-          </LocalizationProvider>
-        </div>
-
         {/* Right Side: Show Unpaid Only */}
         <div className="flex justify-end">
           <label className="flex items-center space-x-2">
@@ -194,59 +199,72 @@ const PackageAllowed = ({
       {/* Package Cards */}
       <Box className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 p-4">
         {filteredPackages.map((pkg) => {
-          const {
-            totalAmount,
-            penaltyAmount,
-            discountAmount,
-            // unpaidFeesFromEarlierPackages,
-            // serviceFee,
-            isDisabled,
-          } = calculateDisplayAmounts(pkg);
-
+          // const {
+          //   totalAmount,
+          //   penaltyAmount,
+          //   discountAmount,
+          //   unpaidFeesFromEarlierPackages,
+          //   serviceFee,
+          //   isDisabled,
+          // } = calculateDisplayAmounts(pkg);
           return (
             <div
               key={pkg.packageId}
-              className={`bg-white shadow-md rounded-lg p-6 border border-gray-200 hover:shadow-lg ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''
-                }`}
+              className={`bg-white shadow-md rounded-lg p-6 border border-gray-200 hover:shadow-lg ${
+                pkg.isDisabled ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
             >
               <h2 className="text-xl font-bold mb-2">{pkg.packageName}</h2>
-              {!isDisabled && totalAmount !== null ? (
+              {!pkg.isDisabled &&
+              pkg.totalAmount !== null &&
+              pkg.status !== 'approved' ? (
                 <>
                   <p className="text-gray-700 mb-1">
                     {`₹${pkg.packageFeeAmount}`}
-                    {penaltyAmount > 0 && (
-                      <span className="text-red-500"> + ₹{penaltyAmount}</span>
+                    {pkg.penaltyAmount > 0 && (
+                      <span className="text-red-500">
+                        {' '}
+                        + ₹{pkg.penaltyAmount}
+                      </span>
                     )}
-                    {discountAmount > 0 && (
+                    {pkg.discountAmount > 0 && (
                       <span className="text-green-500">
                         {' '}
-                        - ₹{discountAmount}
+                        - ₹{pkg.discountAmount}
                       </span>
                     )}
-                    {/* {unpaidFeesFromEarlierPackages > 0 && (
+                    {/* {pkg.unpaidFeesFromEarlierPackages > 0 && (
                       <span className="text-orange-500">
                         {' '}
-                        + ₹{unpaidFeesFromEarlierPackages} (Unpaid Fees)
+                        + ₹{pkg.unpaidFeesFromEarlierPackages} (Unpaid Fees)
                       </span>
                     )} */}
-                    {/* {serviceFee > 0 && (
+                    {/* {pkg.serviceFee > 0 && (
                       <span className="text-purple-500">
                         {' '}
-                        + ₹{serviceFee} (Service Fee)
+                        + ₹{pkg.serviceFee} (Service Fee)
                       </span>
                     )} */}
-                    = ₹{totalAmount}
+                    = ₹{pkg.totalAmount}
                   </p>
                   <p className="text-gray-700 mb-1">
                     Payable End Date: {pkg.packagePayableEndDate}
                   </p>
-                  <button
+                  <Button
                     className="mt-4 bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-700"
+                    variant="contained"
                     onClick={() => handlePayClick(pkg)}
-                    disabled={isDisabled || pendingPayments.length > 0}
+                    disabled={pkg.isDisabled || pendingPayments?.length > 0}
                   >
                     Pay Now
-                  </button>
+                  </Button>
+                </>
+              ) : pkg.status === 'approved' ? (
+                <>
+                  <div>
+                    You have paid ₹{pkg.paidAmount} for this package on{' '}
+                    {new Date(pkg.paymentDate).toLocaleDateString()}
+                  </div>
                 </>
               ) : (
                 <p className="text-gray-700 mb-1">Payment Not Allowed</p>
@@ -260,19 +278,6 @@ const PackageAllowed = ({
       {selectedPackage && (
         <AcceptPaymentMember
           selectedPackage={selectedPackage}
-          totalFees={selectedPackage.packageFeeAmount}
-          penaltyAmount={calculateDisplayAmounts(selectedPackage).penaltyAmount}
-          discountAmount={
-            calculateDisplayAmounts(selectedPackage).discountAmount
-          }
-          paidFees={calculateDisplayAmounts(selectedPackage).paidFees}
-          // unpaidFeesFromEarlierPackages={
-          //   calculateDisplayAmounts(selectedPackage)
-          //     .unpaidFeesFromEarlierPackages
-          // }
-          // serviceFee={calculateDisplayAmounts(selectedPackage).serviceFee}
-          finalAmount={calculateDisplayAmounts(selectedPackage).adjustedPackageFee}
-          meetingIds={selectedPackage.meetingIds}
           onClose={() => setSelectedPackage(null)}
           onPaymentSuccess={handlePaymentSuccess}
           chapterMeetings={chapterMeetings}

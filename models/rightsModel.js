@@ -2,7 +2,7 @@
 const db = require("../config/db");
 
 // Function to get features by memberId and chapterId
-const getRightsByMemberIdAndChapterId = async (memberId, chapterId) => {
+const getRightsByMemberIdAndChapterIdAndMenu = async (memberId, chapterId) => {
   console.log({ memberId, chapterId });
   
   return db.raw(
@@ -24,11 +24,12 @@ JOIN
     featuresMaster fm ON FIND_IN_SET(fm.featureId, ro.rights) > 0
 WHERE 
     mcm.memberId = ? 
-    AND mcm.chapterId = ? ;`,
-    [memberId, chapterId]
+    AND mcm.chapterId = ?
+    AND fm.featureType = ? ;`,
+    [memberId, chapterId, "menu"]
   );
 };
 
 module.exports = {
-  getRightsByMemberIdAndChapterId,
+  getRightsByMemberIdAndChapterIdAndMenu,
 };
