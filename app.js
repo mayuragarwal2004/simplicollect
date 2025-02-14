@@ -12,6 +12,7 @@ const feeRecieverRoutes = require("./routes/feeReceiverRoutes");
 const meetingRoutes = require("./routes/meetingRoutes");
 
 const { authenticateToken } = require("./middlewares/authMiddleware");
+const { sendWhatsAppOtp } = require("./config/whatsapp");
 const PORT = process.env.PORT || 5000;
 
 const app = express();
@@ -28,8 +29,17 @@ app.use("/api/rights", authenticateToken, rightsRoutes);
 app.use("/api/image-upload", authenticateToken, imageUploadRoutes);
 app.use("/api/packages", authenticateToken, packageRoutes);
 app.use("/api/payment", authenticateToken, paymentRoutes);
-app.use("/api/feeReciever", authenticateToken, feeRecieverRoutes)
+app.use("/api/feeReciever", authenticateToken, feeRecieverRoutes);
 app.use("/api/meetings", authenticateToken, meetingRoutes);
+app.get("/api/testWA", async (req, res) => {
+  const result = await sendWhatsAppOtp("919921318237", "1234");
+  console.log({ result });
+  if (result.ok) {
+    res.send("Success");
+  } else {
+    res.status(500).send("Failed");
+  }
+});
 
 app.use("/api/*", (req, res) => {
   res.status(404).send("Not Found - Please check the URL and try again");
