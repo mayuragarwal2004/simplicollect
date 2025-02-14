@@ -5,6 +5,8 @@ import 'react-toastify/dist/ReactToastify.css';
 import Loader from './common/Loader';
 import PageTitle from './components/PageTitle';
 import SignIn from './pages/Authentication/SignIn';
+import OtpVerification from './pages/Authentication/Otpverification';
+import ForgotPassword from './pages/Authentication/ForgotPassword';
 import SignUp from './pages/Authentication/SignUp';
 import Calendar from './pages/Calendar';
 import Chart from './pages/Chart';
@@ -26,6 +28,7 @@ import MemberFeeApproval from './pages/Member/MemberFeeApproval';
 import FeeReciever from './pages/Member/FeeReciever';
 import RequireAuth from './utils/RequireAut';
 import { Bounce, ToastContainer } from 'react-toastify';
+import { Password } from '@mui/icons-material';
 
 function App() {
   const [loading, setLoading] = useState<boolean>(true);
@@ -133,11 +136,29 @@ function App() {
           }
         />
         <Route
-          path="/auth/signup"
+          path="/auth/signin"
+          element={
+            <>
+              <PageTitle title="Signin | SimpliCollect - Meeting Fee Manager" />
+              <SignIn />
+            </>
+          }
+        />
+        <Route
+          path="/auth/otp-verification"
+          element={
+            <>
+              <PageTitle title="Signin | SimpliCollect - Meeting Fee Manager" />
+              <OtpVerification />
+            </>
+          }
+        />
+        <Route
+          path="/auth/forgot-password"
           element={
             <>
               <PageTitle title="Signup | SimpliCollect - Meeting Fee Manager" />
-              <SignUp />
+              <ForgotPassword/>
             </>
           }
         />

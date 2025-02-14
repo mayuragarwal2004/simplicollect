@@ -17,7 +17,9 @@ const findMemberById = async (memberId) => {
 
 // Add member
 const addMember = async (memberData) => {
-  return db("members").insert(memberData);
+  return db("members").insert(memberData)
+  db("memberschaptermapping").insert({ memberId: memberData.memberId, chapterId: memberData.chapterId });
+    
 };
 
 const getMembers = async (chapterId) => {

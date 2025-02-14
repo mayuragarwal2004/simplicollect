@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import Box from '@mui/material/Box';
 import AcceptPaymentMember from './AcceptPaymentMember';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
@@ -24,30 +24,30 @@ const PackageAllowed = ({
   console.log({ selectedPackage });
 
   // Helper function to check if any meetings within the package are paid
-  const hasOverlappingPayments = (pkg) => {
-    return pkg.meetingIds?.some((meetingId) => {
-      const meeting = chapterMeetings.find((m) => m.meetingId === meetingId);
-      return meeting && meeting.isPaid;
-    });
-  };
+  // const hasOverlappingPayments = (pkg) => {
+  //   return pkg.meetingIds?.some((meetingId) => {
+  //     const meeting = chapterMeetings.find((m) => m.meetingId === meetingId);
+  //     return meeting && meeting.isPaid;
+  //   });
+  // };
 
   // Helper function to calculate unpaid fees from earlier packages
-  const calculateUnpaidFeesFromEarlierPackages = (currentPackage) => {
-    const currentPackageIndex = packageData.findIndex(
-      (pkg) => pkg.packageId === currentPackage.packageId,
-    );
-    let unpaidFees = 0;
+  // const calculateUnpaidFeesFromEarlierPackages = (currentPackage) => {
+  //   const currentPackageIndex = packageData.findIndex(
+  //     (pkg) => pkg.packageId === currentPackage.packageId,
+  //   );
+  //   let unpaidFees = 0;
 
-    // Loop through earlier packages
-    for (let i = 0; i < currentPackageIndex; i++) {
-      const earlierPackage = packageData[i];
-      if (!earlierPackage.isPaid) {
-        unpaidFees += earlierPackage.packageFeeAmount;
-      }
-    }
+  //   // Loop through earlier packages
+  //   for (let i = 0; i < currentPackageIndex; i++) {
+  //     const earlierPackage = packageData[i];
+  //     if (!earlierPackage.isPaid) {
+  //       unpaidFees += earlierPackage.packageFeeAmount;
+  //     }
+  //   }
 
-    return unpaidFees;
-  };
+  //   return unpaidFees;
+  // };
 
   // Helper function to calculate total amounts with penalties or discounts
   const calculateDisplayAmounts = (pkg) => {
@@ -90,7 +90,7 @@ const PackageAllowed = ({
     if (calculationDate <= new Date(pkg.discountEndDate)) {
       const daysRemainingForDiscount = Math.ceil(
         (new Date(pkg.discountEndDate) - calculationDate) /
-          (1000 * 60 * 60 * 24),
+        (1000 * 60 * 60 * 24),
       );
       discountAmount =
         getDuration(pkg.discountType, daysRemainingForDiscount) *
@@ -112,38 +112,39 @@ const PackageAllowed = ({
 
     // Adjust based on already paid meetings
     let adjustedPackageFee = totalAmount + penaltyAmount - discountAmount;
-    let paidFees = 0;
+    // let paidFees = 0;
 
-    paidFees = Array.isArray(pkg.meetingIds)
-      ? pkg.meetingIds.reduce((sum, meetingId) => {
-          const meeting = chapterMeetings.find(
-            (m) => m.meetingId === meetingId,
-          );
-          return (
-            sum + (meeting && meeting.isPaid ? meeting.meetingFeeMembers : 0)
-          );
-        }, 0)
-      : 0;
+    // paidFees = Array.isArray(pkg.meetingIds)
+    //   ? pkg.meetingIds.reduce((sum, meetingId) => {
+    //       const meeting = chapterMeetings.find(
+    //         (m) => m.meetingId === meetingId,
+    //       );
+    //       return (
+    //         sum + (meeting && meeting.isPaid ? meeting.meetingFeeMembers : 0)
+    //       );
+    //     }, 0)
+    //   : 0; 
+    // // const unpaidFeesFromEarlierPackages =
+    //   calculateUnpaidFeesFromEarlierPackages(pkg);
+    // adjustedPackageFee += unpaidFeesFromEarlierPackages;
 
     // Add unpaid fees from earlier packages
-    const unpaidFeesFromEarlierPackages =
-      calculateUnpaidFeesFromEarlierPackages(pkg);
-    adjustedPackageFee += unpaidFeesFromEarlierPackages;
+
 
     // Add service fee (2.5%)
-    const serviceFee = adjustedPackageFee * 0.025;
-    const totalPayableAmount = adjustedPackageFee + serviceFee;
+    // const serviceFee = adjustedPackageFee * 0.025;
+    const totalPayableAmount = adjustedPackageFee;
 
     return {
       totalAmount: totalPayableAmount,
       penaltyAmount,
       discountAmount,
-      paidFees,
-      unpaidFeesFromEarlierPackages,
-      serviceFee,
+      // paidFees,
+      // unpaidFeesFromEarlierPackages,
+      // serviceFee,
       isDisabled:
-        (!pkg.allowAfterEndDate && calculationDate > payableEndDate) ||
-        (!pkg.allowPackagePurchaseIfFeesPaid && hasOverlappingPayments(pkg)),
+        (!pkg.allowAfterEndDate && calculationDate > payableEndDate)
+      // (!pkg.allowPackagePurchaseIfFeesPaid && hasOverlappingPayments(pkg)),
     };
   };
 
@@ -197,17 +198,16 @@ const PackageAllowed = ({
             totalAmount,
             penaltyAmount,
             discountAmount,
-            unpaidFeesFromEarlierPackages,
-            serviceFee,
+            // unpaidFeesFromEarlierPackages,
+            // serviceFee,
             isDisabled,
           } = calculateDisplayAmounts(pkg);
 
           return (
             <div
               key={pkg.packageId}
-              className={`bg-white shadow-md rounded-lg p-6 border border-gray-200 hover:shadow-lg ${
-                isDisabled ? 'opacity-50 cursor-not-allowed' : ''
-              }`}
+              className={`bg-white shadow-md rounded-lg p-6 border border-gray-200 hover:shadow-lg ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''
+                }`}
             >
               <h2 className="text-xl font-bold mb-2">{pkg.packageName}</h2>
               {!isDisabled && totalAmount !== null ? (
@@ -223,18 +223,18 @@ const PackageAllowed = ({
                         - ₹{discountAmount}
                       </span>
                     )}
-                    {unpaidFeesFromEarlierPackages > 0 && (
+                    {/* {unpaidFeesFromEarlierPackages > 0 && (
                       <span className="text-orange-500">
                         {' '}
                         + ₹{unpaidFeesFromEarlierPackages} (Unpaid Fees)
                       </span>
-                    )}
-                    {serviceFee > 0 && (
+                    )} */}
+                    {/* {serviceFee > 0 && (
                       <span className="text-purple-500">
                         {' '}
                         + ₹{serviceFee} (Service Fee)
                       </span>
-                    )}
+                    )} */}
                     = ₹{totalAmount}
                   </p>
                   <p className="text-gray-700 mb-1">
@@ -266,17 +266,16 @@ const PackageAllowed = ({
             calculateDisplayAmounts(selectedPackage).discountAmount
           }
           paidFees={calculateDisplayAmounts(selectedPackage).paidFees}
-          unpaidFeesFromEarlierPackages={
-            calculateDisplayAmounts(selectedPackage)
-              .unpaidFeesFromEarlierPackages
-          }
-          serviceFee={calculateDisplayAmounts(selectedPackage).serviceFee}
+          // unpaidFeesFromEarlierPackages={
+          //   calculateDisplayAmounts(selectedPackage)
+          //     .unpaidFeesFromEarlierPackages
+          // }
+          // serviceFee={calculateDisplayAmounts(selectedPackage).serviceFee}
+          finalAmount={calculateDisplayAmounts(selectedPackage).adjustedPackageFee}
           meetingIds={selectedPackage.meetingIds}
           onClose={() => setSelectedPackage(null)}
           onPaymentSuccess={handlePaymentSuccess}
           chapterMeetings={chapterMeetings}
-          cashReceivers={cashReceivers}
-          qrReceivers={qrReceivers}
         />
       )}
     </div>
