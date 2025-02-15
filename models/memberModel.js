@@ -19,7 +19,7 @@ const addMember = async (memberData) => {
 };
 
 const getMembers = async (chapterId) => {
-  return db("memberchaptermapping as mmm")
+  return db("memberChapterMapping as mmm")
     .where("mmm.chapterId", chapterId)
     .join("members as m", "mmm.memberId", "m.memberId")
     .leftJoin("roles as r", "mmm.roleId", "r.roleId")

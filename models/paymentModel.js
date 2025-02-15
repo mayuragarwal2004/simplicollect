@@ -136,7 +136,7 @@ const setIsPaid = async (transactionIdsArray, trx) => {
 
 const addDues = async (dueList, trx) => {
   for (const { memberId, chapterId, due } of dueList) {
-    await trx("memberchaptermapping")
+    await trx("memberChapterMapping")
       .where({ memberId, chapterId })
       .update({
         due: trx.raw("due + ?", [due]), // Directly add/subtract due
@@ -146,7 +146,7 @@ const addDues = async (dueList, trx) => {
 
 const updateDue = async (dueList) => {
   for (const { memberId, chapterId, due } of dueList) {
-    await db("memberchaptermapping")
+    await db("memberChapterMapping")
       .where({ memberId, chapterId })
       .update({
         due, // Directly set due
@@ -155,7 +155,7 @@ const updateDue = async (dueList) => {
 };
 
 const getMemberChapterDue = async (memberId, chapterId) => {
-  return db("memberchaptermapping")
+  return db("memberChapterMapping")
     .where({ memberId, chapterId })
     .select("due")
     .first();
