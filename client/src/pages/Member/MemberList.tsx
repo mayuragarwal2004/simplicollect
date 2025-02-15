@@ -78,9 +78,9 @@ const MemberList: React.FC = () => {
             onChange={handleSearchChange}
             className="px-4 py-2 border rounded dark:bg-gray-700 dark:border-gray-600"
           />
-          <Button variant="contained" color="primary" onClick={() => setOpenModal(true)}>
+          {/* <Button variant="contained" color="primary" onClick={() => setOpenModal(true)}>
             Add Member
-          </Button>
+          </Button> */}
         </div>
       </div>
       <div className="overflow-x-auto">

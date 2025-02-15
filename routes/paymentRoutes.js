@@ -1,7 +1,6 @@
 const express = require("express");
 const router = express.Router();
 const paymentController = require("../controllers/paymentController");
-const { authenticateToken } = require("../middlewares/authMiddleware");
 
 // Route to add a new payment
 router.post("/addPayment", paymentController.addPayment);
@@ -22,6 +21,6 @@ router.get("/pendingPayments/:chapterId", paymentController.chapterPendingPaymen
 router.put("/approvePendingPayment", paymentController.approvePendingPaymentController);
 
 // Route to get all payment requests of a member
-router.post("/pendingPaymentRequests/:chapterId", paymentController.getPendingPaymentRequestsController);
+router.post("/paymentRequests/:chapterId", paymentController.getPaymentRequestsController);
 
 module.exports = router;

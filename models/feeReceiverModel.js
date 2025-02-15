@@ -23,8 +23,8 @@ const addCashReceiver = async (
   });
 };
 
-const getCurrentCashReceivers = async (chapterId, today)=>{
-  return db("cashreceivers").where("chapterId", chapterId).andWhere("enableDate", "<=", today).andWhere("disableDate", ">=", today).select("*");
+const getCurrentCashReceivers = async (chapterId, date)=>{
+  return db("cashreceivers").where("chapterId", chapterId).andWhere("enableDate", "<=", date).andWhere("disableDate", ">=", date).select("*");
 }
 
 const getQRReceivers = async (chapterId) => {
@@ -35,8 +35,8 @@ const addQRReceiver = async (data) => {
   return db("qrreceivers").insert(data);
 };
 
-const getCurrentQRReceivers = async (chapterId, today)=>{
-  return db("qrreceivers").where("chapterId", chapterId).andWhere("enableDate", "<=", today).andWhere("disableDate", ">=", today).select("*");
+const getCurrentQRReceivers = async (chapterId, date)=>{
+  return db("qrreceivers").where("chapterId", chapterId).andWhere("enableDate", "<=", date).andWhere("disableDate", ">=", date).select("*");
 }
 
 

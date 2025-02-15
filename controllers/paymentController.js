@@ -189,17 +189,18 @@ const approvePendingPaymentController = async (req, res) => {
   }
 };
 
-const getPendingPaymentRequestsController = async (req, res) => {
+const getPaymentRequestsController = async (req, res) => {
   const { memberId } = req.user;
   const { chapterId } = req.params;
-  const {currentState} = req.body;
+  const {status, currentState} = req.body;
 
   try {
     const getAllRequests = currentState === "all_members_approval";
-    const pendingPayments = await paymentModel.getPendingPaymentRequests(
+    const pendingPayments = await paymentModel.getPaymentRequests(
       memberId,
       chapterId,
-      getAllRequests
+      getAllRequests,
+      status
     );
     res.json(pendingPayments);
   } catch (error) {
@@ -214,5 +215,5 @@ module.exports = {
   deleteRequest,
   chapterPendingPayments,
   approvePendingPaymentController,
-  getPendingPaymentRequestsController,
+  getPaymentRequestsController,
 };

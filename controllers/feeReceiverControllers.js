@@ -14,12 +14,7 @@ const getCashReceiversController = async (req, res) => {
 
 const addCashReceiversController = async (req, res) => {
   const { chapterId } = req.params;
-  const {
-    cashRecieverName,
-    memberId,
-    enableDate,
-    disableDate,
-  } = req.body;
+  const { cashRecieverName, memberId, enableDate, disableDate } = req.body;
   try {
     const cashRecieverId = uuidv4();
     const newCashReceiver = await feeReceiverModel.addCashReceiver(
@@ -50,19 +45,20 @@ const getQRReceiversController = async (req, res) => {
 
 const addQRReceiversController = async (req, res) => {
   const { chapterId } = req.params;
-  const { qrCode, memberId, qrCodeName,qrImageLink, enableDate, disableDate } =
+  const { qrCode, memberId, qrCodeName, qrImageLink, enableDate, disableDate } =
     req.body;
   try {
     const qrCodeId = uuidv4();
-    const newQRReceiver = await feeReceiverModel.addQRReceiver(
-      {qrCodeId,qrCode,
+    const newQRReceiver = await feeReceiverModel.addQRReceiver({
+      qrCodeId,
+      qrCode,
       memberId,
       chapterId,
       qrCodeName,
       qrImageLink,
       enableDate,
-      disableDate}
-    );
+      disableDate,
+    });
     res.json(newQRReceiver);
   } catch (error) {
     console.error(error);
@@ -72,27 +68,35 @@ const addQRReceiversController = async (req, res) => {
 
 const getCurrentCashReceiversController = async (req, res) => {
   const { chapterId } = req.params;
+  const { date } = req.body; //DD-MM-YYYY
   try {
-    const today = new Date();
-    const cashReceivers = await feeReceiverModel.getCurrentCashReceivers(chapterId, today);
+    const dateObject = date ? new Date(date) : new Date();
+    const cashReceivers = await feeReceiverModel.getCurrentCashReceivers(
+      chapterId,
+      dateObject
+    );
     res.json(cashReceivers);
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: error.message });
   }
-}
+};
 
 const getCurrentQRReceiversController = async (req, res) => {
   const { chapterId } = req.params;
+  const { date } = req.body; //DD-MM-YYYY
   try {
-    const today = new Date();
-    const qrReceivers = await feeReceiverModel.getCurrentQRReceivers(chapterId, today);
+    const dateObject = date ? new Date(date) : new Date();
+    const qrReceivers = await feeReceiverModel.getCurrentQRReceivers(
+      chapterId,
+      dateObject
+    );
     res.json(qrReceivers);
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: error.message });
   }
-}
+};
 
 module.exports = {
   getCashReceiversController,
@@ -100,5 +104,5 @@ module.exports = {
   getCurrentCashReceiversController,
   getQRReceiversController,
   addQRReceiversController,
-  getCurrentQRReceiversController
+  getCurrentQRReceiversController,
 };

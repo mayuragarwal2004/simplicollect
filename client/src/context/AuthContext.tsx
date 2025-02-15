@@ -58,6 +58,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         console.error('Login failed:', data.message || 'Unknown error');
       }
     } catch (error) {
+      toast.error('Could not log in. Please try again later.');
       console.error('An error occurred:', error);
     }
   };

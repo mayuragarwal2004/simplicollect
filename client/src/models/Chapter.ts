@@ -22,4 +22,5 @@ export interface Chapter {
   quarterlyFee?: number;
   organisationId?: string;
   organisationName?: string;
+  testMode?: boolean;
 }
