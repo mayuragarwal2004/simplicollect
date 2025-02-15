@@ -233,6 +233,11 @@ const PackageAllowed = ({
                         - ₹{pkg.discountAmount}
                       </span>
                     )}
+                    {pkg.previousDue !== 0 && (
+                      <span className={`text-orange-500`}>
+                      {' '}+ ₹{pkg.previousDue} ({pkg.previousDue > 0 ? 'Advance' : 'Previous Due'})
+                      </span>
+                    )}
                     {/* {pkg.unpaidFeesFromEarlierPackages > 0 && (
                       <span className="text-orange-500">
                         {' '}
@@ -248,7 +253,8 @@ const PackageAllowed = ({
                     = ₹{pkg.totalAmount}
                   </p>
                   <p className="text-gray-700 mb-1">
-                    Payable End Date: {formatDateDDMMYYY(pkg.packagePayableEndDate)}
+                    Payable End Date:{' '}
+                    {formatDateDDMMYYY(pkg.packagePayableEndDate)}
                   </p>
                   <Button
                     className="mt-4 bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-700"

@@ -22,13 +22,8 @@ const MemberFeeManager = () => {
   const [cashReceivers, setCashReceivers] = useState([]);
   const [qrReceivers, setQrReceivers] = useState([]);
   const [calculationDate, setCalculationDate] = useState(new Date());
+  const [due, setDue] = useState(null);
   const { chapterData } = useData();
-
-  const [chapterFeeConfig] = React.useState({
-    isPerMeetingAllowed: true,
-    isMonthlyAllowed: true,
-    isQuarterlyAllowed: true,
-  });
 
   console.log({ cashReceivers, qrReceivers });
 
@@ -43,15 +38,25 @@ const MemberFeeManager = () => {
       .catch((error) => console.error('Error fetching meetings:', error));
   }, []);
 
-  const processPackageData = (packages) => {
+  const processPackageData = (packages, due) => {
     return packages.map((pkg) => {
       const amountCaluculations = packageAmountCalculations(
         calculationDate,
         pkg,
         chapterMeetings,
+        due,
       );
       return { ...pkg, ...amountCaluculations };
     });
+  };
+
+  const fetchDueAmount = () => {
+    axiosInstance
+      .get(`/api/payment/due/${chapterData.chapterId}`)
+      .then((data) => {
+        console.log('Fetched Due Amount:', data.data);
+        setDue(data.data.due);
+      });
   };
 
   const fetchPackages = () => {
@@ -62,7 +67,7 @@ const MemberFeeManager = () => {
         const parentTypes = [
           ...new Set(data.data.map((pkg) => pkg.packageParent)),
         ];
-        const responseData = processPackageData(data.data);
+        const responseData = processPackageData(data.data, due);
         setPackageParents(parentTypes);
         setPackageData(responseData);
       })
@@ -100,7 +105,11 @@ const MemberFeeManager = () => {
   const fetchCurrentQrReceivers = () => {
     // Fetch QR receivers
     axiosInstance
-      .get(`/api/feeReciever/currentQRReceivers/${chapterData.chapterId}?date=${formatDateDDMMYYY(calculationDate)}`)
+      .get(
+        `/api/feeReciever/currentQRReceivers/${
+          chapterData.chapterId
+        }?date=${formatDateDDMMYYY(calculationDate)}`,
+      )
       .then((data) => {
         console.log('Fetched QR Receivers:', data.data);
         setQrReceivers(data.data);
@@ -110,12 +119,18 @@ const MemberFeeManager = () => {
 
   useEffect(() => {
     if (chapterData.chapterId) {
+      fetchDueAmount();
+    }
+  }, [chapterData.chapterId]);
+
+  useEffect(() => {
+    if (chapterData.chapterId && due !== null) {
       fetchPendingPayments();
       fetchCurrentCashReceivers();
       fetchCurrentQrReceivers();
       fetchPackages();
     }
-  }, [chapterData.chapterId, calculationDate]);
+  }, [chapterData.chapterId, calculationDate, due]);
 
   const handleDeleteRequest = (transactionId) => {
     axiosInstance
@@ -188,28 +203,47 @@ const MemberFeeManager = () => {
           </div>
         </div>
       )}
-      {/* Left Side: DatePicker */}
-      {Boolean(chapterData.testMode) && (
-        <div className="flex items-center space-x-4">
-          <LocalizationProvider dateAdapter={AdapterDateFns}>
-            <DatePicker
-              label="Calculation Date"
-              value={calculationDate}
-              onChange={(newDate) => setCalculationDate(newDate)}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  value={
-                    calculationDate
-                      ? new Date(calculationDate).toLocaleDateString('en-GB')
-                      : ''
-                  }
-                />
-              )}
-            />
-          </LocalizationProvider>
-        </div>
-      )}
+      <div className="flex justify-between">
+        {/* Left Side: DatePicker */}
+        {Boolean(chapterData.testMode) && (
+          <div className="flex items-center space-x-4">
+            <LocalizationProvider dateAdapter={AdapterDateFns}>
+              <DatePicker
+                label="Calculation Date"
+                value={calculationDate}
+                onChange={(newDate) => setCalculationDate(newDate)}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    value={
+                      calculationDate
+                        ? new Date(calculationDate).toLocaleDateString('en-GB')
+                        : ''
+                    }
+                  />
+                )}
+              />
+            </LocalizationProvider>
+          </div>
+        )}
+        {/* Right Side: Due Amount, show red for positive value, green for negative value */}
+        {due !== null && (
+          <div className="flex items-center justify-end mt-4">
+            <div className="flex items-center space-x-2">
+              <p className="text-lg font-semibold text-gray-700 dark:text-gray-300">
+                {due > 0 ? 'Due Amount' : 'Advance Amount'}:
+              </p>
+              <p
+                className={`text-lg font-semibold ${
+                  due > 0 ? 'text-red-500' : 'text-green-500'
+                }`}
+              >
+                ₹{Math.abs(due)}
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
 
       <Box sx={{ width: '100%' }}>
         <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>

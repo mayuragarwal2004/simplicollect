@@ -109,31 +109,56 @@ const getTransactionById = async (transactionId) => {
 };
 
 // data is an array of objects containing transactionId, approvedById and status
-const approvePendingPayment = async (data) => {
+const approvePendingPayment = async (data, trx) => {
   try {
     const updatePromises = data.map((transaction) => {
       const { transactionId, ...updateData } = transaction;
-      return db("transactions").where({ transactionId }).update(updateData);
+      return trx("transactions").where({ transactionId }).update(updateData);
     });
     await Promise.all(updatePromises);
-    return { success: true };
   } catch (error) {
     throw error;
   }
 };
 
-const setIsPaid = async (transactionIdsArray) => {
+const setIsPaid = async (transactionIdsArray, trx) => {
   try {
     const updatePromises = transactionIdsArray.map((transactionId) => {
-      return db("membersmeetingmapping")
+      return trx("membersmeetingmapping")
         .where({ transactionId })
         .update({ isPaid: true });
     });
     await Promise.all(updatePromises);
-    return { success: true };
   } catch (error) {
     throw error;
   }
+};
+
+const addDues = async (dueList, trx) => {
+  for (const { memberId, chapterId, due } of dueList) {
+    await trx("memberchaptermapping")
+      .where({ memberId, chapterId })
+      .update({
+        due: trx.raw("due + ?", [due]), // Directly add/subtract due
+      });
+  }
+};
+
+const updateDue = async (dueList) => {
+  for (const { memberId, chapterId, due } of dueList) {
+    await db("memberchaptermapping")
+      .where({ memberId, chapterId })
+      .update({
+        due, // Directly set due
+      });
+  }
+};
+
+const getMemberChapterDue = async (memberId, chapterId) => {
+  return db("memberchaptermapping")
+    .where({ memberId, chapterId })
+    .select("due")
+    .first();
 };
 
 module.exports = {
@@ -147,4 +172,7 @@ module.exports = {
   getTransactionById,
   approvePendingPayment,
   setIsPaid,
+  addDues,
+  updateDue,
+  getMemberChapterDue,
 };

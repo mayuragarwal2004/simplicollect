@@ -23,4 +23,7 @@ router.put("/approvePendingPayment", paymentController.approvePendingPaymentCont
 // Route to get all payment requests of a member
 router.post("/paymentRequests/:chapterId", paymentController.getPaymentRequestsController);
 
+// Route to get the due of a member of a chapter
+router.get("/due/:chapterId", paymentController.getMemberChapterDueController);
+
 module.exports = router;

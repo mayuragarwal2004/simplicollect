@@ -22,7 +22,7 @@ const MemberList: React.FC = () => {
     phoneNumber: '',
     role: '',
     chapterId: chapterData.chapterId, // Example chapterId
-    password: '',  // Added password to the state
+    password: '', // Added password to the state
   });
 
   useEffect(() => {
@@ -43,8 +43,9 @@ const MemberList: React.FC = () => {
 
   useEffect(() => {
     setFilteredMembers(
-      members.filter((member) =>
-        member.firstName?.toLowerCase().includes(search.toLowerCase()),
+      members.filter(
+        (member) =>
+          member.firstName?.toLowerCase().includes(search.toLowerCase()),
       ),
     );
   }, [search, members]);
@@ -59,7 +60,15 @@ const MemberList: React.FC = () => {
       setMembers([...members, response.data]); // Add new member to the list
       setFilteredMembers([...members, response.data]);
       setOpenModal(false);
-      setNewMember({ firstName: '', lastName: '', email: '', phoneNumber: '', role: '', chapterId: chapterData.chapterId, password: '' });
+      setNewMember({
+        firstName: '',
+        lastName: '',
+        email: '',
+        phoneNumber: '',
+        role: '',
+        chapterId: chapterData.chapterId,
+        password: '',
+      });
     } catch (error) {
       console.error('Error adding member:', error);
     }
@@ -90,15 +99,27 @@ const MemberList: React.FC = () => {
               <th className="py-2 px-4 border-b dark:border-gray-600">Name</th>
               <th className="py-2 px-4 border-b dark:border-gray-600">Email</th>
               <th className="py-2 px-4 border-b dark:border-gray-600">Role</th>
-              <th className="py-2 px-4 border-b dark:border-gray-600">Actions</th>
+              <th className="py-2 px-4 border-b dark:border-gray-600">Due</th>
+              <th className="py-2 px-4 border-b dark:border-gray-600">
+                Actions
+              </th>
             </tr>
           </thead>
           <tbody>
             {filteredMembers.map((member) => (
               <tr key={member.memberId}>
-                <td className="py-2 px-4 border-b dark:border-gray-600">{member.firstName}</td>
-                <td className="py-2 px-4 border-b dark:border-gray-600">{member.email}</td>
-                <td className="py-2 px-4 border-b dark:border-gray-600">{member.roleName}</td>
+                <td className="py-2 px-4 border-b dark:border-gray-600">
+                  {member.firstName}
+                </td>
+                <td className="py-2 px-4 border-b dark:border-gray-600">
+                  {member.email}
+                </td>
+                <td className="py-2 px-4 border-b dark:border-gray-600">
+                  {member.roleName}
+                </td>
+                <td className="py-2 px-4 border-b dark:border-gray-600">
+                  ₹{member.due}
+                </td>
                 <td className="py-2 px-4 border-b dark:border-gray-600">
                   <div className="flex space-x-2">
                     <IconButton>
@@ -123,21 +144,27 @@ const MemberList: React.FC = () => {
             label="First Name"
             fullWidth
             value={newMember.firstName}
-            onChange={(e) => setNewMember({ ...newMember, firstName: e.target.value })}
+            onChange={(e) =>
+              setNewMember({ ...newMember, firstName: e.target.value })
+            }
             margin="normal"
           />
           <TextField
             label="Last Name"
             fullWidth
             value={newMember.lastName}
-            onChange={(e) => setNewMember({ ...newMember, lastName: e.target.value })}
+            onChange={(e) =>
+              setNewMember({ ...newMember, lastName: e.target.value })
+            }
             margin="normal"
           />
           <TextField
             label="Email"
             fullWidth
             value={newMember.email}
-            onChange={(e) => setNewMember({ ...newMember, email: e.target.value })}
+            onChange={(e) =>
+              setNewMember({ ...newMember, email: e.target.value })
+            }
             margin="normal"
           />
           <TextField
@@ -145,21 +172,27 @@ const MemberList: React.FC = () => {
             type="password" // Make the input type "password"
             fullWidth
             value={newMember.password}
-            onChange={(e) => setNewMember({ ...newMember, password: e.target.value })} // Corrected to handle password change
+            onChange={(e) =>
+              setNewMember({ ...newMember, password: e.target.value })
+            } // Corrected to handle password change
             margin="normal"
           />
           <TextField
             label="Phone Number"
             fullWidth
             value={newMember.phoneNumber}
-            onChange={(e) => setNewMember({ ...newMember, phoneNumber: e.target.value })}
+            onChange={(e) =>
+              setNewMember({ ...newMember, phoneNumber: e.target.value })
+            }
             margin="normal"
           />
           <TextField
             label="Role"
             fullWidth
             value={newMember.role}
-            onChange={(e) => setNewMember({ ...newMember, role: e.target.value })}
+            onChange={(e) =>
+              setNewMember({ ...newMember, role: e.target.value })
+            }
             margin="normal"
           />
           <div className="flex justify-center mt-4">

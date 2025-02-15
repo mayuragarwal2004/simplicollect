@@ -1,4 +1,5 @@
 // controllers/paymentControllers.js
+const db = require("../config/db");
 const memberModel = require("../models/memberModel");
 const paymentModel = require("../models/paymentModel");
 const { v4: uuidv4 } = require("uuid");
@@ -162,37 +163,47 @@ const deleteRequest = async (req, res) => {
 
 const approvePendingPaymentController = async (req, res) => {
   const { memberId } = req.user;
-  const { transactionIds } = req.body;
+  const { transactionDetails } = req.body;
+
   try {
-    const memberDetails = await memberModel.findMemberById(memberId);
-    const transactionData = transactionIds.map((transactionId) => {
-      return {
+    await db.transaction(async (trx) => {
+      const memberDetails = await memberModel.findMemberById(memberId);
+
+      const transactionData = transactionDetails.map((element) => ({
         approvedById: memberId,
         approvedByName: `${memberDetails.firstName} ${memberDetails.lastName}`,
-        transactionId,
+        transactionId: element.transactionId,
         status: "approved",
-      };
+      }));
+
+      // Step 1: Approve Payments
+      await paymentModel.approvePendingPayment(transactionData, trx);
+
+      // Step 2: Set isPaid to true
+      const transactionIdsArray = transactionDetails.map((t) => t.transactionId);
+      await paymentModel.setIsPaid(transactionIdsArray, trx);
+
+      // Step 3: Add Dues
+      const dueList = transactionDetails.map((transaction) => ({
+        memberId: transaction.memberId,
+        chapterId: transaction.chapterId,
+        due: transaction.dueAmount,
+      }));
+      await paymentModel.updateDue(dueList, trx);
+
+      // If all succeeds, transaction commits automatically
+      res.json({ success: true });
     });
-
-    const result = await paymentModel.approvePendingPayment(transactionData);
-
-    // set isPaid to true in membersmeetingmapping table using transactionId
-    const transactionIdsArray = transactionIds.map((transactionId) => {
-      return transactionId;
-    });
-
-    const result2 = await paymentModel.setIsPaid(transactionIdsArray);
-    res.json(result);
   } catch (error) {
-    console.log(error);
-    res.status(500).json({ error: error.message });
+    console.error("Transaction Failed:", error);
+    res.status(500).json({ error: "Transaction Failed", details: error.message });
   }
 };
 
 const getPaymentRequestsController = async (req, res) => {
   const { memberId } = req.user;
   const { chapterId } = req.params;
-  const {status, currentState} = req.body;
+  const { status, currentState } = req.body;
 
   try {
     const getAllRequests = currentState === "all_members_approval";
@@ -209,6 +220,19 @@ const getPaymentRequestsController = async (req, res) => {
   }
 };
 
+const getMemberChapterDueController = async (req, res) => {
+  const { memberId } = req.user;
+  const { chapterId } = req.params;
+
+  try {
+    const dues = await paymentModel.getMemberChapterDue(memberId, chapterId);
+    res.json(dues);
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
 module.exports = {
   addPayment,
   checkPendingPayments,
@@ -216,4 +240,5 @@ module.exports = {
   chapterPendingPayments,
   approvePendingPaymentController,
   getPaymentRequestsController,
+  getMemberChapterDueController,
 };

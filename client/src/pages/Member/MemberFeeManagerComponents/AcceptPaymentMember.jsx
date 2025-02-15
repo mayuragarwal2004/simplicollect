@@ -17,6 +17,7 @@ const AcceptPaymentMember = ({
   const [paymentDate] = useState(new Date().toLocaleDateString()); // Current date
   const [showMeetings, setShowMeetings] = useState(false); // Toggle meeting details
   const [selectedMeetings, setSelectedMeetings] = useState([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [amountPaid, setAmountPaid] = useState(selectedPackage.totalAmount); // Amount paid by the member
   const [minimumPayable, setMinimumPayable] = useState(0); // Minimum payable amount
@@ -120,6 +121,9 @@ const AcceptPaymentMember = ({
       })
       .catch((error) => {
         console.error('Error submitting payment:', error);
+      })
+      .finally(() => {
+        setIsSubmitting(false);
       });
   };
 
@@ -157,6 +161,13 @@ const AcceptPaymentMember = ({
             {selectedPackage.discountAmount > 0 && (
               <p className="text-green-500">
                 - ₹{selectedPackage.discountAmount} (Discount)
+              </p>
+            )}
+            {selectedPackage.previousDue !== 0 && (
+              <p className="text-orange-500">
+                {' '}
+                + ₹{selectedPackage.previousDue} (
+                {selectedPackage.previousDue > 0 ? 'Advance' : 'Previous Due'})
               </p>
             )}
             {selectedPackage.paidFees > 0 && (
@@ -355,7 +366,12 @@ const AcceptPaymentMember = ({
             Cancel
           </button>
           <button
-            onClick={handlePaymentSubmit}
+            onClick={(e) => {
+              e.preventDefault();
+              setIsSubmitting(true);
+              handlePaymentSubmit();
+            }}
+            disabled={isSubmitting}
             className="px-2 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition flex items-center justify-center space-x-2"
           >
             <Check size={18} />

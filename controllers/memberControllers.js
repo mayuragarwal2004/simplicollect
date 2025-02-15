@@ -10,6 +10,7 @@ const getMemberById = async (req, res) => {
 
   try {
     const member = await memberModel.findMemberById(memberId);
+    member.password = undefined;
     if (member) {
       res.json(member);
     } else {

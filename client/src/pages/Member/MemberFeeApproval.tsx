@@ -5,6 +5,7 @@ import useWindowDimensions from '../../utils/useWindowDimensions';
 import Breadcrumb from '../../components/Breadcrumbs/Breadcrumb';
 import { Checkbox, IconButton } from '@mui/material';
 import RefreshIcon from '@mui/icons-material/Refresh';
+import { toast } from 'react-toastify';
 
 interface MemberFee {
   transactionId: string;
@@ -94,14 +95,22 @@ const MemberFeeApproval: React.FC = () => {
 
   const confirmSelectedFees = async () => {
     try {
+      // make an aaray of objects with transactionId and dues
+      const data = pendingFees.filter((fee) =>
+        selectedApprovals.includes(fee.transactionId),
+      );
+      console.log({ data });
+      
       await axiosInstance.put('/api/payment/approvePendingPayment', {
-        transactionIds: selectedApprovals, // Send the first selected transactionId (or adjust for multiple approvals)
+        transactionDetails: data, // Send the first selected transactionId (or adjust for multiple approvals)
       });
       setPendingFees((prev) =>
         prev.filter((fee) => !selectedApprovals.includes(fee.transactionId)),
       );
       setSelectedApprovals([]);
+      toast.success('Fees confirmed successfully');
     } catch (error) {
+      toast.error('Could not confirm fees. Please try again later.');
       console.error('Confirming fees failed:', error);
     }
   };
@@ -114,7 +123,7 @@ const MemberFeeApproval: React.FC = () => {
           <h2 className="text-lg font-medium dark:text-white">
             Member Fee Approvals
           </h2>
-          <IconButton aria-label="refresh" onClick={fetchFeeRequests}>
+          <IconButton aria-label="refresh" onClick={() => fetchFeeRequests()}>
             <RefreshIcon className="dark:text-white" />
           </IconButton>
         </div>
