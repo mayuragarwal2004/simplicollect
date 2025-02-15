@@ -127,6 +127,12 @@ const AcceptPaymentMember = ({
       });
   };
 
+  const updatePaymentType = (type) => {
+    setSelectedCashReceiver('');
+    setSelectedQRReceiver('');
+    setPaymentType(type);
+  }
+
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-[1000]">
       <div className="bg-white rounded-lg p-6 w-full max-w-lg shadow-xl relative max-h-[90vh] overflow-y-auto">
@@ -221,7 +227,7 @@ const AcceptPaymentMember = ({
             onClick={() => setShowMeetings(!showMeetings)}
             className="flex items-center text-lg font-medium text-blue-500 hover:underline focus:outline-none"
           >
-            {selectedPackage.meetingIds.length} Meetings
+            {selectedMeetings.length} Meetings
             {showMeetings ? (
               <ChevronUp className="ml-2" size={18} />
             ) : (
@@ -256,7 +262,7 @@ const AcceptPaymentMember = ({
           <p className="text-gray-700 font-semibold">Select Payment Method:</p>
           <div className="flex space-x-4 mt-2">
             <button
-              onClick={() => setPaymentType('cash')}
+              onClick={() => updatePaymentType('cash')}
               className={`px-4 py-2 rounded-lg text-white font-medium ${
                 paymentType === 'cash' ? 'bg-blue-600' : 'bg-gray-300'
               } hover:bg-blue-700`}
@@ -264,7 +270,7 @@ const AcceptPaymentMember = ({
               Cash
             </button>
             <button
-              onClick={() => setPaymentType('online')}
+              onClick={() => updatePaymentType('online')}
               className={`px-4 py-2 rounded-lg text-white font-medium ${
                 paymentType === 'online' ? 'bg-blue-600' : 'bg-gray-300'
               } hover:bg-blue-700`}
