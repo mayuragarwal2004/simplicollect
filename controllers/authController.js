@@ -1,5 +1,5 @@
 const db = require("../config/db");
-const { sendOTP, verifyOTP,memberExistOrNot } = require("../models/authModel");
+const { sendOTP, verifyOTP, memberExistOrNot } = require("../models/authModel");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 
@@ -170,41 +170,55 @@ const resetPassword = async (req, res) => {
   }
 };
 const sendOtpForLogin = async (req, res) => {
-  const { email } = req.body;
+  const { identifier } = req.body; // Can be email or phone number
 
   try {
-    const user = await db("members").where("email", email).first();
+    // Find user by either email or phone number
+    const user = await db("members")
+      .where("email", identifier)
+      .orWhere("phoneNumber", identifier)
+      .first();
+
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    const response = await sendOTP(email);
+    console.log("User found:", user);
+
+    // Send OTP to the provided identifier (email or phone)
+    const response = await sendOTP(identifier);
+
     return res.status(response.success ? 200 : 500).json(response);
   } catch (error) {
+    console.error("Error in sendOtpForLogin:", error);
     return res.status(500).json({ message: "Internal server error" });
   }
 };
-const verifyOtpLogin = async (req, res) => {
-  const { email, otp, password } = req.body;
 
+const verifyOtpLogin = async (req, res) => {
+  const { identifier, otp, password } = req.body;
+  console.log(otp)
+  console.log("Verifying OTP for:", identifier);
   try {
-    console.log("hi");
-    const response = await verifyOTP(email, otp);
-    console.log(response);
-    console.log("hio");
+    console.log("Verifying OTP for:", identifier);
+
+    const response = await verifyOTP(identifier, otp);
     if (!response.success) {
-      console.log("hashedPassword");
       return res.status(400).json(response);
     }
-    console.log("bye");
-  const hashedPassword = await bcrypt.hash(password, 10);
-    console.log(hashedPassword);
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
     await db("members")
-      .where("email", email)
+      .where("email", identifier)
+      .orWhere("phoneNumber", identifier)
       .update({ password: hashedPassword });
 
-    // If OTP is valid, generate tokens
-    const user = await db("members").where("email", email).first();
+    const user = await db("members")
+      .where("email", identifier)
+      .orWhere("phoneNumber", identifier)
+      .first();
+
     const accessToken = generateAccessToken(user);
     const refreshToken = generateRefreshToken(user);
 
@@ -217,7 +231,8 @@ const verifyOtpLogin = async (req, res) => {
 
     return res.status(200).json({ accessToken });
   } catch (error) {
-    // return res.status(500).json({ message: "Internal server error" });
+    console.error("Error verifying OTP login:", error);
+    return res.status(500).json({ message: "Internal server error" });
   }
 };
 
@@ -251,5 +266,5 @@ module.exports = {
   resetPassword,
   sendOtpForLogin,
   verifyOtpLogin,
-  meberexists,    
+  meberexists,
 };

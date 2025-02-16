@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate, Link ,useLocation} from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import Breadcrumb from "../../components/Breadcrumbs/Breadcrumb";
 import LogoDark from "../../images/logo/logo-dark.svg";
@@ -9,7 +9,7 @@ const OtpVerification = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const { login } = useAuth();
-    const [email, setEmail] = useState(location.state?.identifier || "");
+    const [identifier, setIdentifier] = useState(location.state?.identifier || ""); // Email or Phone
     const [otp, setOtp] = useState("");
     const [newPassword, setNewPassword] = useState("");
     const [otpSent, setOtpSent] = useState(false);
@@ -20,12 +20,14 @@ const OtpVerification = () => {
             const response = await fetch("/api/auth/send-otp", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ email }),
+                body: JSON.stringify({ identifier, otp, password: newPassword }),
             });
             const data = await response.json();
             if (response.ok) {
                 setOtpSent(true);
                 setError("");
+                await login(identifier, password);
+                navigate('/');
             } else {
                 setError(data.message);
             }
@@ -42,7 +44,7 @@ const OtpVerification = () => {
             const response = await fetch("/api/auth/verify-otp", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ email, otp, password: newPassword }), // Send password as "password"
+                body: JSON.stringify({ identifier, otp,password: newPassword }), // Send password as "password"
             });
             const data = await response.json();
             if (response.ok) {
@@ -74,19 +76,22 @@ const OtpVerification = () => {
                     <form className="w-full" onSubmit={handleVerifyOtp}>
                         {/* Email Input */}
                         <div className="mb-4">
-                            <label className="block text-gray-700 dark:text-gray-300 mb-2" htmlFor="email">
-                                Email
+                            <label
+                                className="block text-gray-700 dark:text-gray-300 mb-2"
+                                htmlFor="identifier"
+                            >
+                                Email or Phone Number
                             </label>
                             <input
-                                type="email"
-                                id="email"
+                                type="text"
+                                id="identifier"
                                 className="w-full p-3 border border-stroke rounded-md dark:border-strokedark dark:bg-boxdark"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
+                                value={identifier}
+                                onChange={(e) => setIdentifier(e.target.value)}
                                 required
+                                disabled={!!location.state?.identifier} // Disable if set from previous page
                             />
                         </div>
-
                         {/* OTP Input */}
                         {otpSent && (
                             <div className="mb-4">
