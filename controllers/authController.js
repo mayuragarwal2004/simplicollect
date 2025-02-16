@@ -1,5 +1,5 @@
 const db = require("../config/db");
-const { sendOTP, verifyOTP } = require("../models/authModel");
+const { sendOTP, verifyOTP,memberExistOrNot } = require("../models/authModel");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 
@@ -80,15 +80,20 @@ const hasPasswordSet = async (email) => {
 
 // Login with password or OTP
 const login = async (req, res) => {
-  const { email, password, otp } = req.body;
+  const { identifier, password, otp } = req.body; // 'identifier' can be email or phone
 
   try {
-    const user = await db("members").where("email", email).first();
+    // Check if the identifier is an email or a phone number
+    const user = await db("members")
+      .where("email", identifier)
+      .orWhere("phoneNumber", identifier)
+      .first();
+
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // If password is set, use password-based login
+    // Password-based login
     if (user.password) {
       if (!password) {
         return res.status(400).json({ message: "Password is required" });
@@ -97,11 +102,11 @@ const login = async (req, res) => {
         return res.status(401).json({ message: "Invalid password" });
       }
     } else {
-      // If password is not set, use OTP-based login
+      // OTP-based login
       if (!otp) {
         return res.status(400).json({ message: "OTP is required" });
       }
-      const otpResponse = await verifyOTP(email, otp);
+      const otpResponse = await verifyOTP(user.email, otp); // OTP verification
       if (!otpResponse.success) {
         return res.status(401).json({ message: otpResponse.message });
       }
@@ -181,9 +186,6 @@ const sendOtpForLogin = async (req, res) => {
 };
 const verifyOtpLogin = async (req, res) => {
   const { email, otp, password } = req.body;
-  console.log(password,"password");
-  console.log(email,"email");
-  console.log(otp,"otp");
 
   try {
     console.log("hi");
@@ -219,6 +221,28 @@ const verifyOtpLogin = async (req, res) => {
   }
 };
 
+
+const meberexists = async (req, res) => {
+  const { identifier } = req.body; // Can be email or phone number
+
+  try {
+    const member = await memberExistOrNot(identifier);
+
+    if (!member) {
+      return res.json({ exists: false, defaultOTP: false });
+    }
+
+    // Check if the user has a password set
+    const hasPassword = member.password && member.password.trim() !== "";
+
+    return res.json({ exists: true, defaultOTP: !hasPassword });
+  } catch (error) {
+    console.error("Error in checkMember:", error);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};
+// Export the functions
+
 module.exports = {
   login,
   register,
@@ -226,5 +250,6 @@ module.exports = {
   forgotPassword,
   resetPassword,
   sendOtpForLogin,
-  verifyOtpLogin
+  verifyOtpLogin,
+  meberexists,    
 };

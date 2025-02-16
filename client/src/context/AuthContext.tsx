@@ -38,31 +38,30 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   }, []);
 
-  const login = async (email: string, password: string) => {
+  const login = async (identifier: string, password: string) => {
     try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ identifier, password }),
       });
       const data = await response.json();
-
+  
       if (response.ok) {
         setAccessToken(data.accessToken);
-        sessionStorage.setItem('accessToken', data.accessToken);
+        sessionStorage.setItem("accessToken", data.accessToken);
         document.cookie = `refreshToken=${data.refreshToken}; Secure; SameSite=Strict; path=/;`;
-        document.cookie = `token=${data.accessToken}; Secure; SameSite=Strict; path=/;`;
-        console.log('User logged in successfully');
+        console.log("User logged in successfully");
       } else {
-        toast.error(data.message || 'Unknown error');
-        console.error('Login failed:', data.message || 'Unknown error');
+        toast.error(data.message || "Unknown error");
+        console.error("Login failed:", data.message || "Unknown error");
       }
     } catch (error) {
-      toast.error('Could not log in. Please try again later.');
-      console.error('An error occurred:', error);
+      toast.error("Could not log in. Please try again later.");
+      console.error("An error occurred:", error);
     }
   };
-
+  
   const logout = () => {
     setAccessToken(null);
     sessionStorage.removeItem('accessToken');

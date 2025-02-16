@@ -74,4 +74,14 @@ const verifyOTP = async (email, otp) => {
   }
 };
 
-module.exports = { sendOTP, verifyOTP };
+const memberExistOrNot = async (identifier) => {
+ const member= await  db("members")
+    .where((builder) => {
+      builder.where("email", identifier).orWhere("phoneNumber", identifier);
+    })
+    .select("memberId", "email", "phoneNumber", "password") // Ensure password is included
+    .first();
+    return member;
+};
+
+module.exports = { sendOTP, verifyOTP, memberExistOrNot };

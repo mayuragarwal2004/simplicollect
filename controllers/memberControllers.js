@@ -84,6 +84,7 @@ const memberList = async (req, res) => {
   }
 };
 
+
 module.exports = {
   getMemberById,
   addMember,

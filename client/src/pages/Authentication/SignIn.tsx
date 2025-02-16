@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Link } from 'react-router-dom';
 import Breadcrumb from '../../components/Breadcrumbs/Breadcrumb';
 import LogoDark from '../../images/logo/logo-dark.svg';
@@ -8,15 +8,17 @@ import { useAuth } from '../../context/AuthContext';
 
 const SignIn: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation(); // ✅ Get the state from navigation
   const { isAuthenticated, login } = useAuth();
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState(location.state?.identifier || "");
+  const [identifier, setIdentifier] = useState(location.state?.identifier || ""); // Email or Phone
   const [password, setPassword] = useState('');
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     // Handle sign-in logic here (e.g., API call)
-    console.log('Email:', email, 'Password:', password);
-    await login(email, password);
+    console.log("Identifier:", identifier, "Password:", password);
+    await login(identifier, password);
   };
 
   // console.log('isAuthenticated:', isAuthenticated);
@@ -26,7 +28,7 @@ const SignIn: React.FC = () => {
       navigate('/');
     }
   }
-  , [isAuthenticated]);
+    , [isAuthenticated]);
 
   return (
     <>
@@ -57,15 +59,15 @@ const SignIn: React.FC = () => {
                 Email
               </label>
               <input
-                type="email"
-                id="email"
+                type="text"
+                id="identifier"
                 className="w-full p-3 border border-stroke rounded-md dark:border-strokedark dark:bg-boxdark"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                value={identifier}
+                onChange={(e) => setIdentifier(e.target.value)}
                 required
+                disabled={!!location.state?.identifier} // Disable if set from previous page
               />
             </div>
-
             <div className="mb-6">
               <label
                 className="block text-gray-700 dark:text-gray-300 mb-2"
@@ -91,14 +93,15 @@ const SignIn: React.FC = () => {
             </button>
           </form>
 
-          <div className="mt-4 text-center">
-            <Link
-              to="/forgot-password"
-              className="text-blue-500 hover:underline"
-            >
+          <div className="mt-4 flex justify-between">
+            <p onClick={() => navigate(-1)} className="text-gray-500 cursor-pointer hover:underline">
+              Change
+            </p>
+            <Link to="/forgot-password" className=" pl-50 text-blue-500 hover:underline">
               Forgot Password?
             </Link>
           </div>
+
 
           {/* <div className="mt-4 text-center">
             <span className="text-gray-600 dark:text-gray-400">

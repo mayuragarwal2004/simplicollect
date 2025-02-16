@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link ,useLocation} from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import Breadcrumb from "../../components/Breadcrumbs/Breadcrumb";
 import LogoDark from "../../images/logo/logo-dark.svg";
@@ -7,8 +7,9 @@ import Logo from "../../images/logo/logo.svg";
 import { toast } from "react-toastify";
 const OtpVerification = () => {
     const navigate = useNavigate();
+    const location = useLocation();
     const { login } = useAuth();
-    const [email, setEmail] = useState("");
+    const [email, setEmail] = useState(location.state?.identifier || "");
     const [otp, setOtp] = useState("");
     const [newPassword, setNewPassword] = useState("");
     const [otpSent, setOtpSent] = useState(false);

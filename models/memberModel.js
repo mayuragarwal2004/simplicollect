@@ -34,6 +34,8 @@ const getMembers = async (chapterId) => {
     );
 };
 
+
+
 module.exports = {
   findMemberByEmail,
   findMemberById,
