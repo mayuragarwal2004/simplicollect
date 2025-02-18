@@ -8,7 +8,7 @@ import SignIn from './pages/Authentication/SignIn';
 import OtpVerification from './pages/Authentication/Otpverification';
 import ForgotPassword from './pages/Authentication/ForgotPassword';
 import SignUp from './pages/Authentication/SignUp';
-import Continue from './pages/Authentication/Continue';
+// import Continue from './pages/Authentication/Continue';
 import Calendar from './pages/Calendar';
 import Chart from './pages/Chart';
 import ECommerce from './pages/Dashboard/ECommerce';
@@ -136,7 +136,7 @@ function App() {
             </>
           }
         />
-        <Route
+          {/* <Route
           path="/auth/continue"
           element={
             <>
@@ -144,7 +144,7 @@ function App() {
               <Continue />
             </>
           }
-        />
+        /> */}
         <Route
           path="/auth/signin"
           element={

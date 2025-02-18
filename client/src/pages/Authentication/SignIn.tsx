@@ -5,30 +5,65 @@ import Breadcrumb from '../../components/Breadcrumbs/Breadcrumb';
 import LogoDark from '../../images/logo/logo-dark.svg';
 import Logo from '../../images/logo/logo.svg';
 import { useAuth } from '../../context/AuthContext';
+import axios from 'axios';
 
 const SignIn: React.FC = () => {
   const navigate = useNavigate();
-  const location = useLocation(); // ✅ Get the state from navigation
+  const location = useLocation();
   const { isAuthenticated, login } = useAuth();
-  const [email, setEmail] = useState(location.state?.identifier || "");
-  const [identifier, setIdentifier] = useState(location.state?.identifier || ""); // Email or Phone
+  const [identifier, setIdentifier] = useState(location.state?.identifier || ''); // Email or Phone
   const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [showPasswordField, setShowPasswordField] = useState(false);
 
-  const handleSignIn = async (e: React.FormEvent) => {
-    e.preventDefault();
-    // Handle sign-in logic here (e.g., API call)
-    console.log("Identifier:", identifier, "Password:", password);
-    await login(identifier, password);
-  };
-
-  // console.log('isAuthenticated:', isAuthenticated);
-
+  // Check if the user is already authenticated
   useEffect(() => {
     if (isAuthenticated) {
       navigate('/');
     }
-  }
-    , [isAuthenticated]);
+  }, [isAuthenticated, navigate]);
+
+  // Handle Continue button click
+  const handleContinue = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+
+    try {
+      const response = await axios.post('/api/auth/check-member', {
+        identifier,
+      });
+
+      console.log('Backend response:', response.data);
+
+      if (!response.data.exists) {
+        setError('User does not exist!');
+      } else if (response.data.defaultOTP) {
+        // Send OTP automatically and navigate to OTP verification
+        await axios.post('/api/auth/send-otp', { identifier });
+        navigate('/auth/otp-verification', { state: { identifier } }); // No password → OTP verification
+      } else if (response.data.exists && !response.data.defaultOTP) {
+        setShowPasswordField(true); // Show password field for login
+      }
+    } catch (err) {
+      console.error('Error:', err);
+      setError('Error checking user.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle Sign In button click
+  const handleSignIn = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await login(identifier, password);
+      navigate('/'); // Redirect to home page after successful login
+    } catch (error) {
+      setError('Invalid email/phone or password.');
+    }
+  };
 
   return (
     <>
@@ -38,25 +73,17 @@ const SignIn: React.FC = () => {
         <div className="flex flex-wrap items-center">
           <div className="w-full text-center mb-6">
             <Link to="/">
-              <img
-                className="hidden dark:block mx-auto"
-                src={Logo}
-                alt="Logo"
-              />
+              <img className="hidden dark:block mx-auto" src={Logo} alt="Logo" />
               <img className="dark:hidden mx-auto" src={LogoDark} alt="Logo" />
             </Link>
-            <p className="mt-3 text-gray-500">
-              Collect and manage meeting fees with ease
-            </p>
+            <p className="mt-3 text-gray-500">Collect and manage meeting fees with ease</p>
           </div>
 
-          <form className="w-full" onSubmit={handleSignIn}>
+          <form className="w-full" onSubmit={showPasswordField ? handleSignIn : handleContinue}>
+            {/* Email or Phone Input */}
             <div className="mb-4">
-              <label
-                className="block text-gray-700 dark:text-gray-300 mb-2"
-                htmlFor="email"
-              >
-                Email
+              <label className="block text-gray-700 dark:text-gray-300 mb-2" htmlFor="identifier">
+                Email or Phone
               </label>
               <input
                 type="text"
@@ -65,52 +92,50 @@ const SignIn: React.FC = () => {
                 value={identifier}
                 onChange={(e) => setIdentifier(e.target.value)}
                 required
-                disabled={!!location.state?.identifier} // Disable if set from previous page
+                disabled={showPasswordField}
               />
             </div>
-            <div className="mb-6">
-              <label
-                className="block text-gray-700 dark:text-gray-300 mb-2"
-                htmlFor="password"
-              >
-                Password
-              </label>
-              <input
-                type="password"
-                id="password"
-                className="w-full p-3 border border-stroke rounded-md dark:border-strokedark dark:bg-boxdark"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-            </div>
+
+            {/* Password Input (if password is set) */}
+            {showPasswordField && (
+              <div className="mb-6">
+                <label className="block text-gray-700 dark:text-gray-300 mb-2" htmlFor="password">
+                  Password
+                </label>
+                <input
+                  type="password"
+                  id="password"
+                  className="w-full p-3 border border-stroke rounded-md dark:border-strokedark dark:bg-boxdark"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+              </div>
+            )}
+
+            {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
 
             <button
               type="submit"
               className="w-full py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition"
+              disabled={loading}
             >
-              Sign In
+              {loading
+                ? 'Checking...'
+                : showPasswordField
+                ? 'Sign In'
+                : 'Continue'}
             </button>
           </form>
 
-          <div className="mt-4 flex justify-between">
-            <p onClick={() => navigate(-1)} className="text-gray-500 cursor-pointer hover:underline">
-              Change
-            </p>
-            <Link to="/forgot-password" className=" pl-50 text-blue-500 hover:underline">
-              Forgot Password?
-            </Link>
-          </div>
-
-
-          {/* <div className="mt-4 text-center">
-            <span className="text-gray-600 dark:text-gray-400">
-              Don't have an account?{' '}
-            </span>
-            <Link to="/signup" className="text-blue-500 hover:underline">
-              Sign Up
-            </Link>
-          </div> */}
+          {/* Forgot Password Link (only shown after password field is displayed) */}
+          {showPasswordField && (
+            <div className="mt-4 text-center">
+              <Link to="/forgot-password" className="text-blue-500 hover:underline">
+                Forgot Password?
+              </Link>
+            </div>
+          )}
         </div>
       </div>
     </>
