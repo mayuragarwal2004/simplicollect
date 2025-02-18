@@ -69,9 +69,10 @@ const approvedMeeting = async (req, res) => {
 };
 
 const getPackagesByChapterController = async (req, res) => {
+  const { memberId } = req.user;
   const { chapterId } = req.params;
   try {
-    const packages = await Package.getPackagesByChapterId(chapterId);
+    const packages = await Package.getPackagesByChapterId(chapterId, memberId);
     res.json(packages);
   } catch (error) {
     console.error("Error fetching packages by chapter:", error);

@@ -56,9 +56,11 @@ const getAllPackages = async () => {
 //   meetingIds JSON
 // ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 
-const getPackagesByChapterId = async (chapterId) => {
+const getPackagesByChapterId = async (chapterId, memberId) => {
   return db("packages as p")
-    .leftJoin("transactions as t", "p.packageId", "t.packageId")
+    .leftJoin("transactions as t", function () {
+      this.on("p.packageId", "t.packageId").andOn("t.memberId", db.raw("?", [memberId]));
+    })
     .join("meetings as m", function () {
       this.on(
         "p.meetingIds",
