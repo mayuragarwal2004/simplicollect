@@ -26,9 +26,14 @@ interface AuthProviderProps {
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [accessToken, setAccessToken] = useState<string | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
 
   // Calculate isAuthenticated based on accessToken
-  const isAuthenticated = !!accessToken;
+  // const isAuthenticated = !!accessToken;
+
+  useEffect(() => {
+    setIsAuthenticated(!!accessToken);
+  }, [accessToken]);
 
   // Retrieve accessToken from sessionStorage on initial render
   useEffect(() => {

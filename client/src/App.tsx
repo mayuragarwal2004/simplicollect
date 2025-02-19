@@ -30,6 +30,7 @@ import FeeReciever from './pages/Member/FeeReciever';
 import RequireAuth from './utils/RequireAut';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsAndConditions from './pages/TermsAndConditions';
+import NoChapterPage from './pages/NoChapterPage';
 import { Bounce, ToastContainer } from 'react-toastify';
 import { Password } from '@mui/icons-material';
 
@@ -73,7 +74,7 @@ function App() {
           }
         />
         <Route
-          path='/privacy-policy'
+          path="/privacy-policy"
           element={
             <>
               <PageTitle title="SimpliCollect - Meeting Fee Manager" />
@@ -82,7 +83,7 @@ function App() {
           }
         />
         <Route
-          path='/terms-and-conditions'
+          path="/terms-and-conditions"
           element={
             <>
               <PageTitle title="SimpliCollect - Meeting Fee Manager" />
@@ -91,6 +92,15 @@ function App() {
           }
         />
         <Route path="" element={<RequireAuth />}>
+          <Route
+            path="/no-chapter"
+            element={
+              <>
+                <PageTitle title="SimpliCollect - Meeting Fee Manager" />
+                <NoChapterPage />
+              </>
+            }
+          />
           <Route
             path="/member/list"
             element={
@@ -156,7 +166,7 @@ function App() {
             </>
           }
         />
-          {/* <Route
+        {/* <Route
           path="/auth/continue"
           element={
             <>
@@ -188,7 +198,7 @@ function App() {
           element={
             <>
               <PageTitle title="Signup | SimpliCollect - Meeting Fee Manager" />
-              <ForgotPassword/>
+              <ForgotPassword />
             </>
           }
         />
