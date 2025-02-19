@@ -28,6 +28,8 @@ import MemberFeeManager from './pages/Member/MemberFeeManager';
 import MemberFeeApproval from './pages/Member/MemberFeeApproval';
 import FeeReciever from './pages/Member/FeeReciever';
 import RequireAuth from './utils/RequireAut';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import TermsAndConditions from './pages/TermsAndConditions';
 import { Bounce, ToastContainer } from 'react-toastify';
 import { Password } from '@mui/icons-material';
 
@@ -67,6 +69,24 @@ function App() {
             <>
               <PageTitle title="SimpliCollect - Meeting Fee Manager" />
               <ECommerce />
+            </>
+          }
+        />
+        <Route
+          path='/privacy-policy'
+          element={
+            <>
+              <PageTitle title="SimpliCollect - Meeting Fee Manager" />
+              <PrivacyPolicy />
+            </>
+          }
+        />
+        <Route
+          path='/terms-and-conditions'
+          element={
+            <>
+              <PageTitle title="SimpliCollect - Meeting Fee Manager" />
+              <TermsAndConditions />
             </>
           }
         />
