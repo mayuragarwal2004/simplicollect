@@ -11,7 +11,9 @@ const SignIn: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { isAuthenticated, login } = useAuth();
-  const [identifier, setIdentifier] = useState(location.state?.identifier || ''); // Email or Phone
+  const [identifier, setIdentifier] = useState(
+    location.state?.identifier || '',
+  ); // Email or Phone
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -58,8 +60,10 @@ const SignIn: React.FC = () => {
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await login(identifier, password);
-      navigate('/'); // Redirect to home page after successful login
+      await login(identifier, password, () => {
+        navigate('/member/fee');
+      });
+      // navigate('/'); // Redirect to home page after successful login
     } catch (error) {
       setError('Invalid email/phone or password.');
     }
@@ -73,16 +77,28 @@ const SignIn: React.FC = () => {
         <div className="flex flex-wrap items-center">
           <div className="w-full text-center mb-6">
             <Link to="/">
-              <img className="hidden dark:block mx-auto" src={Logo} alt="Logo" />
+              <img
+                className="hidden dark:block mx-auto"
+                src={Logo}
+                alt="Logo"
+              />
               <img className="dark:hidden mx-auto" src={LogoDark} alt="Logo" />
             </Link>
-            <p className="mt-3 text-gray-500">Collect and manage meeting fees with ease</p>
+            <p className="mt-3 text-gray-500">
+              Collect and manage meeting fees with ease
+            </p>
           </div>
 
-          <form className="w-full" onSubmit={showPasswordField ? handleSignIn : handleContinue}>
+          <form
+            className="w-full"
+            onSubmit={showPasswordField ? handleSignIn : handleContinue}
+          >
             {/* Email or Phone Input */}
             <div className="mb-4">
-              <label className="block text-gray-700 dark:text-gray-300 mb-2" htmlFor="identifier">
+              <label
+                className="block text-gray-700 dark:text-gray-300 mb-2"
+                htmlFor="identifier"
+              >
                 Email or Phone
               </label>
               <input
@@ -99,7 +115,10 @@ const SignIn: React.FC = () => {
             {/* Password Input (if password is set) */}
             {showPasswordField && (
               <div className="mb-6">
-                <label className="block text-gray-700 dark:text-gray-300 mb-2" htmlFor="password">
+                <label
+                  className="block text-gray-700 dark:text-gray-300 mb-2"
+                  htmlFor="password"
+                >
                   Password
                 </label>
                 <input
@@ -131,7 +150,10 @@ const SignIn: React.FC = () => {
           {/* Forgot Password Link (only shown after password field is displayed) */}
           {showPasswordField && (
             <div className="mt-4 text-center">
-              <Link to="/forgot-password" className="text-blue-500 hover:underline">
+              <Link
+                to="/forgot-password"
+                className="text-blue-500 hover:underline"
+              >
                 Forgot Password?
               </Link>
             </div>

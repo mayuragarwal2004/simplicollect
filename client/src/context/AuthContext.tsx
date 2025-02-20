@@ -4,7 +4,7 @@ import { toast } from 'react-toastify';
 interface AuthContextType {
   accessToken: string | null;
   isAuthenticated: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string, onSuccess?: Function) => Promise<void>;
   logout: () => void;
   refreshToken: () => Promise<void>;
 }
@@ -43,7 +43,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   }, []);
 
-  const login = async (identifier: string, password: string) => {
+  const login = async (identifier: string, password: string, onSuccess?: Function) => {
     try {
       const response = await fetch("/api/auth/login", {
         method: "POST",
@@ -58,6 +58,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         document.cookie = `refreshToken=${data.refreshToken}; Secure; SameSite=Strict; path=/;`;
         document.cookie = `token=${data.accessToken}; Secure; SameSite=Strict; path=/;`;
         console.log("User logged in successfully");
+        if (onSuccess) {
+          onSuccess();
+        }
       } else {
         toast.error(data.message || "Unknown error");
         console.error("Login failed:", data.message || "Unknown error");

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Check, Upload, X, ChevronDown, ChevronUp } from 'lucide-react';
 import { axiosInstance } from '../../../utils/config';
+import formatDateDDMMYYY from '../../../utils/dateUtility';
 
 const AcceptPaymentMember = ({
   selectedPackage,
@@ -24,6 +25,9 @@ const AcceptPaymentMember = ({
 
   const [refreshAdmins, setRefreshAdmins] = useState(false);
 
+  console.log({ selectedQRReceiver });
+  console.log({ selectedCashReceiver });
+
   const handleRefreshAdmins = () => {
     // setRefreshAdmins(true);
     // setTimeout(() => {
@@ -35,6 +39,13 @@ const AcceptPaymentMember = ({
 
   useEffect(() => {
     if (selectedPackage.meetingIds && chapterMeetings) {
+      console.log('Hi mayur');
+      console.log(selectedPackage.meetingIds);
+      console.log(typeof selectedPackage.meetingIds);
+      console.log(chapterMeetings.map((meeting) => meeting.meetingId));
+
+      console.log('Hi mayur');
+
       const filteredMeetings = chapterMeetings.filter((meeting) =>
         selectedPackage.meetingIds.includes(meeting.meetingId),
       );
@@ -48,6 +59,7 @@ const AcceptPaymentMember = ({
       setPaymentProof(file);
     }
   };
+  console.log({ qrReceivers });
 
   const handlePaymentSubmit = async () => {
     const dueAmount = selectedPackage.totalAmount - amountPaid;
@@ -92,16 +104,24 @@ const AcceptPaymentMember = ({
       paymentType: paymentType,
       paymentDate: paymentDate,
       paymentImageLink: paymentProofLink,
-      cashPaymentReceivedById: selectedCashReceiver,
+      cashPaymentReceivedById: selectedCashReceiver
+        ? cashReceivers.find(
+            (receiver) => receiver.cashRecieverId === selectedCashReceiver,
+          )?.memberId
+        : '',
       cashPaymentReceivedByName: selectedCashReceiver
         ? cashReceivers.find(
-            (receiver) => receiver.memberId === selectedCashReceiver,
+            (receiver) => receiver.cashRecieverId === selectedCashReceiver,
           )?.cashRecieverName
         : '',
-      onlinePaymentReceivedById: selectedQRReceiver,
+      onlinePaymentReceivedById: selectedQRReceiver
+        ? qrReceivers.find(
+            (receiver) => receiver.qrCodeId === selectedQRReceiver,
+          )?.memberId
+        : '',
       onlinePaymentReceivedByName: selectedQRReceiver
         ? qrReceivers.find(
-            (receiver) => receiver.memberId === selectedQRReceiver,
+            (receiver) => receiver.qrCodeId === selectedQRReceiver,
           )?.qrCodeName
         : '',
     };
@@ -131,7 +151,9 @@ const AcceptPaymentMember = ({
     setSelectedCashReceiver('');
     setSelectedQRReceiver('');
     setPaymentType(type);
-  }
+  };
+
+  console.log({ cashReceivers });
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-[1000]">
@@ -240,14 +262,20 @@ const AcceptPaymentMember = ({
                 selectedMeetings?.map((meeting) => (
                   <div
                     key={meeting.meetingId}
-                    className="border p-2 rounded mb-2"
+                    className={`border p-2 rounded mb-2 ${
+                      meeting.isPaid ? 'bg-green-100' : ''
+                    }`}
                   >
                     <p>
                       <strong>{meeting.meetingName}</strong>
                     </p>
                     <p>
-                      {meeting.meetingDate} at {meeting.meetingTime}
+                      {formatDateDDMMYYY(meeting.meetingDate)} at{' '}
+                      {meeting.meetingTime}
                     </p>
+                    {meeting.isPaid && (
+                      <p className="text-green-500 font-semibold">Paid</p>
+                    )}
                   </div>
                 ))
               ) : (
@@ -294,7 +322,10 @@ const AcceptPaymentMember = ({
                   Select Admin
                 </option>
                 {cashReceivers?.map((adminValue, index) => (
-                  <option key={adminValue.memberId} value={adminValue.memberId}>
+                  <option
+                    key={adminValue.cashRecieverId}
+                    value={adminValue.cashRecieverId}
+                  >
                     {adminValue.cashRecieverName}
                   </option>
                 ))}
@@ -318,11 +349,11 @@ const AcceptPaymentMember = ({
                 <div
                   key={index}
                   className={`flex items-center space-x-4 p-2 border rounded-lg cursor-pointer m-1 ${
-                    selectedQRReceiver === receiver.qrCodeName
+                    selectedQRReceiver === receiver.qrCodeId
                       ? 'border-blue-500'
                       : 'border-gray-300'
                   }`}
-                  onClick={() => setSelectedQRReceiver(receiver.qrCodeName)}
+                  onClick={() => setSelectedQRReceiver(receiver.qrCodeId)}
                 >
                   <span className="text-gray-700">{receiver.qrCodeName}</span>
                   <img

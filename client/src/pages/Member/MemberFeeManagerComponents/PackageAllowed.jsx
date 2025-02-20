@@ -235,7 +235,9 @@ const PackageAllowed = ({
                     )}
                     {pkg.previousDue !== 0 && (
                       <span className={`text-orange-500`}>
-                      {' '}+ ₹{pkg.previousDue} ({pkg.previousDue > 0 ? 'Advance' : 'Previous Due'})
+                        {' '}
+                        + ₹{pkg.previousDue} (
+                        {pkg.previousDue > 0 ? 'Previous Due' : 'Advance'})
                       </span>
                     )}
                     {/* {pkg.unpaidFeesFromEarlierPackages > 0 && (
