@@ -11,4 +11,6 @@ router.get("/qr/:chapterId", feeReceiverControllers.getQRReceiversController);
 router.post("/qr/:chapterId", feeReceiverControllers.addQRReceiversController);
 router.get("/currentQRReceivers/:chapterId", feeReceiverControllers.getCurrentQRReceiversController);
 
+router.get("/amountCollected/:chapterId", feeReceiverControllers.getAmountCollectedController);
+
 module.exports = router;

@@ -31,11 +31,13 @@ const FeeReciever = () => {
     enableDate: '',
     disableDate: '',
   });
+  const [amountCollected, setAmountCollected] = useState([]);
 
   useEffect(() => {
     fetchCashReceivers();
     fetchQrReceivers();
     fetchMembersList();
+    getAmountCollected();
   }, []);
 
   const fetchMembersList = async () => {
@@ -115,6 +117,13 @@ const FeeReciever = () => {
     }
   };
 
+  const getAmountCollected = async () => {
+    const response = await axiosInstance.get(
+      `/api/feeReciever/amountCollected/${chapterData.chapterId}`,
+    );
+    setAmountCollected(response.data);
+  };
+
   return (
     <>
       <Breadcrumb pageName="Fee Receiver List" />
@@ -159,6 +168,9 @@ const FeeReciever = () => {
                   <th className="py-3 px-4 text-black dark:text-white">
                     Disable Date
                   </th>
+                  <th className="py-3 px-4 text-black dark:text-white">
+                    Amount Collected
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -186,6 +198,11 @@ const FeeReciever = () => {
                       <td className="py-3 px-4 text-black dark:text-white">
                         {new Date(receiver.disableDate).toLocaleDateString()}
                       </td>
+                      <td className="py-3 px-4 text-black dark:text-white">
+                        {amountCollected.find(
+                          (amount) => amount.receiverId === receiver.memberId,
+                        )?.totalAmountCollected || 0}
+                      </td>
                     </tr>
                   ))
                 )}
@@ -209,6 +226,9 @@ const FeeReciever = () => {
                   </th>
                   <th className="py-3 px-4 text-black dark:text-white">
                     Disable Date
+                  </th>
+                  <th className="py-3 px-4 text-black dark:text-white">
+                    Amount Collected
                   </th>
                 </tr>
               </thead>
@@ -243,6 +263,11 @@ const FeeReciever = () => {
                       </td>
                       <td className="py-3 px-4 text-black dark:text-white">
                         {new Date(receiver.disableDate).toLocaleDateString()}
+                      </td>
+                      <td className="py-3 px-4 text-black dark:text-white">
+                        {amountCollected.find(
+                          (amount) => amount.receiverId === receiver.memberId,
+                        )?.totalAmountCollected || 0}
                       </td>
                     </tr>
                   ))

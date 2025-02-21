@@ -98,6 +98,22 @@ const getCurrentQRReceiversController = async (req, res) => {
   }
 };
 
+const getAmountCollectedController = async (req, res) => {
+  const { chapterId } = req.params;
+  const { date } = req.body; //DD-MM-YYYY
+  try {
+    const dateObject = date ? new Date(date) : new Date();
+    const amountCollected = await feeReceiverModel.getAmountCollected(
+      chapterId,
+      dateObject
+    );
+    res.json(amountCollected);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
 module.exports = {
   getCashReceiversController,
   addCashReceiversController,
@@ -105,4 +121,5 @@ module.exports = {
   getQRReceiversController,
   addQRReceiversController,
   getCurrentQRReceiversController,
+  getAmountCollectedController,
 };
