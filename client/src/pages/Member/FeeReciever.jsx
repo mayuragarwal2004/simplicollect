@@ -1,11 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Modal, Button, Checkbox } from '@material-ui/core';
+// import { Button } from '@material-ui/core';
 import Breadcrumb from '../../components/Breadcrumbs/Breadcrumb';
 import { IconButton } from '@mui/material';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import { axiosInstance } from '../../utils/config';
 import { useData } from '../../context/DataContext';
+import { Button } from "@/components/ui/button"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
 
 const FeeReciever = () => {
   const [cashReceivers, setCashReceivers] = useState([]);
@@ -276,188 +285,197 @@ const FeeReciever = () => {
             </table>
           </div>
 
-          <Modal open={isModalOpen} onClose={handleModalClose}>
-            <div className="modal-content p-4 bg-white rounded shadow-md">
-              <h2 className="text-lg font-medium mb-4">
-                Add New {modalType === 'cash' ? 'Cash' : 'QR'} Receiver
-              </h2>
-              <form>
-                {modalType === 'cash' ? (
-                  <>
-                    <div className="mb-4">
-                      <label className="block text-sm font-medium text-gray-700">
-                        Receiver Name
-                      </label>
-                      <select
-                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring indigo-500 sm:text-sm"
-                        value={recieverFormData.memberId}
-                        onChange={(e) =>
-                          setRecieverFormData((prev) => ({
-                            ...prev,
-                            memberId: e.target.value,
-                          }))
-                        }
-                      >
-                        {membersList.map((member) => (
-                          <option key={member.memberId} value={member.memberId}>
-                            {member.firstName} {member.lastName}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    <div className="mb-4">
-                      <label className="block text-sm font-medium text-gray-700">
-                        Enable Date
-                      </label>
-                      <input
-                        type="date"
-                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                        value={recieverFormData.enableDate}
-                        onChange={(e) =>
-                          setRecieverFormData((prev) => ({
-                            ...prev,
-                            enableDate: e.target.value,
-                          }))
-                        }
-                      />
-                    </div>
-                    <div className="mb-4">
-                      <label className="block text-sm font-medium text-gray-700">
-                        Disable Date
-                      </label>
-                      <input
-                        type="date"
-                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                        value={recieverFormData.disableDate}
-                        onChange={(e) =>
-                          setRecieverFormData((prev) => ({
-                            ...prev,
-                            disableDate: e.target.value,
-                          }))
-                        }
-                      />
-                    </div>
-                    <div className="flex justify-end">
-                      <Button
-                        variant="contained"
-                        color="primary"
-                        type="submit"
-                        className="mr-2"
-                        onClick={handleCashSubmit}
-                      >
-                        Save
-                      </Button>
-                      <Button variant="contained" onClick={handleModalClose}>
-                        Close
-                      </Button>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div className="mb-4">
-                      <label className="block text-sm font-medium text-gray-700">
-                        Member Name
-                      </label>
-                      <select
-                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring indigo-500 sm:text-sm"
-                        value={qrRecieverFormData.memberId}
-                        onChange={(e) =>
-                          setQrRecieverFormData((prev) => ({
-                            ...prev,
-                            memberId: e.target.value,
-                          }))
-                        }
-                      >
-                        {membersList.map((member) => (
-                          <option key={member.memberId} value={member.memberId}>
-                            {member.firstName} {member.lastName}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    <div className="mb-4">
-                      <label className="block text-sm font-medium text-gray-700">
-                        QR Name
-                      </label>
-                      <input
-                        type="text"
-                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                        value={qrRecieverFormData.qrCodeName}
-                        onChange={(e) =>
-                          setQrRecieverFormData((prev) => ({
-                            ...prev,
-                            qrCodeName: e.target.value,
-                          }))
-                        }
-                      />
-                    </div>
-                    <div className="mb-4">
-                      <label className="block text-sm font-medium text-gray-700">
-                        QR Code Image
-                      </label>
-                      <input
-                        type="file"
-                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring indigo-500 sm:text-sm"
-                        onChange={(e) =>
-                          setQrRecieverFormData((prev) => ({
-                            ...prev,
-                            imageFile: e.target.files[0],
-                          }))
-                        }
-                      />
-                    </div>
+          <Dialog  open={isModalOpen} onOpenChange={handleModalClose}>
+            <DialogTrigger />
+            <DialogContent className="sm:max-w-[425px]">
+              <div className="modal-content p-4 bg-white rounded shadow-md">
+                <h2 className="text-lg font-medium mb-4">
+                  Add New {modalType === 'cash' ? 'Cash' : 'QR'} Receiver
+                </h2>
+                <form>
+                  {modalType === 'cash' ? (
+                    <>
+                      <div className="mb-4">
+                        <label className="block text-sm font-medium text-gray-700">
+                          Receiver Name
+                        </label>
+                        <select
+                          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring indigo-500 sm:text-sm"
+                          value={recieverFormData.memberId}
+                          onChange={(e) =>
+                            setRecieverFormData((prev) => ({
+                              ...prev,
+                              memberId: e.target.value,
+                            }))
+                          }
+                        >
+                          {membersList.map((member) => (
+                            <option
+                              key={member.memberId}
+                              value={member.memberId}
+                            >
+                              {member.firstName} {member.lastName}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="mb-4">
+                        <label className="block text-sm font-medium text-gray-700">
+                          Enable Date
+                        </label>
+                        <input
+                          type="date"
+                          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                          value={recieverFormData.enableDate}
+                          onChange={(e) =>
+                            setRecieverFormData((prev) => ({
+                              ...prev,
+                              enableDate: e.target.value,
+                            }))
+                          }
+                        />
+                      </div>
+                      <div className="mb-4">
+                        <label className="block text-sm font-medium text-gray-700">
+                          Disable Date
+                        </label>
+                        <input
+                          type="date"
+                          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                          value={recieverFormData.disableDate}
+                          onChange={(e) =>
+                            setRecieverFormData((prev) => ({
+                              ...prev,
+                              disableDate: e.target.value,
+                            }))
+                          }
+                        />
+                      </div>
+                      <div className="flex justify-end">
+                        <Button
+                          variant="contained"
+                          color="primary"
+                          type="submit"
+                          className="mr-2"
+                          onClick={handleCashSubmit}
+                        >
+                          Save
+                        </Button>
+                        <Button variant="contained" onClick={handleModalClose}>
+                          Close
+                        </Button>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="mb-4">
+                        <label className="block text-sm font-medium text-gray-700">
+                          Member Name
+                        </label>
+                        <select
+                          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring indigo-500 sm:text-sm"
+                          value={qrRecieverFormData.memberId}
+                          onChange={(e) =>
+                            setQrRecieverFormData((prev) => ({
+                              ...prev,
+                              memberId: e.target.value,
+                            }))
+                          }
+                        >
+                          {membersList.map((member) => (
+                            <option
+                              key={member.memberId}
+                              value={member.memberId}
+                            >
+                              {member.firstName} {member.lastName}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="mb-4">
+                        <label className="block text-sm font-medium text-gray-700">
+                          QR Name
+                        </label>
+                        <input
+                          type="text"
+                          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                          value={qrRecieverFormData.qrCodeName}
+                          onChange={(e) =>
+                            setQrRecieverFormData((prev) => ({
+                              ...prev,
+                              qrCodeName: e.target.value,
+                            }))
+                          }
+                        />
+                      </div>
+                      <div className="mb-4">
+                        <label className="block text-sm font-medium text-gray-700">
+                          QR Code Image
+                        </label>
+                        <input
+                          type="file"
+                          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring indigo-500 sm:text-sm"
+                          onChange={(e) =>
+                            setQrRecieverFormData((prev) => ({
+                              ...prev,
+                              imageFile: e.target.files[0],
+                            }))
+                          }
+                        />
+                      </div>
 
-                    <div className="mb-4">
-                      <label className="block text-sm font-medium text-gray-700">
-                        Enable Date
-                      </label>
-                      <input
-                        type="date"
-                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                        value={qrRecieverFormData.enableDate}
-                        onChange={(e) =>
-                          setQrRecieverFormData((prev) => ({
-                            ...prev,
-                            enableDate: e.target.value,
-                          }))
-                        }
-                      />
-                    </div>
-                    <div className="mb-4">
-                      <label className="block text-sm font-medium text-gray-700">
-                        Disable Date
-                      </label>
-                      <input
-                        type="date"
-                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                        value={qrRecieverFormData.disableDate}
-                        onChange={(e) =>
-                          setQrRecieverFormData((prev) => ({
-                            ...prev,
-                            disableDate: e.target.value,
-                          }))
-                        }
-                      />
-                    </div>
-                    <div className="flex justify-end">
-                      <Button
-                        variant="contained"
-                        color="primary"
-                        type="submit"
-                        className="mr-2"
-                        onClick={handleQRSubmit}
-                      >
-                        Save
-                      </Button>
-                      <Button variant="contained" onClick={handleModalClose}>
-                        Close
-                      </Button>
-                    </div>
-                  </>
-                )}
-              </form>
-            </div>
-          </Modal>
+                      <div className="mb-4">
+                        <label className="block text-sm font-medium text-gray-700">
+                          Enable Date
+                        </label>
+                        <input
+                          type="date"
+                          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                          value={qrRecieverFormData.enableDate}
+                          onChange={(e) =>
+                            setQrRecieverFormData((prev) => ({
+                              ...prev,
+                              enableDate: e.target.value,
+                            }))
+                          }
+                        />
+                      </div>
+                      <div className="mb-4">
+                        <label className="block text-sm font-medium text-gray-700">
+                          Disable Date
+                        </label>
+                        <input
+                          type="date"
+                          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                          value={qrRecieverFormData.disableDate}
+                          onChange={(e) =>
+                            setQrRecieverFormData((prev) => ({
+                              ...prev,
+                              disableDate: e.target.value,
+                            }))
+                          }
+                        />
+                      </div>
+                      <div className="flex justify-end">
+                        <Button
+                          variant="contained"
+                          color="primary"
+                          type="submit"
+                          className="mr-2"
+                          onClick={handleQRSubmit}
+                        >
+                          Save
+                        </Button>
+                        <Button variant="contained" onClick={handleModalClose}>
+                          Close
+                        </Button>
+                      </div>
+                    </>
+                  )}
+                </form>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
     </>
