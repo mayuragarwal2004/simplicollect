@@ -4,11 +4,13 @@ import Sidebar from '../components/Sidebar/index';
 import { useAuth } from '../context/AuthContext';
 import { Backdrop } from '@mui/material';
 import { useData } from '../context/DataContext';
+import { useOutlet } from 'react-router-dom';
 
-const DefaultLayout: React.FC<{ children: ReactNode }> = ({ children }) => {
+const DefaultLayout: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { chapterData, allChaptersData, switchChapter } = useData();
   const { isAuthenticated } = useAuth();
+  const currentOutlet = useOutlet();
 
   const [backDropOpen, setBackDropOpen] = useState(false);
 
@@ -67,7 +69,7 @@ const DefaultLayout: React.FC<{ children: ReactNode }> = ({ children }) => {
           {/* <!-- ===== Main Content Start ===== --> */}
           <main>
             <div className="mx-auto max-w-screen-2xl p-4 md:p-6 2xl:p-10">
-              {children}
+              {currentOutlet}
             </div>
           </main>
           {/* <!-- ===== Main Content End ===== --> */}

@@ -22,9 +22,9 @@ const SignIn: React.FC = () => {
   // Check if the user is already authenticated
   useEffect(() => {
     if (isAuthenticated) {
-      navigate('/');
+      navigate('/member/fee');
     }
-  }, [isAuthenticated, navigate]);
+  }, []);
 
   // Handle Continue button click
   const handleContinue = async (e: React.FormEvent) => {

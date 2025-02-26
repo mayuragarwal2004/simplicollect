@@ -8,15 +8,18 @@ import './css/satoshi.css';
 import 'flatpickr/dist/flatpickr.min.css';
 import { AuthProvider } from './context/AuthContext';
 import { DataProvider } from './context/DataContext';
+import { ThemeProvider } from './context/theme-provider';
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>
-    <AuthProvider>
-      <DataProvider>
-        <Router>
+    <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+      <AuthProvider>
+        <DataProvider>
+          {/* <Router> */}
           <App />
-        </Router>
-      </DataProvider>
-    </AuthProvider>
+          {/* </Router> */}
+        </DataProvider>
+      </AuthProvider>
+    </ThemeProvider>
   </React.StrictMode>,
 );

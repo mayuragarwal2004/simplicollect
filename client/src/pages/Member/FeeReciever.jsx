@@ -148,14 +148,12 @@ const FeeReciever = () => {
         <div>
           <div className="mb-4 flex gap-4">
             <Button
-              variant="contained"
               color="primary"
               onClick={() => handleAddNew('cash')}
             >
               Add New Cash Receiver
             </Button>
             <Button
-              variant="contained"
               color="primary"
               onClick={() => handleAddNew('qr')}
             >

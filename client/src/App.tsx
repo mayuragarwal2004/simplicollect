@@ -1,5 +1,12 @@
 import { useEffect, useState } from 'react';
-import { Route, Routes, useLocation } from 'react-router-dom';
+import {
+  createBrowserRouter,
+  Navigate,
+  Route,
+  RouterProvider,
+  Routes,
+  useLocation,
+} from 'react-router-dom';
 import 'react-toastify/dist/ReactToastify.css';
 
 import Loader from './common/Loader';
@@ -34,22 +41,105 @@ import NoChapterPage from './pages/NoChapterPage';
 import { Bounce, ToastContainer } from 'react-toastify';
 import { Password } from '@mui/icons-material';
 
+const routes = [
+  {
+    index: true,
+    element: <Navigate to="/auth/signin" />
+  },
+  {
+    path: '/',
+    element: <DefaultLayout />,
+    children: [
+      {
+        path: 'privacy-policy',
+        element: <PrivacyPolicy />,
+      },
+      {
+        path: 'terms-and-conditions',
+        element: <TermsAndConditions />,
+      },
+      {
+        path: 'auth',
+        children: [
+          {
+            path: 'signin',
+            element: <SignIn />,
+          },
+          {
+            path: 'otp-verification',
+            element: <OtpVerification />,
+          },
+          {
+            path: 'forgot-password',
+            element: <ForgotPassword />,
+          },
+        ],
+      },
+      {
+        path: 'eoi/:chapterSlug',
+        element: <EOI />,
+      },
+      {
+        path: 'member',
+        element: <RequireAuth />,
+        children: [
+          {
+            path: 'list',
+            element: <MemberList />,
+          },
+          {
+            path: 'fee',
+            element: <MemberFeeManager />,
+          },
+          {
+            path: 'fee_approval',
+            element: <MemberFeeApproval />,
+          },
+          {
+            path: 'fee-reciver-edit',
+            element: <FeeReciever />,
+          },
+          {
+            path: 'share-visitor-form',
+            element: <ShareForm />,
+          },
+        ],
+      },
+      {
+        path: 'visitor',
+        children: [
+          {
+            path: 'list',
+            element: <VisitorList />,
+          },
+        ],
+      },
+      {
+        path: "*",
+        index: true,
+        element: <Navigate to="/auth/signin" />
+      },
+    ],
+  },
+];
+
+const router = createBrowserRouter(routes);
+
 function App() {
   const [loading, setLoading] = useState<boolean>(true);
-  const { pathname } = useLocation();
+  // const { pathname } = useLocation();
 
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [pathname]);
+  // useEffect(() => {
+  //   window.scrollTo(0, 0);
+  // }, [pathname]);
 
   useEffect(() => {
     setTimeout(() => setLoading(false), 1000);
   }, []);
-
   return loading ? (
     <Loader />
   ) : (
-    <DefaultLayout>
+    <>
       <ToastContainer
         position="top-right"
         autoClose={5000}
@@ -63,231 +153,8 @@ function App() {
         theme="light"
         transition={Bounce}
       />
-      <Routes>
-        <Route
-          index
-          element={
-            <>
-              <PageTitle title="SimpliCollect - Meeting Fee Manager" />
-              <ECommerce />
-            </>
-          }
-        />
-        <Route
-          path="/privacy-policy"
-          element={
-            <>
-              <PageTitle title="SimpliCollect - Meeting Fee Manager" />
-              <PrivacyPolicy />
-            </>
-          }
-        />
-        <Route
-          path="/terms-and-conditions"
-          element={
-            <>
-              <PageTitle title="SimpliCollect - Meeting Fee Manager" />
-              <TermsAndConditions />
-            </>
-          }
-        />
-        <Route path="" element={<RequireAuth />}>
-          <Route
-            path="/no-chapter"
-            element={
-              <>
-                <PageTitle title="SimpliCollect - Meeting Fee Manager" />
-                <NoChapterPage />
-              </>
-            }
-          />
-          <Route
-            path="/member/list"
-            element={
-              <>
-                <PageTitle title="Member List | SimpliCollect - Meeting Fee Manager" />
-                <MemberList />
-              </>
-            }
-          />
-          <Route
-            path="/member/fee"
-            element={
-              <>
-                <PageTitle title="Member List | SimpliCollect - Meeting Fee Manager" />
-                <MemberFeeManager />
-              </>
-            }
-          />
-          <Route
-            path="/member/fee_approval"
-            element={
-              <>
-                <PageTitle title="Member Fee Approval | SimpliCollect - Meeting Fee Manager" />
-                <MemberFeeApproval />
-              </>
-            }
-          />
-          <Route
-            path="/fee-reciver-edit"
-            element={
-              <>
-                <PageTitle title="Fee Reciever | SimpliCollect - Meeting Fee Manager" />
-                <FeeReciever />
-              </>
-            }
-          />
-          <Route
-            path="/visitor/shareform"
-            element={
-              <>
-                <PageTitle title="Expression of Interest | SimpliCollect - Meeting Fee Manager" />
-                <ShareForm />
-              </>
-            }
-          />
-          <Route
-            path="/visitor/list"
-            element={
-              <>
-                <PageTitle title="Expression of Interest | SimpliCollect - Meeting Fee Manager" />
-                <VisitorList />
-              </>
-            }
-          />
-        </Route>
-
-        <Route
-          path="/auth/signin"
-          element={
-            <>
-              <PageTitle title="Signin | SimpliCollect - Meeting Fee Manager" />
-              <SignIn />
-            </>
-          }
-        />
-        {/* <Route
-          path="/auth/continue"
-          element={
-            <>
-              <PageTitle title="Signin | SimpliCollect - Meeting Fee Manager" />
-              <Continue />
-            </>
-          }
-        /> */}
-        <Route
-          path="/auth/signin"
-          element={
-            <>
-              <PageTitle title="Signin | SimpliCollect - Meeting Fee Manager" />
-              <SignIn />
-            </>
-          }
-        />
-        <Route
-          path="/auth/otp-verification"
-          element={
-            <>
-              <PageTitle title="Signin | SimpliCollect - Meeting Fee Manager" />
-              <OtpVerification />
-            </>
-          }
-        />
-        <Route
-          path="/auth/forgot-password"
-          element={
-            <>
-              <PageTitle title="Signup | SimpliCollect - Meeting Fee Manager" />
-              <ForgotPassword />
-            </>
-          }
-        />
-
-        <Route
-          path="/eoi/:chapterSlug"
-          element={
-            <>
-              <PageTitle title="Expression of Interest | SimpliCollect - Meeting Fee Manager" />
-              <EOI />
-            </>
-          }
-        />
-
-        {/* template pages */}
-        <Route
-          path="/calendar"
-          element={
-            <>
-              <PageTitle title="Calendar | SimpliCollect - Meeting Fee Manager" />
-              <Calendar />
-            </>
-          }
-        />
-        <Route
-          path="/profile"
-          element={
-            <>
-              <PageTitle title="Profile | SimpliCollect - Meeting Fee Manager" />
-              <Profile />
-            </>
-          }
-        />
-        <Route
-          path="/tables"
-          element={
-            <>
-              <PageTitle title="Tables | SimpliCollect - Meeting Fee Manager" />
-              <Tables />
-            </>
-          }
-        />
-        <Route
-          path="/settings"
-          element={
-            <>
-              <PageTitle title="Settings | SimpliCollect - Meeting Fee Manager" />
-              <Settings />
-            </>
-          }
-        />
-        <Route
-          path="/chart"
-          element={
-            <>
-              <PageTitle title="Basic Chart | SimpliCollect - Meeting Fee Manager" />
-              <Chart />
-            </>
-          }
-        />
-        <Route
-          path="/ui/alerts"
-          element={
-            <>
-              <PageTitle title="Alerts | SimpliCollect - Meeting Fee Manager" />
-              <AlertsPage />
-            </>
-          }
-        />
-        <Route
-          path="/ui/buttons"
-          element={
-            <>
-              <PageTitle title="Buttons | SimpliCollect - Meeting Fee Manager" />
-              <Buttons />
-            </>
-          }
-        />
-        <Route
-          path="/chapter/list"
-          element={
-            <>
-              <PageTitle title="Expression of Interest | SimpliCollect - Meeting Fee Manager" />
-              <VisitorList />
-            </>
-          }
-        />
-      </Routes>
-    </DefaultLayout>
+      <RouterProvider router={router} />
+    </>
   );
 }
 

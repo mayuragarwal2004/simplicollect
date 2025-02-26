@@ -18,6 +18,12 @@ const OtpVerification = () => {
   const [loading, setLoading] = useState(false);
   const [confirmPassword, setConfirmPassword] = useState('');
 
+  useEffect(() => {
+    if (!location.state?.identifier) {
+      navigate('/auth/forgot-password');
+    }
+  }, [location.state, navigate]);
+
   // Automatically send OTP when the component mounts
   useEffect(() => {
     const sendOtp = async () => {
