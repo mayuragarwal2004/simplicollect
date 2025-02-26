@@ -31,6 +31,7 @@ import DefaultLayout from './layout/DefaultLayout';
 import ShareForm from './pages/Visitor/ShareForm';
 import VisitorList from './pages/Visitor/VisitorList';
 import MemberList from './pages/Member/MemberList';
+import Reports from './pages/Member/Reports';
 import MemberFeeManager from './pages/Member/MemberFeeManager';
 import MemberFeeApproval from './pages/Member/MemberFeeApproval';
 import FeeReciever from './pages/Member/FeeReciever';
@@ -103,6 +104,10 @@ const routes = [
             path: 'share-visitor-form',
             element: <ShareForm />,
           },
+          {
+            path: 'reports',
+            element: <Reports />,
+          }
         ],
       },
       {
