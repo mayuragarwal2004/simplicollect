@@ -1,9 +1,30 @@
-import React from 'react'
+import React, { useEffect } from 'react';
+import { axiosInstance } from '../../../utils/config';
 
 const ReportA = () => {
-  return (
-    <div>ReportA</div>
-  )
-}
+  const [memberPackageSummary, setMemberPackageSummary] = useState([]);
+  const { chapterData } = useData();
 
-export default ReportA
+  const getMemeberPackageSummary = () => {
+    // get member package summary
+    axiosInstance
+      .get(`report/${chapterData.chapterId}/package-summary`)
+      .then((res) => {
+        setMemberPackageSummary(res.data);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  };
+
+  useEffect(() => {
+    getMemeberPackageSummary();
+  });
+
+  console.log(memberPackageSummary);
+  
+
+  return <div></div>;
+};
+
+export default ReportA;

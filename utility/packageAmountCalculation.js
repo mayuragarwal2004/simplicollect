@@ -106,4 +106,6 @@ const packageAmountCalculations = (
   };
 };
 
-export default packageAmountCalculations;
+module.exports = {
+  packageAmountCalculations,
+};

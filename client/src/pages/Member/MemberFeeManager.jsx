@@ -30,7 +30,7 @@ const MemberFeeManager = () => {
   // Fetch meetings data
   useEffect(() => {
     axiosInstance
-      .get(`/api/meetings/meetings/${chapterData.chapterId}`)
+      .get(`/api/meetings/meetings/${chapterData?.chapterId}`)
       .then((data) => {
         console.log('Fetched Meetings:', data.data);
         setChapterMeetings(data.data);
@@ -52,7 +52,7 @@ const MemberFeeManager = () => {
 
   const fetchDueAmount = () => {
     axiosInstance
-      .get(`/api/payment/due/${chapterData.chapterId}`)
+      .get(`/api/payment/due/${chapterData?.chapterId}`)
       .then((data) => {
         console.log('Fetched Due Amount:', data.data);
         setDue(data.data.due);
@@ -61,7 +61,7 @@ const MemberFeeManager = () => {
 
   const fetchPackages = () => {
     axiosInstance
-      .get(`/api/packages/all/${chapterData.chapterId}`)
+      .get(`/api/packages/all/${chapterData?.chapterId}`)
       .then((data) => {
         // find the unique parent types
         const parentTypes = [
@@ -92,7 +92,7 @@ const MemberFeeManager = () => {
     axiosInstance
       .get(
         `/api/feeReciever/currentCashReceivers/${
-          chapterData.chapterId
+          chapterData?.chapterId
         }?date=${formatDateDDMMYYY(calculationDate)}`,
       )
       .then((data) => {
@@ -107,7 +107,7 @@ const MemberFeeManager = () => {
     axiosInstance
       .get(
         `/api/feeReciever/currentQRReceivers/${
-          chapterData.chapterId
+          chapterData?.chapterId
         }?date=${formatDateDDMMYYY(calculationDate)}`,
       )
       .then((data) => {
@@ -118,19 +118,24 @@ const MemberFeeManager = () => {
   };
 
   useEffect(() => {
-    if (chapterData.chapterId) {
+    if (chapterData?.chapterId) {
       fetchDueAmount();
     }
-  }, [chapterData.chapterId]);
+  }, [chapterData]);
 
   useEffect(() => {
-    if (chapterData.chapterId && due !== null) {
+    if (chapterData?.chapterId && due !== null) {
+      console.log(`Start Time: ${new Date().toISOString()}`);
+      const startTime = Date.now();
       fetchPendingPayments();
       fetchCurrentCashReceivers();
       fetchCurrentQrReceivers();
       fetchPackages();
+
+      console.log(`End Time: ${new Date().toISOString()}`);
+      console.log(`Time taken: ${Date.now() - startTime}ms`);
     }
-  }, [chapterData.chapterId, calculationDate, due]);
+  }, [chapterData, calculationDate, due]);
 
   const handleDeleteRequest = (transactionId) => {
     axiosInstance
@@ -205,7 +210,7 @@ const MemberFeeManager = () => {
       )}
       <div className="flex justify-between">
         {/* Left Side: DatePicker */}
-        {Boolean(chapterData.testMode) && (
+        {Boolean(chapterData?.testMode) && (
           <div className="flex items-center space-x-4">
             <LocalizationProvider dateAdapter={AdapterDateFns}>
               <DatePicker

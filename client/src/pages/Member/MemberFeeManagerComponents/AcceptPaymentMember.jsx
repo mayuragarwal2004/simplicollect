@@ -104,26 +104,24 @@ const AcceptPaymentMember = ({
       paymentType: paymentType,
       paymentDate: paymentDate,
       paymentImageLink: paymentProofLink,
-      cashPaymentReceivedById: selectedCashReceiver
+      paymentReceivedById: selectedCashReceiver
         ? cashReceivers.find(
             (receiver) => receiver.cashRecieverId === selectedCashReceiver,
           )?.memberId
-        : '',
-      cashPaymentReceivedByName: selectedCashReceiver
+        : selectedQRReceiver
+          ? qrReceivers.find(
+              (receiver) => receiver.qrCodeId === selectedQRReceiver,
+            )?.memberId
+          : '',
+      paymentReceivedByName: selectedCashReceiver
         ? cashReceivers.find(
             (receiver) => receiver.cashRecieverId === selectedCashReceiver,
           )?.cashRecieverName
-        : '',
-      onlinePaymentReceivedById: selectedQRReceiver
-        ? qrReceivers.find(
-            (receiver) => receiver.qrCodeId === selectedQRReceiver,
-          )?.memberId
-        : '',
-      onlinePaymentReceivedByName: selectedQRReceiver
-        ? qrReceivers.find(
-            (receiver) => receiver.qrCodeId === selectedQRReceiver,
-          )?.qrCodeName
-        : '',
+        : selectedQRReceiver
+          ? qrReceivers.find(
+              (receiver) => receiver.qrCodeId === selectedQRReceiver,
+            )?.qrCodeName
+          : '',
     };
     const response = await axiosInstance
       .post('/api/payment/addPayment', paymentDetails)

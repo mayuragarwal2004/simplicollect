@@ -49,9 +49,7 @@ const getPaymentRequests = async (
     .where({ "p.chapterId": chapterId, "t.status": status })
     .andWhere(function () {
       if (getAllRequests) return this.where({ "t.status": status });
-      return this.where({ "t.cashPaymentReceivedById": memberId }).orWhere({
-        "t.onlinePaymentReceivedById": memberId,
-      });
+      return this.where({ "t.paymentReceivedById": memberId })
     })
     .distinct("t.transactionId")
     .select(

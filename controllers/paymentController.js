@@ -53,11 +53,8 @@ const addPayment = async (req, res) => {
     paymentType: paymentDetails.paymentType || "",
     paymentDate: new Date(paymentDetails.paymentDate) || "",
     paymentImageLink: paymentDetails.paymentImageLink || "",
-    cashPaymentReceivedById: paymentDetails.cashPaymentReceivedById || "",
-    cashPaymentReceivedByName: paymentDetails.cashPaymentReceivedByName || "",
-    onlinePaymentReceivedById: paymentDetails.onlinePaymentReceivedById || "",
-    onlinePaymentReceivedByName:
-      paymentDetails.onlinePaymentReceivedByName || "",
+    paymentReceivedById: paymentDetails.paymentReceivedById || "",
+    paymentReceivedByName: paymentDetails.paymentReceivedByName || "",
   };
   // make data to insert in db table of membersmeetingmapping
   const newRecords = [];
@@ -180,7 +177,9 @@ const approvePendingPaymentController = async (req, res) => {
       await paymentModel.approvePendingPayment(transactionData, trx);
 
       // Step 2: Set isPaid to true
-      const transactionIdsArray = transactionDetails.map((t) => t.transactionId);
+      const transactionIdsArray = transactionDetails.map(
+        (t) => t.transactionId
+      );
       await paymentModel.setIsPaid(transactionIdsArray, trx);
 
       // Step 3: Add Dues
@@ -196,7 +195,9 @@ const approvePendingPaymentController = async (req, res) => {
     });
   } catch (error) {
     console.error("Transaction Failed:", error);
-    res.status(500).json({ error: "Transaction Failed", details: error.message });
+    res
+      .status(500)
+      .json({ error: "Transaction Failed", details: error.message });
   }
 };
 
