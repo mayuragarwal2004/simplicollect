@@ -12,7 +12,7 @@ const ReportA = () => {
   const [columns, setColumns] = useState([]);
 
   // Extracting query parameters
-  const rows = searchParams.get('rows') || 6;
+  const rows = searchParams.get('rows') || 5;
   const page = searchParams.get('page') || 0;
 
   const getMemeberPackageSummary = () => {

@@ -12,7 +12,7 @@ export function usePagination(initialSize = 10) {
     onPaginationChange: setPagination,
     pagination,
     // API
-    limit: pageSize,
-    skip: pageIndex,
+    rows: pageSize,
+    page: pageIndex,
   };
 }

@@ -2,9 +2,7 @@ import useColorMode from '../../utils/useColorMode';
 import { useTheme } from "@/context/theme-provider"
 
 const DarkModeSwitcher = () => {
-  const { theme, setTheme } = useTheme()
-  console.log('theme:', theme);
-  
+  const { theme, setTheme } = useTheme()  
 
   return (
     <li>

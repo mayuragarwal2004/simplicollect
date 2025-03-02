@@ -67,8 +67,6 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
     if (chapterData?.chapterId) getRightData();
   }, [chapterData]);
 
-  console.log({ rightsData });
-
   const getRightData = async () => {
     try {
       const response = await axiosInstance(`/api/rights/sidebar`, {

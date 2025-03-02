@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Check, Upload, X, ChevronDown, ChevronUp } from 'lucide-react';
 import { axiosInstance } from '../../../utils/config';
-import formatDateDDMMYYY from '../../../utils/dateUtility';
+import formatDateDDMMYYYY from '../../../utils/dateUtility';
 
 const AcceptPaymentMember = ({
   selectedPackage,
@@ -268,7 +268,7 @@ const AcceptPaymentMember = ({
                       <strong>{meeting.meetingName}</strong>
                     </p>
                     <p>
-                      {formatDateDDMMYYY(meeting.meetingDate)} at{' '}
+                      {formatDateDDMMYYYY(meeting.meetingDate)} at{' '}
                       {meeting.meetingTime}
                     </p>
                     {meeting.isPaid && (
