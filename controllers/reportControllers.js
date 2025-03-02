@@ -13,18 +13,17 @@ const getPackageSummaryController = async (req, res) => {
   try {
     const chapterMembers = await memberModel.getMembers(chapterId);
     for (let i = 0; i < chapterMembers.length; i++) {
-      console.log(`Processing member ${i + 1}/${chapterMembers.length}`);
+      console.log(`Processing member ${i+1}/${chapterMembers.length}`);
 
       const member = chapterMembers[i];
       const packageData = await packageModel.getPackagesByChapterId(
         chapterId,
         member.memberId
       );
-      const meetingData =
-        await meetingModel.getAllMeetingsUsingMemberIdAndChapterId(
-          member.memberId,
-          chapterId
-        );
+      const meetingData = await meetingModel.getAllMeetingsUsingMemberIdAndChapterId(
+        member.memberId,
+        chapterId
+      );
       //   chapterMembers[i].packageData = packageData;
       for (let j = 0; j < packageData.length; j++) {
         const package = packageData[j];
@@ -46,41 +45,18 @@ const getPackageSummaryController = async (req, res) => {
   }
 };
 const getAllMemberReports = async (req, res) => {
-  const { chapterId, rows, page } = req.query;
   try {
-    const { transactions, totalRecords } = await paymentModel.getTransactions(
-      chapterId,
-      rows,
-      page
-    );
+    const transactions = await paymentModel.getTransactions();
     if (!transactions || transactions.length === 0) {
       return res.status(404).json({ message: "No transactions found" });
     }
 
-    res.json({
-      data: transactions,
-      totalRecords,
-      rows,
-      page,
-    });
+    res.json(transactions);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
-const getMemberTotalDues = async (req, res) => {
-  try {
-    const transactionreport = await paymentModel.getMemberFinancialSummary();
-    if (!transactionreport || transactionreport.length === 0) {
-      return res.status(404).json({ message: "No transactions found" });
-    }
-    res.json(transactionreport);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
-
 module.exports = {
   getPackageSummaryController,
-  getAllMemberReports,
-  getMemberTotalDues,
+  getAllMemberReports
 };

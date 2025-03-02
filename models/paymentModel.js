@@ -49,7 +49,7 @@ const getPaymentRequests = async (
     .where({ "p.chapterId": chapterId, "t.status": status })
     .andWhere(function () {
       if (getAllRequests) return this.where({ "t.status": status });
-      return this.where({ "t.paymentReceivedById": memberId });
+      return this.where({ "t.paymentReceivedById": memberId })
     })
     .distinct("t.transactionId")
     .select(
@@ -144,9 +144,11 @@ const addDues = async (dueList, trx) => {
 
 const updateDue = async (dueList) => {
   for (const { memberId, chapterId, due } of dueList) {
-    await db("memberChapterMapping").where({ memberId, chapterId }).update({
-      due, // Directly set due
-    });
+    await db("memberChapterMapping")
+      .where({ memberId, chapterId })
+      .update({
+        due, // Directly set due
+      });
   }
 };
 
@@ -156,9 +158,8 @@ const getMemberChapterDue = async (memberId, chapterId) => {
     .select("due")
     .first();
 };
-const getTransactions = async (chapterId, rows, page) => {
-  const offset = page * rows;
-  const transactions = await db("transactions as t")
+const getTransactions = async () => {
+  return db("transactions as t")
     .join("members as m", "t.memberId", "m.memberId")
     .join("packages as p", "t.packageId", "p.packageId")
     .select(
@@ -174,28 +175,7 @@ const getTransactions = async (chapterId, rows, page) => {
       "t.approvedByName",
       "t.transactionDate",
       "t.status as approvalStatus"
-    )
-    .limit(rows)
-    .offset(offset);
-
-  const [{ count }] = await db("transactions as t")
-    .count("t.transactionId as count")
-    .join("members as m", "t.memberId", "m.memberId")
-    .join("packages as p", "t.packageId", "p.packageId");
-
-  return { transactions, totalRecords: parseInt(count, 10) };
-};
-
-const getMemberFinancialSummary = async () => {
-  return db("transactions as t")
-    .join("members as m", "t.memberId", "m.memberId")
-    .select(
-      "m.memberId",
-      db.raw("CONCAT(m.firstName, ' ', m.lastName) as memberName"),
-      db.raw("SUM(t.paidAmount) as amountTotal"),
-      db.raw("SUM(t.dueAmount) as totalDues")
-    )
-    .groupBy("m.memberId", "m.firstName", "m.lastName");
+    );
 };
 
 module.exports = {
@@ -212,6 +192,5 @@ module.exports = {
   addDues,
   updateDue,
   getMemberChapterDue,
-  getTransactions,
-  getMemberFinancialSummary,
+  getTransactions
 };

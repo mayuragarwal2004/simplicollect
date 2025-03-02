@@ -20,6 +20,9 @@ const app = express();
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "client/dist")));
 
+const organisationRoutes = require('./routes/organisationRoutes');
+app.use('/api/organisations', organisationRoutes);
+
 // Visitor routes
 app.use("/api/auth", authRoutes);
 app.use("/api/visitor", visitorRoutes);

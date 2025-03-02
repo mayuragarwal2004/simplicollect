@@ -1,4 +1,4 @@
-function formatDateDDMMYYYY(input) {
+function formatDateDDMMYYY(input) {
     let date;
     
     if (typeof input === 'string') {
@@ -16,4 +16,4 @@ function formatDateDDMMYYYY(input) {
     return `${day}-${month}-${year}`;
 }
 
-export default formatDateDDMMYYYY;
+export default formatDateDDMMYYY;

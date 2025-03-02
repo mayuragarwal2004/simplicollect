@@ -1,164 +1,63 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect ,useState} from 'react';
 import { axiosInstance } from '../../../utils/config';
-import { useLocation } from 'react-router-dom'
-import { ReportBTable } from './reportb-data-table/reportb-table';
-import { ReportBColumns } from './reportb-data-table/reportb-column';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Button } from '@/components/ui/button';
-import Papa from 'papaparse';
-import jsPDF from 'jspdf';
-import 'jspdf-autotable';
-import { useData } from '../../../context/DataContext';
 
 const ReportB = () => {
- const location = useLocation()
- const [reports, setReports] = useState([]);
+  const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
-  const { chapterData } = useData();
-  const searchParams = new URLSearchParams(location.search);
-  const [totalRecord, setTotalRecord] = useState(null);
-  const rows = searchParams.get('rows') || 5;
-  const page = searchParams.get('page') || 0;
-
-  const columnLabels = ReportBColumns.map(({ accessorKey, header }) => ({
-    label: header().props.children,
-    key: accessorKey,
-  }));
-
-  const [selectedColumns, setSelectedColumns] = useState(
-    columnLabels.map(({ label }) => label),
-  );
 
   useEffect(() => {
-    console.log("helo");
-    
-    if (!chapterData) return;
-    getReportData();
-  }, [chapterData, rows, page, location.search]);
-
-  const getReportData = () => {
-    console.log("helo 2");
-
+    // get member package summary
     axiosInstance
-      .get('/api/report/member-transactions', {
-        params: {
-          chapterId: chapterData.chapterId,
-          rows,
-          page,
-        },
-      })
+      .get(`/api/report/allMemberReports`)
       .then((res) => {
-        setReports(res.data.data);
-        setTotalRecord(res.data.totalRecords);
+        setReports(res.data);
         setLoading(false);
       })
       .catch((err) => {
-        console.error('Error fetching reports:', err);
+        console.log(err);
+        console.log("Error");
         setLoading(false);
       });
-  };
-
-  const toggleColumn = (column) => {
-    setSelectedColumns((prev) =>
-      prev.includes(column)
-        ? prev.filter((c) => c !== column)
-        : [...prev, column],
-    );
-  };
-
-  const exportCSV = () => {
-    const csvData = reports.map((report) => {
-      let row = {};
-      columnLabels.forEach(({ label, key }) => {
-        if (selectedColumns.includes(label)) {
-          row[label] =
-            key === 'name'
-              ? `${report.firstName} ${report.lastName}`
-              : report[key];
-        }
-      });
-      return row;
-    });
-
-    const csv = Papa.unparse(csvData);
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', 'report.csv');
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
-  const exportPDF = () => {
-    const doc = new jsPDF();
-    doc.text('Member Transactions Report', 20, 10);
-    const tableColumn = columnLabels
-      .filter(({ label }) => selectedColumns.includes(label))
-      .map(({ label }) => label);
-    const tableRows = reports.map((report) =>
-      tableColumn.map((col) =>
-        col === 'Member Name'
-          ? `${report.firstName} ${report.lastName}`
-          : report[col.toLowerCase().replace(/ /g, '')],
-      ),
-    );
-
-    doc.autoTable({
-      head: [tableColumn],
-      body: tableRows,
-    });
-
-    doc.save('report.pdf');
-  };
-
+  }
+    , []);
   return (
-    <div className="p-6">
-      <h2 className="text-2xl font-semibold mb-4">
-        Member Transactions Report
-      </h2>
-
-      <div className="mb-4 p-4 border rounded-md bg-gray-100">
-        <h3 className="text-lg font-semibold mb-2">Select Columns to Export</h3>
-        <div className="flex flex-wrap gap-4">
-          {columnLabels.map(({ label }) => (
-            <div key={label} className="flex items-center gap-2">
-              <Checkbox
-                checked={selectedColumns.includes(label)}
-                onCheckedChange={() => toggleColumn(label)}
-              />
-              <label className="text-sm">{label}</label>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <div className="flex gap-4 mb-4">
-        <Button onClick={exportCSV} className="bg-blue-500 text-white">
-          Export as CSV
-        </Button>
-        <Button onClick={exportPDF} className="bg-red-500 text-white">
-          Export as PDF
-        </Button>
-      </div>
-
+    <div>
+      <h2>Member Transactions Report</h2>
       {loading ? (
-        <p className="text-gray-600">Loading...</p>
+        <p>Loading...</p>
       ) : reports.length === 0 ? (
-        <p className="text-gray-600">No reports available.</p>
+        <p>No reports available.</p>
       ) : (
-        <ReportBTable
-          data={reports}
-          columns={ReportBColumns}
-          searchInputField="firstName"
-          totalRecord={totalRecord}
-          pagination={{
-            pageSize: rows,
-            pageIndex: page,
-          }}
-          state={{ pagination: { pageSize: rows, pageIndex: page } }}
-        />
+        <table border="1" cellPadding="8" cellSpacing="0">
+          <thead>
+            <tr>
+              <th>Member Name</th>
+              <th>Amount Paid</th>
+              <th>Due</th>
+              <th>Package Name</th>
+              <th>Payment Type</th>
+              <th>Collected By</th>
+              <th>Approved By</th>
+              <th>Date</th>
+              <th>Approval Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {reports.map((report) => (
+              <tr key={report.transactionId}>
+                <td>{report.firstName} {report.lastName}</td>
+                <td>{report.paidAmount}</td>
+                <td>{report.dueAmount}</td>
+                <td>{report.packageName}</td>
+                <td>{report.paymentType}</td>
+                <td>{report.paymentReceivedByName}</td>
+                <td>{report.approvedByName}</td>
+                <td>{new Date(report.transactionDate).toLocaleDateString()}</td>
+                <td>{report.approvalStatus}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       )}
     </div>
   );

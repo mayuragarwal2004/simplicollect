@@ -11,7 +11,7 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { TextField } from '@mui/material';
-import formatDateDDMMYYYY from '../../utils/dateUtility';
+import formatDateDDMMYYY from '../../utils/dateUtility';
 
 const MemberFeeManager = () => {
   const [tabValue, setTabValue] = React.useState(0);
@@ -93,7 +93,7 @@ const MemberFeeManager = () => {
       .get(
         `/api/feeReciever/currentCashReceivers/${
           chapterData?.chapterId
-        }?date=${formatDateDDMMYYYY(calculationDate)}`,
+        }?date=${formatDateDDMMYYY(calculationDate)}`,
       )
       .then((data) => {
         console.log('Fetched Cash Receivers:', data.data);
@@ -108,7 +108,7 @@ const MemberFeeManager = () => {
       .get(
         `/api/feeReciever/currentQRReceivers/${
           chapterData?.chapterId
-        }?date=${formatDateDDMMYYYY(calculationDate)}`,
+        }?date=${formatDateDDMMYYY(calculationDate)}`,
       )
       .then((data) => {
         console.log('Fetched QR Receivers:', data.data);

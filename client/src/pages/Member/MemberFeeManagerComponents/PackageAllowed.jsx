@@ -4,7 +4,7 @@ import AcceptPaymentMember from './AcceptPaymentMember';
 import { axiosInstance } from '../../../utils/config';
 import { useData } from '../../../context/DataContext';
 import { Button } from '@mui/material';
-import formatDateDDMMYYYY from '../../../utils/dateUtility';
+import formatDateDDMMYYY from '../../../utils/dateUtility';
 
 const PackageAllowed = ({
   pendingPayments,
@@ -256,7 +256,7 @@ const PackageAllowed = ({
                   </p>
                   <p className="text-gray-700 mb-1">
                     Payable End Date:{' '}
-                    {formatDateDDMMYYYY(pkg.packagePayableEndDate)}
+                    {formatDateDDMMYYY(pkg.packagePayableEndDate)}
                   </p>
                   <Button
                     className="mt-4 bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-700"
