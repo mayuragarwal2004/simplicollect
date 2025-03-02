@@ -178,6 +178,18 @@ const getTransactions = async () => {
     );
 };
 
+const getMemberFinancialSummary = async () => {
+  return db("transactions as t")
+    .join("members as m", "t.memberId", "m.memberId")
+    .select(
+      "m.memberId",
+      db.raw("CONCAT(m.firstName, ' ', m.lastName) as memberName"),
+      db.raw("SUM(t.paidAmount) as amountTotal"),
+      db.raw("SUM(t.dueAmount) as totalDues")
+    )
+    .groupBy("m.memberId", "m.firstName", "m.lastName");
+};
+
 module.exports = {
   addTransaction,
   addPayment,
@@ -192,5 +204,6 @@ module.exports = {
   addDues,
   updateDue,
   getMemberChapterDue,
-  getTransactions
+  getTransactions,
+  getMemberFinancialSummary,
 };
