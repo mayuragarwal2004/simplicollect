@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { Children, useEffect, useState } from 'react';
 import {
   createBrowserRouter,
   Navigate,
@@ -41,6 +41,9 @@ import TermsAndConditions from './pages/TermsAndConditions';
 import NoChapterPage from './pages/NoChapterPage';
 import { Bounce, ToastContainer } from 'react-toastify';
 import { Password } from '@mui/icons-material';
+import AdminSignIn from './pages/Authentication/AdminSignIn';
+import AdminRequireAuth from './utils/AdminRequireAut';
+import AdminOrganisations from './components/Admin/Organisations/AdminOrganisations'
 
 const routes = [
   {
@@ -60,8 +63,22 @@ const routes = [
         element: <TermsAndConditions />,
       },
       {
+        path: 'admin',
+        element: <AdminRequireAuth/>,
+        children: [
+          {
+            path: 'organisations',
+            element: <AdminOrganisations/>
+          }
+        ]
+      },
+      {
         path: 'auth',
         children: [
+          {
+            path: 'admin-sign-in',
+            element: <AdminSignIn />,
+          },
           {
             path: 'signin',
             element: <SignIn />,
