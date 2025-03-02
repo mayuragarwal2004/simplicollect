@@ -20,11 +20,11 @@ const AdminSignIn: React.FC = () => {
   const [showPasswordField, setShowPasswordField] = useState(false);
 
   // Check if the user is already authenticated
-  // useEffect(() => {
-  //   if (isAuthenticated) {
-  //     navigate('/admin');
-  //   }
-  // }, [isAuthenticated]);
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/admin');
+    }
+  }, [isAuthenticated]);
 
   // Handle Continue button click
   const handleContinue = async (e: React.FormEvent) => {
@@ -61,6 +61,8 @@ const AdminSignIn: React.FC = () => {
     e.preventDefault();
     try {
       await login(identifier, password, () => {
+        console.log('Logged in successfully! as admin');
+        
         navigate('/admin');
       });
       // navigate('/'); // Redirect to home page after successful login

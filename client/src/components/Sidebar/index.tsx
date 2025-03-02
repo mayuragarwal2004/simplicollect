@@ -11,9 +11,32 @@ import { useAuth } from '../../context/AuthContext';
 interface SidebarProps {
   sidebarOpen: boolean;
   setSidebarOpen: (arg: boolean) => void;
+  admin?: boolean;
 }
 
-const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
+const adminSidebarData = [
+  {
+    title: 'Organisations',
+    icon: 'Users',
+    links: [
+      {
+        title: 'Organisations',
+        to: '/admin/organisations',
+      },
+    ],
+  },{
+    title: 'Chapters',
+    icon: 'Users',
+    links: [
+      {
+        title: 'Chapters',
+        to: '/admin/chapters',
+      },
+    ],
+  },
+];
+
+const Sidebar = ({ sidebarOpen, setSidebarOpen, admin }: SidebarProps) => {
   const { chapterData } = useData();
   const { isAuthenticated } = useAuth();
   const [rightsData, setRightsData] = useState<any>([]);
@@ -64,8 +87,13 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
   }, [sidebarExpanded]);
 
   useEffect(() => {
-    if (chapterData?.chapterId) getRightData();
-  }, [chapterData]);
+    if (chapterData?.chapterId)
+      if (admin) {
+        setRightsData(adminSidebarData);
+      } else {
+        getRightData();
+      }
+  }, [chapterData, admin]);
 
   const getRightData = async () => {
     try {

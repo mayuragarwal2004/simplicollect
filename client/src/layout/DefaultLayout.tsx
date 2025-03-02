@@ -6,7 +6,11 @@ import { Backdrop } from '@mui/material';
 import { useData } from '../context/DataContext';
 import { useOutlet } from 'react-router-dom';
 
-const DefaultLayout: React.FC = () => {
+interface DefaultLayoutProps {
+  admin?: boolean;
+}
+
+const DefaultLayout: React.FC<DefaultLayoutProps> = ({ admin = false }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { chapterData, allChaptersData, switchChapter } = useData();
   const { isAuthenticated } = useAuth();
@@ -56,7 +60,7 @@ const DefaultLayout: React.FC = () => {
       <div className="flex h-screen overflow-hidden">
         {/* <!-- ===== Sidebar Start ===== --> */}
         {isAuthenticated && (
-          <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
+          <Sidebar sidebarOpen={sidebarOpen} admin={admin} setSidebarOpen={setSidebarOpen} />
         )}
         {/* <!-- ===== Sidebar End ===== --> */}
 
