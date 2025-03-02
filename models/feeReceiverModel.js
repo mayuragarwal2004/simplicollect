@@ -40,7 +40,7 @@ const getCurrentQRReceivers = async (chapterId, date)=>{
 }
 
 const getAmountCollected = async (chapterId, date) => {
-  const cashPayments = await db("transactions as t")
+  const payments = await db("transactions as t")
     .join("packages as p", "t.packageId", "p.packageId")
     .where({ "p.chapterId": chapterId, "t.status": "approved" })
     .select(
@@ -48,17 +48,7 @@ const getAmountCollected = async (chapterId, date) => {
       db.raw("SUM(t.paidAmount) as totalAmountCollected")
     )
     .groupBy("receiverId");
-
-  const onlinePayments = await db("transactions as t")
-    .join("packages as p", "t.packageId", "p.packageId")
-    .where({ "p.chapterId": chapterId, "t.status": "approved" })
-    .select(
-      db.raw("t.paymentReceivedById as receiverId"),
-      db.raw("SUM(t.paidAmount) as totalAmountCollected")
-    )
-    .groupBy("receiverId");
-
-  return [...cashPayments, ...onlinePayments];
+  return payments;
 };
 
 module.exports = {

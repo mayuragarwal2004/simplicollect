@@ -1,3 +1,5 @@
+
+
 const packageAmountCalculations = (
   calculationDate,
   pkg,
@@ -5,11 +7,43 @@ const packageAmountCalculations = (
   previousDue,
 ) => {
   const payableEndDate = new Date(pkg.packagePayableEndDate);
+
+  if (typeof pkg.meetingIds === 'string') {
+    pkg.meetingIds = JSON.parse(pkg.meetingIds);
+  }
+
+  if (pkg.status === 'pending') {
+    return {
+      message: 'You have applied for this package. Please wait for approval',
+      totalAmount: null,
+      penaltyAmount: null,
+      discountAmount: null,
+      isDisabled: true,
+    };
+  } else if (pkg.status === 'rejected') {
+    return {
+      message: 'Your package application has been rejected',
+      totalAmount: null,
+      penaltyAmount: null,
+      discountAmount: null,
+      isDisabled: true,
+    };
+  } else if (pkg.status === 'approved') {
+    return {
+      message: 'Your package application has been approved',
+      totalAmount: null,
+      penaltyAmount: null,
+      discountAmount: null,
+      isDisabled: true,
+    };
+  }
+
   if (
     pkg.packagePayableStartDate &&
     calculationDate < new Date(pkg.packagePayableStartDate)
   ) {
     return {
+      message: 'Package is not open to payable yet',
       totalAmount: null,
       penaltyAmount: null,
       discountAmount: null,
@@ -20,11 +54,24 @@ const packageAmountCalculations = (
   // Disable package if allowAfterEndDate is false and calculationDate is after payableEndDate
   if (!pkg.allowAfterEndDate && calculationDate > payableEndDate) {
     return {
+      message: 'Package is not open to payable anymore',
       totalAmount: null,
       penaltyAmount: null,
       discountAmount: null,
       isDisabled: true,
     };
+  }
+
+  if (pkg.allowPackagePurchaseIfFeesPaid) {
+    if (hasOverlappingPayments(pkg, chapterMeetings)) {
+      return {
+        message: 'Package has overlapping payments',
+        totalAmount: null,
+        penaltyAmount: null,
+        discountAmount: null,
+        isDisabled: true,
+      };
+    }
   }
 
   // Calculate penalty and discount as before
@@ -101,9 +148,16 @@ const packageAmountCalculations = (
     // unpaidFeesFromEarlierPackages,
     serviceFee,
     isDisabled:
-      (!pkg.allowAfterEndDate && calculationDate > payableEndDate) ||
-      (!pkg.allowPackagePurchaseIfFeesPaid && hasOverlappingPayments(pkg)),
+      (!pkg.allowAfterEndDate && calculationDate > payableEndDate)
   };
 };
+
+const hasOverlappingPayments = (pkg, chapterMeetings) => {
+  return pkg.meetingIds?.some((meetingId) => {
+    const meeting = chapterMeetings.find((m) => m.meetingId === meetingId);
+    return meeting && meeting.isPaid;
+  });
+};
+
 
 export default packageAmountCalculations;
