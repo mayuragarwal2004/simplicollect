@@ -157,10 +157,12 @@ const getMemberChapterDue = async (memberId, chapterId) => {
     .first();
 };
 const getTransactions = async (chapterId, rows, page) => {
-  const offset = page * rows;
+  const offset = parseInt(page, 10) * parseInt(rows, 10);
+
   const transactions = await db("transactions as t")
     .join("members as m", "t.memberId", "m.memberId")
     .join("packages as p", "t.packageId", "p.packageId")
+    .where("p.chapterId", chapterId)  // Ensure chapter filtering
     .select(
       "t.transactionId",
       "m.firstName",
@@ -175,28 +177,40 @@ const getTransactions = async (chapterId, rows, page) => {
       "t.transactionDate",
       "t.status as approvalStatus"
     )
-    .limit(rows)
+    .limit(parseInt(rows, 10))
     .offset(offset);
 
   const [{ count }] = await db("transactions as t")
     .count("t.transactionId as count")
-    .join("members as m", "t.memberId", "m.memberId")
-    .join("packages as p", "t.packageId", "p.packageId");
+    .join("packages as p", "t.packageId", "p.packageId")
+    .where("p.chapterId", chapterId);
 
   return { transactions, totalRecords: parseInt(count, 10) };
 };
 
-const getMemberFinancialSummary = async () => {
-  return db("transactions as t")
+
+const getMemberFinancialSummary = async (chapterId,row,page) => {
+  const offset = parseInt(page, 10) * parseInt(row, 10);
+  const transactionreport = await db("transactions as t")
     .join("members as m", "t.memberId", "m.memberId")
+    .join("packages as p", "t.packageId", "p.packageId")
+    .where("p.chapterId", chapterId)
     .select(
       "m.memberId",
       db.raw("CONCAT(m.firstName, ' ', m.lastName) as memberName"),
       db.raw("SUM(t.paidAmount) as amountTotal"),
       db.raw("SUM(t.dueAmount) as totalDues")
     )
-    .groupBy("m.memberId", "m.firstName", "m.lastName");
-};
+    .groupBy("m.memberId", "m.firstName", "m.lastName")
+    .limit(parseInt(row, 10))
+    .offset(offset);
+  const [{ count }] = await db("transactions as t")
+    .count("t.transactionId as count")
+    .join("packages as p", "t.packageId", "p.packageId")
+    .where("p.chapterId", chapterId);
+  return { transactionreport,chapterId, totalRecords: parseInt(count, 10) };
+}
+;
 
 module.exports = {
   addTransaction,

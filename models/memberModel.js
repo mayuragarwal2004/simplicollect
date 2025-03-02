@@ -18,7 +18,9 @@ const addMember = async (memberData) => {
     
 };
 
-const getMembers = async (chapterId) => {
+const getMembers = async (chapterId, page = 0, rows = 10) => {
+  const offset = parseInt(page, 10) * parseInt(rows, 10);
+
   return db("memberChapterMapping as mmm")
     .where("mmm.chapterId", chapterId)
     .join("members as m", "mmm.memberId", "m.memberId")
@@ -31,7 +33,10 @@ const getMembers = async (chapterId) => {
       "m.phoneNumber",
       "m.email",
       "mmm.*"
-    );
+    )
+    .limit(rows)
+    .offset(offset);
+
 };
 
 

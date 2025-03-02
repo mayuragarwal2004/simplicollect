@@ -1,25 +1,44 @@
 import React, { useEffect, useState } from 'react';
 import { axiosInstance } from '../../../utils/config';
 import { useData } from '../../../context/DataContext';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ReportATable } from './reporta-data-table/reporta-table';
 import { ReportAColumns } from './reporta-data-table/reporta-column';
-
+import { useLocation } from 'react-router-dom';
 const ReportA = () => {
   const [memberPackageSummary, setMemberPackageSummary] = useState([]);
   const { chapterData } = useData();
   const [totalRecord, setTotalRecord] = useState(null);
   const searchParams = new URLSearchParams(location.search);
+  
   const [columns, setColumns] = useState([]);
 
   // Extracting query parameters
-  const rows = searchParams.get('rows') || 5;
+  const rows = searchParams.get('rows') || 10;
   const page = searchParams.get('page') || 0;
 
+const columnLabels = ReportAColumns.map(({ accessorKey, header }) => ({
+    label: header().props.children,
+    key: accessorKey,
+  }));
+
+  const [selectedColumns, setSelectedColumns] = useState(
+    columnLabels.map(({ label }) => label),
+  );
+
+
+  
   const getMemeberPackageSummary = () => {
     // get member package summary
     axiosInstance
       .get(
-        `/api/report/${chapterData.chapterId}/package-summary?rows=${rows}&page=${page}`,
+        `/api/report/${chapterData.chapterId}/package-summary?rows=${rows}&page=${page}`,{
+        params: {
+          chapterId: chapterData.chapterId,
+          rows,
+          page,
+        },
+      }
       )
       .then((res) => {
         setMemberPackageSummary(res.data);
@@ -43,11 +62,19 @@ const ReportA = () => {
           });
         }
         setColumns([...ReportAColumns, ...newColumns]);
+        setTotalRecord(res.data.totalRecords);
       })
       .catch((err) => {
         throw new Error(err);
         console.log(err);
       });
+  };
+  const toggleColumn = (column) => {
+    setSelectedColumns((prev) =>
+      prev.includes(column)
+        ? prev.filter((c) => c !== column)
+        : [...prev, column],
+    );
   };
 
   useEffect(() => {

@@ -5,7 +5,7 @@ const reportController = require("../controllers/reportControllers");
 
 // 
 router.get("/:chapterId/package-summary", reportController.getPackageSummaryController);
-router.get("/member-transactions", reportController.getAllMemberReports);
-router.get("/member-Total", reportController.getMemberTotalDues);
+router.get("/:chapterId/member-transactions", reportController.getAllMemberReports);
+router.get("/:chapterId/member-Total", reportController.getMemberTotalAmountAndDues);
 
 module.exports = router;

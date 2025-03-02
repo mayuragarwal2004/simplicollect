@@ -4,6 +4,7 @@ import { useLocation } from 'react-router-dom'
 import { ReportBTable } from './reportb-data-table/reportb-table';
 import { ReportBColumns } from './reportb-data-table/reportb-column';
 import { Checkbox } from '@/components/ui/checkbox';
+import { ReportBPagination } from './reportb-data-table/reportb-pagination';
 import { Button } from '@/components/ui/button';
 import Papa from 'papaparse';
 import jsPDF from 'jspdf';
@@ -37,10 +38,11 @@ const ReportB = () => {
   }, [chapterData, rows, page, location.search]);
 
   const getReportData = () => {
+    if(!chapterData.chapterId) return;
     console.log("helo 2");
 
     axiosInstance
-      .get('/api/report/member-transactions', {
+      .get(`/api/report/${chapterData.chapterId}/member-transactions?rows=${rows}&page=${page}  `, {
         params: {
           chapterId: chapterData.chapterId,
           rows,

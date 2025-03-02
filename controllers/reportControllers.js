@@ -39,20 +39,26 @@ const getPackageSummaryController = async (req, res) => {
       }
       chapterMembers[i].packageData = packageData;
     }
-    res.json(chapterMembers);
+    res.json(chapterMembers,row,page);
   } catch (error) {
     console.log(error);
     res.status(500).json({ error: error.message });
   }
 };
 const getAllMemberReports = async (req, res) => {
-  const { chapterId, rows, page } = req.query;
+  const { chapterId, rows = 5, page = 0 } = req.query;
+
+  if (!chapterId) {
+    return res.status(400).json({ message: "Chapter ID is required" });
+  }
+
   try {
     const { transactions, totalRecords } = await paymentModel.getTransactions(
       chapterId,
       rows,
       page
     );
+
     if (!transactions || transactions.length === 0) {
       return res.status(404).json({ message: "No transactions found" });
     }
@@ -60,20 +66,23 @@ const getAllMemberReports = async (req, res) => {
     res.json({
       data: transactions,
       totalRecords,
-      rows,
-      page,
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
-const getMemberTotalDues = async (req, res) => {
+const getMemberTotalAmountAndDues = async (req, res) => {
+  const { chapterId, rows = 5, page = 0 } = req.query;
   try {
-    const transactionreport = await paymentModel.getMemberFinancialSummary();
+    const { transactionreport, totalRecords } = await paymentModel.getMemberFinancialSummary(chapterId, rows, page);
     if (!transactionreport || transactionreport.length === 0) {
       return res.status(404).json({ message: "No transactions found" });
     }
-    res.json(transactionreport);
+    res.json({
+      transactionreport,
+      totalRecords,
+      chapterId
+    });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -82,5 +91,5 @@ const getMemberTotalDues = async (req, res) => {
 module.exports = {
   getPackageSummaryController,
   getAllMemberReports,
-  getMemberTotalDues,
+  getMemberTotalAmountAndDues,
 };
