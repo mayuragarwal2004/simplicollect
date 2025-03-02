@@ -3,6 +3,7 @@
 const memberModel = require("../models/memberModel");
 const packageModel = require("../models/packageModel");
 const meetingModel = require("../models/meetingModel");
+const paymentModel = require("../models/paymentModel");
 const {
   packageAmountCalculations,
 } = require("../utility/packageAmountCalculation");
@@ -43,7 +44,33 @@ const getPackageSummaryController = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+const getAllMemberReports = async (req, res) => {
+  try {
+    const transactions = await paymentModel.getTransactions();
+    if (!transactions || transactions.length === 0) {
+      return res.status(404).json({ message: "No transactions found" });
+    }
+
+    res.json(transactions);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+const getMemberTotalDues = async (req, res) => {
+  try{
+    const transactionreport= await paymentModel.getMemberFinancialSummary();
+    if(!transactionreport || transactionreport.length === 0){
+      return res.status(404).json({ message: "No transactions found" });
+    }
+    res.json(transactionreport);
+  }
+  catch(error){
+    res.status(500).json({ error: error.message });
+  }
+}
 
 module.exports = {
   getPackageSummaryController,
+  getAllMemberReports,
+  getMemberTotalDues,
 };
