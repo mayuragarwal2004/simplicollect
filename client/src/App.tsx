@@ -42,13 +42,31 @@ import NoChapterPage from './pages/NoChapterPage';
 import { Bounce, ToastContainer } from 'react-toastify';
 import { Password } from '@mui/icons-material';
 import AdminSignIn from './pages/Authentication/AdminSignIn';
-import AdminRequireAuth from './utils/AdminRequireAut';
-import AdminOrganisations from './components/Admin/Organisations/AdminOrganisations'
+import AdminOrganisations from './components/Admin/Organisations/AdminOrganisations';
 
 const routes = [
   {
     index: true,
-    element: <Navigate to="/auth/signin" />
+    element: <Navigate to="/auth/signin" />,
+  },
+  {
+    path: '/admin',
+    element: (
+      <RequireAuth>
+        <DefaultLayout admin={true} />
+      </RequireAuth>
+    ),
+    children: [
+      {
+        path: "",
+        index: true,
+        element: <Navigate to="/admin/organisations" />, // replace with dashboard
+      },
+      {
+        path: 'organisations',
+        element: <AdminOrganisations />,
+      },
+    ],
   },
   {
     path: '/',
@@ -61,16 +79,6 @@ const routes = [
       {
         path: 'terms-and-conditions',
         element: <TermsAndConditions />,
-      },
-      {
-        path: 'admin',
-        element: <AdminRequireAuth/>,
-        children: [
-          {
-            path: 'organisations',
-            element: <AdminOrganisations/>
-          }
-        ]
       },
       {
         path: 'auth',
@@ -124,7 +132,7 @@ const routes = [
           {
             path: 'reports',
             element: <Reports />,
-          }
+          },
         ],
       },
       {
@@ -137,9 +145,9 @@ const routes = [
         ],
       },
       {
-        path: "*",
+        path: '*',
         index: true,
-        element: <Navigate to="/auth/signin" />
+        element: <>404</>,
       },
     ],
   },

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { axiosInstance } from '../../../utils/config';
 
-const AdminOrganisations = () => {
+const AdminOrganisationsPage = () => {
   const [organisations, setOrganisations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -283,4 +283,4 @@ const AdminOrganisations = () => {
   );
 };
 
-export default AdminOrganisations;
+export default AdminOrganisationsPage;
