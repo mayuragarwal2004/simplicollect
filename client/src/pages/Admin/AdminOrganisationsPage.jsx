@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { axiosInstance } from '../../../utils/config';
+import { axiosInstance } from '../../utils/config';
 
 const AdminOrganisationsPage = () => {
   const [organisations, setOrganisations] = useState([]);
