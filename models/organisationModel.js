@@ -2,15 +2,26 @@ const db = require("../config/db");
 const { v4: uuidv4 } = require("uuid");
 
 
-const getAllOrganisationsWithChapterCount = async () => {
-  return db("organisations")
+const getAllOrganisationsWithChapterCount = async (rows, page) => {
+  console.log("rows", rows);
+  console.log("page", page);
+    const organisations = await db("organisations")
     .leftJoin("chapters", "organisations.organisationId", "chapters.organisationId")
     .select(
       "organisations.organisationId",
       "organisations.organisationName"
     )
     .count("chapters.chapterId as numberOfChapters")
-    .groupBy("organisations.organisationId", "organisations.organisationName");
+    .groupBy("organisations.organisationId", "organisations.organisationName")
+    .limit(rows)
+    .offset((page) * rows);
+
+  const totalRecords = await db("organisations").count("* as totalRecords").first();
+  
+  return {
+    data: organisations,
+    ...totalRecords,
+  };
 };
 
 

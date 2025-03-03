@@ -1,11 +1,19 @@
 import React, { useEffect, useState } from 'react';
-import { axiosInstance } from '../../utils/config';
+import { axiosInstance } from '../../../utils/config';
+import { useLocation } from 'react-router-dom';
+import { OrgTable } from './organisation-data-table/org-table';
+import { OrgColumns } from './organisation-data-table/org-column';
 
 const AdminOrganisationsPage = () => {
   const [organisations, setOrganisations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingOrg, setEditingOrg] = useState(null);
+  const [totalRecord, setTotalRecord] = useState(0);
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const rows = searchParams.get('rows') || 10;
+  const page = searchParams.get('page') || 0;
   const [notification, setNotification] = useState({
     show: false,
     message: '',
@@ -17,7 +25,7 @@ const AdminOrganisationsPage = () => {
 
   useEffect(() => {
     fetchOrganisations();
-  }, []);
+  }, [rows, page]);
 
   // Hide notification after 3 seconds
   useEffect(() => {
@@ -39,10 +47,11 @@ const AdminOrganisationsPage = () => {
 
   const fetchOrganisations = () => {
     axiosInstance
-      .get(`/api/organisations`)
+      .get(`/api/organisations?rows=${rows}&page=${page}`)
       .then((res) => {
         console.log('Fetched organisations:', res.data);
-        setOrganisations(res.data);
+        setOrganisations(res.data.data || res.data);
+        setTotalRecord(res.data.totalRecords || res.data.length);
         setLoading(false);
       })
       .catch((err) => {
@@ -191,54 +200,20 @@ const AdminOrganisationsPage = () => {
       {loading ? (
         <p>Loading...</p>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse">
-            <thead>
-              <tr className="bg-gray-2 text-left dark:bg-meta-4">
-                <th className="py-4 px-4 font-medium">Sr. No.</th>
-                <th className="py-4 px-4 font-medium">Organisation Name</th>
-                <th className="py-4 px-4 font-medium">Number of Chapters</th>
-                <th className="py-4 px-4 font-medium">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {organisations.length === 0 ? (
-                <tr>
-                  <td colSpan="4" className="py-4 px-4 text-center">
-                    No organisations available.
-                  </td>
-                </tr>
-              ) : (
-                organisations.map((org, index) => (
-                  <tr
-                    key={org.organisationId}
-                    className="border-b border-[#eee]"
-                  >
-                    <td className="py-4 px-4">{index + 1}</td>
-                    <td className="py-4 px-4">{org.organisationName}</td>
-                    <td className="py-4 px-4">{org.numberOfChapters}</td>
-                    <td className="py-4 px-4">
-                      <div className="flex space-x-3">
-                        <button
-                          onClick={() => handleOpenModal(org)}
-                          className="text-primary hover:underline"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          onClick={() => handleDelete(org.organisationId)}
-                          className="text-danger hover:underline"
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+        <OrgTable
+          data={organisations.map(org => ({
+            ...org,
+            onEdit: handleOpenModal,
+            onDelete: handleDelete
+          }))}
+          columns={OrgColumns}
+          searchInputField="organisationName"
+          totalRecord={totalRecord}
+          pagination={{
+            pageSize: parseInt(rows),
+            pageIndex: parseInt(page)
+          }}
+        />
       )}
 
       {/* Modal for Add/Edit */}

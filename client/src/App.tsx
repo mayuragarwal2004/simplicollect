@@ -42,7 +42,7 @@ import NoChapterPage from './pages/NoChapterPage';
 import { Bounce, ToastContainer } from 'react-toastify';
 import { Password } from '@mui/icons-material';
 import AdminSignIn from './pages/Authentication/AdminSignIn';
-import AdminOrganisationsPage from './pages/Admin/AdminOrganisationsPage';
+import AdminOrganisationsPage from './pages/Admin/organisation/AdminOrganisationsPage';
 
 const routes = [
   {

@@ -1,8 +1,9 @@
 const organisationModel = require("../models/organisationModel");
 
 const getAllOrganisations = async (req, res) => {
+  const {rows,page} = req.query;
   try {
-    const organisations = await organisationModel.getAllOrganisationsWithChapterCount();
+    const organisations = await organisationModel.getAllOrganisationsWithChapterCount(rows,page);
     res.json(organisations);
   } catch (error) {
     res.status(500).json({ error: error.message });
