@@ -5,7 +5,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { ReportATable } from './reporta-data-table/reporta-table';
 import { ReportAColumns } from './reporta-data-table/reporta-column';
 import { useLocation } from 'react-router-dom';
+
 const ReportA = () => {
+   const location = useLocation()
   const [memberPackageSummary, setMemberPackageSummary] = useState([]);
   const { chapterData } = useData();
   const [totalRecord, setTotalRecord] = useState(null);
@@ -41,10 +43,10 @@ const columnLabels = ReportAColumns.map(({ accessorKey, header }) => ({
       }
       )
       .then((res) => {
-        setMemberPackageSummary(res.data);
+        setMemberPackageSummary(res.data.data);
         // make more columns
         const newColumns = [];
-        const packageData = res.data[0].packageData;
+        const packageData = res.data.data[0].packageData;
         console.log({ packageData });
 
         for (let i = 0; i < packageData.length; i++) {
@@ -79,7 +81,7 @@ const columnLabels = ReportAColumns.map(({ accessorKey, header }) => ({
 
   useEffect(() => {
     getMemeberPackageSummary();
-  }, []);
+  }, [chapterData, rows, page, location.search]);
 
   console.log({ memberPackageSummary });
 
