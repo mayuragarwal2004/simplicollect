@@ -43,6 +43,10 @@ import { Bounce, ToastContainer } from 'react-toastify';
 import { Password } from '@mui/icons-material';
 import AdminSignIn from './pages/Authentication/AdminSignIn';
 import AdminOrganisationsPage from './pages/Admin/organisation/AdminOrganisationsPage';
+import AdminChaptersPage from './pages/Admin/chapters/AdminChaptersPage'
+
+
+
 
 const routes = [
   {
@@ -65,6 +69,15 @@ const routes = [
       {
         path: 'organisations',
         element: <AdminOrganisationsPage />,
+      },
+      {
+        path: "",
+        index: true,
+        element: <Navigate to="/admin/chapters" />, // replace with dashboard
+      },
+      {
+        path: 'chapters',
+        element: <AdminChaptersPage/>,
       },
     ],
   },
