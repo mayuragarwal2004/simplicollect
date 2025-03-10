@@ -19,7 +19,7 @@ const ReportC = () => {
   const searchParams = new URLSearchParams(location.search);
   const [totalRecord, setTotalRecord] = useState(null);
   const rows = searchParams.get('rows') || 10;
-  const page = searchParams.get('page') || 0;
+  const page = searchParams.get('page') || 1;
 
   const columnLabels = ReportCColumns.map(({ accessorKey, header }) => ({
     label: header().props.children,

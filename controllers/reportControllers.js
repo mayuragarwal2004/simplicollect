@@ -9,9 +9,14 @@ const {
 } = require("../utility/packageAmountCalculation");
 
 const getPackageSummaryController = async (req, res) => {
+  const { rows = 5, page = 0 } = req.query;
   const { chapterId } = req.params;
   try {
-    const chapterMembers = await memberModel.getMembers(chapterId);
+    const { data: chapterMembers, totalRecords } = await memberModel.getMembers(
+      chapterId,
+      page,
+      rows
+    );
     for (let i = 0; i < chapterMembers.length; i++) {
       console.log(`Processing member ${i + 1}/${chapterMembers.length}`);
 
@@ -39,26 +44,20 @@ const getPackageSummaryController = async (req, res) => {
       }
       chapterMembers[i].packageData = packageData;
     }
-    res.json(chapterMembers,row,page);
+    res.json({ data: chapterMembers, totalRecords });
   } catch (error) {
     console.log(error);
     res.status(500).json({ error: error.message });
   }
 };
 const getAllMemberReports = async (req, res) => {
-  const { chapterId, rows = 5, page = 0 } = req.query;
-
-  if (!chapterId) {
-    return res.status(400).json({ message: "Chapter ID is required" });
-  }
-
+  const { chapterId, rows, page } = req.query;
   try {
     const { transactions, totalRecords } = await paymentModel.getTransactions(
       chapterId,
       rows,
       page
     );
-
     if (!transactions || transactions.length === 0) {
       return res.status(404).json({ message: "No transactions found" });
     }
@@ -66,6 +65,8 @@ const getAllMemberReports = async (req, res) => {
     res.json({
       data: transactions,
       totalRecords,
+      rows,
+      page,
     });
   } catch (error) {
     res.status(500).json({ error: error.message });

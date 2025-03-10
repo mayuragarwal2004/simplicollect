@@ -13,15 +13,17 @@ const findMemberById = async (memberId) => {
 
 // Add member
 const addMember = async (memberData) => {
-  return db("members").insert(memberData)
-  db("memberschaptermapping").insert({ memberId: memberData.memberId, chapterId: memberData.chapterId });
-    
+  return db("members").insert(memberData);
+  db("memberschaptermapping").insert({
+    memberId: memberData.memberId,
+    chapterId: memberData.chapterId,
+  });
 };
 
 const getMembers = async (chapterId, page = 0, rows = 10) => {
   const offset = parseInt(page, 10) * parseInt(rows, 10);
 
-  return db("memberChapterMapping as mmm")
+  const data = await db("memberChapterMapping as mmm")
     .where("mmm.chapterId", chapterId)
     .join("members as m", "mmm.memberId", "m.memberId")
     .leftJoin("roles as r", "mmm.roleId", "r.roleId")
@@ -37,9 +39,15 @@ const getMembers = async (chapterId, page = 0, rows = 10) => {
     .limit(rows)
     .offset(offset);
 
+  const totalRecords = await db("memberChapterMapping as mmm")
+    .where("mmm.chapterId", chapterId)
+    .join("members as m", "mmm.memberId", "m.memberId")
+    .leftJoin("roles as r", "mmm.roleId", "r.roleId")
+    .count("m.memberId as totalRecords")
+    .first();
+
+  return { data, totalRecords: totalRecords.totalRecords };
 };
-
-
 
 module.exports = {
   findMemberByEmail,
