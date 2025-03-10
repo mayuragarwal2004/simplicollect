@@ -9,7 +9,7 @@ const {
 } = require("../utility/packageAmountCalculation");
 
 const getPackageSummaryController = async (req, res) => {
-  const { row = 5, page = 0 } = req.query;
+  const { rows = 5, page = 0 } = req.query;
   const { chapterId } = req.params;
   try {
     const { data: chapterMembers, totalRecords } = await memberModel.getMembers(
