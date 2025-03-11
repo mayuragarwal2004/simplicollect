@@ -18,11 +18,11 @@ import SignUp from './pages/Authentication/SignUp';
 // import Continue from './pages/Authentication/Continue';
 import Calendar from './pages/Calendar';
 import Chart from './pages/Chart';
-import ECommerce from './pages/Dashboard/ECommerce';
+import ECommerce from './pages/Member/Dashboard/ECommerce';
 import EOI from './pages/Visitor/EOI';
 import FormElements from './pages/Form/FormElements';
 import FormLayout from './pages/Form/FormLayout';
-import Profile from './pages/Profile';
+import Profile from './pages/Member/Profile';
 import Settings from './pages/Settings';
 import Tables from './pages/Tables';
 import AlertsPage from './pages/UiElements/AlertsPage';
@@ -32,7 +32,7 @@ import ShareForm from './pages/Visitor/ShareForm';
 import VisitorList from './pages/Visitor/VisitorList';
 import MemberList from './pages/Member/MemberList';
 import Reports from './pages/Member/Reports';
-import MemberFeeManager from './pages/Member/MemberFeeManager';
+import PackageViewer from './pages/Member/Package/PackageViewer';
 import MemberFeeApproval from './pages/Member/MemberFeeApproval';
 import FeeReciever from './pages/Member/FeeReciever';
 import RequireAuth from './utils/RequireAut';
@@ -42,16 +42,17 @@ import NoChapterPage from './pages/NoChapterPage';
 import { Bounce, ToastContainer } from 'react-toastify';
 import { Password } from '@mui/icons-material';
 import AdminSignIn from './pages/Authentication/AdminSignIn';
-import AdminOrganisationsPage from './pages/Admin/organisation/AdminOrganisationsPage';
-import AdminChaptersPage from './pages/Admin/chapters/AdminChaptersPage'
-
-
-
+import AdminOrganisationsPage from './pages/Admin/organisation/AdminOrganisationsTablePage';
+import AdminChaptersTablePage from './pages/Admin/chapters/AdminChaptersTablePage';
 
 const routes = [
   {
     index: true,
     element: <Navigate to="/auth/signin" />,
+  },
+  {
+    path: 'profile',
+    element: <Profile />,
   },
   {
     path: '/admin',
@@ -62,7 +63,7 @@ const routes = [
     ),
     children: [
       {
-        path: "",
+        path: '',
         index: true,
         element: <Navigate to="/admin/organisations" />, // replace with dashboard
       },
@@ -71,13 +72,13 @@ const routes = [
         element: <AdminOrganisationsPage />,
       },
       {
-        path: "",
+        path: '',
         index: true,
         element: <Navigate to="/admin/chapters" />, // replace with dashboard
       },
       {
         path: 'chapters',
-        element: <AdminChaptersPage/>,
+        element: <AdminChaptersTablePage />,
       },
     ],
   },
@@ -128,7 +129,7 @@ const routes = [
           },
           {
             path: 'fee',
-            element: <MemberFeeManager />,
+            element: <PackageViewer />,
           },
           {
             path: 'fee_approval',
@@ -146,6 +147,10 @@ const routes = [
             path: 'reports',
             element: <Reports />,
           },
+          {
+            path: 'profile',
+            element: <Profile />,
+          }
         ],
       },
       {

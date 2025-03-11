@@ -5,7 +5,7 @@ import { Visitor } from '../../models/Visitor';
 import AcceptPayment from './VisitorListComponents/AcceptPayment';
 import ViewVisitor from './VisitorListComponents/ViewVisitor';
 import { Link } from 'react-router-dom';
-import Breadcrumb from '../../components/Breadcrumbs/Breadcrumb';
+import Breadcrumb from '../../components/Breadcrumbs/BreadcrumbOriginal';
 import FilterTags from '../../components/FilterTags';
 import ExportVisitorData from './VisitorListComponents/ExportVisitorData';
 import VisitorDelete from './VisitorListComponents/VisitorDelete';
