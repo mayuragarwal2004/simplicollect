@@ -1,76 +1,72 @@
-import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
-import { ChevronDownIcon } from "@radix-ui/react-icons";
-import { useState } from "react";
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
+import ChapterBasicDetails from './ChapterBasicDetails';
 
 const OrganisationSelection = () => {
-  const [step, setStep] = useState(1);
+  const [selectedOrg, setSelectedOrg] = useState('');
+  const [showNextComponent, setShowNextComponent] = useState(false);
+  const navigate = useNavigate();
+
+  const onCancel = () => {
+    setSelectedOrg('');
+    navigate(1);
+  };
+
+  const handleChange = (value) => {
+    setSelectedOrg(value);
+  };
+
+  const onNext = () => {
+    if (selectedOrg) {
+      setShowNextComponent(true);
+    }
+  };
+
+  if (showNextComponent) {
+    return <ChapterBasicDetails />;
+  }
 
   return (
-    <div className="flex items-center justify-center bg-pink-200">
-      {step === 1 && (
-        <div className="p-6 bg-white rounded-2xl shadow-lg text-center w-[600px]">
-          <h2 className="text-2xl font-bold mb-6">Choose an Organisation</h2>
-          <DropdownMenu.Root>
-            <DropdownMenu.Trigger className="px-4 py-2 bg-gray-400 text-black rounded-lg flex items-center">
-              Choose from the below dropdown <ChevronDownIcon className="ml-2" />
-            </DropdownMenu.Trigger>
-            <DropdownMenu.Content className="bg-white shadow-md rounded-md w-48 mt-2 p-2">
-              <DropdownMenu.Item className="px-4 py-2 cursor-pointer hover:bg-gray-200 rounded">Organisation 1</DropdownMenu.Item>
-              <DropdownMenu.Item className="px-4 py-2 cursor-pointer hover:bg-gray-200 rounded">Organisation 2</DropdownMenu.Item>
-              <DropdownMenu.Item className="px-4 py-2 cursor-pointer hover:bg-gray-200 rounded">Organisation 3</DropdownMenu.Item>
-            </DropdownMenu.Content>
-          </DropdownMenu.Root>
-          <div className="flex justify-between mt-6">
-            <button className="bg-gray-400 text-black px-6 py-2 rounded-lg">&lt; Cancel</button>
-            <button className="bg-gray-400 text-black px-6 py-2 rounded-lg" onClick={() => setStep(2)}>Next &gt;</button>
-          </div>
-        </div>
-      )}
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+      <div className="p-6 bg-white rounded-2xl shadow-lg text-center w-[600px]">
+        <h3 className="text-2xl font-semibold mb-4">Choose an Organisation</h3>
+        <Select value={selectedOrg} onValueChange={handleChange}>
+          <SelectTrigger className="w-full border border-gray-300 rounded-lg shadow-md bg-white text-gray-700 cursor-pointer hover:border-blue-800 my-5">
+            <SelectValue placeholder="Select an Organisation" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="org1">Organisation 1</SelectItem>
+            <SelectItem value="org2">Organisation 2</SelectItem>
+            <SelectItem value="org3">Organisation 3</SelectItem>
+          </SelectContent>
+        </Select>
 
-      {/* {step === 2 && (
-        <div className="p-6 bg-white rounded-2xl shadow-lg w-[700px]">
-          <h2 className="text-3xl font-bold mb-6 text-center">Enter chapter’s basic details</h2>
-          <div className="grid grid-cols-2 gap-6">
-            <div>
-              <label className="font-semibold">Chapter Name</label>
-              <input type="text" className="w-full px-4 py-2 bg-gray-400 text-black rounded-lg mt-1" placeholder="Enter the name" />
-            </div>
-            <div>
-              <label className="font-semibold">Chapter Slug</label>
-              <input type="text" className="w-full px-4 py-2 bg-gray-400 text-black rounded-lg mt-1" placeholder="Enter the slug" />
-            </div>
-            <div>
-              <label className="font-semibold">City</label>
-              <input type="text" className="w-full px-4 py-2 bg-gray-400 text-black rounded-lg mt-1" placeholder="Enter the city" />
-            </div>
-            <div>
-              <label className="font-semibold">State</label>
-              <input type="text" className="w-full px-4 py-2 bg-gray-400 text-black rounded-lg mt-1" placeholder="Enter the state" />
-            </div>
-            <div className="col-span-2">
-              <label className="font-semibold">Country</label>
-              <DropdownMenu.Root>
-                <DropdownMenu.Trigger className="w-full px-4 py-2 bg-gray-400 text-black rounded-lg mt-1 flex justify-between items-center">
-                  Select Country <ChevronDownIcon />
-                </DropdownMenu.Trigger>
-                <DropdownMenu.Content className="bg-white shadow-md rounded-md w-full mt-2 p-2">
-                  <DropdownMenu.Item className="px-4 py-2 cursor-pointer hover:bg-gray-200 rounded">India</DropdownMenu.Item>
-                  <DropdownMenu.Item className="px-4 py-2 cursor-pointer hover:bg-gray-200 rounded">USA</DropdownMenu.Item>
-                  <DropdownMenu.Item className="px-4 py-2 cursor-pointer hover:bg-gray-200 rounded">UK</DropdownMenu.Item>
-                </DropdownMenu.Content>
-              </DropdownMenu.Root>
-            </div>
-          </div>
-          <div className="flex justify-end mt-6">
-            <button className="bg-gray-400 text-black px-6 py-2 rounded-lg">Next &gt;</button>
-          </div>
+        <div className="flex justify-between mt-6">
+          <Button
+            className="bg-gray-200 hover:bg-gray-300 text-black px-4 py-2 rounded-lg border-2"
+            onClick={onCancel}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={onNext}
+            className={`px-4 py-2 rounded-lg border-2 ${selectedOrg ? 'bg-gray-200 hover:bg-gray-300 text-black' : 'bg-gray-100 text-gray-400 cursor-not-allowed'}`}
+            disabled={!selectedOrg}
+          >
+            Next
+          </Button>
         </div>
-      )} */}
+      </div>
     </div>
   );
 };
 
-
-
 export default OrganisationSelection;
-
