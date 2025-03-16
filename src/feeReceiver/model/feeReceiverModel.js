@@ -1,6 +1,14 @@
 // models/feeRecieverModel.js
 const db = require("../../config/db");
 
+const getCurrentReceivers = async (chapterId, date) => {
+  return db("feeReceivers")
+    .where("chapterId", chapterId)
+    .andWhere("enableDate", "<=", date)
+    .andWhere("disableDate", ">=", date)
+    .select("*");
+};
+
 const getCashReceivers = async (chapterId) => {
   return db("cashreceivers").where("chapterId", chapterId).select("*");
 };
@@ -23,9 +31,13 @@ const addCashReceiver = async (
   });
 };
 
-const getCurrentCashReceivers = async (chapterId, date)=>{
-  return db("cashreceivers").where("chapterId", chapterId).andWhere("enableDate", "<=", date).andWhere("disableDate", ">=", date).select("*");
-}
+const getCurrentCashReceivers = async (chapterId, date) => {
+  return db("cashreceivers")
+    .where("chapterId", chapterId)
+    .andWhere("enableDate", "<=", date)
+    .andWhere("disableDate", ">=", date)
+    .select("*");
+};
 
 const getQRReceivers = async (chapterId) => {
   return db("qrreceivers").where("chapterId", chapterId).select("*");
@@ -35,9 +47,13 @@ const addQRReceiver = async (data) => {
   return db("qrreceivers").insert(data);
 };
 
-const getCurrentQRReceivers = async (chapterId, date)=>{
-  return db("qrreceivers").where("chapterId", chapterId).andWhere("enableDate", "<=", date).andWhere("disableDate", ">=", date).select("*");
-}
+const getCurrentQRReceivers = async (chapterId, date) => {
+  return db("qrreceivers")
+    .where("chapterId", chapterId)
+    .andWhere("enableDate", "<=", date)
+    .andWhere("disableDate", ">=", date)
+    .select("*");
+};
 
 const getAmountCollected = async (chapterId, date) => {
   const payments = await db("transactions as t")
@@ -52,6 +68,7 @@ const getAmountCollected = async (chapterId, date) => {
 };
 
 module.exports = {
+  getCurrentReceivers,
   getCashReceivers,
   addCashReceiver,
   getCurrentCashReceivers,

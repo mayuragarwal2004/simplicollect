@@ -5,19 +5,42 @@ import { axiosInstance } from '../../../utils/config';
 import { useData } from '../../../context/DataContext';
 import { Button } from '@mui/material';
 import formatDateDDMMYYYY from '../../../utils/dateUtility';
+import PackagePayMain from './PackagePayMain';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import { usePaymentData } from './PaymentDataContext';
 
-const PackageAllowed = ({
+const PackageCard = ({
   pendingPayments,
-  packageData,
-  setPackageData,
   parentType,
-  chapterMeetings,
   paymentSuccessHandler,
-  cashReceivers,
-  qrReceivers,
 }) => {
+  const {
+    paymentData: {
+      receivers,
+      chapterMeetings,
+      due,
+      packageParents,
+      packageData,
+    },
+    setPaymentData,
+  } = usePaymentData();
   const [showUnpaidOnly, setShowUnpaidOnly] = useState(false);
   const [selectedPackage, setSelectedPackage] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(true);
+  console.log('From PackageCard', { receivers });
+
+  const handlePackagePayModalClose = () => {
+    console.log('Triggered handlePackagePayModalClose');
+
+    setIsModalOpen(false);
+  };
 
   console.log({ selectedPackage });
 
@@ -166,6 +189,13 @@ const PackageAllowed = ({
   };
 
   const handlePayClick = (pkg) => {
+    setIsModalOpen(true);
+    setPaymentData((prev) => {
+      return {
+        ...prev,
+        selectedPackage: pkg,
+      };
+    });
     setSelectedPackage(pkg);
   };
 
@@ -283,18 +313,31 @@ const PackageAllowed = ({
       </Box>
 
       {/* Payment Component */}
-      {selectedPackage && (
-        <AcceptPaymentMember
-          selectedPackage={selectedPackage}
-          onClose={() => setSelectedPackage(null)}
-          onPaymentSuccess={handlePaymentSuccess}
-          chapterMeetings={chapterMeetings}
-          cashReceivers={cashReceivers}
-          qrReceivers={qrReceivers}
-        />
+      {selectedPackage && receivers && (
+        <Dialog open={isModalOpen} onOpenChange={handlePackagePayModalClose}>
+          <DialogTrigger />
+          <DialogContent className="sm:max-w-[425px]">
+            <PackagePayMain
+              selectedPackage={selectedPackage}
+              pendingPayments={pendingPayments}
+              packageData={packageData}
+              paymentSuccessHandler={paymentSuccessHandler}
+              parentType={parentType}
+              chapterMeetings={chapterMeetings}
+              receivers={receivers}
+              handlePackagePayModalClose={handlePackagePayModalClose}
+            />
+          </DialogContent>
+        </Dialog>
+        // <AcceptPaymentMember
+        //   selectedPackage={selectedPackage}
+        //   onClose={() => setSelectedPackage(null)}
+        //   onPaymentSuccess={handlePaymentSuccess}
+        //   chapterMeetings={chapterMeetings}
+        // />
       )}
     </div>
   );
 };
 
-export default PackageAllowed;
+export default PackageCard;

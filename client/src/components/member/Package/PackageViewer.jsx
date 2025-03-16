@@ -2,8 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import Box from '@mui/material/Box';
-import PerMeetingAllowed from '../../../components/member/Package/PerMeetingAllowed';
-import PackageAllowed from '../../../components/member/Package/PackageAllowed';
+import PackageCard from '../../../components/member/Package/PackageCard';
 import { axiosInstance } from '../../../utils/config';
 import { useData } from '../../../context/DataContext';
 import packageAmountCalculations from '../../../components/member/Package/packageAmountCalculation';
@@ -12,67 +11,33 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { TextField } from '@mui/material';
 import formatDateDDMMYYYY from '../../../utils/dateUtility';
+import PackagePayMain from '../../../components/member/Package/PackagePayMain';
+import { usePaymentData } from './PaymentDataContext';
 
 const PackageViewer = () => {
+  const {
+    paymentData: { receivers, chapterMeetings, due, packageParents, packageData },
+    setPaymentData,
+  } = usePaymentData();
   const [tabValue, setTabValue] = React.useState(0);
-  const [chapterMeetings, setChapterMeetings] = useState([]);
-  const [packageData, setPackageData] = useState([]);
-  const [packageParents, setPackageParents] = useState([]);
   const [pendingPayments, setPendingPayments] = useState([]);
-  const [cashReceivers, setCashReceivers] = useState([]);
-  const [qrReceivers, setQrReceivers] = useState([]);
   const [calculationDate, setCalculationDate] = useState(new Date());
-  const [due, setDue] = useState(null);
   const { chapterData } = useData();
 
-  console.log({ cashReceivers, qrReceivers });
+  console.log({ receivers });
 
-  // Fetch meetings data
   useEffect(() => {
-    axiosInstance
-      .get(`/api/meetings/meetings/${chapterData?.chapterId}`)
-      .then((data) => {
-        console.log('Fetched Meetings:', data.data);
-        setChapterMeetings(data.data);
-      })
-      .catch((error) => console.error('Error fetching meetings:', error));
-  }, []);
+    console.log('Setting Receivers to ', receivers);
 
-  const processPackageData = (packages, due) => {
-    return packages.map((pkg) => {
-      const amountCaluculations = packageAmountCalculations(
-        calculationDate,
-        pkg,
-        chapterMeetings,
-        due,
-      );
-      return { ...pkg, ...amountCaluculations };
-    });
-  };
+    setPaymentData((prev) => ({
+      ...prev,
+      packageData,
+      pendingPayments,
+      setPendingPayments,
+      receivers,
+    }));
+  }, [packageData, pendingPayments, receivers]);
 
-  const fetchDueAmount = () => {
-    axiosInstance
-      .get(`/api/payment/due/${chapterData?.chapterId}`)
-      .then((data) => {
-        console.log('Fetched Due Amount:', data.data);
-        setDue(data.data.due);
-      });
-  };
-
-  const fetchPackages = () => {
-    axiosInstance
-      .get(`/api/packages/all/${chapterData?.chapterId}`)
-      .then((data) => {
-        // find the unique parent types
-        const parentTypes = [
-          ...new Set(data.data.map((pkg) => pkg.packageParent)),
-        ];
-        const responseData = processPackageData(data.data, due);
-        setPackageParents(parentTypes);
-        setPackageData(responseData);
-      })
-      .catch((error) => console.error('Error fetching packages:', error));
-  };
 
   // Fetch pending payments data
   const fetchPendingPayments = () => {
@@ -86,56 +51,6 @@ const PackageViewer = () => {
         console.error('Error fetching pending payments:', error),
       );
   };
-
-  const fetchCurrentCashReceivers = () => {
-    // Fetch cash receivers
-    axiosInstance
-      .get(
-        `/api/feeReciever/currentCashReceivers/${
-          chapterData?.chapterId
-        }?date=${formatDateDDMMYYYY(calculationDate)}`,
-      )
-      .then((data) => {
-        console.log('Fetched Cash Receivers:', data.data);
-        setCashReceivers(data.data);
-      })
-      .catch((error) => console.error('Error fetching cash receivers:', error));
-  };
-
-  const fetchCurrentQrReceivers = () => {
-    // Fetch QR receivers
-    axiosInstance
-      .get(
-        `/api/feeReciever/currentQRReceivers/${
-          chapterData?.chapterId
-        }?date=${formatDateDDMMYYYY(calculationDate)}`,
-      )
-      .then((data) => {
-        console.log('Fetched QR Receivers:', data.data);
-        setQrReceivers(data.data);
-      })
-      .catch((error) => console.error('Error fetching QR receivers:', error));
-  };
-
-  useEffect(() => {
-    if (chapterData?.chapterId) {
-      fetchDueAmount();
-    }
-  }, [chapterData]);
-
-  useEffect(() => {
-    if (chapterData?.chapterId && due !== null) {
-      console.log(`Start Time: ${new Date().toISOString()}`);
-      const startTime = Date.now();
-      fetchPendingPayments();
-      fetchCurrentCashReceivers();
-      fetchCurrentQrReceivers();
-      fetchPackages();
-
-      console.log(`End Time: ${new Date().toISOString()}`);
-      console.log(`Time taken: ${Date.now() - startTime}ms`);
-    }
-  }, [chapterData, calculationDate, due]);
 
   const handleDeleteRequest = (transactionId) => {
     axiosInstance
@@ -253,7 +168,7 @@ const PackageViewer = () => {
       <Box sx={{ width: '100%' }}>
         <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
           <Tabs value={tabValue} onChange={handleChange} aria-label="fee tabs">
-            {packageParents.map((parentType, index) => (
+            {packageParents?.map((parentType, index) => (
               <Tab key={index} label={parentType} />
             ))}
             {/* {chapterFeeConfig.isPerMeetingAllowed && (
@@ -265,17 +180,15 @@ const PackageViewer = () => {
         </Box>
         {
           // Render the tab content based on the selected tab
-          packageParents.map((parentType, index) => (
+          packageParents?.map((parentType, index) => (
             <CustomTabPanel key={index} value={tabValue} index={index}>
-              <PackageAllowed
+              <PackageCard
                 pendingPayments={pendingPayments}
                 packageData={packageData}
-                setPackageData={setPackageData}
+                // setPackageData={setPackageData}
                 paymentSuccessHandler={paymentSuccessHandler}
                 parentType={parentType}
-                chapterMeetings={chapterMeetings}
-                cashReceivers={cashReceivers}
-                qrReceivers={qrReceivers}
+                receivers={receivers}
               />
             </CustomTabPanel>
           ))

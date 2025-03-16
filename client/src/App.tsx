@@ -32,7 +32,7 @@ import ShareForm from './pages/Visitor/ShareForm';
 import VisitorList from './pages/Visitor/VisitorList';
 import MemberList from './pages/Member/MemberList';
 import Reports from './pages/Member/Reports';
-import PackageViewer from './pages/Member/Package/PackageViewer';
+import PackageViewerPage from './pages/Member/Package/PackageViewerPage';
 import MemberFeeApproval from './pages/Member/MemberFeeApproval';
 import FeeReciever from './pages/Member/FeeReciever';
 import RequireAuth from './utils/RequireAut';
@@ -129,7 +129,7 @@ const routes = [
           },
           {
             path: 'fee',
-            element: <PackageViewer />,
+            element: <PackageViewerPage />,
           },
           {
             path: 'fee_approval',

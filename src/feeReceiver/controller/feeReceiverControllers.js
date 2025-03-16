@@ -1,5 +1,24 @@
 const feeReceiverModel = require("../model/feeReceiverModel");
 const { v4: uuidv4 } = require("uuid");
+const feeReceiverService = require("../service/feeReceiverService");
+
+const getCurrentReceiversController = async (req, res) => {
+  const { chapterId } = req.params;
+  const { date } = req.query; //DD-MM-YYYY
+  // convert to YYYY-MM-DD
+  
+  const dateParts = date ? date.split("-") : [];
+  const formattedDate = dateParts.length === 3 ? `${dateParts[2]}-${dateParts[1]}-${dateParts[0]}` : null;
+
+  try {
+    const currentReceivers =
+      await feeReceiverService.getCurrentReceiversService(chapterId, formattedDate);
+    res.json(currentReceivers);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: error.message });
+  }
+};
 
 const getCashReceiversController = async (req, res) => {
   const { chapterId } = req.params;
@@ -115,6 +134,7 @@ const getAmountCollectedController = async (req, res) => {
 };
 
 module.exports = {
+  getCurrentReceiversController,
   getCashReceiversController,
   addCashReceiversController,
   getCurrentCashReceiversController,
