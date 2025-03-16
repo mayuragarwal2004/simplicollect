@@ -44,7 +44,7 @@ import { Password } from '@mui/icons-material';
 import AdminSignIn from './pages/Authentication/AdminSignIn';
 import AdminOrganisationsPage from './pages/Admin/organisation/AdminOrganisationsPage';
 import AdminChaptersPage from './pages/Admin/chapters/AdminChaptersPage'
-
+import ChapterBasicDetails from './components/Admin/Chapter/CreateNew/ChapterBasicDetails';
 
 
 
@@ -77,8 +77,12 @@ const routes = [
       },
       {
         path: 'chapters',
-        element: <AdminChaptersPage/>,
+        element: <AdminChaptersPage />,
       },
+      {
+        path: 'chapter-basic-details',
+        element: <ChapterBasicDetails />,
+      }
     ],
   },
   {
