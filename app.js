@@ -1,18 +1,18 @@
 const path = require("path");
 const express = require("express");
-const authRoutes = require("./routes/authRoutes");
-const visitorRoutes = require("./routes/visitorRoutes");
-const chapterRoutes = require("./routes/chapterRoutes");
-const memberRoutes = require("./routes/memberRoutes");
-const rightsRoutes = require("./routes/rightsRoutes");
-const imageUploadRoutes = require("./routes/imageUploadRoutes");
-const packageRoutes = require("./routes/packageRoutes");
-const paymentRoutes = require("./routes/paymentRoutes");
-const feeRecieverRoutes = require("./routes/feeReceiverRoutes");
-const meetingRoutes = require("./routes/meetingRoutes");
+const authRoutes = require("./src/authentication/route/authRoutes");
+const visitorRoutes = require("./src/visitor/route/visitorRoutes");
+const chapterRoutes = require("./src/chapter/route/chapterRoutes");
+const memberRoutes = require("./src/member/route/memberRoutes");
+const rightsRoutes = require("./src/rights/route/rightsRoutes");
+const imageUploadRoutes = require("./src/imageUpload/route/imageUploadRoutes");
+const packageRoutes = require("./src/package/route/packageRoutes");
+const paymentRoutes = require("./src/payment/route/paymentRoutes");
+const feeRecieverRoutes = require("./src/feeReceiver/route/feeReceiverRoutes");
+const meetingRoutes = require("./src/meeting/route/meetingRoutes");
 
-const { authenticateToken } = require("./middlewares/authMiddleware");
-const { sendWhatsAppOtp } = require("./config/whatsapp");
+const { authenticateToken } = require("./src/middlewares/authMiddleware");
+const { sendWhatsAppOtp } = require("./src/config/whatsapp");
 const PORT = process.env.PORT || 5000;
 
 const app = express();
@@ -31,7 +31,7 @@ app.use("/api/packages", authenticateToken, packageRoutes);
 app.use("/api/payment", authenticateToken, paymentRoutes);
 app.use("/api/feeReciever", authenticateToken, feeRecieverRoutes);
 app.use("/api/meetings", authenticateToken, meetingRoutes);
-app.use("/api/report", authenticateToken, require("./routes/reportRoutes"));
+app.use("/api/report", authenticateToken, require("./src/report/route/reportRoutes"));
 app.get("/api/testWA", async (req, res) => {
   const result = await sendWhatsAppOtp("919921318237", "1234");
   console.log({ result });
@@ -43,8 +43,8 @@ app.get("/api/testWA", async (req, res) => {
 });
 
 // admin routes
-app.use("/api/organisations", authenticateToken, require("./routes/organisationRoutes"));
-app.use("/api/admin/chapters", authenticateToken, require("./routes/adminChapterRoutes"));
+app.use("/api/organisations", authenticateToken, require("./src/organisation/route/organisationRoutes"));
+app.use("/api/admin/chapters", authenticateToken, require("./src/chapter/route/adminChapterRoutes"));
 
 app.use("/api/*", (req, res) => {
   res.status(404).send("Not Found - Please check the URL and try again");
