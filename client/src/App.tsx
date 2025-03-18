@@ -52,10 +52,6 @@ const routes = [
     element: <Navigate to="/auth/signin" />,
   },
   {
-    path: 'profile',
-    element: <Profile />,
-  },
-  {
     path: '/admin',
     element: (
       <RequireAuth>

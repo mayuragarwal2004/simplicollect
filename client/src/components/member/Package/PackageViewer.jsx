@@ -16,53 +16,25 @@ import { usePaymentData } from './PaymentDataContext';
 
 const PackageViewer = () => {
   const {
-    paymentData: { receivers, chapterMeetings, due, packageParents, packageData },
+    paymentData: {
+      receivers,
+      chapterMeetings,
+      due,
+      packageParents,
+      packageData,
+      pendingPayments,
+    },
     setPaymentData,
+    fetchAllData,
+    handleDeletePendingRequest,
   } = usePaymentData();
   const [tabValue, setTabValue] = React.useState(0);
-  const [pendingPayments, setPendingPayments] = useState([]);
   const [calculationDate, setCalculationDate] = useState(new Date());
   const { chapterData } = useData();
 
   console.log({ receivers });
-
-  useEffect(() => {
-    console.log('Setting Receivers to ', receivers);
-
-    setPaymentData((prev) => ({
-      ...prev,
-      packageData,
-      pendingPayments,
-      setPendingPayments,
-      receivers,
-    }));
-  }, [packageData, pendingPayments, receivers]);
-
-
-  // Fetch pending payments data
-  const fetchPendingPayments = () => {
-    axiosInstance
-      .get('/api/payment/pendingPayments')
-      .then((response) => {
-        console.log('Fetched Pending Payments:', response.data);
-        setPendingPayments(response.data);
-      })
-      .catch((error) =>
-        console.error('Error fetching pending payments:', error),
-      );
-  };
-
-  const handleDeleteRequest = (transactionId) => {
-    axiosInstance
-      .delete(`/api/payment/deleteRequest/${transactionId}`)
-      .then((response) => {
-        fetchPendingPayments(); // Refresh the pending payments list
-      })
-      .catch((error) => console.error('Error deleting request:', error));
-  };
-
   const paymentSuccessHandler = () => {
-    fetchPendingPayments();
+    fetchAllData();
   };
 
   const handleChange = (event, newValue) => {
@@ -83,7 +55,7 @@ const PackageViewer = () => {
             </p>
             <button
               className="px-3 py-1 text-sm font-semibold text-yellow-800 bg-yellow-300 rounded-md hover:bg-yellow-400 dark:text-yellow-200 dark:bg-yellow-400"
-              onClick={fetchPendingPayments}
+              onClick={fetchAllData}
             >
               Refresh
             </button>
@@ -114,7 +86,7 @@ const PackageViewer = () => {
                 {/* make more button like  */}
                 <button
                   className="px-3 py-1 mt-2 text-sm font-semibold text-red-800 border border-red rounded-md hover:bg-red-400 dark:text-red-200 dark:bg-red-400"
-                  onClick={() => handleDeleteRequest(payment.transactionId)}
+                  onClick={() => handleDeletePendingRequest(payment.transactionId)}
                 >
                   Delete Request
                 </button>

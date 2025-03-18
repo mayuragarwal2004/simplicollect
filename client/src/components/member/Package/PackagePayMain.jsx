@@ -54,6 +54,7 @@ const PackagePayMain = ({
           // finalAmount={finalAmount}
           // setFinalAmount={setFinalAmount}
           // onConfirm={() => paymentSuccessHandler(finalAmount)}
+          handlePackagePayModalClose={handlePackagePayModalCloseLocal}
         />
       )}
     </div>

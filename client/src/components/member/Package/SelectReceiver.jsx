@@ -28,12 +28,8 @@ import { ChevronRight } from 'lucide-react';
 const SelectReceiver = ({ setStep, handlePackagePayModalClose }) => {
   const { paymentData, setPaymentData } = usePaymentData();
 
-  const [paymentMethod, setPaymentMethod] = useState('cash');
   const [showPaymentMethod, setShowPaymentMethod] = useState(false);
 
-  console.log('From SelectReceiver', {
-    selectedReceiver: paymentMethod.selectedReceiver,
-  });
   const handleChange = (value) => {
     setPaymentData((prev) => ({
       ...prev,
@@ -102,30 +98,58 @@ const SelectReceiver = ({ setStep, handlePackagePayModalClose }) => {
   };
 
   useEffect(() => {
-    if (paymentData.receivers.length === 0) {
-      setShowPaymentMethod(false);
-    } else if (
-      paymentData.receivers.filter(
-        (receiver) => receiver.paymentType === 'cash',
-      ).length === 0
-    ) {
-      setPaymentData((prev) => ({
-        ...prev,
-        paymentMethod: 'online',
-      }));
-      setShowPaymentMethod(false);
-    } else if (
-      paymentData.receivers.filter(
-        (receiver) => receiver.paymentType === 'online',
-      ).length === 0
-    ) {
-      setPaymentData((prev) => ({
-        ...prev,
-        paymentMethod: 'cash',
-      }));
-      setShowPaymentMethod(false);
+    if (!paymentData.paymentMethod) {
+      if (paymentData.receivers.length === 0) {
+        setShowPaymentMethod(false);
+      } else if (
+        paymentData.receivers.filter(
+          (receiver) => receiver.paymentType === 'cash',
+        ).length === 0
+      ) {
+        setPaymentData((prev) => ({
+          ...prev,
+          paymentMethod: 'online',
+        }));
+        setShowPaymentMethod(false);
+      } else if (
+        paymentData.receivers.filter(
+          (receiver) => receiver.paymentType === 'online',
+        ).length === 0
+      ) {
+        setPaymentData((prev) => ({
+          ...prev,
+          paymentMethod: 'cash',
+        }));
+        setShowPaymentMethod(false);
+      } else {
+        setPaymentData((prev) => ({
+          ...prev,
+          paymentMethod: 'cash',
+        }));
+        setShowPaymentMethod(true);
+      }
     } else {
-      setShowPaymentMethod(true);
+      // check if the selected paymentMethod is present in the paymentData.receivers array
+      if (
+        paymentData.receivers.filter(
+          (receiver) => receiver.paymentType === paymentData.paymentMethod,
+        ).length === 0
+      ) {
+        setShowPaymentMethod(false);
+        if (paymentData.paymentMethod === 'cash') {
+          setPaymentData((prev) => ({
+            ...prev,
+            paymentMethod: 'online',
+          }));
+        } else {
+          setPaymentData((prev) => ({
+            ...prev,
+            paymentMethod: 'cash',
+          }));
+        }
+      } else {
+        setShowPaymentMethod(true);
+      }
     }
   }, [paymentData.receivers]);
 
@@ -138,9 +162,17 @@ const SelectReceiver = ({ setStep, handlePackagePayModalClose }) => {
       </h2>
       <Tabs
         value={paymentData.paymentMethod}
-        defaultValue="cash"
         className="w-full"
-        onValueChange={setPaymentMethod}
+        onValueChange={(value) => {
+          setPaymentData((prev) => ({
+            ...prev,
+            paymentMethod: value,
+          }));
+
+          if (value === 'cash' || value === 'online') {
+            setError('');
+          }
+        }}
       >
         {showPaymentMethod && (
           <TabsList className="grid w-full grid-cols-2">

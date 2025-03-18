@@ -44,14 +44,26 @@ const addPayment = async (req, res) => {
     packageId: paymentDetails.packageId,
     transactionDate: new Date(),
     payableAmount: paymentDetails.payableAmount,
-    paidAmount: paymentDetails.paymentAmount,
     dueAmount: paymentDetails.dueAmount,
     status: "pending",
     statusUpdateDate: new Date(),
 
+    payableAmount: paymentDetails.payableAmount || 0,
+    paidAmount: paymentDetails.paidAmount || 0,
+    originalPayableAmount: paymentDetails.originalPayableAmount || 0,
+    discountAmount: paymentDetails.discountAmount || 0,
+    penaltyAmount: paymentDetails.penaltyAmount || 0,
+    receiverFee: paymentDetails.receiverFee || 0,
+    amountPaidToChapter: paymentDetails.amountPaidToChapter || 0,
+    amountExpectedToChapter: paymentDetails.amountExpectedToChapter || 0,
+    platformFee: paymentDetails.platformFee || 0,
+    balanceAmount: paymentDetails.balanceAmount || 0,
+
     // more details
     paymentType: paymentDetails.paymentType || "",
-    paymentDate: new Date(paymentDetails.paymentDate) || "",
+    paymentDate: paymentDetails.paymentDate
+      ? new Date(paymentDetails.paymentDate)
+      : new Date(),
     paymentImageLink: paymentDetails.paymentImageLink || "",
     paymentReceivedById: paymentDetails.paymentReceivedById || "",
     paymentReceivedByName: paymentDetails.paymentReceivedByName || "",

@@ -3,6 +3,7 @@ import { useData } from '../../../context/DataContext';
 import { axiosInstance } from '../../../utils/config';
 import formatDateDDMMYYYY from '../../../utils/dateUtility';
 import packageAmountCalculations from './packageAmountCalculation';
+import { toast } from 'react-toastify';
 
 // Create a context
 const PaymentDataContext = createContext();
@@ -15,6 +16,8 @@ export const PaymentDataProvider = ({ children }) => {
   const [paymentData, setPaymentData] = useState({
     selectedReceiver: null, // maybe reset on exiting package
     saveReceiverSelection: false,
+    selectedReceiverObject: null,
+
     receivers: [],
     selectedPackage: null, // reset on exiting package
     pendingPayments: [],
@@ -27,6 +30,7 @@ export const PaymentDataProvider = ({ children }) => {
       ...prev,
       selectedReceiver: null,
       paymentMethod: 'cash',
+      selectedReceiverObject: null,
 
       saveReceiverSelection: false,
       receivers: [],
@@ -123,8 +127,39 @@ export const PaymentDataProvider = ({ children }) => {
     });
   };
 
+  // Pending Payments start
+
+  // Fetch pending payments data
+  const fetchPendingPayments = async () => {
+    await axiosInstance
+      .get('/api/payment/pendingPayments')
+      .then((response) => {
+        console.log('Fetched Pending Payments:', response.data);
+        setPaymentData((prev) => ({
+          ...prev,
+          pendingPayments: response.data,
+        }));
+      })
+      .catch((error) =>
+        console.error('Error fetching pending payments:', error),
+      );
+  };
+
+  const handleDeletePendingRequest = async (transactionId) => {
+    await axiosInstance
+      .delete(`/api/payment/deleteRequest/${transactionId}`)
+      .then((response) => {
+        fetchAllData(); // Refresh the package data
+        toast.success('Request deleted successfully');
+      })
+      .catch((error) => console.error('Error deleting request:', error));
+  };
+
+  // Pending Payments end
+
   const fetchAllData = async () => {
-    let updatedValues = await fetchCurrentReceivers();
+    await fetchCurrentReceivers();
+    await fetchPendingPayments();
     await fetchMeetings();
     await fetchDueAmount();
   };
@@ -146,11 +181,30 @@ export const PaymentDataProvider = ({ children }) => {
     }
   }, [chapterData?.chapterId]);
 
+  // update selectedReceiverObject when selectedReceiver changes
+  useEffect(() => {
+    if (paymentData.selectedReceiver) {
+      const selectedReceiverObject = paymentData.receivers.find(
+        (receiver) => receiver.receiverId === paymentData.selectedReceiver,
+      );
+      setPaymentData((prev) => ({
+        ...prev,
+        selectedReceiverObject,
+      }));
+    }
+  }, [paymentData.selectedReceiver]);
+
   console.log('From PaymentDataContext', { paymentData });
 
   return (
     <PaymentDataContext.Provider
-      value={{ paymentData, setPaymentData, resetPaymentData }}
+      value={{
+        paymentData,
+        setPaymentData,
+        resetPaymentData,
+        fetchAllData,
+        handleDeletePendingRequest,
+      }}
     >
       {children}
     </PaymentDataContext.Provider>
