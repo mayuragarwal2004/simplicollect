@@ -84,9 +84,19 @@ const memberList = async (req, res) => {
   }
 };
 
+const getAllMembersListController = async (req, res) => {
+  const { chapterId } = req.query;
+  try {
+    const members = await memberModel.getAllMembers(chapterId);
+    res.json(members);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+}
 
 module.exports = {
   getMemberById,
   addMember,
   memberList,
+  getAllMembersListController,
 };

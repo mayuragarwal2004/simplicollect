@@ -6,13 +6,19 @@ const getCurrentReceiversController = async (req, res) => {
   const { chapterId } = req.params;
   const { date } = req.query; //DD-MM-YYYY
   // convert to YYYY-MM-DD
-  
+
   const dateParts = date ? date.split("-") : [];
-  const formattedDate = dateParts.length === 3 ? `${dateParts[2]}-${dateParts[1]}-${dateParts[0]}` : null;
+  const formattedDate =
+    dateParts.length === 3
+      ? `${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`
+      : null;
 
   try {
     const currentReceivers =
-      await feeReceiverService.getCurrentReceiversService(chapterId, formattedDate);
+      await feeReceiverService.getCurrentReceiversService(
+        chapterId,
+        formattedDate
+      );
     res.json(currentReceivers);
   } catch (error) {
     console.error(error);
@@ -35,15 +41,16 @@ const addCashReceiversController = async (req, res) => {
   const { chapterId } = req.params;
   const { cashRecieverName, memberId, enableDate, disableDate } = req.body;
   try {
-    const cashRecieverId = uuidv4();
-    const newCashReceiver = await feeReceiverModel.addCashReceiver(
-      cashRecieverId,
-      cashRecieverName,
+    const receiverId = uuidv4();
+    const newCashReceiver = await feeReceiverModel.addCashReceiver({
+      receiverId,
+      receiverName: cashRecieverName,
       memberId,
       chapterId,
+      paymentType: "cash",
       enableDate,
-      disableDate
-    );
+      disableDate,
+    });
     res.json(newCashReceiver);
   } catch (error) {
     console.error(error);
@@ -64,53 +71,21 @@ const getQRReceiversController = async (req, res) => {
 
 const addQRReceiversController = async (req, res) => {
   const { chapterId } = req.params;
-  const { qrCode, memberId, qrCodeName, qrImageLink, enableDate, disableDate } =
+  const { qrCodeName, memberId, qrImageLink, enableDate, disableDate } =
     req.body;
   try {
-    const qrCodeId = uuidv4();
+    const receiverId = uuidv4();
     const newQRReceiver = await feeReceiverModel.addQRReceiver({
-      qrCodeId,
-      qrCode,
+      receiverId,
+      receiverName: qrCodeName,
       memberId,
       chapterId,
-      qrCodeName,
       qrImageLink,
       enableDate,
       disableDate,
+      paymentType: "online",
     });
     res.json(newQRReceiver);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: error.message });
-  }
-};
-
-const getCurrentCashReceiversController = async (req, res) => {
-  const { chapterId } = req.params;
-  const { date } = req.body; //DD-MM-YYYY
-  try {
-    const dateObject = date ? new Date(date) : new Date();
-    const cashReceivers = await feeReceiverModel.getCurrentCashReceivers(
-      chapterId,
-      dateObject
-    );
-    res.json(cashReceivers);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: error.message });
-  }
-};
-
-const getCurrentQRReceiversController = async (req, res) => {
-  const { chapterId } = req.params;
-  const { date } = req.body; //DD-MM-YYYY
-  try {
-    const dateObject = date ? new Date(date) : new Date();
-    const qrReceivers = await feeReceiverModel.getCurrentQRReceivers(
-      chapterId,
-      dateObject
-    );
-    res.json(qrReceivers);
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: error.message });
@@ -137,9 +112,7 @@ module.exports = {
   getCurrentReceiversController,
   getCashReceiversController,
   addCashReceiversController,
-  getCurrentCashReceiversController,
   getQRReceiversController,
   addQRReceiversController,
-  getCurrentQRReceiversController,
   getAmountCollectedController,
 };

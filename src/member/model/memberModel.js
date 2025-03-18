@@ -49,9 +49,26 @@ const getMembers = async (chapterId, page = 0, rows = 10) => {
   return { data, totalRecords: totalRecords.totalRecords };
 };
 
+const getAllMembers = async (chapterId) => {
+  return db("memberChapterMapping as mmm")
+    .where("mmm.chapterId", chapterId)
+    .join("members as m", "mmm.memberId", "m.memberId")
+    .leftJoin("roles as r", "mmm.roleId", "r.roleId")
+    .select(
+      "r.*",
+      "m.memberId",
+      "m.firstName",
+      "m.lastName",
+      "m.phoneNumber",
+      "m.email",
+      "mmm.*"
+    );
+};
+
 module.exports = {
   findMemberByEmail,
   findMemberById,
   addMember,
   getMembers,
+  getAllMembers,
 };

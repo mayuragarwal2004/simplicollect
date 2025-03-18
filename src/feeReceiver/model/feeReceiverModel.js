@@ -10,49 +10,51 @@ const getCurrentReceivers = async (chapterId, date) => {
 };
 
 const getCashReceivers = async (chapterId) => {
-  return db("cashreceivers").where("chapterId", chapterId).select("*");
-};
-
-const addCashReceiver = async (
-  cashRecieverId,
-  cashRecieverName,
-  memberId,
-  chapterId,
-  enableDate,
-  disableDate
-) => {
-  return db("cashreceivers").insert({
-    cashRecieverId,
-    cashRecieverName,
-    memberId,
-    chapterId,
-    enableDate,
-    disableDate,
-  });
-};
-
-const getCurrentCashReceivers = async (chapterId, date) => {
-  return db("cashreceivers")
-    .where("chapterId", chapterId)
-    .andWhere("enableDate", "<=", date)
-    .andWhere("disableDate", ">=", date)
+  return db("feeReceivers")
+    .where("paymentType", "cash")
+    .andWhere("chapterId", chapterId)
     .select("*");
+};
+
+const addCashReceiver = async (data) => {
+  {
+    /*
+    data = {
+      receiverId: uuidv4(),
+      receiverName,
+      memberId, connection with member table
+      chapterId, connection with chapter table
+      paymentType: "cash", // or "online"
+      enableDate, 
+      disableDate,
+  */
+  }
+  return db("feeReceivers").insert(data);
 };
 
 const getQRReceivers = async (chapterId) => {
-  return db("qrreceivers").where("chapterId", chapterId).select("*");
+  return db("feeReceivers")
+    .where("paymentType", "online")
+    .andWhere("chapterId", chapterId)
+    .select("*");
 };
 
 const addQRReceiver = async (data) => {
-  return db("qrreceivers").insert(data);
-};
-
-const getCurrentQRReceivers = async (chapterId, date) => {
-  return db("qrreceivers")
-    .where("chapterId", chapterId)
-    .andWhere("enableDate", "<=", date)
-    .andWhere("disableDate", ">=", date)
-    .select("*");
+  {
+    /*
+    data = {
+      receiverId: uuidv4(),
+      receiverName,
+      memberId, connection with member table
+      chapterId, connection with chapter table
+      qrCodeName,
+      qrImageLink,
+      enableDate, 
+      disableDate,
+      paymentType: "online",
+  */
+  }
+  return db("feeReceivers").insert(data);
 };
 
 const getAmountCollected = async (chapterId, date) => {
@@ -71,9 +73,7 @@ module.exports = {
   getCurrentReceivers,
   getCashReceivers,
   addCashReceiver,
-  getCurrentCashReceivers,
   getQRReceivers,
   addQRReceiver,
-  getCurrentQRReceivers,
   getAmountCollected,
 };
