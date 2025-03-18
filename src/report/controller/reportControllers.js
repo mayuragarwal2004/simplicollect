@@ -90,8 +90,45 @@ const getMemberTotalAmountAndDues = async (req, res) => {
   }
 };
 
+const ExcelJS = require("exceljs");
+const { getReceiverDaywiseReportService } = require("../service/reportService");
+
+const getReceiverDaywiseReportController = async (req, res) => {
+  const { date } = req.query;
+  const { chapterId } = req.params;
+  try {
+    // 1. Create workbook and worksheet
+    const workbook = new ExcelJS.Workbook();
+    let worksheet = workbook.addWorksheet("Daywise Report");
+
+    worksheet = await getReceiverDaywiseReportService(
+      worksheet,
+      chapterId,
+      date ? new Date(date) : new Date()
+    );
+
+    // 4. Set headers for download
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    );
+    res.setHeader(
+      "Content-Disposition",
+      "attachment; filename=ReceiverDaywiseReport.xlsx"
+    );
+
+    // 5. Write the workbook to response
+    await workbook.xlsx.write(res);
+    res.end(); // Important to end the response
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Error generating Excel report" });
+  }
+};
+
 module.exports = {
   getPackageSummaryController,
   getAllMemberReports,
   getMemberTotalAmountAndDues,
+  getReceiverDaywiseReportController,
 };

@@ -6,9 +6,9 @@ import PackageCard from '../../../components/member/Package/PackageCard';
 import { axiosInstance } from '../../../utils/config';
 import { useData } from '../../../context/DataContext';
 import packageAmountCalculations from '../../../components/member/Package/packageAmountCalculation';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+// import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+// import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+// import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { TextField } from '@mui/material';
 import formatDateDDMMYYYY from '../../../utils/dateUtility';
 import PackagePayMain from '../../../components/member/Package/PackagePayMain';
@@ -98,7 +98,7 @@ const PackageViewer = () => {
         {/* Left Side: DatePicker */}
         {Boolean(chapterData?.testMode) ? (
           <div className="flex items-center space-x-4">
-            <LocalizationProvider dateAdapter={AdapterDateFns}>
+            {/* <LocalizationProvider dateAdapter={AdapterDateFns}>
               <DatePicker
                 label="Calculation Date"
                 value={calculationDate}
@@ -114,7 +114,7 @@ const PackageViewer = () => {
                   />
                 )}
               />
-            </LocalizationProvider>
+            </LocalizationProvider> */}
           </div>
         ) : (
           // display live current date time in the format of "DD/MM/YYYY HH:MM:SS"
