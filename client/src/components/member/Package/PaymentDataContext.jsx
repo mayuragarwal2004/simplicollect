@@ -28,16 +28,11 @@ export const PaymentDataProvider = ({ children }) => {
   const resetPaymentData = () => {
     setPaymentData((prev) => ({
       ...prev,
+      selectedPackage: null,
       selectedReceiver: null,
       paymentMethod: 'cash',
       selectedReceiverObject: null,
-
       saveReceiverSelection: false,
-      receivers: [],
-      selectedPackage: null,
-      pendingPayments: [],
-      packageData: null,
-      parentType: null,
     }));
   };
 
@@ -82,17 +77,19 @@ export const PaymentDataProvider = ({ children }) => {
   };
 
   const fetchDueAmount = async () => {
-    // Fetch all due payments
+    // Fetch all balance payments
     axiosInstance
-      .get(`/api/payment/due/${chapterData?.chapterId}`)
+      .get(`/api/payment/balance/${chapterData?.chapterId}`)
       .then((data) => {
         console.log('Fetched Due Amounts:', data.data);
         setPaymentData((prev) => ({
           ...prev,
-          due: data.data.due,
+          balance: data.data.balance,
         }));
       })
-      .catch((error) => console.error('Error fetching due amounts:', error));
+      .catch((error) =>
+        console.error('Error fetching balance amounts:', error),
+      );
   };
 
   const fetchPackages = () => {
@@ -103,11 +100,12 @@ export const PaymentDataProvider = ({ children }) => {
         const parentTypes = [
           ...new Set(data.data.map((pkg) => pkg.packageParent)),
         ];
-        const responseData = processPackageData(data.data, paymentData.due);
+        const responseData = processPackageData(data.data, paymentData.balance);
         setPaymentData((prev) => ({
           ...prev,
           packageParents: parentTypes,
           packageData: responseData,
+          lastUpdated: new Date(),
         }));
       })
       .catch((error) => {
@@ -121,7 +119,7 @@ export const PaymentDataProvider = ({ children }) => {
         calculationDate,
         pkg,
         paymentData.chapterMeetings,
-        paymentData.due,
+        paymentData.balance,
       );
       return { ...pkg, ...amountCalculations };
     });
@@ -167,13 +165,13 @@ export const PaymentDataProvider = ({ children }) => {
   useEffect(() => {
     if (
       paymentData.chapterMeetings !== undefined &&
-      paymentData.due !== undefined
+      paymentData.balance !== undefined
     ) {
       console.log('Fetching Packages');
 
       fetchPackages();
     }
-  }, [paymentData.chapterMeetings, paymentData.due]);
+  }, [paymentData.chapterMeetings, paymentData.balance]);
 
   useEffect(() => {
     if (chapterData?.chapterId) {
@@ -193,6 +191,42 @@ export const PaymentDataProvider = ({ children }) => {
       }));
     }
   }, [paymentData.selectedReceiver]);
+
+  // 1st check if the data was updated in the last 5 minutes or not using paymentData.lastUpdated
+  // if not updated, check if the selectedPackage was selected in the last 10 minutes or not using paymentData.lastSelectedPackageTime
+  // if not selected in the last 10 minutes, reset the selectedPackage and fetchAllData
+  useEffect(() => {
+    const FIVE_MINUTES = 5 * 60 * 1000; // 5 minutes in milliseconds
+    const TEN_MINUTES = 10 * 60 * 1000; // 10 minutes in milliseconds
+
+    const interval = setInterval(() => {
+      const currentTime = new Date();
+      const lastUpdated = paymentData.lastUpdated;
+      const lastSelectedPackageTime = paymentData.lastSelectedPackageTime;
+
+      if (currentTime - lastUpdated > FIVE_MINUTES) {
+        if (paymentData.selectedPackage) {
+          if (currentTime - lastSelectedPackageTime > TEN_MINUTES) {
+            toast.warn('Payment window will timeout in 10 seconds...');
+            setTimeout(() => {
+              toast.warn(
+                'Payment window has timed out. Refreshing data now...',
+              );
+              resetPaymentData();
+              fetchAllData();
+            }, 10000); // 10 seconds timeout
+          } else {
+            toast.warn('Refresh coming soon');
+          }
+        } else {
+          toast.warn('Data is stale. Refreshing now...');
+          fetchAllData();
+        }
+      }
+    }, 60 * 1000); // Run every 1 minute
+
+    return () => clearInterval(interval); // Cleanup on unmount
+  }, [paymentData.lastUpdated, paymentData.lastSelectedPackageTime]);
 
   console.log('From PaymentDataContext', { paymentData });
 

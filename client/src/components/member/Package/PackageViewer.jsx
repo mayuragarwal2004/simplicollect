@@ -19,7 +19,7 @@ const PackageViewer = () => {
     paymentData: {
       receivers,
       chapterMeetings,
-      due,
+      balance,
       packageParents,
       packageData,
       pendingPayments,
@@ -32,7 +32,6 @@ const PackageViewer = () => {
   const [calculationDate, setCalculationDate] = useState(new Date());
   const { chapterData } = useData();
 
-  console.log({ receivers });
   const paymentSuccessHandler = () => {
     fetchAllData();
   };
@@ -40,8 +39,6 @@ const PackageViewer = () => {
   const handleChange = (event, newValue) => {
     setTabValue(newValue);
   };
-
-  console.log({ chapterData });
 
   return (
     <div className="rounded-sm border border-stroke bg-white px-5 pt-6 pb-2.5 shadow-default dark:border-strokedark dark:bg-boxdark sm:px-7.5 xl:pb-1">
@@ -86,7 +83,9 @@ const PackageViewer = () => {
                 {/* make more button like  */}
                 <button
                   className="px-3 py-1 mt-2 text-sm font-semibold text-red-800 border border-red rounded-md hover:bg-red-400 dark:text-red-200 dark:bg-red-400"
-                  onClick={() => handleDeletePendingRequest(payment.transactionId)}
+                  onClick={() =>
+                    handleDeletePendingRequest(payment.transactionId)
+                  }
                 >
                   Delete Request
                 </button>
@@ -97,7 +96,7 @@ const PackageViewer = () => {
       )}
       <div className="flex justify-between">
         {/* Left Side: DatePicker */}
-        {Boolean(chapterData?.testMode) && (
+        {Boolean(chapterData?.testMode) ? (
           <div className="flex items-center space-x-4">
             <LocalizationProvider dateAdapter={AdapterDateFns}>
               <DatePicker
@@ -117,20 +116,30 @@ const PackageViewer = () => {
               />
             </LocalizationProvider>
           </div>
+        ) : (
+          // display live current date time in the format of "DD/MM/YYYY HH:MM:SS"
+          <div className="flex items-center space-x-4">
+            <p className="text-lg font-semibold text-gray-700 dark:text-gray-300">
+              Current Date:
+            </p>
+            <p className="text-lg font-semibold text-gray-700 dark:text-gray-300">
+              <CurrentDateTime />
+            </p>
+          </div>
         )}
         {/* Right Side: Due Amount, show red for positive value, green for negative value */}
-        {due !== null && (
+        {Boolean(balance) && (
           <div className="flex items-center justify-end mt-4">
             <div className="flex items-center space-x-2">
               <p className="text-lg font-semibold text-gray-700 dark:text-gray-300">
-                {due > 0 ? 'Due Amount' : 'Advance Amount'}:
+                {balance > 0 ? 'Advance Amount' : 'Due Amount'}:
               </p>
               <p
                 className={`text-lg font-semibold ${
-                  due > 0 ? 'text-red-500' : 'text-green-500'
+                  balance > 0 ? 'text-green-500' : 'text-red-500'
                 }`}
               >
-                ₹{Math.abs(due)}
+                ₹{Math.abs(balance)}
               </p>
             </div>
           </div>
@@ -185,5 +194,27 @@ function CustomTabPanel(props) {
     </div>
   );
 }
+
+const CurrentDateTime = () => {
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000); // updates every second
+
+    // Cleanup on component unmount
+    return () => clearInterval(timer);
+  }, []);
+
+  return (
+    <p className="text-lg font-semibold text-gray-700 dark:text-gray-300">
+      {currentTime.getDate()}-{currentTime.getMonth() + 1}-
+      {currentTime.getFullYear()} {currentTime.getHours()}:
+      {currentTime.getMinutes().toString().padStart(2, '0')}:
+      {currentTime.getSeconds().toString().padStart(2, '0')}
+    </p>
+  );
+};
 
 export default PackageViewer;

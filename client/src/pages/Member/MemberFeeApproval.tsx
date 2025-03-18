@@ -232,7 +232,7 @@ const MemberFeeApproval: React.FC = () => {
                             ₹{fee.paidAmount}
                           </td>
                           <td className="py-3 px-4 text-black dark:text-white">
-                            ₹{fee.dueAmount}
+                            ₹{fee.balanceAmount}
                           </td>
                           <td className="py-3 px-4">
                             <Checkbox
@@ -277,7 +277,7 @@ const MemberFeeApproval: React.FC = () => {
                         Amount Paid: ₹{fee.paidAmount}
                       </p>
                       <p className="text-sm text-gray-600 dark:text-gray-300">
-                        Dues: ₹{fee.dueAmount}
+                        Dues: ₹{fee.balanceAmount}
                       </p>
                       <div className="mt-2">
                         <Checkbox
@@ -361,7 +361,7 @@ const MemberFeeApproval: React.FC = () => {
                             ₹{fee.paidAmount}
                           </td>
                           <td className="py-3 px-4 text-black dark:text-white">
-                            ₹{fee.dueAmount}
+                            ₹{fee.balanceAmount}
                           </td>
                         </tr>
                       ))
@@ -395,7 +395,7 @@ const MemberFeeApproval: React.FC = () => {
                         Amount Paid: ₹{fee.paidAmount}
                       </p>
                       <p className="text-sm text-gray-600 dark:text-gray-300">
-                        Dues: ₹{fee.dueAmount}
+                        Dues: ₹{fee.balanceAmount}
                       </p>
                     </div>
                   ))

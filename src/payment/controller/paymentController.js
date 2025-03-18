@@ -4,34 +4,6 @@ const memberModel = require("../../member/model/memberModel");
 const paymentModel = require("../model/paymentModel");
 const { v4: uuidv4 } = require("uuid");
 
-paymentDetails = {
-  packageId: "1",
-  amount: "1000",
-  meetingIds: ["1", "2"],
-  due: "200",
-  advance: "800",
-};
-
-// -- Create membersmeetingmapping table
-// CREATE TABLE simplicollect.membersmeetingmapping (
-//   memberId VARCHAR(255) NOT NULL,
-//   meetingId VARCHAR(255) NOT NULL,
-//   packageId VARCHAR(255),
-//   notToPay BOOLEAN DEFAULT FALSE,
-//   notToPayReason TEXT,
-//   isPaid BOOLEAN DEFAULT FALSE,
-//   payableAmount BIGINT,
-//   paymentAmount BIGINT,
-//   paymentDate DATE,
-//   dueAmount BIGINT,
-//   advanceAmount BIGINT,
-//   status VARCHAR(255),
-//   statusUpdateDate DATE,
-//   FOREIGN KEY (memberId) REFERENCES members(memberId) ON DELETE CASCADE,
-//   FOREIGN KEY (meetingId) REFERENCES meetings(meetingId) ON DELETE CASCADE,
-//   FOREIGN KEY (packageId) REFERENCES packages(packageId) ON DELETE CASCADE
-// ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
-
 const addPayment = async (req, res) => {
   const { memberId } = req.user;
   console.log({ check: req.user });
@@ -44,7 +16,6 @@ const addPayment = async (req, res) => {
     packageId: paymentDetails.packageId,
     transactionDate: new Date(),
     payableAmount: paymentDetails.payableAmount,
-    dueAmount: paymentDetails.dueAmount,
     status: "pending",
     statusUpdateDate: new Date(),
 
@@ -195,12 +166,12 @@ const approvePendingPaymentController = async (req, res) => {
       await paymentModel.setIsPaid(transactionIdsArray, trx);
 
       // Step 3: Add Dues
-      const dueList = transactionDetails.map((transaction) => ({
+      const balanceList = transactionDetails.map((transaction) => ({
         memberId: transaction.memberId,
         chapterId: transaction.chapterId,
-        due: transaction.dueAmount,
+        balance: transaction.balanceAmount,
       }));
-      await paymentModel.updateDue(dueList, trx);
+      await paymentModel.updateBalance(balanceList, trx);
 
       // If all succeeds, transaction commits automatically
       res.json({ success: true });
@@ -233,13 +204,13 @@ const getPaymentRequestsController = async (req, res) => {
   }
 };
 
-const getMemberChapterDueController = async (req, res) => {
+const getMemberChapterBalancesController = async (req, res) => {
   const { memberId } = req.user;
   const { chapterId } = req.params;
 
   try {
-    const dues = await paymentModel.getMemberChapterDue(memberId, chapterId);
-    res.json(dues);
+    const balances = await paymentModel.getMemberChapterDue(memberId, chapterId);
+    res.json(balances);
   } catch (error) {
     console.log(error);
     res.status(500).json({ error: error.message });
@@ -253,5 +224,5 @@ module.exports = {
   chapterPendingPayments,
   approvePendingPaymentController,
   getPaymentRequestsController,
-  getMemberChapterDueController,
+  getMemberChapterBalancesController,
 };

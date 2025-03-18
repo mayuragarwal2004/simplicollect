@@ -132,20 +132,20 @@ const setIsPaid = async (transactionIdsArray, trx) => {
   }
 };
 
-const addDues = async (dueList, trx) => {
-  for (const { memberId, chapterId, due } of dueList) {
+const addBalance = async (balanceList, trx) => {
+  for (const { memberId, chapterId, balance } of balanceList) {
     await trx("memberChapterMapping")
       .where({ memberId, chapterId })
       .update({
-        due: trx.raw("due + ?", [due]), // Directly add/subtract due
+        balance: trx.raw("balance + ?", [balance]), // Directly add/subtract balance
       });
   }
 };
 
-const updateDue = async (dueList) => {
-  for (const { memberId, chapterId, due } of dueList) {
+const updateBalance = async (balanceList) => {
+  for (const { memberId, chapterId, balance } of balanceList) {
     await db("memberChapterMapping").where({ memberId, chapterId }).update({
-      due, // Directly set due
+      balance, // Directly set balance
     });
   }
 };
@@ -153,7 +153,7 @@ const updateDue = async (dueList) => {
 const getMemberChapterDue = async (memberId, chapterId) => {
   return db("memberChapterMapping")
     .where({ memberId, chapterId })
-    .select("due")
+    .select("balance")
     .first();
 };
 const getTransactions = async (chapterId, rows, page) => {
@@ -169,7 +169,7 @@ const getTransactions = async (chapterId, rows, page) => {
       "m.lastName",
       "t.payableAmount",
       "t.paidAmount",
-      "t.dueAmount",
+      "t.balanceAmount",
       "p.packageName",
       "t.paymentType",
       "t.paymentReceivedByName",
@@ -199,7 +199,7 @@ const getMemberFinancialSummary = async (chapterId,row,page) => {
       "m.memberId",
       db.raw("CONCAT(m.firstName, ' ', m.lastName) as memberName"),
       db.raw("SUM(t.paidAmount) as amountTotal"),
-      db.raw("SUM(t.dueAmount) as totalDues")
+      db.raw("SUM(t.balanceAmount) as totalDues")
     )
     .groupBy("m.memberId", "m.firstName", "m.lastName")
     .limit(parseInt(row, 10))
@@ -223,8 +223,8 @@ module.exports = {
   getTransactionById,
   approvePendingPayment,
   setIsPaid,
-  addDues,
-  updateDue,
+  addBalance,
+  updateBalance,
   getMemberChapterDue,
   getTransactions,
   getMemberFinancialSummary,

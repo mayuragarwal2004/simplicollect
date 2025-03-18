@@ -31,11 +31,11 @@ export const ReportBColumns = [
     enableHiding: false,
   },
   {
-    accessorKey: 'dueAmount',
-    header: () => <div className>Due</div>,
+    accessorKey: 'balanceAmount',
+    header: () => <div className>Balance</div>,
     cell: ({ row }) => (
       <p className='text-sm font-medium'>
-        {row.original.dueAmount}
+        {row.original.balanceAmount}
       </p>
     ),
     enableSorting: false,

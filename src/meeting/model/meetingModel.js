@@ -30,7 +30,7 @@ const getAllMeetingsUsingMemberIdAndChapterId = async (memberId, chapterId) => {
       "t.payableAmount",
       "t.paidAmount",
       "t.paymentDate",
-      "t.dueAmount",
+      "t.balanceAmount",
       "t.status",
       "t.statusUpdateDate"
     )

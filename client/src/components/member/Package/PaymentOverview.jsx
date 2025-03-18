@@ -164,11 +164,15 @@ const PaymentOverview = ({ onClose, onPaymentSuccess, setStep }) => {
                 - ₹{selectedPackage.discountAmount} (Discount)
               </p>
             )}
-            {selectedPackage.previousDue !== 0 && (
+            {selectedPackage.previousBalance !== 0 && (
               <p className="text-orange-500">
                 {' '}
-                + ₹{selectedPackage.previousDue} (
-                {selectedPackage.previousDue > 0 ? 'Advance' : 'Previous Due'})
+                {selectedPackage.previousBalance > 0 ? '-' : '+'} ₹
+                {selectedPackage.previousBalance} (
+                {selectedPackage.previousBalance > 0
+                  ? 'Advance'
+                  : 'Previous Due'}
+                )
               </p>
             )}
             {selectedPackage.paidFees > 0 && (

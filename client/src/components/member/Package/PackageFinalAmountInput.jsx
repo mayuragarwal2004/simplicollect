@@ -137,7 +137,7 @@ const PackageFinalAmountInput = ({ setStep, handlePackagePayModalClose }) => {
         </h3>
       ) : currentPayment < totalPayableAmount ? (
         <h3 className="text-xl font-semibold text-red-700">
-          You will be due by ₹{netBalance}
+          You will be due by ₹{Math.abs(netBalance)}
         </h3>
       ) : (
         <h3 className="text-xl font-semibold text-green-700">
@@ -171,7 +171,7 @@ const PackageFinalAmountInput = ({ setStep, handlePackagePayModalClose }) => {
               )}
               {currentPayment < totalPayableAmount && (
                 <div className="mt-2 text-red-700 font-semibold">
-                  (You will be due by ₹{netBalance})
+                  (You will be due by ₹{Math.abs(netBalance)})
                 </div>
               )}
             </AlertDialogDescription>

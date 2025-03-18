@@ -47,7 +47,6 @@ const addQRReceiver = async (data) => {
       receiverName,
       memberId, connection with member table
       chapterId, connection with chapter table
-      qrCodeName,
       qrImageLink,
       enableDate, 
       disableDate,

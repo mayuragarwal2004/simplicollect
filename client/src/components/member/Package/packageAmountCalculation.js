@@ -4,7 +4,7 @@ const packageAmountCalculations = (
   calculationDate,
   pkg,
   chapterMeetings,
-  previousDue,
+  previousBalance,
 ) => {
   const payableEndDate = new Date(pkg.packagePayableEndDate);
 
@@ -134,9 +134,7 @@ const packageAmountCalculations = (
   //     calculateUnpaidFeesFromEarlierPackages(pkg);
   //   adjustedPackageFee += unpaidFeesFromEarlierPackages;
 
-  // Add service fee (2.5%)
-  const serviceFee = adjustedPackageFee * 0;
-  const totalPayableAmount = adjustedPackageFee + serviceFee + previousDue;
+  const totalPayableAmount = adjustedPackageFee - previousBalance;
 
 
   return {
@@ -144,9 +142,8 @@ const packageAmountCalculations = (
     penaltyAmount,
     discountAmount,
     paidFees,
-    previousDue,
+    previousBalance,
     // unpaidFeesFromEarlierPackages,
-    serviceFee,
     isDisabled:
       (!pkg.allowAfterEndDate && calculationDate > payableEndDate)
   };
