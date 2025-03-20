@@ -10,23 +10,11 @@ import {
 import 'react-toastify/dist/ReactToastify.css';
 
 import Loader from './common/Loader';
-import PageTitle from './components/PageTitle';
 import SignIn from './pages/Authentication/SignIn';
 import OtpVerification from './pages/Authentication/Otpverification';
 import ForgotPassword from './pages/Authentication/ForgotPassword';
-import SignUp from './pages/Authentication/SignUp';
-// import Continue from './pages/Authentication/Continue';
-import Calendar from './pages/Calendar';
-import Chart from './pages/Chart';
-import ECommerce from './pages/Member/Dashboard/ECommerce';
 import EOI from './pages/Visitor/EOI';
-import FormElements from './pages/Form/FormElements';
-import FormLayout from './pages/Form/FormLayout';
 import Profile from './pages/Member/Profile';
-import Settings from './pages/Settings';
-import Tables from './pages/Tables';
-import AlertsPage from './pages/UiElements/AlertsPage';
-import Buttons from './pages/UiElements/Buttons';
 import DefaultLayout from './layout/DefaultLayout';
 import ShareForm from './pages/Visitor/ShareForm';
 import VisitorList from './pages/Visitor/VisitorList';
@@ -40,11 +28,11 @@ import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsAndConditions from './pages/TermsAndConditions';
 import NoChapterPage from './pages/NoChapterPage';
 import { Bounce, ToastContainer } from 'react-toastify';
-import { Password } from '@mui/icons-material';
 import AdminSignIn from './pages/Authentication/AdminSignIn';
 import AdminOrganisationsPage from './pages/Admin/organisation/AdminOrganisationsTablePage';
 import AdminChaptersTablePage from './pages/Admin/chapters/AdminChaptersTablePage';
 import ChapterBasicDetails from './components/Admin/Chapter/CreateNew/ChapterBasicDetails';
+import AcceptChapterPaymentPage from './pages/Member/FeeReceiver/AcceptChapterPaymentPage';
 
 const routes = [
   {
@@ -151,6 +139,10 @@ const routes = [
           {
             path: 'profile',
             element: <Profile />,
+          },
+          {
+            path: 'accept-chapter-transaction',
+            element: <AcceptChapterPaymentPage />,
           }
         ],
       },

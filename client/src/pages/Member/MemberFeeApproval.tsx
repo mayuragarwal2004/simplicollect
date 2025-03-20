@@ -6,6 +6,7 @@ import Breadcrumb from '../../components/Breadcrumbs/BreadcrumbOriginal';
 import { Checkbox, IconButton } from '@mui/material';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import { toast } from 'react-toastify';
+import TransferAmountToChapter from '../../components/member/FeeReceiver/TransferAmountToChapter';
 
 interface MemberFee {
   transactionId: string;
@@ -100,7 +101,7 @@ const MemberFeeApproval: React.FC = () => {
         selectedApprovals.includes(fee.transactionId),
       );
       console.log({ data });
-      
+
       await axiosInstance.put('/api/payment/approvePendingPayment', {
         transactionDetails: data, // Send the first selected transactionId (or adjust for multiple approvals)
       });
@@ -127,6 +128,7 @@ const MemberFeeApproval: React.FC = () => {
             <RefreshIcon className="dark:text-white" />
           </IconButton>
         </div>
+        <TransferAmountToChapter />
         <div className="flex mb-4">
           <button
             className={`px-4 py-2 rounded-l ${
