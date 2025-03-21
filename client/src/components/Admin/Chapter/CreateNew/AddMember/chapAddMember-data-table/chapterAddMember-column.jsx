@@ -1,4 +1,4 @@
-export const ChapterRuleColumns = [
+export const ChapterAddMemberColumns = [
   {
     id: 'srno',
     header: () => <p>Sr. No.</p>,
@@ -7,28 +7,23 @@ export const ChapterRuleColumns = [
     enableHiding: false,
   },
   {
-    accessorKey: 'roleName',
-    header: () => <div>Role Name</div>,
+    accessorKey: 'memberName',
+    header: () => <div>Member Name</div>,
     cell: ({ row }) => (
-      <p className="text-sm font-medium">{row.original.roleName}</p>
+      <p className="text-sm font-medium">
+        {row.original.memberName}
+      </p>
     ),
     enableSorting: false,
     enableHiding: false,
   },
   {
-    accessorKey: 'roleDescription',
-    header: () => <div>Role Description</div>,
+    accessorKey: 'role',
+    header: () => <div>Role</div>,
     cell: ({ row }) => (
-      <p className="text-sm font-medium">{row.original.roleDescription}</p>
-    ),
-    enableSorting: false,
-    enableHiding: false,
-  },
-  {
-    accessorKey: 'rights',
-    header: () => <div>Rights</div>,
-    cell: ({ row }) => (
-      <p className="text-sm font-medium">{row.original.rights}</p>
+      <p className="text-sm font-medium">
+        {row.original.role}
+      </p>
     ),
     enableSorting: false,
     enableHiding: false,
@@ -45,7 +40,7 @@ export const ChapterRuleColumns = [
           Edit
         </button>
         <button
-          onClick={() => row.original.onDelete(row.original.roleId)}
+          onClick={() => row.original.onDelete(row.original.memberId)} // Updated to use memberId
           className="text-danger hover:underline"
         >
           Delete

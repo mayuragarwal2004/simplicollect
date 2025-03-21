@@ -5,6 +5,7 @@ import ChapterRules from './ChapterRules';
 
 function ChapterBasicDetails() {
   const [step, setStep] = useState(1);
+  const [showNextComponent, setShowNextComponent] = useState(false);
   const [formData, setFormData] = useState({
     chapterName: '',
     chapterSlug: '',
@@ -32,8 +33,12 @@ function ChapterBasicDetails() {
   };
 
   const handleNext = () => {
-    setStep(2);
+    setShowNextComponent(true);
   };
+
+  if (showNextComponent) {  
+    return <ChapterRules />;
+  }
 
   if (step === 1) {
     return (
@@ -139,6 +144,7 @@ function ChapterBasicDetails() {
                 Back
               </Button>
               <Button
+              onClick={handleNext}
                 type="submit"
                 className="bg-gray-200 hover:bg-gray-300 hover:border-black text-black px-4 py-2 rounded-lg border-2"
               >

@@ -38,6 +38,7 @@ const adminSidebarData = [
 
 const Sidebar = ({ sidebarOpen, setSidebarOpen, admin }: SidebarProps) => {
   const { chapterData } = useData();
+  console.log({admin});
   const { isAuthenticated } = useAuth();
   const [rightsData, setRightsData] = useState<any>([]);
   const location = useLocation();
