@@ -45,6 +45,8 @@ import AdminSignIn from './pages/Authentication/AdminSignIn';
 import AdminOrganisationsPage from './pages/Admin/organisation/AdminOrganisationsTablePage';
 import AdminChaptersTablePage from './pages/Admin/chapters/AdminChaptersTablePage';
 import ChapterBasicDetails from './components/Admin/Chapter/CreateNew/ChapterBasicDetails';
+import AdminChapterMemberList from './pages/Admin/chapters/AdminChapterMemberList';
+import AdminChapterLayout from './pages/Admin/chapters/AdminChapterLayout'
 
 const routes = [
   {
@@ -75,8 +77,25 @@ const routes = [
       },
       {
         path: 'chapters',
-        element: <AdminChaptersTablePage />,
+        children:[
+          {
+            index: true,
+            element: <AdminChaptersTablePage />,
+          },
+          {
+            path: ':chapterSlug',
+            element: <AdminChapterLayout />,//////
+            children:[
+              {
+                path:"member",
+                element:<AdminChapterMemberList />
+              }
+            ]
+          }
+        ]
       },
+
+     
       {
         path: 'chapter-basic-details',
         element: <ChapterBasicDetails />,
