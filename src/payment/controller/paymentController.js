@@ -209,7 +209,10 @@ const getMemberChapterBalancesController = async (req, res) => {
   const { chapterId } = req.params;
 
   try {
-    const balances = await paymentModel.getMemberChapterDue(memberId, chapterId);
+    const balances = await paymentModel.getMemberChapterDue(
+      memberId,
+      chapterId
+    );
     res.json(balances);
   } catch (error) {
     console.log(error);
