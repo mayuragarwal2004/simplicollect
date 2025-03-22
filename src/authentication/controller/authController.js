@@ -183,8 +183,6 @@ const sendOtpForLogin = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    console.log("User found:", user);
-
     // Send OTP to the provided identifier (email or phone)
     const response = await sendOTP(identifier);
 

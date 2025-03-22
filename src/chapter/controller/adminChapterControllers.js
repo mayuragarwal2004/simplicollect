@@ -51,10 +51,18 @@ const createChapter = async (req, res) => {
     const chapterData = req.body;
     
     // Validate required fields
-    if (!chapterData.chapterName) {
-      return res.status(400).json({ error: "Chapter name is required" });
+    if (!chapterData.chapterName || !chapterData.chapterSlug || !chapterData.meetingPeriodicity || !chapterData.meetingPaymentType || !chapterData.visitorPerMeetingFee || !chapterData.organisationId) {
+      return res.status(400).json({ error: "Required fields are missing" });
     }
-    
+    const validPeriodicities = ['weekly', 'fortnightly', 'monthly', 'bi-monthly', 'quarterly', '6-monthly', 'yearly'];
+    if (!validPeriodicities.includes(chapterData.meetingPeriodicity)) {
+      return res.status(400).json({ error: "Invalid meeting periodicity" });
+    }
+
+    const validPaymentTypes = ['weekly', 'monthly', 'quarterly'];
+    if (!chapterData.meetingPaymentType.split(',').every(type => validPaymentTypes.includes(type.trim()))) {
+      return res.status(400).json({ error: "Invalid meeting payment type" });
+    }
     // Create the chapter
     const newChapter = await adminChapterModel.createChapter(chapterData);
     
@@ -69,7 +77,7 @@ const deleteChapter = async (req, res) => {
   try {
     const { chapterId } = req.params;
     
-    const chapter = await adminChapterModel.getChapterById(chapterId);
+    const chapter = await adminChapterModel.findChapterById(chapterId);
     if (!chapter) {
       return res.status(404).json({ message: "Chapter not found" });
     }
