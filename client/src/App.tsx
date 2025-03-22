@@ -32,9 +32,6 @@ import AdminSignIn from './pages/Authentication/AdminSignIn';
 import AdminOrganisationsPage from './pages/Admin/organisation/AdminOrganisationsTablePage';
 import AdminChaptersTablePage from './pages/Admin/chapters/AdminChaptersTablePage';
 import ChapterBasicDetails from './components/Admin/Chapter/CreateNew/ChapterBasicDetails';
-import AdminChapterMemberList from './pages/Admin/chapters/AdminChapterMemberList';
-import AdminChapterLayout from './pages/Admin/chapters/AdminChapterLayout'
-import AcceptChapterPaymentPage from './pages/Member/FeeReceiver/AcceptChapterPaymentPage';
 
 const routes = [
   {
@@ -85,8 +82,8 @@ const routes = [
 
      
       {
-        path: 'chapter-basic-details',
-        element: <ChapterBasicDetails />,
+        path: 'members',
+        element: <AdminMembersTablePage />,
       }
     ],
   },
