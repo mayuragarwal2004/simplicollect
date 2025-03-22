@@ -287,7 +287,7 @@ function ChapterAddMember() {
             Back
           </Button>
           <Button
-            onClick={handleNext()}
+            onClick={handleNext}
             type="submit"
             className="bg-gray-200 hover:bg-gray-300 hover:border-black text-black px-4 py-2 rounded-lg border-2"
           >
