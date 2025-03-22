@@ -24,7 +24,7 @@ import PackageViewerPage from './pages/Member/Package/PackageViewerPage';
 import MemberFeeApproval from './pages/Member/MemberFeeApproval';
 import FeeReciever from './pages/Member/FeeReciever';
 import RequireAuth from './utils/RequireAut';
-import PrivacyPolicy from './pages/PrivacyPolicy';
+import PrivacyPolicy from './pages/simpliCollectPrivacyPolicy';
 import TermsAndConditions from './pages/TermsAndConditions';
 import NoChapterPage from './pages/NoChapterPage';
 import { Bounce, ToastContainer } from 'react-toastify';
