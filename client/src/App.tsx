@@ -31,7 +31,10 @@ import { Bounce, ToastContainer } from 'react-toastify';
 import AdminSignIn from './pages/Authentication/AdminSignIn';
 import AdminOrganisationsPage from './pages/Admin/organisation/AdminOrganisationsTablePage';
 import AdminChaptersTablePage from './pages/Admin/chapters/AdminChaptersTablePage';
-import ChapterBasicDetails from './components/Admin/Chapter/CreateNew/ChapterBasicDetails';
+import AdminChapterLayout from './pages/Admin/chapters/AdminChapterLayout';
+import AdminChapterMemberList from './pages/Admin/chapters/AdminChapterMemberList';
+import AdminMembersTablePage from './pages/Admin/members/AdminMembersTablePage';
+import AcceptChapterPaymentPage from './pages/Member/FeeReceiver/AcceptChapterPaymentPage';
 
 const routes = [
   {

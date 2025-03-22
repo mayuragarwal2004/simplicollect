@@ -46,8 +46,6 @@ app.get("/api/testWA", async (req, res) => {
 // admin routes
 app.use("/api/organisations", authenticateToken, require("./src/organisation/route/organisationRoutes"));
 app.use("/api/admin/chapters", authenticateToken, require("./src/chapter/route/adminChapterRoutes"));
-app.use("/api/admin/chapters-member-list", authenticateToken, require("./src/chapter/route/adminChapterMemberListRoutes"));
-
 
 app.use("/api/*", (req, res) => {
   res.status(404).send("Not Found - Please check the URL and try again");
