@@ -6,6 +6,8 @@ import { ChapterRuleColumns } from './ChapterRules/chapterRule-data-table/chapte
 import { Button } from '../../../../components/ui/button';
 import ChapterAddMember from './ChapterAddMember';
 import ChapterBasicDetails from './ChapterBasicDetails';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 function ChapterRules() {
   const [roles, setRoles] = useState([]); // State for roles
@@ -17,11 +19,6 @@ function ChapterRules() {
   const searchParams = new URLSearchParams(location.search);
   const rows = searchParams.get('rows') || 10;
   const page = searchParams.get('page') || 0;
-  const [notification, setNotification] = useState({
-    show: false,
-    message: '',
-    type: '',
-  });
   const [formData, setFormData] = useState({
     roleName: '',
     roleDescription: '',
@@ -36,25 +33,6 @@ function ChapterRules() {
     fetchRoles();
   }, [rows, page]);
 
-  // Auto-hide notification after 3 seconds
-  useEffect(() => {
-    if (notification.show) {
-      const timer = setTimeout(() => {
-        setNotification({ show: false, message: '', type: '' });
-      }, 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [notification.show]);
-
-  // Show notification
-  const showNotification = (message, type) => {
-    setNotification({
-      show: true,
-      message,
-      type,
-    });
-  };
-
   // Fetch roles from the API
   const fetchRoles = async () => {
     try {
@@ -65,7 +43,7 @@ function ChapterRules() {
       setLoading(false);
     } catch (err) {
       console.error('Error fetching roles:', err);
-      showNotification('Failed to fetch roles', 'error');
+      toast.error('Failed to fetch roles');
       setLoading(false);
     }
   };
@@ -113,15 +91,15 @@ function ChapterRules() {
   // Validate form fields
   const validateForm = () => {
     if (!formData.roleName.trim()) {
-      showNotification('Role name is required', 'error');
+      toast.error('Role name is required');
       return false;
     }
     if (!formData.roleDescription.trim()) {
-      showNotification('Role description is required', 'error');
+      toast.error('Role description is required');
       return false;
     }
     if (!formData.rights.trim()) {
-      showNotification('Rights are required', 'error');
+      toast.error('Rights are required');
       return false;
     }
     return true;
@@ -155,7 +133,7 @@ function ChapterRules() {
               role.roleId === editingRole.roleId ? { ...role, ...response.data } : role,
             ),
           );
-          showNotification('Role updated successfully', 'success');
+          toast.success('Role updated successfully');
         }
       } else {
         response = await axiosInstance.post('/api/chapter-rules', payload);
@@ -165,7 +143,7 @@ function ChapterRules() {
             ...response.data,
           };
           setRoles((prevRoles) => [...prevRoles, newRole]);
-          showNotification('Role created successfully', 'success');
+          toast.success('Role created successfully');
         }
       }
 
@@ -177,7 +155,7 @@ function ChapterRules() {
         error.response?.data?.error ||
         error.message ||
         (editingRole ? 'Failed to update role' : 'Failed to create role');
-      showNotification(errorMessage, 'error');
+      toast.error(errorMessage);
     }
   };
 
@@ -186,12 +164,12 @@ function ChapterRules() {
     if (window.confirm('Are you sure you want to delete this role?')) {
       try {
         await axiosInstance.delete(`/api/chapter-rules/${roleId}`);
-        showNotification('Role deleted successfully', 'success');
+        toast.success('Role deleted successfully');
         fetchRoles(); // Refresh the list after deletion
       } catch (error) {
         const errorMessage =
           error.response?.data?.error || 'Failed to delete role';
-        showNotification(errorMessage, 'error');
+        toast.error(errorMessage);
         console.error('Error deleting role:', error);
       }
     }
@@ -217,15 +195,7 @@ function ChapterRules() {
   return (
     <div className="fixed w-auto inset-0 bg-black bg-opacity-50 flex items-center justify-center ">
       <div className="p-6 bg-white rounded-2xl shadow-lg text-center w-[600px]">
-        {notification.show && (
-          <div
-            className={`fixed top-4 right-4 p-4 rounded shadow-lg ${
-              notification.type === 'success' ? 'bg-green-500' : 'bg-red-500'
-            } text-white z-50`}
-          >
-            {notification.message}
-          </div>
-        )}
+        <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} newestOnTop={false} closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover />
 
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-xl font-semibold">

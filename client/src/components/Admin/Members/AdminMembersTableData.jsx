@@ -3,6 +3,8 @@ import { axiosInstance } from '../../../utils/config';
 import { useLocation } from 'react-router-dom';
 import { MembersTable } from './members-data-table/members-table';
 import { MembersColumns } from './members-data-table/members-column';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const AdminMembersTableData = () => {
   const [members, setMembers] = useState([]);
@@ -14,36 +16,16 @@ const AdminMembersTableData = () => {
   const searchParams = new URLSearchParams(location.search);
   const rows = searchParams.get('rows') || 10;
   const page = searchParams.get('page') || 0;
-  const [notification, setNotification] = useState({
-    show: false,
-    message: '',
-    type: '',
-  });
   const [formData, setFormData] = useState({
     membersName: '',
+    email: '',
+    phoneNumber: '',
+    numberOfMembers: '',
   });
 
   useEffect(() => {
     fetchMembers();
   }, [rows, page]);
-
-  // Hide notification after 3 seconds
-  useEffect(() => {
-    if (notification.show) {
-      const timer = setTimeout(() => {
-        setNotification({ show: false, message: '', type: '' });
-      }, 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [notification.show]);
-
-  const showNotification = (message, type) => {
-    setNotification({
-      show: true,
-      message,
-      type,
-    });
-  };
 
   const fetchMembers = () => {
     axiosInstance
@@ -56,7 +38,7 @@ const AdminMembersTableData = () => {
       })
       .catch((err) => {
         console.error('Error fetching members:', err);
-        showNotification('Failed to fetch members', 'error');
+        toast.error('Failed to fetch members');
         setLoading(false);
       });
   };
@@ -65,11 +47,17 @@ const AdminMembersTableData = () => {
     if (member) {
       setFormData({
         membersName: member.membersName,
+        email: member.email,
+        phoneNumber: member.phoneNumber,
+        numberOfMembers: member.numberOfMembers,
       });
       setEditingChap(member);
     } else {
       setFormData({
         membersName: '',
+        email: '',
+        phoneNumber: '',
+        numberOfMembers: '',
       });
       setEditingChap(null);
     }
@@ -81,6 +69,9 @@ const AdminMembersTableData = () => {
     setEditingChap(null);
     setFormData({
       membersName: '',
+      email: '',
+      phoneNumber: '',
+      numberOfMembers: '',
     });
   };
 
@@ -96,7 +87,19 @@ const AdminMembersTableData = () => {
 
   const validateForm = () => {
     if (!formData.membersName.trim()) {
-      showNotification('Members name is required', 'error');
+      toast.error('Members name is required');
+      return false;
+    }
+    if (!formData.email.trim()) {
+      toast.error('Email is required');
+      return false;
+    }
+    if (!formData.phoneNumber.trim()) {
+      toast.error('Phone number is required');
+      return false;
+    }
+    if (!formData.numberOfMembers.trim()) {
+      toast.error('Number of members is required');
       return false;
     }
     return true;
@@ -112,6 +115,8 @@ const AdminMembersTableData = () => {
     try {
       const payload = {
         membersName: formData.membersName.trim(),
+        email: formData.email.trim(),
+        phoneNumber: formData.phoneNumber.trim(),
         numberOfMembers: parseInt(formData.numberOfMembers),
       };
       console.log('Sending payload:', payload);
@@ -130,7 +135,7 @@ const AdminMembersTableData = () => {
                 : member,
             ),
           );
-          showNotification('Members updated successfully', 'success');
+          toast.success('Members updated successfully');
         }
       } else {
         response = await axiosInstance.post('/api/admin/members', payload);
@@ -139,7 +144,7 @@ const AdminMembersTableData = () => {
             ...response.data,
           };
           setMembers((prevMembers) => [...prevMembers, newMember]);
-          showNotification('Members created successfully', 'success');
+          toast.success('Members created successfully');
         }
       }
 
@@ -153,7 +158,7 @@ const AdminMembersTableData = () => {
         (editingChap
           ? 'Failed to update members'
           : 'Failed to create members');
-      showNotification(errorMessage, 'error');
+      toast.error(errorMessage);
     }
   };
 
@@ -161,12 +166,12 @@ const AdminMembersTableData = () => {
     if (window.confirm('Are you sure you want to delete this member?')) {
       try {
         await axiosInstance.delete(`/api/admin/members/${memberId}`);
-        showNotification('Member deleted successfully', 'success');
+        toast.success('Member deleted successfully');
         await fetchMembers();
       } catch (error) {
         const errorMessage =
           error.response?.data?.error || 'Failed to delete member';
-        showNotification(errorMessage, 'error');
+        toast.error(errorMessage);
         console.error('Error deleting member:', error);
       }
     }
@@ -174,16 +179,7 @@ const AdminMembersTableData = () => {
 
   return (
     <div className="rounded-2xl border border-stroke bg-white p-5 shadow-md dark:border-strokedark dark:bg-boxdark">
-      {/* Notification */}
-      {notification.show && (
-        <div
-          className={`fixed top-4 right-4 p-4 rounded shadow-lg ${
-            notification.type === 'success' ? 'bg-green-500' : 'bg-red-500'
-          } text-white z-50`}
-        >
-          {notification.message}
-        </div>
-      )}
+      <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} newestOnTop={false} closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover />
 
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-xl font-semibold">

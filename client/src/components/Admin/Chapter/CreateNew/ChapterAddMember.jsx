@@ -5,6 +5,8 @@ import { ChapterAddMemberTable } from './AddMember/chapAddMember-data-table/chap
 import { ChapterAddMemberColumns } from './AddMember/chapAddMember-data-table/chapterAddMember-column';
 import { Button } from '../../../../components/ui/button';
 import ChapterRules from './ChapterRules';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 function ChapterAddMember() {
   const navigate = useNavigate();
@@ -19,39 +21,15 @@ function ChapterAddMember() {
   const searchParams = new URLSearchParams(location.search);
   const rows = searchParams.get('rows') || 10;
   const page = searchParams.get('page') || 0;
-  const [notification, setNotification] = useState({
-    show: false,
-    message: '',
-    type: '',
-  });
 
   const handleNext = () => {
     navigate('/admin/chapters');
-  }
+  };
 
   // Fetch members from the API
   useEffect(() => {
     fetchMembers();
   }, [rows, page]);
-
-  // Auto-hide notification after 3 seconds
-  useEffect(() => {
-    if (notification.show) {
-      const timer = setTimeout(() => {
-        setNotification({ show: false, message: '', type: '' });
-      }, 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [notification.show]);
-
-  // Show notification
-  const showNotification = (message, type) => {
-    setNotification({
-      show: true,
-      message,
-      type,
-    });
-  };
 
   // Fetch members from the API
   const fetchMembers = () => {
@@ -65,7 +43,7 @@ function ChapterAddMember() {
       })
       .catch((err) => {
         console.error('Error fetching members:', err);
-        showNotification('Failed to fetch members', 'error');
+        toast.error('Failed to fetch members');
         setLoading(false);
       });
   };
@@ -108,7 +86,7 @@ function ChapterAddMember() {
         // Add new member
         response = await axiosInstance.post('/api/chapter-members', payload);
         if (response.data && response.data.memberId) {
-          showNotification('Member created successfully', 'success');
+          toast.success('Member created successfully');
           fetchMembers(); // Refresh the list
         }
       } else {
@@ -118,7 +96,7 @@ function ChapterAddMember() {
           payload,
         );
         if (response.data) {
-          showNotification('Member updated successfully', 'success');
+          toast.success('Member updated successfully');
           fetchMembers(); // Refresh the list
         }
       }
@@ -129,14 +107,14 @@ function ChapterAddMember() {
         error.response?.data?.error ||
         error.message ||
         'Failed to save member';
-      showNotification(errorMessage, 'error');
+      toast.error(errorMessage);
     }
   };
 
   // Handle bulk upload
   const handleBulkUpload = async () => {
     if (!file) {
-      showNotification('Please select a file to upload', 'error');
+      toast.error('Please select a file to upload');
       return;
     }
 
@@ -150,7 +128,7 @@ function ChapterAddMember() {
         },
       });
       if (response.data) {
-        showNotification('Members uploaded successfully', 'success');
+        toast.success('Members uploaded successfully');
         fetchMembers(); // Refresh the list
         setIsBulkUploadOpen(false); // Close the modal
         setFile(null); // Reset file input
@@ -159,7 +137,7 @@ function ChapterAddMember() {
       console.error('Error uploading file:', error);
       const errorMessage =
         error.response?.data?.error || 'Failed to upload members';
-      showNotification(errorMessage, 'error');
+      toast.error(errorMessage);
     }
   };
 
@@ -176,12 +154,12 @@ function ChapterAddMember() {
     if (window.confirm('Are you sure you want to delete this member?')) {
       try {
         await axiosInstance.delete(`/api/chapter-members/${memberId}`);
-        showNotification('Member deleted successfully', 'success');
+        toast.success('Member deleted successfully');
         fetchMembers(); // Refresh the list after deletion
       } catch (error) {
         const errorMessage =
           error.response?.data?.error || 'Failed to delete member';
-        showNotification(errorMessage, 'error');
+        toast.error(errorMessage);
         console.error('Error deleting member:', error);
       }
     }
@@ -198,15 +176,7 @@ function ChapterAddMember() {
   return (
     <div className="fixed w-auto inset-0 bg-black bg-opacity-50 flex items-center justify-center ">
       <div className="p-6 bg-white rounded-2xl shadow-lg text-center w-[600px]">
-        {notification.show && (
-          <div
-            className={`fixed top-4 right-4 p-4 rounded shadow-lg ${
-              notification.type === 'success' ? 'bg-green-500' : 'bg-red-500'
-            } text-white z-50`}
-          >
-            {notification.message}
-          </div>
-        )}
+        <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} newestOnTop={false} closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover />
 
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-xl font-semibold">Add Members to the Chapter</h2>

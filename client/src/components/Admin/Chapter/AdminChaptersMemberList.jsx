@@ -3,6 +3,8 @@ import { axiosInstance } from '../../../utils/config';
 import { useLocation, useParams } from 'react-router-dom';
 import { MemberTable } from '../Chapter/chapter-member-data-table/chapter-member-table';
 import { MemberColumn } from '../Chapter/chapter-member-data-table/chapter-member-column';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const AdminChaptersMemberList = () => {
   const [members, setMembers] = useState([]);
@@ -14,27 +16,14 @@ const AdminChaptersMemberList = () => {
   const searchParams = new URLSearchParams(location.search);
   const rows = searchParams.get('rows') || 10;
   const page = searchParams.get('page') || 0;
-  const [notification, setNotification] = useState({ show: false, message: '', type: '' });
   const [formData, setFormData] = useState({ memberName: '', email: '' });
   const [selectedOrganisation, setSelectedOrganisation] = useState(null);
+     
   const { chapterSlug } = useParams();
 
   useEffect(() => {
     fetchMembers();
   }, [rows, page, chapterSlug]);
-
-  useEffect(() => {
-    if (notification.show) {
-      const timer = setTimeout(() => {
-        setNotification({ show: false, message: '', type: '' });
-      }, 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [notification.show]);
-
-  const showNotification = (message, type) => {
-    setNotification({ show: true, message, type });
-  };
 
   const fetchMembers = () => {
     axiosInstance
@@ -45,7 +34,7 @@ const AdminChaptersMemberList = () => {
         setLoading(false);
       })
       .catch(() => {
-        showNotification('Failed to fetch Members', 'error');
+        toast.error('Failed to fetch Members');
         setLoading(false);
       });
   };
@@ -71,11 +60,11 @@ const AdminChaptersMemberList = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.memberName.trim() || !formData.email.trim()) {
-      showNotification('All fields are required', 'error');
+      toast.error('All fields are required');
       return;
     }
     if (!selectedOrganisation) {
-      showNotification('Please select an organisation', 'error');
+      toast.error('Please select an organisation');
       return;
     }
 
@@ -89,21 +78,21 @@ const AdminChaptersMemberList = () => {
       if (editingMember) {
         response = await axiosInstance.put(`/api/admin/members/${editingMember.memberId}`, payload);
         setMembers((prev) => prev.map((mem) => (mem.memberId === editingMember.memberId ? { ...mem, ...response.data } : mem)));
-        showNotification('Member updated successfully', 'success');
+        toast.success('Member updated successfully');
       } else {
         response = await axiosInstance.post('/api/admin/members', payload);
         setMembers((prev) => [...prev, response.data]);
-        showNotification('Member added successfully', 'success');
+        toast.success('Member added successfully');
       }
       handleCloseModal();
       fetchMembers();
     } catch (error) {
-      showNotification(error.response?.data?.error || 'Failed to process request', 'error');
+      toast.error(error.response?.data?.error || 'Failed to process request');
     }
   };
 
   return (
-    <div className="rounded-sm border border-stroke bg-background p-5 shadow-md dark:border-strokedark dark:bg-boxdark">
+    <div className="rounded-sm border border-stroke bg-white p-5 shadow-md dark:border-strokedark dark:bg-boxdark">
       {notification.show && (
         <div className={`fixed top-4 right-4 p-4 rounded shadow-lg ${notification.type === 'success' ? 'bg-green-500' : 'bg-red-500'} text-white z-50`}>
           {notification.message}

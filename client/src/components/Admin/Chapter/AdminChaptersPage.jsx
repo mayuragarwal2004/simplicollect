@@ -4,42 +4,26 @@ import { useLocation } from 'react-router-dom';
 import { ChapterTable } from './chapters-data-table/chapter-table';
 import { ChapterColumn } from './chapters-data-table/chapter-column';
 import OrganisationSelection from './CreateNew/OrganistaionSeletion';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const AdminChaptersPage = () => {
   const [chapters, setChapters] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false); // For Add Chapter (Organisation Selection)
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false); // For Edit Chapter
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingChapter, setEditingChapter] = useState(null);
   const [totalRecord, setTotalRecord] = useState(0);
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
   const rows = searchParams.get('rows') || 10;
   const page = searchParams.get('page') || 0;
-  const [notification, setNotification] = useState({
-    show: false,
-    message: '',
-    type: '',
-  });
   const [formData, setFormData] = useState({ chapterName: '' });
   const [selectedOrganisation, setSelectedOrganisation] = useState(null);
 
   useEffect(() => {
     fetchChapters();
   }, [rows, page]);
-
-  useEffect(() => {
-    if (notification.show) {
-      const timer = setTimeout(() => {
-        setNotification({ show: false, message: '', type: '' });
-      }, 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [notification.show]);
-
-  const showNotification = (message, type) => {
-    setNotification({ show: true, message, type });
-  };
 
   const fetchChapters = () => {
     axiosInstance
@@ -50,19 +34,19 @@ const AdminChaptersPage = () => {
         setLoading(false);
       })
       .catch((err) => {
-        showNotification('Failed to fetch Chapters', 'error');
+        toast.error('Failed to fetch Chapters');
         setLoading(false);
       });
   };
 
   const handleOpenAddModal = () => {
-    setIsAddModalOpen(true); // Open Organisation Selection modal
+    setIsAddModalOpen(true);
   };
 
   const handleOpenEditModal = (chapter) => {
     setFormData({ chapterName: chapter.chapterName });
     setEditingChapter(chapter);
-    setIsEditModalOpen(true); // Open Edit Chapter modal
+    setIsEditModalOpen(true);
   };
 
   const handleCloseModals = () => {
@@ -76,17 +60,17 @@ const AdminChaptersPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.chapterName.trim()) {
-      showNotification('Chapter name is required', 'error');
+      toast.error('Chapter name is required');
       return;
     }
 
     try {
       const payload = editingChapter
-        ? { chapterName: formData.chapterName.trim() } // For editing, only send chapterName
+        ? { chapterName: formData.chapterName.trim() }
         : {
             chapterName: formData.chapterName.trim(),
             organisation: selectedOrganisation,
-          }; // For adding, include organisation
+          };
       let response;
       if (editingChapter) {
         response = await axiosInstance.put(
@@ -100,23 +84,20 @@ const AdminChaptersPage = () => {
               : chap,
           ),
         );
-        showNotification('Chapter updated successfully', 'success');
+        toast.success('Chapter updated successfully');
       } else {
         if (!selectedOrganisation) {
-          showNotification('Please select an organisation', 'error');
+          toast.error('Please select an organisation');
           return;
         }
         response = await axiosInstance.post('/api/admin/chapters', payload);
         setChapters((prev) => [...prev, response.data]);
-        showNotification('Chapter created successfully', 'success');
+        toast.success('Chapter created successfully');
       }
       handleCloseModals();
       fetchChapters();
     } catch (error) {
-      showNotification(
-        error.response?.data?.error || 'Failed to process request',
-        'error',
-      );
+      toast.error(error.response?.data?.error || 'Failed to process request');
     }
   };
 
@@ -126,21 +107,15 @@ const AdminChaptersPage = () => {
       setChapters((prev) =>
         prev.filter((chap) => chap.chapterId !== chapterId),
       );
-      showNotification('Chapter deleted successfully', 'success');
+      toast.success('Chapter deleted successfully');
     } catch (error) {
-      showNotification('Failed to delete chapter', 'error');
+      toast.error('Failed to delete chapter');
     }
   };
 
   return (
     <div className="rounded-sm border border-stroke bg-white p-5 shadow-md dark:border-strokedark dark:bg-boxdark">
-      {notification.show && (
-        <div
-          className={`fixed top-4 right-4 p-4 rounded shadow-lg ${notification.type === 'success' ? 'bg-green-500' : 'bg-red-500'} text-white z-50`}
-        >
-          {notification.message}
-        </div>
-      )}
+      <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} newestOnTop={false} closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover />
 
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-xl font-semibold">Super Admin Chapter Table</h2>
@@ -168,31 +143,19 @@ const AdminChaptersPage = () => {
         />
       )}
 
-      {/* Organisation Selection Modal (for Add Chapter) */}
       {isAddModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-              <OrganisationSelection
-                onCancel={handleCloseModals}
-                onNext={(org) => {
-                  setSelectedOrganisation(org);
-                  setIsAddModalOpen(false); 
-                  setIsEditModalOpen(true); 
-                }}
-              />
+          <OrganisationSelection
+            onCancel={handleCloseModals}
+            onNext={(org) => {
+              setSelectedOrganisation(org);
+              setIsAddModalOpen(false);
+              setIsEditModalOpen(true);
+            }}
+          />
         </div>
       )}
-      {/* {isAddModalOpen && (
-        <OrganisationSelection
-          onCancel={handleCloseModals}
-          onNext={(org) => {
-            setSelectedOrganisation(org);
-            setIsAddModalOpen(false); // Close Organisation Selection modal
-            setIsEditModalOpen(true); // Open the Edit modal after selecting an organisation
-          }}
-        />
-      )} */}
 
-      {/* Edit Chapter Modal */}
       {isEditModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
           <div className="bg-white p-6 rounded-lg w-full max-w-lg">
@@ -200,7 +163,6 @@ const AdminChaptersPage = () => {
               {editingChapter ? 'Edit Chapter' : 'Add Chapter'}
             </h3>
             <form onSubmit={handleSubmit}>
-              {/* Chapter Name Field */}
               <div className="mb-4">
                 <label className="block mb-2">Chapter Name</label>
                 <input
@@ -215,7 +177,6 @@ const AdminChaptersPage = () => {
                 />
               </div>
 
-              {/* Form Buttons */}
               <div className="flex justify-end space-x-3">
                 <button
                   type="button"
