@@ -171,7 +171,6 @@ const AdminChaptersPage = () => {
       {/* Organisation Selection Modal (for Add Chapter) */}
       {isAddModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-            <form onSubmit={handleSubmit}>
               <OrganisationSelection
                 onCancel={handleCloseModals}
                 onNext={(org) => {
@@ -180,7 +179,6 @@ const AdminChaptersPage = () => {
                   setIsEditModalOpen(true); 
                 }}
               />
-            </form>
         </div>
       )}
       {/* {isAddModalOpen && (

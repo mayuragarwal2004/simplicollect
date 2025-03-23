@@ -3,7 +3,6 @@ import { axiosInstance } from '../../../utils/config';
 import { useLocation ,useParams} from 'react-router-dom';
 import { MemberTable } from '../Chapter/chapter-member-data-table/chapter-member-table';
 import { MemberColumn } from '../Chapter/chapter-member-data-table/chapter-member-column';
-import OrganisationSelection from './CreateNew/OrganistaionSeletion';
 
 const AdminChaptersMemberList = () => {
   const [members, setMembers] = useState([]);
@@ -136,7 +135,6 @@ const AdminChaptersMemberList = () => {
           <div className="bg-white p-6 rounded-lg w-full max-w-lg">
             <h3 className="text-xl font-semibold mb-4">{editingMember ? 'Edit Member' : 'Add Member'}</h3>
             <form onSubmit={handleSubmit}>
-              <OrganisationSelection onSelect={setSelectedOrganisation} />
               <div className="mb-4">
                 <label className="block mb-2">Member Name</label>
                 <input 

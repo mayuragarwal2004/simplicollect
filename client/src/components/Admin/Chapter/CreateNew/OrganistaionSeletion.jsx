@@ -10,9 +10,10 @@ import {
 import { Button } from '@/components/ui/button';
 import ChapterBasicDetails from './ChapterBasicDetails';
 
-const OrganisationSelection = ({ onCancel }) => {
+const OrganisationSelection = () => {
   const [selectedOrg, setSelectedOrg] = useState('');
   const [showNextComponent, setShowNextComponent] = useState(false);
+  const [showModal, setShowModal] = useState(true);
 
   const handleChange = (value) => {
     setSelectedOrg(value);
@@ -20,7 +21,7 @@ const OrganisationSelection = ({ onCancel }) => {
 
   const handleCancel = () => {
     setSelectedOrg('');
-    onCancel(); // Call the onCancel prop to close the modal
+    setShowModal(false);
   };
 
   const onNext = () => {
