@@ -3,7 +3,7 @@ import { axiosInstance } from '../../../utils/config';
 import { useLocation } from 'react-router-dom';
 import { OrgTable } from './organisation-data-table/org-table';
 import { OrgColumns } from './organisation-data-table/org-column';
-import { toast } from 'react-toastify';
+import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 const OrganisationTableData = () => {
@@ -16,7 +16,6 @@ const OrganisationTableData = () => {
   const searchParams = new URLSearchParams(location.search);
   const rows = searchParams.get('rows') || 10;
   const page = searchParams.get('page') || 0;
-
   const [formData, setFormData] = useState({
     organisationName: '',
   });
@@ -29,6 +28,7 @@ const OrganisationTableData = () => {
     axiosInstance
       .get(`/api/organisations?rows=${rows}&page=${page}`)
       .then((res) => {
+        console.log('Fetched organisations:', res.data);
         setOrganisations(res.data.data || res.data);
         setTotalRecord(res.data.totalRecords || res.data.length);
         setLoading(false);
@@ -42,10 +42,14 @@ const OrganisationTableData = () => {
 
   const handleOpenModal = (org = null) => {
     if (org) {
-      setFormData({ organisationName: org.organisationName });
+      setFormData({
+        organisationName: org.organisationName,
+      });
       setEditingOrg(org);
     } else {
-      setFormData({ organisationName: '' });
+      setFormData({
+        organisationName: '',
+      });
       setEditingOrg(null);
     }
     setIsModalOpen(true);
@@ -54,12 +58,18 @@ const OrganisationTableData = () => {
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setEditingOrg(null);
-    setFormData({ organisationName: '' });
+    setFormData({
+      organisationName: '',
+    });
   };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    console.log('Input changed:', name, value);
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
   const validateForm = () => {
@@ -73,34 +83,40 @@ const OrganisationTableData = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!validateForm()) return;
+    if (!validateForm()) {
+      return;
+    }
 
     try {
       const payload = {
         organisationName: formData.organisationName.trim(),
         numberOfChapters: parseInt(formData.numberOfChapters),
       };
+      console.log('Sending payload:', payload);
 
       let response;
       if (editingOrg) {
         response = await axiosInstance.put(
           `/api/organisations/${editingOrg.organisationId}`,
-          payload
+          payload,
         );
         if (response.data) {
           setOrganisations((prevOrgs) =>
             prevOrgs.map((org) =>
               org.organisationId === editingOrg.organisationId
                 ? { ...org, ...response.data }
-                : org
-            )
+                : org,
+            ),
           );
           toast.success('Organisation updated successfully');
         }
       } else {
         response = await axiosInstance.post('/api/organisations', payload);
         if (response.data && response.data.organisationId) {
-          setOrganisations((prevOrgs) => [...prevOrgs, response.data]);
+          const newOrg = {
+            ...response.data,
+          };
+          setOrganisations((prevOrgs) => [...prevOrgs, newOrg]);
           toast.success('Organisation created successfully');
         }
       }
@@ -112,7 +128,9 @@ const OrganisationTableData = () => {
       const errorMessage =
         error.response?.data?.error ||
         error.message ||
-        (editingOrg ? 'Failed to update organisation' : 'Failed to create organisation');
+        (editingOrg
+          ? 'Failed to update organisation'
+          : 'Failed to create organisation');
       toast.error(errorMessage);
     }
   };
@@ -124,18 +142,22 @@ const OrganisationTableData = () => {
         toast.success('Organisation deleted successfully');
         fetchOrganisations();
       } catch (error) {
-        toast.error(error.response?.data?.error || 'Failed to delete organisation');
+        const errorMessage =
+          error.response?.data?.error || 'Failed to delete organisation';
+        toast.error(errorMessage);
+        console.error('Error deleting organisation:', error);
       }
     }
   };
 
   return (
     <div className="rounded-2xl border border-stroke bg-white p-5 shadow-md dark:border-strokedark dark:bg-boxdark">
-      {/* Toast Notifications */}
-      <toast.ToastContainer position="top-right" autoClose={3000} />
+      <ToastContainer position="top-right" autoClose={3000} />
 
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-semibold">Super Admin Organisation Table</h2>
+        <h2 className="text-xl font-semibold">
+          Super Admin Organisation Table
+        </h2>
         <button
           onClick={() => handleOpenModal()}
           className="px-4 py-2 bg-primary text-white rounded hover:bg-opacity-90"

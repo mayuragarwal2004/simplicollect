@@ -93,11 +93,7 @@ const AdminChaptersMemberList = () => {
 
   return (
     <div className="rounded-sm border border-stroke bg-white p-5 shadow-md dark:border-strokedark dark:bg-boxdark">
-      {notification.show && (
-        <div className={`fixed top-4 right-4 p-4 rounded shadow-lg ${notification.type === 'success' ? 'bg-green-500' : 'bg-red-500'} text-white z-50`}>
-          {notification.message}
-        </div>
-      )}
+      <ToastContainer position="top-right" autoClose={3000} />
 
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-xl font-semibold">Super Admin Chapter Slug Member Table</h2>
