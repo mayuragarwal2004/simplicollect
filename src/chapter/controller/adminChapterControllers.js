@@ -34,17 +34,24 @@ const updateChapterDetails = async (req, res) => {
 };
 
 const getAllChaptersController = async (req, res) => {
-  const { memberId } = req.user;
+  const { rows, page } = req.query; 
+
   try {
-    console.log({memberId});
-    
-    const chapters = await adminChapterModel.getAllChapters(memberId);
-    res.json(chapters);
+    const { chapters, totalRecords } = await adminChapterModel.getAllChapters(rows, page);
+    if (!chapters || chapters.length === 0) {
+      return res.status(404).json({ message: "No chapters found" });
+    }
+    res.json({
+      data: chapters,
+      totalRecords,
+      rows,
+      page,
+    });
   } catch (error) {
     console.log(error);
     res.status(500).json({ error: error.message });
   }
-}
+};
 
 const createChapter = async (req, res) => {
   try {

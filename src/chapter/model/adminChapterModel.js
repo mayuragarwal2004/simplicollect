@@ -16,11 +16,24 @@ const updateChapter = async (chapterId, chapterData) => {
 };
 
 // Function to get all chapters (admin has access to all)
-const getAllChapters = async () => {
-  return db("chapters")
+const getAllChapters = async (rows, page) => {
+  const limit = parseInt(rows, 10) || 10;
+  const pageNumber = parseInt(page, 10) || 1;
+  const offset = (pageNumber - 1) * limit;
+  const [{ count }] = await db("chapters").count("chapterId as count");
+
+  if (offset >= count) {
+    return { chapters: [], totalRecords: parseInt(count, 10) };
+  }
+
+  const chapters = await db("chapters")
     .join("organisations", "chapters.organisationId", "organisations.organisationId")
     .select("chapters.*", "organisations.organisationName")
-    .orderBy("chapters.chapterName", "asc");
+    .orderBy("chapters.chapterName", "asc")
+    .limit(limit) 
+    .offset(offset); 
+
+  return { chapters, totalRecords: parseInt(count, 10) };
 };
 
 // Function to create a new chapter
