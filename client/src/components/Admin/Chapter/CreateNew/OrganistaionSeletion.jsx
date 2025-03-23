@@ -13,15 +13,15 @@ import ChapterBasicDetails from './ChapterBasicDetails';
 const OrganisationSelection = () => {
   const [selectedOrg, setSelectedOrg] = useState('');
   const [showNextComponent, setShowNextComponent] = useState(false);
-  const navigate = useNavigate();
-
-  const onCancel = () => {
-    setSelectedOrg('');
-    navigate(1);
-  };
+  const [showModal, setShowModal] = useState(true);
 
   const handleChange = (value) => {
     setSelectedOrg(value);
+  };
+
+  const handleCancel = () => {
+    setSelectedOrg('');
+    setShowModal(false);
   };
 
   const onNext = () => {
@@ -35,7 +35,7 @@ const OrganisationSelection = () => {
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+    // <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
       <div className="p-6 bg-white rounded-2xl shadow-lg text-center w-[600px]">
         <h3 className="text-2xl font-semibold mb-4">Choose an Organisation</h3>
         <Select value={selectedOrg} onValueChange={handleChange}>
@@ -52,7 +52,7 @@ const OrganisationSelection = () => {
         <div className="flex justify-between mt-6">
           <Button
             className="bg-gray-200 hover:bg-gray-300 text-black px-4 py-2 rounded-lg border-2"
-            onClick={onCancel}
+            onClick={handleCancel}
           >
             Cancel
           </Button>
@@ -65,7 +65,7 @@ const OrganisationSelection = () => {
           </Button>
         </div>
       </div>
-    </div>
+    // </div>
   );
 };
 

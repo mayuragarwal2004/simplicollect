@@ -34,27 +34,42 @@ const updateChapterDetails = async (req, res) => {
 };
 
 const getAllChaptersController = async (req, res) => {
-  const { memberId } = req.user;
+  const { rows, page } = req.query; 
+
   try {
-    console.log({memberId});
-    
-    const chapters = await adminChapterModel.getAllChapters(memberId);
-    res.json(chapters);
+    const { chapters, totalRecords } = await adminChapterModel.getAllChapters(rows, page);
+    if (!chapters || chapters.length === 0) {
+      return res.status(404).json({ message: "No chapters found" });
+    }
+    res.json({
+      data: chapters,
+      totalRecords,
+      rows,
+      page,
+    });
   } catch (error) {
     console.log(error);
     res.status(500).json({ error: error.message });
   }
-}
+};
 
 const createChapter = async (req, res) => {
   try {
     const chapterData = req.body;
     
     // Validate required fields
-    if (!chapterData.chapterName) {
-      return res.status(400).json({ error: "Chapter name is required" });
+    if (!chapterData.chapterName || !chapterData.chapterSlug || !chapterData.meetingPeriodicity || !chapterData.meetingPaymentType || !chapterData.visitorPerMeetingFee || !chapterData.organisationId) {
+      return res.status(400).json({ error: "Required fields are missing" });
     }
-    
+    const validPeriodicities = ['weekly', 'fortnightly', 'monthly', 'bi-monthly', 'quarterly', '6-monthly', 'yearly'];
+    if (!validPeriodicities.includes(chapterData.meetingPeriodicity)) {
+      return res.status(400).json({ error: "Invalid meeting periodicity" });
+    }
+
+    const validPaymentTypes = ['weekly', 'monthly', 'quarterly'];
+    if (!chapterData.meetingPaymentType.split(',').every(type => validPaymentTypes.includes(type.trim()))) {
+      return res.status(400).json({ error: "Invalid meeting payment type" });
+    }
     // Create the chapter
     const newChapter = await adminChapterModel.createChapter(chapterData);
     
@@ -69,7 +84,7 @@ const deleteChapter = async (req, res) => {
   try {
     const { chapterId } = req.params;
     
-    const chapter = await adminChapterModel.getChapterById(chapterId);
+    const chapter = await adminChapterModel.findChapterById(chapterId);
     if (!chapter) {
       return res.status(404).json({ message: "Chapter not found" });
     }
