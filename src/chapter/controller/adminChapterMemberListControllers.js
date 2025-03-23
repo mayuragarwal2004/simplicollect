@@ -12,13 +12,10 @@ const getChapterMembers = async (req, res) => {
     const { members, total } = await adminChapterMemberListModel.getChapterMembers(chapterSlug, rows, page);
     
     res.json({
-      members,
-      pagination: {
-        total,
-        page,
-        rows,
-        totalPages: Math.ceil(total / rows)
-      }
+      data:members,
+      totalRecords: total,
+      rows,
+      page
     });
   } catch (error) {
     console.error("Error fetching chapter members:", error);

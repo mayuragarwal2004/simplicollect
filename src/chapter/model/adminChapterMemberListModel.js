@@ -35,7 +35,6 @@ const getChapterMembers = async (chapterSlug, rows, page) => {
     .limit(rows)
     .offset(offsetValue);
 
-  // Ensure it always returns an array
   return { members: members || [], total: total.count };
 };
 
