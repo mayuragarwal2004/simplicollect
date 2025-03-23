@@ -1,22 +1,46 @@
 const db = require("../../config/db");
 
 // Function to get all members of a chapter
-const getChapterMembers = async (chapterId) => {
-  return db("chapter_members")
-    .join("users", "chapter_members.userId", "users.userId")
-    .where("chapter_members.chapterId", chapterId)
+const getChapterMembers = async (chapterSlug, rows, page) => {
+  const chapter = await db("chapters")
+    .where("chapters.chapterSlug", chapterSlug)
+    .select("chapterId")
+    .first();
+
+  if (!chapter) {
+    throw new Error("Chapter not found!");
+  }
+
+  const chapterId = chapter.chapterId;
+
+  const total = await db("memberchaptermapping")
+    .where("chapterId", chapterId)
+    .count("memberId as count")
+    .first();
+
+  const offsetValue = Math.max(0, (page - 1) * rows);
+
+  const members = await db("memberchaptermapping")
+    .join("members", "memberchaptermapping.memberId", "members.memberId")
+    .where("memberchaptermapping.chapterId", chapterId)
     .select(
-      "users.userId",
-      "users.firstName",
-      "users.lastName",
-      "users.email",
-      "users.phone",
-      "chapter_members.role",
-      "chapter_members.balance",
-      "chapter_members.joinDate"
+      "members.memberId",
+      "members.firstName",
+      "members.lastName",
+      "members.email",
+      "members.phoneNumber",
+      "memberchaptermapping.balance"
     )
-    .orderBy("users.firstName", "asc");
+    .orderBy("members.firstName", "asc")
+    .limit(rows)
+    .offset(offsetValue);
+
+  // Ensure it always returns an array
+  return { members: members || [], total: total.count };
 };
+
+
+
 
 // Function to remove a member from a chapter (keeps record, adds leave date)
 const removeChapterMember = async (chapterId, userId, leaveDate) => {

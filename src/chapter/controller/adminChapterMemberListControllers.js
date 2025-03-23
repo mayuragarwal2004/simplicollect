@@ -3,9 +3,23 @@ const adminChapterMemberListModel = require("../model/adminChapterMemberListMode
 // Get all members of a chapter by chapterSlug
 const getChapterMembers = async (req, res) => {
   const { chapterSlug } = req.params;
+  let { rows = 10, page = 1 } = req.query;
+
+  rows = parseInt(rows, 10);
+  page = parseInt(page, 10);
+
   try {
-    const members = await adminChapterMemberListModel.getChapterMembers(chapterSlug);
-    res.json(members);
+    const { members, total } = await adminChapterMemberListModel.getChapterMembers(chapterSlug, rows, page);
+    
+    res.json({
+      members,
+      pagination: {
+        total,
+        page,
+        rows,
+        totalPages: Math.ceil(total / rows)
+      }
+    });
   } catch (error) {
     console.error("Error fetching chapter members:", error);
     res.status(500).json({ error: error.message });

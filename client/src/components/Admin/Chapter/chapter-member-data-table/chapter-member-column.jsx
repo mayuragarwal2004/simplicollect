@@ -20,10 +20,10 @@ export const MemberColumn = [
     enableHiding: false,
   },
   {
-    accessorKey: 'phone',
+    accessorKey: 'phoneNumber',
     header: () => <div>Phone Number</div>,
     cell: ({ row }) => (
-      <p className="text-sm">{row.original.phone}</p>
+      <p className="text-sm">{row.original.phoneNumber}</p>
     ),
     enableSorting: false,
     enableHiding: false,
@@ -38,7 +38,7 @@ export const MemberColumn = [
     enableHiding: false,
   },
   {
-    accessorKey: 'balance',
+    accessorKey: 'balanceAmount',
     header: () => <div>Balance Amount</div>,
     cell: ({ row }) => (
       <p className="text-sm font-medium">₹{row.original.balance}</p>

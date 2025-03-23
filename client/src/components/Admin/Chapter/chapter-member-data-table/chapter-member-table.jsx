@@ -56,7 +56,6 @@ export function MemberTable({
     },
     rowCount: totalRecord,
   });
-
   // Clone children (DataToolbar) and pass `table` as a prop
   const childrenWithProps = React.Children.map(children, (child) => {
     if (React.isValidElement(child)) {

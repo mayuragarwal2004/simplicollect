@@ -42,7 +42,7 @@ const AdminChaptersMemberList = () => {
     axiosInstance
       .get(`/api/admin/chapter-member-list/${chapterSlug}/members?rows=${rows}&page=${page}`)
       .then((res) => {
-        setMembers(res.data.data || res.data);
+        setMembers(res.data.members || res.data);
         setTotalRecord(res.data.totalRecords || res.data.length);
         setLoading(false);
       })

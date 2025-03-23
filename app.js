@@ -35,7 +35,6 @@ app.use("/api/report", authenticateToken, require("./src/report/route/reportRout
 app.use("/api/chapter-payment", authenticateToken, require("./src/chapterPayment/route/chapterPaymentRoutes"));
 app.get("/api/testWA", async (req, res) => {
   const result = await sendWhatsAppOtp("919921318237", "1234");
-  console.log({ result });
   if (result.ok) {
     res.send("Success");
   } else {
@@ -46,7 +45,7 @@ app.get("/api/testWA", async (req, res) => {
 // admin routes
 app.use("/api/organisations", authenticateToken, require("./src/organisation/route/organisationRoutes"));
 app.use("/api/admin/chapters", authenticateToken, require("./src/chapter/route/adminChapterRoutes"));
-app.use("/api/admin/chapters-member-list", authenticateToken, require("./src/chapter/route/adminChapterMemberListRoutes"));
+app.use("/api/admin/chapter-member-list", authenticateToken, require("./src/chapter/route/adminChapterMemberListRoutes"));
 
 
 app.use("/api/*", (req, res) => {
