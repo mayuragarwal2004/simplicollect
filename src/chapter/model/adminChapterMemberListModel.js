@@ -49,16 +49,28 @@ const removeChapterMember = async (chapterSlug, memberId, leaveDate) => {
     .select("chapterId")
     .where({ chapterSlug: chapterSlug })
     .first();
+
   if (!chapter) {
     throw new Error("Chapter not found");
   }
-  return db("memberchaptermapping")
-  .where({ chapterId: chapter.chapterId, memberId })
-  .update({
-    leaveDate,
-    status: "left",
-  });
-}
+
+  const removedMember = await db("memberchaptermapping")
+    .where({ 
+      chapterId: chapter.chapterId, 
+      memberId: memberId,
+      status: "joined" 
+    })
+    .update({
+      leaveDate: leaveDate,
+      status: "left",
+    });
+
+  if (removedMember === 0) {
+    throw new Error("Member not found in this chapter or already left");
+  }
+
+  return { memberId, chapterId: chapter.chapterId, status: "left", leaveDate };
+};
 
 const deleteChapterMember = async (chapterSlug,memberId) => {
   const chapter = await db("chapters")
