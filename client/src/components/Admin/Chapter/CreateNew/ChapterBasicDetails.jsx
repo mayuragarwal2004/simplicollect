@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import Navigation from '@/components/ui/navigation';
 import {
   Dialog,
   DialogContent,
@@ -9,21 +10,21 @@ import {
 } from '@/components/ui/dialog';
 
 function ChapterBasicDetails({ onNext, onCancel }) {
+  const navigate = Navigation();
   const [formData, setFormData] = useState({
     chapterName: '',
     chapterSlug: '',
+    meetingPeriodicity: '',
+    meetingPaymentType: '',
+    visitorPerMeetingFee: '',
     region: '',
     city: '',
     state: '',
     country: '',
     meetingDay: '',
-    meetingPeriodicity: '',
-    meetingPaymentType: '',
-    visitorPerMeetingFee: '',
     weeklyFee: '',
     monthlyFee: '',
     quarterlyFee: '',
-    organisationId: '',
     testMode: '',
     platformFee: '',
     platformFeeType: '',
@@ -31,6 +32,18 @@ function ChapterBasicDetails({ onNext, onCancel }) {
   });
 
   const [isDialogOpen, setIsDialogOpen] = useState(true);
+  const [hoverDropdown, setHoverDropdown] = useState(null);
+
+  const periodicityOptions = [
+    'weekly',
+    'fortnightly',
+    'monthly',
+    'bi-monthly',
+    'quarterly',
+    '6-monthly',
+    'yearly',
+  ];
+  const paymentTypeOptions = ['weekly', 'monthly', 'quarterly'];
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -39,12 +52,18 @@ function ChapterBasicDetails({ onNext, onCancel }) {
       [name]: value,
     }));
   };
-  
+
   const handleSubmit = (e) => {
     e.preventDefault();
     console.log('Form Data:', formData);
+
     onNext(formData);
+
     setIsDialogOpen(false);
+
+    setTimeout(() => {
+      navigate('/admin/chapters');
+    }, 100);
   };
 
   const handleCancel = () => {
@@ -64,22 +83,74 @@ function ChapterBasicDetails({ onNext, onCancel }) {
         <form onSubmit={handleSubmit}>
           <div className="grid grid-cols-2 gap-4">
             {Object.keys(formData).map((key) => (
-              <div key={key} className="text-left">
+              <div key={key} className="text-left relative">
                 <label
                   htmlFor={key}
                   className="block text-sm font-medium text-gray-700"
                 >
-                  {key.replace(/([A-Z])/g, ' $1').replace(/^./, (str) => str.toUpperCase())}
+                  {key
+                    .replace(/([A-Z])/g, ' $1')
+                    .replace(/^./, (str) => str.toUpperCase())}
                 </label>
-                <input
-                  type={key.includes('Fee') || key === 'testMode' ? 'number' : 'text'}
-                  id={key}
-                  name={key}
-                  value={formData[key]}
-                  onChange={handleInputChange}
-                  className="w-full border border-gray-300 rounded-lg p-2 mt-1"
-                  required
-                />
+                {key === 'meetingPeriodicity' ||
+                key === 'meetingPaymentType' ? (
+                  <div
+                    className="relative"
+                    onMouseEnter={() => setHoverDropdown(key)}
+                    onMouseLeave={() => setHoverDropdown(null)}
+                  >
+                    <input
+                      type="text"
+                      id={key}
+                      name={key}
+                      value={formData[key]}
+                      readOnly
+                      className="w-full border border-gray-300 rounded-lg p-2 mt-1 bg-white cursor-pointer"
+                      required
+                    />
+                    {hoverDropdown === key && (
+                      <div className="absolute left-0 mt-1 w-full bg-white border rounded-lg shadow-lg z-10">
+                        {(key === 'meetingPeriodicity'
+                          ? periodicityOptions
+                          : paymentTypeOptions
+                        ).map((option) => (
+                          <div
+                            key={option}
+                            className="px-4 py-2 cursor-pointer hover:bg-gray-200"
+                            onClick={() =>
+                              setFormData((prevData) => ({
+                                ...prevData,
+                                [key]: option,
+                              }))
+                            }
+                          >
+                            {option}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <input
+                    type={
+                      key.includes('Fee') || key === 'testMode'
+                        ? 'number'
+                        : 'text'
+                    }
+                    id={key}
+                    name={key}
+                    value={formData[key]}
+                    onChange={handleInputChange}
+                    className="w-full border border-gray-300 rounded-lg p-2 mt-1"
+                    required={[
+                      'chapterName',
+                      'chapterSlug',
+                      'meetingPeriodicity',
+                      'meetingPaymentType',
+                      'visitorPerMeetingFee',
+                    ].includes(key)}
+                  />
+                )}
               </div>
             ))}
           </div>
