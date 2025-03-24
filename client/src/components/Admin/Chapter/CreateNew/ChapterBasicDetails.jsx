@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import Navigation from '@/components/ui/navigation';
+import { useNavigate } from 'react-router-dom';
 import {
   Dialog,
   DialogContent,
@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/dialog';
 
 function ChapterBasicDetails({ onNext, onCancel }) {
-  const navigate = Navigation();
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     chapterName: '',
     chapterSlug: '',

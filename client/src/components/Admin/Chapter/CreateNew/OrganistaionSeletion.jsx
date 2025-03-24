@@ -1,32 +1,50 @@
-import { useState } from 'react';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import ChapterBasicDetails from './ChapterBasicDetails';
+"use client";
+
+import React, { useState, useEffect } from "react";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandInput, CommandList, CommandItem, CommandEmpty } from "@/components/ui/command";
+import ChapterBasicDetails from "./ChapterBasicDetails";
+import { cn } from "@/lib/utils"; // Ensure you have this utility for conditional classNames
+
+// Simulated API call to fetch organizations
+const fetchOrganisations = async () => {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve([
+        { id: "org1", name: "Organisation One" },
+        { id: "org2", name: "Organisation Two" },
+        { id: "org3", name: "Organisation Three" },
+      ]);
+    }, 500);
+  });
+};
 
 const OrganisationSelection = ({ onCancel }) => {
-  const [selectedOrg, setSelectedOrg] = useState('');
+  const [organisations, setOrganisations] = useState([]);
+  const [selectedOrg, setSelectedOrg] = useState(null);
   const [showNext, setShowNext] = useState(false);
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [open, setOpen] = useState(false);
 
-  const handleChange = (value) => {
-    setSelectedOrg(value);
-    setIsDropdownOpen(false);
-  };
+  useEffect(() => {
+    const loadOrganisations = async () => {
+      const data = await fetchOrganisations();
+      setOrganisations(data);
+    };
+    loadOrganisations();
+  }, []);
 
-  const handleCancel = () => {
-    setSelectedOrg('');
-    onCancel();
-  };
-
-  const handleNext = () => {
-    setShowNext(true);
+  const handleSelect = (org) => {
+    setSelectedOrg(org);
+    setOpen(false);
   };
 
   if (showNext) {
     return (
       <ChapterBasicDetails
         onNext={(data) => {
-          console.log('Chapter Data:', data);
+          console.log("Chapter Data:", data);
           setShowNext(false);
         }}
         onCancel={() => setShowNext(false)}
@@ -35,48 +53,53 @@ const OrganisationSelection = ({ onCancel }) => {
   }
 
   return (
-    <div className="p-6 bg-white rounded-2xl shadow-lg text-center w-[600px] relative">
-      <h3 className="text-2xl font-semibold mb-4">Choose an Organisation</h3>
+    <Dialog open={true} onOpenChange={setShowNext}>
+      <DialogContent className="max-w-md">
+        <h3 className="text-2xl font-semibold mb-4 text-center">Choose an Organisation</h3>
 
-      <div className="relative z-20">
-        <Button
-          className="bg-gray-200 hover:bg-gray-300 text-black px-4 py-2 rounded-lg border-2 w-full"
-          onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-        >
-          {selectedOrg ? `Selected: ${selectedOrg}` : 'Select an Organisation'}
-        </Button>
-        {isDropdownOpen && (
-          <div className="absolute w-full bg-white shadow-lg rounded-lg mt-2 border z-30 top-full left-0">
-            {['org1', 'org2', 'org3'].map((org) => (
-              <Button
-                key={org}
-                className={`w-full px-4 py-2 rounded-lg border-2 text-left ${
-                  selectedOrg === org ? 'bg-gray-300 text-black' : 'bg-gray-200 hover:bg-gray-300 text-black'
-                }`}
-                onClick={() => handleChange(org)}
-              >
-                {org.replace('org', 'Organisation ')}
-              </Button>
-            ))}
-          </div>
-        )}
-      </div>
+        {/* Combobox for selecting organization */}
+        <Popover open={open} onOpenChange={setOpen}>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              className="w-full justify-between text-left bg-gray-200 hover:bg-gray-300 border"
+            >
+              {selectedOrg ? selectedOrg.name : "Select an Organisation"}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-full p-0" collisionPadding={10} align="start">
+            <Command>
+              <CommandInput placeholder="Search organisation..." />
+              <CommandList>
+                <CommandEmpty>No organisations found.</CommandEmpty>
+                {organisations.map((org) => (
+                  <CommandItem key={org.id} onSelect={() => handleSelect(org)}>
+                    {org.name}
+                  </CommandItem>
+                ))}
+              </CommandList>
+            </Command>
+          </PopoverContent>
+        </Popover>
 
-      <div className={`flex justify-between mt-6 transition-opacity ${isDropdownOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
-        <Button className="bg-gray-200 hover:bg-gray-300 text-black px-4 py-2 rounded-lg border-2" onClick={handleCancel}>
-          Cancel
-        </Button>
-        <Button
-          onClick={handleNext}
-          className={`px-4 py-2 rounded-lg border-2 ${
-            selectedOrg ? 'bg-gray-200 hover:bg-gray-300 text-black' : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-          }`}
-          disabled={!selectedOrg}
-        >
-          Next
-        </Button>
-      </div>
-    </div>
+        {/* Action Buttons */}
+        <div className="flex justify-between mt-6">
+          <Button variant="outline" onClick={onCancel} className="border-gray-300">
+            Cancel
+          </Button>
+          <Button
+            onClick={() => setShowNext(true)}
+            className={cn(
+              "border-gray-300",
+              selectedOrg ? "bg-gray-200 hover:bg-gray-300" : "bg-gray-100 text-gray-400 cursor-not-allowed"
+            )}
+            disabled={!selectedOrg}
+          >
+            Next
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 };
 
