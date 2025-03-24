@@ -1,6 +1,5 @@
 const db = require("../../config/db");
 
-// Function to get all members of a chapter
 const getChapterMembers = async (chapterSlug, rows, page) => {
   const chapter = await db("chapters")
     .where("chapters.chapterSlug", chapterSlug)
@@ -15,6 +14,7 @@ const getChapterMembers = async (chapterSlug, rows, page) => {
 
   const total = await db("memberchaptermapping")
     .where("chapterId", chapterId)
+    .andWhere("status", "joined")
     .count("memberId as count")
     .first();
 
@@ -23,6 +23,7 @@ const getChapterMembers = async (chapterSlug, rows, page) => {
   const members = await db("memberchaptermapping")
     .join("members", "memberchaptermapping.memberId", "members.memberId")
     .where("memberchaptermapping.chapterId", chapterId)
+    .andWhere("memberchaptermapping.status", "joined") 
     .select(
       "members.memberId",
       "members.firstName",
