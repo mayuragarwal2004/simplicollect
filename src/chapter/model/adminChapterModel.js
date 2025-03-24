@@ -20,6 +20,7 @@ const getAllChapters = async (rows, page) => {
   const limit = parseInt(rows, 10) || 10;
   const pageNumber = parseInt(page, 10) || 1;
   const offset = (pageNumber - 1) * limit;
+
   const [{ count }] = await db("chapters").count("chapterId as count");
 
   if (offset >= count) {
@@ -28,13 +29,20 @@ const getAllChapters = async (rows, page) => {
 
   const chapters = await db("chapters")
     .join("organisations", "chapters.organisationId", "organisations.organisationId")
-    .select("chapters.*", "organisations.organisationName")
+    .leftJoin("memberchaptermapping", "chapters.chapterId", "memberchaptermapping.chapterId")
+    .select(
+      "chapters.*",
+      "organisations.organisationName",
+      db.raw("COUNT(CASE WHEN memberchaptermapping.status = 'joined' THEN 1 END) as numberOfMembers")
+    )
+    .groupBy("chapters.chapterId", "organisations.organisationName")
     .orderBy("chapters.chapterName", "asc")
-    .limit(limit) 
-    .offset(offset); 
+    .limit(limit)
+    .offset(offset);
 
   return { chapters, totalRecords: parseInt(count, 10) };
 };
+
 
 // Function to create a new chapter
 const createChapter = async (chapterData) => {
