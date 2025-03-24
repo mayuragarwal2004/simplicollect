@@ -33,7 +33,7 @@ const removeChapterMember = async (req, res) => {
   }
 
   try {
-    const removedMember = await adminChapterMemberListModel.removeMember(chapterSlug, userId, leaveDate);
+    const removedMember = await adminChapterMemberListModel.removeChapterMember(chapterSlug, userId, leaveDate);
     res.json({ message: "Member removed successfully", removedMember });
   } catch (error) {
     console.error("Error removing chapter member:", error);
@@ -46,7 +46,7 @@ const deleteChapterMember = async (req, res) => {
   const { chapterSlug, userId } = req.params;
 
   try {
-    const deletedMember = await adminChapterMemberListModel.deleteMember(chapterSlug, userId);
+    const deletedMember = await adminChapterMemberListModel.deleteChapterMember(chapterSlug, userId);
     res.json({ message: "Member deleted successfully", deletedMember });
   } catch (error) {
     console.error("Error deleting chapter member:", error);
@@ -64,7 +64,7 @@ const updateMemberRole = async (req, res) => {
   }
 
   try {
-    const updatedMember = await adminChapterMemberListModel.updateRole(chapterSlug, userId, role);
+    const updatedMember = await adminChapterMemberListModel.updateMemberRole(chapterSlug, userId, role);
     res.json({ message: "Role updated successfully", updatedMember });
   } catch (error) {
     console.error("Error updating member role:", error);
@@ -82,7 +82,7 @@ const updateMemberBalance = async (req, res) => {
   }
 
   try {
-    const updatedBalance = await adminChapterMemberListModel.updateBalance(chapterSlug, userId, balance, addToTransaction);
+    const updatedBalance = await adminChapterMemberListModel.updateMemberBalance(chapterSlug, userId, balance, addToTransaction);
     res.json({ message: "Balance updated successfully", updatedBalance });
   } catch (error) {
     console.error("Error updating member balance:", error);

@@ -42,44 +42,113 @@ const getChapterMembers = async (chapterSlug, rows, page) => {
 
 
 // Function to remove a member from a chapter (keeps record, adds leave date)
-const removeChapterMember = async (chapterId, userId, leaveDate) => {
-  return db("chapter_members")
-    .where({ chapterId, userId })
-    .update({ leaveDate });
-};
-
-// Function to delete a member (completely removes all data)
-const deleteChapterMember = async (userId) => {
-  return db.transaction(async (trx) => {
-    await trx("chapter_members").where("userId", userId).del();
-    await trx("users").where("userId", userId).del();
+const removeChapterMember = async (chapterSlug, memberId, leaveDate) => {
+  // Get chapterId from chapterSlug
+  const chapter = await db("chapters")
+    .select("chapterId")
+    .where({ chapterSlug: chapterSlug })
+    .first();
+  if (!chapter) {
+    throw new Error("Chapter not found");
+  }
+  return db("memberchaptermapping")
+  .where({ chapterId: chapter.chapterId, memberId })
+  .update({
+    leaveDate,
+    status: "left",
   });
+}
+
+const deleteChapterMember = async (chapterSlug,memberId) => {
+  const chapter = await db("chapters")
+    .select("chapterId")
+    .where({ chapterSlug })
+    .first();
+
+  if (!chapter) {
+    throw new Error(`Chapter '${chapterSlug}' does not exist`);
+  }
+
+  const member = await db("members")
+    .select("memberId")
+    .where({ memberId })
+    .first();
+
+  if (!member) {
+    throw new Error(`Member ID '${memberId}' does not exist`);
+  }
+
+  await db("memberchaptermapping")
+    .where({ chapterId:chapter.chapterId, memberId })
+    .del();
+
+  await db("members")
+    .where({ memberId })
+    .del();
+  return member;
 };
 
 // Function to update a member's role in a chapter
-const updateMemberRole = async (chapterId, userId, newRole) => {
-  return db("chapter_members")
-    .where({ chapterId, userId })
-    .update({ role: newRole })
-    .returning("*");
+const updateMemberRole = async (chapterSlug, userId, newRole) => {
+    const role = await db("roles")
+        .select("roleId")
+        .where({ roleName: newRole })
+        .first();
+
+    if (!role) {
+      throw new Error("Invalid role name");
+    }
+    const roleId = role.roleId;
+
+    const chapter = await db("chapters")
+        .select("chapterId")
+        .where({ chapterSlug })
+        .first();
+
+    if (!chapter) {
+      throw new Error(`Chapter '${chapterSlug}' does not exist`);
+    }
+
+    const member = await db("members")
+        .select("memberId")
+        .where({ memberId: userId })
+        .first();
+
+    if (!member) {
+      throw new Error(`User ID '${userId}' does not exist in members table`);
+    }
+    await db("members").where({ memberId: userId }).update({ role: newRole });
+
+    const existingMapping = await db("memberchaptermapping")
+      .where({ chapterId:chapter.chapterId, memberId: userId })
+      .first();
+
+    if (existingMapping) {
+      await db("memberchaptermapping")
+        .where({ chapterId:chapter.chapterId, memberId: userId })
+        .update({ roleId });
+    } else {
+      await db("memberchaptermapping").insert({ chapterId:chapter.chapterId, memberId: userId, roleId });
+    }
+    return { userId, roleId, chapterId: chapter.chapterId, roleName: newRole };
 };
 
 // Function to update member balance (with optional transaction record)
-const updateMemberBalance = async (userId, newBalance, addToTransaction = false) => {
-  return db.transaction(async (trx) => {
-    await trx("chapter_members")
-      .where("userId", userId)
-      .update({ balance: newBalance });
-
-    if (addToTransaction) {
-      await trx("transactions").insert({
-        userId,
-        amount: newBalance,
-        transactionDate: new Date(),
-        type: "balance_update",
-      });
-    }
-  });
+const updateMemberBalance = async (chapterSlug,userId, newBalance, addToTransaction = false) => {
+  const chapter =await db("chapters")
+    .select("chapterId")
+    .where({ chapterSlug })
+    .first();
+    
+  if (!chapter) {
+    throw new Error(`Chapter '${chapterSlug}' does not exist`);
+  }
+  if(addToTransaction){
+    //yet to implement with transaction after discussion
+  }else{
+    await db("memberchaptermapping").where({ chapterId:chapter.chapterId, memberId: userId }).update({ balance: newBalance });
+  }
+  return { userId, chapterId: chapter.chapterId, newBalance };
 };
 
 module.exports = {
