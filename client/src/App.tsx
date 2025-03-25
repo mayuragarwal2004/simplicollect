@@ -24,7 +24,7 @@ import FormElements from './pages/Form/FormElements';
 import FormLayout from './pages/Form/FormLayout';
 import Profile from './pages/Member/Profile';
 import Settings from './pages/Settings';
-import Tables from './pages/Tables';
+// import Tables from './pages/Tables';
 import AlertsPage from './pages/UiElements/AlertsPage';
 import Buttons from './pages/UiElements/Buttons';
 import DefaultLayout from './layout/DefaultLayout';

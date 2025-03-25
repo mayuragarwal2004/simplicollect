@@ -12,18 +12,21 @@ import {
 import ReportA from '../../components/member/Reports/ReportA';
 import ReportB from '../../components/member/Reports/ReportB';
 import ReportC from '../../components/member/Reports/ReportC';
+import MemberLedgerReport from '../../components/member/Reports/MemberLedgerReport';
 
 const reportComponents = {
-    report_a: () => <ReportA />,
-    report_b: () => <ReportB />,
-    report_c: () => <ReportC />,
+  report_a: () => <ReportA />,
+  report_b: () => <ReportB />,
+  report_c: () => <ReportC />,
+  member_ledger_report: () => <MemberLedgerReport />,
+
 };
 
 const Reports = () => {
   const [reportType, setReportType] = React.useState('');
 
-  
-  
+
+
   return (
     <>
       <Breadcrumb pageName="Reports" />
@@ -57,6 +60,10 @@ const Reports = () => {
               <SelectGroup>
                 <SelectLabel>Package Report</SelectLabel>
                 <SelectItem value="report_c">Report C</SelectItem>
+              </SelectGroup>
+              <SelectGroup>
+                <SelectLabel>Package Report</SelectLabel>
+                <SelectItem value="member_ledger_report">Member Ledger Report</SelectItem>
               </SelectGroup>
             </SelectContent>
           </Select>

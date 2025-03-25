@@ -317,7 +317,7 @@ const FeeReciever = () => {
                           ))}
                         </select>
                       </div>
-                      <div className="mb-4">
+                       <div className="mb-4">
                         <label className="block text-sm font-medium text-gray-700">
                           Enable Date
                         </label>
