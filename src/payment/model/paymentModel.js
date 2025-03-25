@@ -162,7 +162,7 @@ const getTransactions = async (chapterId, rows, page) => {
   const transactions = await db("transactions as t")
     .join("members as m", "t.memberId", "m.memberId")
     .join("packages as p", "t.packageId", "p.packageId")
-    .where("p.chapterId", chapterId)  // Ensure chapter filtering
+    .where("p.chapterId", chapterId) // Ensure chapter filtering
     .select(
       "t.transactionId",
       "m.firstName",
@@ -188,8 +188,7 @@ const getTransactions = async (chapterId, rows, page) => {
   return { transactions, totalRecords: parseInt(count, 10) };
 };
 
-
-const getMemberFinancialSummary = async (chapterId,row,page) => {
+const getMemberFinancialSummary = async (chapterId, row, page) => {
   const offset = parseInt(page, 10) * parseInt(row, 10);
   const transactionreport = await db("transactions as t")
     .join("members as m", "t.memberId", "m.memberId")
@@ -208,9 +207,16 @@ const getMemberFinancialSummary = async (chapterId,row,page) => {
     .count("t.transactionId as count")
     .join("packages as p", "t.packageId", "p.packageId")
     .where("p.chapterId", chapterId);
-  return { transactionreport,chapterId, totalRecords: parseInt(count, 10) };
-}
-;
+  return { transactionreport, chapterId, totalRecords: parseInt(count, 10) };
+};
+
+const getTransactionsByMemberId = async (memberId, chapterId) => {
+  return db("transactions as t")
+    .join("packages as p", "t.packageId", "p.packageId")
+    .where({ "t.memberId": memberId, "p.chapterId": chapterId })
+    .orderBy("t.transactionDate", "desc")
+    .select("t.*");
+};
 
 module.exports = {
   addTransaction,
@@ -228,4 +234,5 @@ module.exports = {
   getMemberChapterDue,
   getTransactions,
   getMemberFinancialSummary,
+  getTransactionsByMemberId,
 };

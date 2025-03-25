@@ -10,12 +10,14 @@ import {
   SelectLabel,
 } from '@/components/ui/select';
 import ReportA from '../../components/member/Reports/ReportA';
+import MemberLedger from '../../components/member/Reports/MemberLedger';
 import ReportB from '../../components/member/Reports/ReportB';
 import ReceiverDaywiseReport  from '../../components/member/Reports/ReceiverDaywiseReport';
 import ReportC from '../../components/member/Reports/ReportC';
 
 const reportComponents = {
     report_a: () => <ReportA />,
+    member_ledger: () => <MemberLedger />,
     report_b: () => <ReportB />,
     receiver_daywise_report: () => <ReceiverDaywiseReport />,
     report_c: () => <ReportC />,
@@ -51,6 +53,7 @@ const Reports = () => {
               <SelectGroup>
                 <SelectLabel>Member Wise Report</SelectLabel>
                 <SelectItem value="report_a">Report A</SelectItem>
+                <SelectItem value="member_ledger">Member Ledger</SelectItem>
               </SelectGroup>
               <SelectGroup>
                 <SelectLabel>Chapter Report</SelectLabel>

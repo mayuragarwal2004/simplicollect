@@ -10,4 +10,6 @@ router.get("/:chapterId/member-Total", reportController.getMemberTotalAmountAndD
 
 router.get("/:chapterId/receiver-daywise-report", reportController.getReceiverDaywiseReportController);
 
+router.get("/:chapterId/member-ledger", reportController.getMemberLedgerController);
+
 module.exports = router;
