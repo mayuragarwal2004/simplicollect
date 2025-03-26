@@ -3,17 +3,19 @@ import { axiosInstance } from '../../../../utils/config';
 import { useLocation } from 'react-router-dom';
 import { ChapterRuleTable } from './ChapterRules/chapterRule-data-table/chapterRule-table';
 import { ChapterRuleColumns } from './ChapterRules/chapterRule-data-table/chapterRule-column';
-import { Button } from '../../../../components/ui/button';
-import ChapterAddMember from './ChapterAddMember';
-import ChapterBasicDetails from './ChapterBasicDetails';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import ChapterAddMember from './ChapterAddMember';
 
 function ChapterRules() {
-  const [roles, setRoles] = useState([]); // State for roles
+  const [roles, setRoles] = useState([]);
+  const [showNextComponent, setShowNextComponent] = useState(false);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingRole, setEditingRole] = useState(null); // State for editing role
+  const [editingRole, setEditingRole] = useState(null);
   const [totalRecord, setTotalRecord] = useState(0);
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
@@ -23,38 +25,39 @@ function ChapterRules() {
     roleName: '',
     roleDescription: '',
     rights: '',
+    removable: false,
   });
 
-  const [showNextComponent, setShowNextComponent] = useState(false);
-  const [showBackComponent, setShowBackComponent] = useState(false);
-
-  // Fetch roles from the API
   useEffect(() => {
     fetchRoles();
   }, [rows, page]);
 
-  // Fetch roles from the API
   const fetchRoles = async () => {
     try {
       const res = await axiosInstance.get(`/api/chapter-rules?rows=${rows}&page=${page}`);
-      console.log('Fetched roles:', res.data);
-      setRoles(res.data.data || res.data); // Update state with roles
+      setRoles(
+        (res.data.data || res.data).map((role) => ({
+          ...role,
+          onEdit: handleOpenModal,
+          onDelete: handleDelete,
+          onToggleRemovable: toggleRemovable,
+        }))
+      );
       setTotalRecord(res.data.totalRecords || res.data.length);
       setLoading(false);
     } catch (err) {
-      console.error('Error fetching roles:', err);
       toast.error('Failed to fetch roles');
       setLoading(false);
     }
   };
 
-  // Open modal for adding/editing a role
   const handleOpenModal = (role = null) => {
     if (role) {
       setFormData({
         roleName: role.roleName,
         roleDescription: role.roleDescription,
         rights: role.rights,
+        removable: role.removable,
       });
       setEditingRole(role);
     } else {
@@ -62,13 +65,13 @@ function ChapterRules() {
         roleName: '',
         roleDescription: '',
         rights: '',
+        removable: false,
       });
       setEditingRole(null);
     }
     setIsModalOpen(true);
   };
 
-  // Close modal
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setEditingRole(null);
@@ -76,10 +79,10 @@ function ChapterRules() {
       roleName: '',
       roleDescription: '',
       rights: '',
+      removable: false,
     });
   };
 
-  // Handle input change in the form
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -88,225 +91,79 @@ function ChapterRules() {
     }));
   };
 
-  // Validate form fields
-  const validateForm = () => {
+  const handleSubmit = async (e) => {
+    e.preventDefault();
     if (!formData.roleName.trim()) {
       toast.error('Role name is required');
-      return false;
+      return;
     }
     if (!formData.roleDescription.trim()) {
       toast.error('Role description is required');
-      return false;
+      return;
     }
     if (!formData.rights.trim()) {
       toast.error('Rights are required');
-      return false;
-    }
-    return true;
-  };
-
-  // Handle form submission (add/edit role)
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    if (!validateForm()) {
       return;
     }
 
     try {
-      const payload = {
-        roleName: formData.roleName.trim(),
-        roleDescription: formData.roleDescription.trim(),
-        rights: formData.rights.trim(),
-      };
-
+      const payload = { ...formData };
       let response;
       if (editingRole) {
-        response = await axiosInstance.put(
-          `/api/chapter-rules/${editingRole.roleId}`,
-          payload,
+        response = await axiosInstance.put(`/api/chapter-rules/${editingRole.roleId}`, payload);
+        setRoles((prevRoles) =>
+          prevRoles.map((role) =>
+            role.roleId === editingRole.roleId ? { ...role, ...response.data } : role
+          )
         );
-        if (response.data) {
-          // Update the specific role in the state
-          setRoles((prevRoles) =>
-            prevRoles.map((role) =>
-              role.roleId === editingRole.roleId ? { ...role, ...response.data } : role,
-            ),
-          );
-          toast.success('Role updated successfully');
-        }
+        toast.success('Role updated successfully');
       } else {
         response = await axiosInstance.post('/api/chapter-rules', payload);
-        if (response.data && response.data.roleId) {
-          // Add the new role to the state
-          const newRole = {
-            ...response.data,
-          };
-          setRoles((prevRoles) => [...prevRoles, newRole]);
-          toast.success('Role created successfully');
-        }
+        setRoles((prevRoles) => [...prevRoles, { ...response.data }]);
+        toast.success('Role created successfully');
       }
-
       handleCloseModal();
-      await fetchRoles(); // Refresh the list after submission
+      fetchRoles();
     } catch (error) {
-      console.error('Error details:', error);
-      const errorMessage =
-        error.response?.data?.error ||
-        error.message ||
-        (editingRole ? 'Failed to update role' : 'Failed to create role');
-      toast.error(errorMessage);
+      toast.error('An error occurred while saving');
     }
   };
 
-  // Handle role deletion
-  const handleDelete = async (roleId) => {
-    if (window.confirm('Are you sure you want to delete this role?')) {
-      try {
-        await axiosInstance.delete(`/api/chapter-rules/${roleId}`);
-        toast.success('Role deleted successfully');
-        fetchRoles(); // Refresh the list after deletion
-      } catch (error) {
-        const errorMessage =
-          error.response?.data?.error || 'Failed to delete role';
-        toast.error(errorMessage);
-        console.error('Error deleting role:', error);
-      }
-    }
-  };
-
-  // Navigate to the next component
   const handleNext = () => {
     setShowNextComponent(true);
   };
 
-  const handleBack = () => {
-    setShowBackComponent(true);
-  };
-
-  // Render the next component if `showNextComponent` is true
   if (showNextComponent) {
     return <ChapterAddMember />;
   }
-  if (showBackComponent) {
-    return <ChapterBasicDetails />;
-  }
 
   return (
-    <div className="fixed w-auto inset-0 bg-black bg-opacity-50 flex items-center justify-center ">
-      <div className="p-6 bg-white rounded-2xl shadow-lg text-center w-[600px]">
-        <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} newestOnTop={false} closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover />
-
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-semibold">
-            Set up Roles for the Chapters
-          </h2>
-        </div>
-
-        {loading ? (
-          <p>Loading...</p>
-        ) : (
-          <ChapterRuleTable
-            data={roles.map((role) => ({
-              ...role,
-              onEdit: handleOpenModal,
-              onDelete: handleDelete,
-            }))}
-            columns={ChapterRuleColumns}
-            searchInputField="roleName"
-            totalRecord={totalRecord}
-            pagination={{
-              pageSize: parseInt(rows),
-              pageIndex: parseInt(page),
-            }}
-          />
-        )}
-
-        {isModalOpen && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-            <div className="bg-white p-6 rounded-lg w-full max-w-md">
-              <h3 className="text-xl font-semibold mb-4">
-                {editingRole ? 'Edit Role' : 'Add Role'}
-              </h3>
-              <form onSubmit={handleSubmit}>
-                <div className="mb-4">
-                  <label className="block mb-2">Role Name</label>
-                  <input
-                    type="text"
-                    name="roleName"
-                    value={formData.roleName}
-                    onChange={handleInputChange}
-                    className="w-full p-2 border rounded"
-                    required
-                  />
-                </div>
-                <div className="mb-4">
-                  <label className="block mb-2">Role Description</label>
-                  <input
-                    type="text"
-                    name="roleDescription"
-                    value={formData.roleDescription}
-                    onChange={handleInputChange}
-                    className="w-full p-2 border rounded"
-                    required
-                  />
-                </div>
-                <div className="mb-4">
-                  <label className="block mb-2">Rights</label>
-                  <input
-                    type="text"
-                    name="rights"
-                    value={formData.rights}
-                    onChange={handleInputChange}
-                    className="w-full p-2 border rounded"
-                    required
-                  />
-                </div>
-                <div className="flex justify-end space-x-3">
-                  <button
-                    type="button"
-                    onClick={handleCloseModal}
-                    className="px-4 py-2 border rounded"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-4 py-2 bg-primary text-white rounded"
-                  >
-                    {editingRole ? 'Update' : 'Add'}
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
-
-        <div className="flex justify-center mt-5">
-          <button
-            className="bg-gray-200 hover:bg-gray-300 hover:border-black text-black px-4 py-2 rounded-lg border-2"
-            onClick={() => handleOpenModal()}
-          >
-            Add Role
-          </button>
-        </div>
-
-        <div className="flex justify-between mt-4">
-          <Button
-            onClick={handleBack}
-            type="submit"
-            className="bg-gray-200 hover:bg-gray-300 hover:border-black text-black px-4 py-2 rounded-lg border-2"
-          >
-            Back
-          </Button>
-          <Button
-            onClick={handleNext}
-            type="submit"
-            className="bg-gray-200 hover:bg-gray-300 hover:border-black text-black px-4 py-2 rounded-lg border-2"
-          >
-            Next
-          </Button>
-        </div>
+    <div className="p-6 bg-white rounded-lg shadow-lg mt-4 relative">
+      <h2 className="text-xl font-semibold mb-4">Set up Roles for the Chapters</h2>
+      {loading ? (
+        <p>Loading...</p>
+      ) : (
+        <ChapterRuleTable data={roles} columns={ChapterRuleColumns} totalRecord={totalRecord} />
+      )}
+      <div className="flex justify-center mt-5">
+        <Button onClick={() => handleOpenModal()}>Add Role</Button>
+      </div>
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{editingRole ? 'Edit Role' : 'Add Role'}</DialogTitle>
+          </DialogHeader>
+          <Input name="roleName" placeholder="Role Name" value={formData.roleName} onChange={handleInputChange} />
+          <Input name="roleDescription" placeholder="Role Description" value={formData.roleDescription} onChange={handleInputChange} />
+          <Input name="rights" placeholder="Rights" value={formData.rights} onChange={handleInputChange} />
+          <DialogFooter>
+            <Button onClick={handleCloseModal} variant="secondary">Cancel</Button>
+            <Button onClick={handleSubmit}>Save</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <div className="absolute bottom-4 right-4">
+        <Button onClick={handleNext}>Next</Button>
       </div>
     </div>
   );
