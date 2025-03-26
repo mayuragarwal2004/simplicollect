@@ -1,3 +1,5 @@
+import { Switch } from '@/components/ui/switch';
+
 export const ChapterRuleColumns = [
   {
     id: 'srno',
@@ -24,6 +26,29 @@ export const ChapterRuleColumns = [
     enableSorting: false,
     enableHiding: false,
   },
+
+  {
+    accessorKey: 'removable',
+    header: () => <div>Removable</div>,
+    cell: ({ row }) => (
+      <div className="flex items-center gap-2">
+        <label
+          htmlFor={`removable-${row.id}`}
+          className="text-sm font-medium text-gray-700"
+        >
+          {row.original.removable ? 'Yes' : 'No'}
+        </label>
+        <Switch
+          id={`removable-${row.id}`}
+          checked={row.original.removable}
+          onCheckedChange={() => row.original.onToggleRemovable(row.original)}
+        />
+      </div>
+    ),
+    enableSorting: false,
+    enableHiding: false,
+  },
+
   {
     accessorKey: 'rights',
     header: () => <div>Rights</div>,

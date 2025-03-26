@@ -32,7 +32,7 @@ export const MembersColumns = [
   },
   {
     accessorKey: 'phoneNumber',
-    header: () => <div className>Phonr Number</div>,
+    header: () => <div className>Phone Number</div>,
     cell: ({ row }) => (
       <p className='text-sm font-medium'>
         {row.original.phoneNumber}
@@ -47,17 +47,6 @@ export const MembersColumns = [
     cell: ({ row }) => (
       <p className='text-sm font-medium'>
         {row.original.numberOfChapter}
-      </p>
-    ),
-    enableSorting: false,
-    enableHiding: false,
-  },
-  {
-    accessorKey: 'numberOfMembers',
-    header: () => <div className>Number of Members</div>,
-    cell: ({ row }) => (
-      <p className='text-sm font-medium'>
-        {row.original.numberOfMembers}
       </p>
     ),
     enableSorting: false,

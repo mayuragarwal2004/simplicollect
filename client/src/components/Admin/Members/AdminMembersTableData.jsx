@@ -5,6 +5,7 @@ import { MembersTable } from './members-data-table/members-table';
 import { MembersColumns } from './members-data-table/members-column';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { Input } from "@/components/ui/input";
 
 const AdminMembersTableData = () => {
   const [members, setMembers] = useState([]);
@@ -16,6 +17,8 @@ const AdminMembersTableData = () => {
   const searchParams = new URLSearchParams(location.search);
   const rows = searchParams.get('rows') || 10;
   const page = searchParams.get('page') || 0;
+  const [filteredMembers, setFilteredMembers] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
   const [formData, setFormData] = useState({
     membersName: '',
     email: '',
@@ -63,6 +66,14 @@ const AdminMembersTableData = () => {
     }
     setIsModalOpen(true);
   };
+
+  useEffect(() => {
+    setFilteredMembers(
+      members.filter(member => 
+        member.membersName.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    );
+  }, [searchQuery, members]);
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
@@ -179,7 +190,6 @@ const AdminMembersTableData = () => {
 
   return (
     <div className="rounded-2xl border border-stroke bg-white p-5 shadow-md dark:border-strokedark dark:bg-boxdark">
-      <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} newestOnTop={false} closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover />
 
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-xl font-semibold">
@@ -191,6 +201,15 @@ const AdminMembersTableData = () => {
         >
           Add Member
         </button>
+      </div>
+      <div className="mb-4">
+        <Input
+          type="text"
+          placeholder="Search members..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full p-2 border rounded"
+        />
       </div>
 
       {loading ? (

@@ -3,7 +3,10 @@ import { axiosInstance } from '../../../../utils/config';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { ChapterAddMemberTable } from './AddMember/chapAddMember-data-table/chapterAddMember-table';
 import { ChapterAddMemberColumns } from './AddMember/chapAddMember-data-table/chapterAddMember-column';
-import { Button } from '../../../../components/ui/button';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import ChapterRules from './ChapterRules';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -11,65 +14,56 @@ import 'react-toastify/dist/ReactToastify.css';
 function ChapterAddMember() {
   const navigate = useNavigate();
   const [showBackComponent, setShowBackComponent] = useState(false);
-  const [members, setMembers] = useState([]); // State for members
+  const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [isBulkUploadOpen, setIsBulkUploadOpen] = useState(false); // State for bulk upload modal
-  const [file, setFile] = useState(null); // State for uploaded file
-  const [editingRow, setEditingRow] = useState(null); // State for editing row in the table
+  const [isBulkUploadOpen, setIsBulkUploadOpen] = useState(false);
+  const [file, setFile] = useState(null);
+  const [editingRow, setEditingRow] = useState(null);
   const [totalRecord, setTotalRecord] = useState(0);
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
   const rows = searchParams.get('rows') || 10;
   const page = searchParams.get('page') || 0;
 
-  const handleNext = () => {
-    navigate('/admin/chapters');
-  };
-
-  // Fetch members from the API
   useEffect(() => {
     fetchMembers();
   }, [rows, page]);
 
-  // Fetch members from the API
-  const fetchMembers = () => {
-    axiosInstance
-      .get(`/api/chapter-members?rows=${rows}&page=${page}`)
-      .then((res) => {
-        console.log('Fetched members:', res.data);
-        setMembers(res.data.data || res.data); // Update state with members
-        setTotalRecord(res.data.totalRecords || res.data.length);
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error('Error fetching members:', err);
-        toast.error('Failed to fetch members');
-        setLoading(false);
-      });
+  const fetchMembers = async () => {
+    try {
+      const res = await axiosInstance.get(`/api/chapter-members?rows=${rows}&page=${page}`);
+      setMembers(res.data.data || res.data);
+      setTotalRecord(res.data.totalRecords || res.data.length);
+      setLoading(false);
+    } catch (err) {
+      toast.error('Failed to fetch members');
+      setLoading(false);
+    }
   };
 
-  // Add a new row for inline editing
+  const handleNext = () => {
+    navigate('/admin/chapters');
+  };
+
   const handleAddMember = () => {
     const newMember = {
-      memberId: `new-${Date.now()}`, // Temporary ID for new member
+      memberId: `new-${Date.now()}`,
       memberName: '',
       role: '',
-      isNew: true, // Flag to identify new rows
+      isNew: true,
     };
     setMembers((prev) => [newMember, ...prev]);
-    setEditingRow(newMember.memberId); // Set the new row in edit mode
+    setEditingRow(newMember.memberId);
   };
 
-  // Handle inline editing
   const handleEditRow = (memberId, field, value) => {
     setMembers((prev) =>
       prev.map((member) =>
-        member.memberId === memberId ? { ...member, [field]: value } : member,
-      ),
+        member.memberId === memberId ? { ...member, [field]: value } : member
+      )
     );
   };
 
-  // Save the edited row
   const handleSaveRow = async (memberId) => {
     const member = members.find((m) => m.memberId === memberId);
     if (!member) return;
@@ -83,35 +77,36 @@ function ChapterAddMember() {
 
       let response;
       if (member.isNew) {
-        // Add new member
         response = await axiosInstance.post('/api/chapter-members', payload);
         if (response.data && response.data.memberId) {
           toast.success('Member created successfully');
-          fetchMembers(); // Refresh the list
+          fetchMembers();
         }
       } else {
-        // Update existing member
-        response = await axiosInstance.put(
-          `/api/chapter-members/${memberId}`,
-          payload,
-        );
+        response = await axiosInstance.put(`/api/chapter-members/${memberId}`, payload);
         if (response.data) {
           toast.success('Member updated successfully');
-          fetchMembers(); // Refresh the list
+          fetchMembers();
         }
       }
-      setEditingRow(null); // Exit edit mode
+      setEditingRow(null);
     } catch (error) {
-      console.error('Error saving member:', error);
-      const errorMessage =
-        error.response?.data?.error ||
-        error.message ||
-        'Failed to save member';
-      toast.error(errorMessage);
+      toast.error('Failed to save member');
     }
   };
 
-  // Handle bulk upload
+  const handleDelete = async (memberId) => {
+    if (window.confirm('Are you sure you want to delete this member?')) {
+      try {
+        await axiosInstance.delete(`/api/chapter-members/${memberId}`);
+        toast.success('Member deleted successfully');
+        fetchMembers();
+      } catch (error) {
+        toast.error('Failed to delete member');
+      }
+    }
+  };
+
   const handleBulkUpload = async () => {
     if (!file) {
       toast.error('Please select a file to upload');
@@ -123,46 +118,21 @@ function ChapterAddMember() {
 
     try {
       const response = await axiosInstance.post('/api/chapter-members/bulk-upload', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
+        headers: { 'Content-Type': 'multipart/form-data' },
       });
       if (response.data) {
         toast.success('Members uploaded successfully');
-        fetchMembers(); // Refresh the list
-        setIsBulkUploadOpen(false); // Close the modal
-        setFile(null); // Reset file input
+        fetchMembers();
+        setIsBulkUploadOpen(false);
+        setFile(null);
       }
     } catch (error) {
-      console.error('Error uploading file:', error);
-      const errorMessage =
-        error.response?.data?.error || 'Failed to upload members';
-      toast.error(errorMessage);
+      toast.error('Failed to upload members');
     }
   };
 
-  // Handle file input change
   const handleFileChange = (e) => {
-    const selectedFile = e.target.files[0];
-    if (selectedFile) {
-      setFile(selectedFile);
-    }
-  };
-
-  // Handle member deletion
-  const handleDelete = async (memberId) => {
-    if (window.confirm('Are you sure you want to delete this member?')) {
-      try {
-        await axiosInstance.delete(`/api/chapter-members/${memberId}`);
-        toast.success('Member deleted successfully');
-        fetchMembers(); // Refresh the list after deletion
-      } catch (error) {
-        const errorMessage =
-          error.response?.data?.error || 'Failed to delete member';
-        toast.error(errorMessage);
-        console.error('Error deleting member:', error);
-      }
-    }
+    setFile(e.target.files[0]);
   };
 
   const handleBack = () => {
@@ -174,98 +144,68 @@ function ChapterAddMember() {
   }
 
   return (
-    <div className="fixed w-auto inset-0 bg-black bg-opacity-50 flex items-center justify-center ">
-      <div className="p-6 bg-white rounded-2xl shadow-lg text-center w-[600px]">
-        <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} newestOnTop={false} closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover />
+    <Card className="p-6 bg-white rounded-lg shadow-lg mt-4">
+      <ToastContainer position="top-right" autoClose={3000} />
 
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-semibold">Add Members to the Chapter</h2>
-        </div>
+      {/* Page Title */}
+      <h2 className="text-xl font-semibold mb-4">Add Members to the Chapter</h2>
 
-        {loading ? (
-          <p>Loading...</p>
-        ) : (
-          <ChapterAddMemberTable
-            data={members.map((member) => ({
-              ...member,
-              onEdit: handleEditRow,
-              onSave: handleSaveRow,
-              onDelete: handleDelete,
-              isEditing: editingRow === member.memberId,
-            }))}
-            columns={ChapterAddMemberColumns}
-            searchInputField="memberName"
-            totalRecord={totalRecord}
-            pagination={{
-              pageSize: parseInt(rows),
-              pageIndex: parseInt(page),
-            }}
-          />
-        )}
+      {/* Members Table */}
+      {loading ? (
+        <p>Loading...</p>
+      ) : (
+        <ChapterAddMemberTable
+          data={members.map((member) => ({
+            ...member,
+            onEdit: handleEditRow,
+            onSave: handleSaveRow,
+            onDelete: handleDelete,
+            isEditing: editingRow === member.memberId,
+          }))}
+          columns={ChapterAddMemberColumns}
+          searchInputField="memberName"
+          totalRecord={totalRecord}
+          pagination={{
+            pageSize: parseInt(rows),
+            pageIndex: parseInt(page),
+          }}
+        />
+      )}
 
-        <div className="flex justify-start gap-5">
-          <Button
-            className="bg-gray-200 hover:bg-gray-300 hover:border-black text-black px-4 py-2 my-5 rounded-lg border-2"
-            onClick={handleAddMember}
-          >
-            Add New Member
-          </Button>
-          <Button
-            className="bg-gray-200 hover:bg-gray-300 hover:border-black text-black px-4 py-2 my-5 rounded-lg border-2"
-            onClick={() => setIsBulkUploadOpen(true)}
-          >
-            Bulk Member Upload
-          </Button>
-        </div>
-
-        {isBulkUploadOpen && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-            <div className="bg-white p-6 rounded-lg w-full max-w-md">
-              <h3 className="text-xl font-semibold mb-4">Bulk Member Upload</h3>
-              <input
-                type="file"
-                accept=".csv, .xlsx"
-                onChange={handleFileChange}
-                className="w-full p-2 border rounded mb-4"
-              />
-              <div className="flex justify-end space-x-3">
-                <button
-                  type="button"
-                  onClick={() => setIsBulkUploadOpen(false)}
-                  className="px-4 py-2 border rounded"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={handleBulkUpload}
-                  className="px-4 py-2 bg-primary text-white rounded"
-                >
-                  Upload
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        <div className="flex justify-between mt-4">
-          <Button
-            onClick={handleBack}
-            type="submit"
-            className="bg-gray-200 hover:bg-gray-300 hover:border-black text-black px-4 py-2 rounded-lg border-2"
-          >
-            Back
-          </Button>
-          <Button
-            onClick={handleNext}
-            type="submit"
-            className="bg-gray-200 hover:bg-gray-300 hover:border-black text-black px-4 py-2 rounded-lg border-2"
-          >
-            Next
-          </Button>
-        </div>
+      {/* Add and Bulk Upload Buttons */}
+      <div className="flex justify-start gap-5 mt-4">
+        <Button variant="outline" onClick={handleAddMember}>
+          Add New Member
+        </Button>
+        <Button variant="outline" onClick={() => setIsBulkUploadOpen(true)}>
+          Bulk Member Upload
+        </Button>
       </div>
-    </div>
+
+      {/* Bulk Upload Dialog */}
+      <Dialog open={isBulkUploadOpen} onOpenChange={setIsBulkUploadOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Bulk Member Upload</DialogTitle>
+          </DialogHeader>
+          <Input type="file" accept=".csv, .xlsx" onChange={handleFileChange} className="w-full" />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsBulkUploadOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleBulkUpload}>Upload</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Back & Next Buttons */}
+      <div className="flex justify-between mt-6">
+        <Button variant="outline" onClick={handleBack}>
+          Back
+        </Button>
+        <Button onClick={handleNext}>Next</Button>
+      </div>
+    </Card>
   );
 }
 
