@@ -39,7 +39,7 @@ const addPayment = async (req, res) => {
     paymentReceivedById: paymentDetails.paymentReceivedById || "",
     paymentReceivedByName: paymentDetails.paymentReceivedByName || "",
   };
-  // make data to insert in db table of membersmeetingmapping
+  // make data to insert in db table of members_meeting_mapping
   const newRecords = [];
 
   if (typeof paymentDetails.meetingIds === "string") {

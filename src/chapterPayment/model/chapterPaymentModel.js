@@ -1,7 +1,7 @@
 const db = require("../../config/db");
 
 const getChapterTransactions = async (chapterId, rows, page) => {
-  const transactions = await db("receiverChapterTransactions as r")
+  const transactions = await db("receiver_chapter_transactions as r")
     .where({
       "r.chapterId": chapterId,
     })
@@ -11,7 +11,7 @@ const getChapterTransactions = async (chapterId, rows, page) => {
     .select("r.*");
 
   // total records
-  const totalRecords = await db("receiverChapterTransactions as r")
+  const totalRecords = await db("receiver_chapter_transactions as r")
     .where({
       "r.chapterId": chapterId,
     })
@@ -53,7 +53,7 @@ const getApprovedTransactions = async (memberId, chapterId, filter) => {
 
 {
   /* CREATE TABLE
-      receiverChapterTransactions (
+      receiver_chapter_transactions (
           id VARCHAR(255) PRIMARY KEY,
           chapterId VARCHAR(255) NOT NULL,
           senderId VARCHAR(255) NOT NULL,
@@ -83,7 +83,7 @@ const payToChapter = async (data, trx) => {
       }
     */
   }
-  return await db("receiverChapterTransactions").transacting(trx).insert(data);
+  return await db("receiver_chapter_transactions").transacting(trx).insert(data);
 };
 
 const updateTransactionsTransferToChapter = async (
@@ -108,7 +108,7 @@ const updateTransactionsTransferToChapter = async (
 const getPendingChapterTransactions = async (memberId, chapterId) => {
   console.log({ memberId, chapterId });
 
-  const transactions = await db("receiverChapterTransactions as r")
+  const transactions = await db("receiver_chapter_transactions as r")
     .where({
       "r.status": "pending",
       "r.chapterId": chapterId,
@@ -122,7 +122,7 @@ const approvePendingRequest = async (
   approvedById,
   approvedByName
 ) => {
-  return db("receiverChapterTransactions")
+  return db("receiver_chapter_transactions")
     .where({ id: transactionid })
     .update({ status: "approved", approvedById, approvedByName });
 };

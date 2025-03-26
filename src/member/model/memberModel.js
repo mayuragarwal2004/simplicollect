@@ -23,7 +23,7 @@ const addMember = async (memberData) => {
 const getMembers = async (chapterId, page = 0, rows = 10) => {
   const offset = parseInt(page, 10) * parseInt(rows, 10);
 
-  const data = await db("memberChapterMapping as mmm")
+  const data = await db("member_chapter_mapping as mmm")
     .where("mmm.chapterId", chapterId)
     .join("members as m", "mmm.memberId", "m.memberId")
     .leftJoin("roles as r", "mmm.roleId", "r.roleId")
@@ -39,7 +39,7 @@ const getMembers = async (chapterId, page = 0, rows = 10) => {
     .limit(rows)
     .offset(offset);
 
-  const totalRecords = await db("memberChapterMapping as mmm")
+  const totalRecords = await db("member_chapter_mapping as mmm")
     .where("mmm.chapterId", chapterId)
     .join("members as m", "mmm.memberId", "m.memberId")
     .leftJoin("roles as r", "mmm.roleId", "r.roleId")
@@ -50,7 +50,7 @@ const getMembers = async (chapterId, page = 0, rows = 10) => {
 };
 
 const getAllMembers = async (chapterId) => {
-  return db("memberChapterMapping as mmm")
+  return db("member_chapter_mapping as mmm")
     .where("mmm.chapterId", chapterId)
     .join("members as m", "mmm.memberId", "m.memberId")
     .leftJoin("roles as r", "mmm.roleId", "r.roleId")

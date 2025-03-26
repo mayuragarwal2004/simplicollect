@@ -6,7 +6,7 @@ const addTransaction = async (data) => {
 
 const addPayment = async (newRecords) => {
   try {
-    const result = await db("membersmeetingmapping").insert(newRecords);
+    const result = await db("members_meeting_mapping").insert(newRecords);
     return result;
   } catch (error) {
     throw error;
@@ -15,7 +15,7 @@ const addPayment = async (newRecords) => {
 
 const getMembersPendingPayments = async (memberId) => {
   try {
-    const pendingPayments = await db("membersmeetingmapping")
+    const pendingPayments = await db("members_meeting_mapping")
       .where({ memberId, status: "pending" })
       .select();
     return pendingPayments;
@@ -26,7 +26,7 @@ const getMembersPendingPayments = async (memberId) => {
 
 const getMembersPendingPaymentsWithPackageDetails = async (memberId) => {
   try {
-    const pendingPayments = await db("membersmeetingmapping as mmm")
+    const pendingPayments = await db("members_meeting_mapping as mmm")
       .leftJoin("transactions as t", "mmm.transactionId", "t.transactionId")
       .join("packages as p", "t.packageId", "p.packageId")
       .where({ "mmm.memberId": memberId, "t.status": "pending" })
@@ -85,7 +85,7 @@ const getChapterPendingPayments = async (chapterId) => {
 
 const deletePendingRequest = async (memberId, transactionId) => {
   try {
-    const result = await db("membersmeetingmapping")
+    const result = await db("members_meeting_mapping")
       .where({ memberId, transactionId })
       .del();
     await db("transactions").where({ transactionId }).del();
@@ -122,7 +122,7 @@ const approvePendingPayment = async (data, trx) => {
 const setIsPaid = async (transactionIdsArray, trx) => {
   try {
     const updatePromises = transactionIdsArray.map((transactionId) => {
-      return trx("membersmeetingmapping")
+      return trx("members_meeting_mapping")
         .where({ transactionId })
         .update({ isPaid: true });
     });
@@ -134,7 +134,7 @@ const setIsPaid = async (transactionIdsArray, trx) => {
 
 const addBalance = async (balanceList, trx) => {
   for (const { memberId, chapterId, balance } of balanceList) {
-    await trx("memberChapterMapping")
+    await trx("member_chapter_mapping")
       .where({ memberId, chapterId })
       .update({
         balance: trx.raw("balance + ?", [balance]), // Directly add/subtract balance
@@ -144,14 +144,14 @@ const addBalance = async (balanceList, trx) => {
 
 const updateBalance = async (balanceList) => {
   for (const { memberId, chapterId, balance } of balanceList) {
-    await db("memberChapterMapping").where({ memberId, chapterId }).update({
+    await db("member_chapter_mapping").where({ memberId, chapterId }).update({
       balance, // Directly set balance
     });
   }
 };
 
 const getMemberChapterDue = async (memberId, chapterId) => {
-  return db("memberChapterMapping")
+  return db("member_chapter_mapping")
     .where({ memberId, chapterId })
     .select("balance")
     .first();
