@@ -121,7 +121,7 @@ const AdminChaptersPage = () => {
         <h2 className="text-xl font-semibold">Super Admin Chapter Table</h2>
         <button
           onClick={handleOpenAddModal}
-          className="px-4 py-2 bg-primary text-white rounded hover:bg-opacity-90"
+          className="px-4 py-2 bg-primary text-white rounded hover:bg-opacity-90 "
         >
           Add Chapter
         </button>
@@ -201,3 +201,4 @@ const AdminChaptersPage = () => {
 };
 
 export default AdminChaptersPage;
+
