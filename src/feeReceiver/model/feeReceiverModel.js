@@ -51,6 +51,8 @@ const addQRReceiver = async (data) => {
       enableDate, 
       disableDate,
       paymentType: "online",
+      receiverAmountType,
+      receiverAmount,
   */
   }
   return db("feeReceivers").insert(data);

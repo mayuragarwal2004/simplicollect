@@ -71,7 +71,7 @@ const getQRReceiversController = async (req, res) => {
 
 const addQRReceiversController = async (req, res) => {
   const { chapterId } = req.params;
-  const { qrCodeName, memberId, qrImageLink, enableDate, disableDate } =
+  const { qrCodeName, memberId, qrImageLink, enableDate, disableDate, receiverAmountType, receiverAmount } =
     req.body;
   try {
     const receiverId = uuidv4();
@@ -84,6 +84,8 @@ const addQRReceiversController = async (req, res) => {
       enableDate,
       disableDate,
       paymentType: "online",
+      receiverAmountType,
+      receiverAmount,
     });
     res.json(newQRReceiver);
   } catch (error) {

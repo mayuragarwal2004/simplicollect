@@ -64,12 +64,12 @@ const PaymentOverview = ({ onClose, onPaymentSuccess, setStep }) => {
   // Calculate receiver fee
   useEffect(() => {
     if (selectedReceiverObject) {
-      if (selectedReceiverObject.receiverAmountType === 'lumpsum') {
+      if (selectedReceiverObject.receiverAmountType === 'Lumpsum') {
         setPaymentData((prev) => ({
           ...prev,
           receiverFeeAmount: selectedReceiverObject.receiverAmount,
         }));
-      } else if (selectedReceiverObject.receiverAmountType === 'percentage') {
+      } else if (selectedReceiverObject.receiverAmountType === 'Percentage') {
         const receiverFee =
           selectedPackage.totalAmount * selectedReceiverObject.receiverFee;
         setPaymentData((prev) => ({
@@ -92,12 +92,12 @@ const PaymentOverview = ({ onClose, onPaymentSuccess, setStep }) => {
           ...prev,
           platformFeeAmount: 0,
         }));
-      } else if (chapterData.platformFeeType === 'lumpsum') {
+      } else if (chapterData.platformFeeType === 'Lumpsum') {
         setPaymentData((prev) => ({
           ...prev,
           platformFeeAmount: chapterData.platformFee,
         }));
-      } else if (chapterData.platformFeeType === 'percentage') {
+      } else if (chapterData.platformFeeType === 'Percentage') {
         const platformFee =
           selectedPackage.totalAmount * chapterData.platformFee;
         setPaymentData((prev) => ({
