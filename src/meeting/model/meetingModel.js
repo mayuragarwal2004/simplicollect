@@ -10,7 +10,7 @@ const getAllMeetings = async () => {
 
 const getAllMeetingsUsingMemberIdAndChapterId = async (memberId, chapterId) => {
   return db("meetings as m")
-    .leftJoin("membersmeetingmapping as mmm", function() {
+    .leftJoin("members_meeting_mapping as mmm", function() {
       this.on("m.meetingId", "=", "mmm.meetingId").andOn("mmm.memberId", "=", db.raw("?", [memberId]));
     })
     .leftJoin("transactions as t", "mmm.transactionId", "t.transactionId")

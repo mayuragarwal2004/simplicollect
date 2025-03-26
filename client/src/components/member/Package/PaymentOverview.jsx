@@ -16,8 +16,14 @@ import { Button } from '@/components/ui/Button';
 import { toast } from 'react-toastify';
 import QrScanner from 'qr-scanner';
 import { useData } from '../../../context/DataContext';
+import { Skeleton } from "@/components/ui/skeleton";
 
-const PaymentOverview = ({ onClose, onPaymentSuccess, setStep }) => {
+const PaymentOverview = ({
+  onClose,
+  onPaymentSuccess,
+  setStep,
+  handlePackagePayModalClose,
+}) => {
   const {
     paymentData: {
       selectedPackage,
@@ -64,14 +70,16 @@ const PaymentOverview = ({ onClose, onPaymentSuccess, setStep }) => {
   // Calculate receiver fee
   useEffect(() => {
     if (selectedReceiverObject) {
-      if (selectedReceiverObject.receiverAmountType === 'lumpsum') {
+      if (selectedReceiverObject.receiverAmountType === 'Lumpsum') {
         setPaymentData((prev) => ({
           ...prev,
           receiverFeeAmount: selectedReceiverObject.receiverAmount,
         }));
-      } else if (selectedReceiverObject.receiverAmountType === 'percentage') {
+      } else if (selectedReceiverObject.receiverAmountType === 'Percentage') {
         const receiverFee =
-          selectedPackage.totalAmount * selectedReceiverObject.receiverFee;
+          (selectedPackage.totalAmount *
+            selectedReceiverObject.receiverAmount) /
+          100;
         setPaymentData((prev) => ({
           ...prev,
           receiverFeeAmount: receiverFee,
@@ -92,12 +100,12 @@ const PaymentOverview = ({ onClose, onPaymentSuccess, setStep }) => {
           ...prev,
           platformFeeAmount: 0,
         }));
-      } else if (chapterData.platformFeeType === 'lumpsum') {
+      } else if (chapterData.platformFeeType === 'Lumpsum') {
         setPaymentData((prev) => ({
           ...prev,
           platformFeeAmount: chapterData.platformFee,
         }));
-      } else if (chapterData.platformFeeType === 'percentage') {
+      } else if (chapterData.platformFeeType === 'Percentage') {
         const platformFee =
           selectedPackage.totalAmount * chapterData.platformFee;
         setPaymentData((prev) => ({
@@ -128,14 +136,6 @@ const PaymentOverview = ({ onClose, onPaymentSuccess, setStep }) => {
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-[1000]">
       <div className="bg-white rounded-lg p-6 w-full max-w-lg shadow-xl relative max-h-[90vh] overflow-y-auto">
-        {/* Close Button */}
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
-        >
-          <X size={20} />
-        </button>
-
         {/* Title */}
         <h2 className="text-2xl font-semibold text-gray-800 text-center mb-4">
           Payment Overview
@@ -248,11 +248,7 @@ const PaymentOverview = ({ onClose, onPaymentSuccess, setStep }) => {
         {/* Show QR code, and option to download it, or open it. And option to upload proof */}
         {selectedReceiverObject && selectedReceiverObject.qrImageLink && (
           <div className="mt-4">
-            <img
-              src={selectedReceiverObject.qrImageLink}
-              alt="QR Code"
-              className="mb-2 rounded-lg"
-            />
+            <QRImage imageUrl={selectedReceiverObject.qrImageLink} />
             <div className="flex justify-between mb-4">
               <Button
                 variant="outline"
@@ -371,3 +367,20 @@ const PaymentOverview = ({ onClose, onPaymentSuccess, setStep }) => {
 };
 
 export default PaymentOverview;
+
+const QRImage = ({ imageUrl }) => {
+  const [loading, setLoading] = useState(true);
+
+  return (
+    <div className="relative">
+      {loading && <Skeleton className="w-full h-32 rounded-lg" />}{' '}
+      {/* Loading Skeleton */}
+      <img
+        src={imageUrl}
+        alt="QR Code"
+        className={`mb-2 rounded-lg ${loading ? 'hidden' : 'block'}`} // Hide image until loaded
+        onLoad={() => setLoading(false)} // Hide skeleton when image loads
+      />
+    </div>
+  );
+};

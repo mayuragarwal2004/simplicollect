@@ -1,7 +1,4 @@
-import { Link } from 'react-router-dom';
-import { Eye, Upload } from 'lucide-react';
-
-export const ReportAColumns = [
+export const AllMembersReportsColumns = [
   {
     id: 'srno',
     header: () => <p className>Sr. No.</p>,

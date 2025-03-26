@@ -1,6 +1,6 @@
 import formatDateDDMMYYYY from '@/utils/dateUtility';
 
-export const ReportBColumns = [
+export const AllTransactionsColumns = [
   {
     id: 'srno',
     header: () => <p className>Sr. No.</p>,

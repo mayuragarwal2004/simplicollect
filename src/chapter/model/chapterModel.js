@@ -15,11 +15,11 @@ const updateChapter = async (chapterId, chapterData) => {
 
 const getAllChapters = async (memberId) => {
 
-  // join the current member with the chapters table using the memberChapterMapping, also join the organisation using th eorganisation id in the chapters table
+  // join the current member with the chapters table using the member_chapter_mapping, also join the organisation using th eorganisation id in the chapters table
   return db("chapters")
-    .join("memberChapterMapping", "chapters.chapterId", "memberChapterMapping.chapterId")
+    .join("member_chapter_mapping", "chapters.chapterId", "member_chapter_mapping.chapterId")
     .join("organisations", "chapters.organisationId", "organisations.organisationId")
-    .where("memberChapterMapping.memberId", memberId)
+    .where("member_chapter_mapping.memberId", memberId)
     .select("chapters.*", "organisations.organisationName")
     .orderBy("chapters.chapterName", "asc");
 }

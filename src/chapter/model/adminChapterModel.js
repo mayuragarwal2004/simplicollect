@@ -29,11 +29,11 @@ const getAllChapters = async (rows, page) => {
 
   const chapters = await db("chapters")
     .join("organisations", "chapters.organisationId", "organisations.organisationId")
-    .leftJoin("memberchaptermapping", "chapters.chapterId", "memberchaptermapping.chapterId")
+    .leftJoin("member_chapter_mapping", "chapters.chapterId", "member_chapter_mapping.chapterId")
     .select(
       "chapters.*",
       "organisations.organisationName",
-      db.raw("COUNT(CASE WHEN memberchaptermapping.status = 'joined' THEN 1 END) as numberOfMembers")
+      db.raw("COUNT(CASE WHEN member_chapter_mapping.status = 'joined' THEN 1 END) as numberOfMembers")
     )
     .groupBy("chapters.chapterId", "organisations.organisationName")
     .orderBy("chapters.chapterName", "asc")
