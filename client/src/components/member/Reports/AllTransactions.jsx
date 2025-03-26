@@ -1,19 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import { axiosInstance } from '../../../utils/config';
-import { useLocation } from 'react-router-dom'
-import { ReportBTable } from './reportb-data-table/reportb-table';
-import { ReportBColumns } from './reportb-data-table/reportb-column';
+import { useLocation } from 'react-router-dom';
+import { AllTransactionsTable } from './allTransactions-data-table/allTransactions-table';
+import { AllTransactionsColumns } from './allTransactions-data-table/allTransactions-column';
 import { Checkbox } from '@/components/ui/checkbox';
-import { ReportBPagination } from './reportb-data-table/reportb-pagination';
 import { Button } from '@/components/ui/button';
 import Papa from 'papaparse';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { useData } from '../../../context/DataContext';
 
-const ReportB = () => {
- const location = useLocation()
- const [reports, setReports] = useState([]);
+const AllTransactions = () => {
+  const location = useLocation();
+  const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
   const { chapterData } = useData();
   const searchParams = new URLSearchParams(location.search);
@@ -21,34 +20,39 @@ const ReportB = () => {
   const rows = searchParams.get('rows') || 5;
   const page = searchParams.get('page') || 1;
 
-  const columnLabels = ReportBColumns.map(({ accessorKey, header }) => ({
-    label: header().props.children,
-    key: accessorKey,
-  }));
+  const columnLabels = AllTransactionsColumns.map(
+    ({ accessorKey, header }) => ({
+      label: header().props.children,
+      key: accessorKey,
+    }),
+  );
 
   const [selectedColumns, setSelectedColumns] = useState(
     columnLabels.map(({ label }) => label),
   );
 
   useEffect(() => {
-    console.log("helo");
-    
+    console.log('helo');
+
     if (!chapterData) return;
     getReportData();
   }, [chapterData, rows, page, location.search]);
 
   const getReportData = () => {
-    if(!chapterData.chapterId) return;
-    console.log("helo 2");
+    if (!chapterData.chapterId) return;
+    console.log('helo 2');
 
     axiosInstance
-      .get(`/api/report/${chapterData.chapterId}/member-transactions?rows=${rows}&page=${page}  `, {
-        params: {
-          chapterId: chapterData.chapterId,
-          rows,
-          page,
+      .get(
+        `/api/report/${chapterData.chapterId}/member-transactions?rows=${rows}&page=${page}  `,
+        {
+          params: {
+            chapterId: chapterData.chapterId,
+            rows,
+            page,
+          },
         },
-      })
+      )
       .then((res) => {
         setReports(res.data.data);
         setTotalRecord(res.data.totalRecords);
@@ -150,9 +154,9 @@ const ReportB = () => {
       ) : reports.length === 0 ? (
         <p className="text-gray-600">No reports available.</p>
       ) : (
-        <ReportBTable
+        <AllTransactionsTable
           data={reports}
-          columns={ReportBColumns}
+          columns={AllTransactionsColumns}
           searchInputField="firstName"
           totalRecord={totalRecord}
           pagination={{
@@ -166,4 +170,4 @@ const ReportB = () => {
   );
 };
 
-export default ReportB;
+export default AllTransactions;

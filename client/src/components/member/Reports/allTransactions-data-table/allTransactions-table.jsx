@@ -17,9 +17,9 @@ import {
 import { useLocation, useNavigate } from 'react-router-dom'
 import { createQueryString } from '@/utils/helper'
 import { usePagination } from '../../../../hooks/usePagination.jsx'
-import { ReportAPagination } from './reporta-pagination.jsx'
+import { AllTransactionsPagination } from './allTransactions-pagination.jsx'
 
-export function ReportATable({
+export function AllTransactionsTable({
  columns,
  data,
  searchInputField,
@@ -117,7 +117,7 @@ export function ReportATable({
      </TableBody>
     </Table>
    </div>
-   <ReportAPagination table={table} totalRecord={totalRecord} />
+   <AllTransactionsPagination table={table} totalRecord={totalRecord} />
   </div>
  )
 }

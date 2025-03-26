@@ -9,16 +9,16 @@ import {
   SelectGroup,
   SelectLabel,
 } from '@/components/ui/select';
-import ReportA from '../../components/member/Reports/ReportA';
+import AllMembersReports from '../../components/member/Reports/AllMembersReports';
 import MemberLedger from '../../components/member/Reports/MemberLedger';
-import ReportB from '../../components/member/Reports/ReportB';
+import AllTransactions from '../../components/member/Reports/AllTransactions';
 import ReceiverDaywiseReport  from '../../components/member/Reports/ReceiverDaywiseReport';
 import ReportC from '../../components/member/Reports/ReportC';
 
 const reportComponents = {
-    report_a: () => <ReportA />,
+    all_members: () => <AllMembersReports />,
     member_ledger: () => <MemberLedger />,
-    report_b: () => <ReportB />,
+    all_transactions: () => <AllTransactions />,
     receiver_daywise_report: () => <ReceiverDaywiseReport />,
     report_c: () => <ReportC />,
 };
@@ -52,18 +52,18 @@ const Reports = () => {
             <SelectContent>
               <SelectGroup>
                 <SelectLabel>Member Wise Report</SelectLabel>
-                <SelectItem value="report_a">Report A</SelectItem>
+                <SelectItem value="all_members">All Members</SelectItem>
                 <SelectItem value="member_ledger">Member Ledger</SelectItem>
               </SelectGroup>
               <SelectGroup>
                 <SelectLabel>Chapter Report</SelectLabel>
-                <SelectItem value="report_b">Report B</SelectItem>
+                <SelectItem value="all_transactions">All Transactions</SelectItem>
                 <SelectItem value="receiver_daywise_report">Receiver Daily Report</SelectItem>
               </SelectGroup>
-              <SelectGroup>
+              {/* <SelectGroup>
                 <SelectLabel>Package Report</SelectLabel>
                 <SelectItem value="report_c">Report C</SelectItem>
-              </SelectGroup>
+              </SelectGroup> */}
             </SelectContent>
           </Select>
         </div>
