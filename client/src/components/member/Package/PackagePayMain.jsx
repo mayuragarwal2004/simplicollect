@@ -46,6 +46,7 @@ const PackagePayMain = ({
           chapterMeetings={chapterMeetings}
           receivers={receivers}
           setStep={setStep}
+          handlePackagePayModalClose={handlePackagePayModalCloseLocal}
         />
       )}
       {step === 3 && (
