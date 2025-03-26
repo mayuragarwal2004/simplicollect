@@ -131,6 +131,37 @@ function ChapterAddMember() {
     }
   };
 
+  const handleAddAllNewMembers = async () => {
+    const newMembers = members.filter((member) => member.isNew);
+  
+    if (newMembers.length === 0) {
+      toast.error('No new members to add.');
+      return;
+    }
+  
+    try {
+      for (const member of newMembers) {
+        if (!member.memberName.trim() || !member.role.trim()) {
+          toast.error('All new members must have a name and role.');
+          return;
+        }
+  
+        const payload = {
+          memberName: member.memberName.trim(),
+          email: member.email?.trim() || '',
+          role: member.role.trim(),
+        };
+  
+        await axiosInstance.post('/api/chapter-members', payload);
+      }
+  
+      toast.success('All new members added successfully');
+      fetchMembers(); // Refresh the table
+    } catch (error) {
+      toast.error('Failed to add members');
+    }
+  };
+
   const handleFileChange = (e) => {
     setFile(e.target.files[0]);
   };
@@ -203,7 +234,7 @@ function ChapterAddMember() {
         <Button variant="outline" onClick={handleBack}>
           Back
         </Button>
-        <Button onClick={handleNext}>Next</Button>
+        <Button onClick={handleAddAllNewMembers}>Add</Button>
       </div>
     </Card>
   );
