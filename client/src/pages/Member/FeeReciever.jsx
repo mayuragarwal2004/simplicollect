@@ -15,6 +15,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import AddCashReceiver from '../../components/member/FeeReceiver/AddCashReceiver';
+import AddOnlineReceiver from '../../components/member/FeeReceiver/AddOnlineReceiver';
 
 const FeeReciever = () => {
   const [cashReceivers, setCashReceivers] = useState([]);
@@ -43,7 +45,7 @@ const FeeReciever = () => {
 
   useEffect(() => {
     fetchCashReceivers();
-    fetchQrReceivers();
+    fetchOnlineReceivers ();
     fetchMembersList();
     getAmountCollected();
   }, []);
@@ -64,7 +66,7 @@ const FeeReciever = () => {
     setCashReceivers(response.data);
   };
 
-  const fetchQrReceivers = async () => {
+  const fetchOnlineReceivers  = async () => {
     const response = await axiosInstance.get(
       `/api/feeReciever/qr/${chapterData.chapterId}`,
     );
@@ -77,6 +79,7 @@ const FeeReciever = () => {
   };
 
   const handleModalClose = () => {
+    setModalType('');
     setIsModalOpen(false);
   };
 
@@ -122,7 +125,7 @@ const FeeReciever = () => {
         qrImageLink: imageLink,
         imageFile: undefined,
       });
-      fetchQrReceivers();
+      fetchOnlineReceivers ();
       handleModalClose();
     } catch (error) {
       console.error(error);
@@ -149,7 +152,7 @@ const FeeReciever = () => {
                 </IconButton> */}
         </div>
         <div>
-          <div className="mb-4 flex gap-4">
+          <div className="mb-4 flex flex-wrap gap-4">
             <Button color="primary" onClick={() => handleAddNew('cash')}>
               Add New Cash Receiver
             </Button>
@@ -280,7 +283,23 @@ const FeeReciever = () => {
             </table>
           </div>
 
-          <Dialog open={isModalOpen} onOpenChange={handleModalClose}>
+          <AddCashReceiver
+            isModalOpen={isModalOpen && modalType === 'cash'}
+            handleModalClose={handleModalClose}
+            membersList={membersList}
+            fetchCashReceivers={fetchCashReceivers}
+            chapterData={chapterData}
+          />
+
+          <AddOnlineReceiver
+            isModalOpen={isModalOpen && modalType === 'qr'}
+            handleModalClose={handleModalClose}
+            membersList={membersList}
+            fetchOnlineReceivers ={fetchOnlineReceivers }
+            chapterData={chapterData}
+          />
+
+          <Dialog open={false} onOpenChange={handleModalClose}>
             <DialogTrigger />
             <DialogContent className="sm:max-w-[425px]">
               <div className="modal-content p-4 bg-white rounded shadow-md">

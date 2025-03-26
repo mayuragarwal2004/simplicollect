@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/select'
 
 // eslint-disable-next-line react/prop-types
-export function ReportAPagination({ table, totalRecord }) {
+export function AllMembersReportsPagination({ table, totalRecord }) {
  return (
   <div className="flex flex-col items-center justify-between space-y-4 px-2 lg:flex-row lg:space-y-0">
    <div className="flex flex-col items-center space-y-2 sm:flex-row sm:space-x-6 sm:space-y-0">

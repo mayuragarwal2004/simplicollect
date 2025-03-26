@@ -1,4 +1,9 @@
 const { getDateWiseTransactions } = require("../model/reportModel");
+const memberModel = require("../../member/model/memberModel");
+const packageModel = require("../../package/model/packageModel");
+const meetingModel = require("../../meeting/model/meetingModel");
+const paymentModel = require("../../payment/model/paymentModel");
+const { highlightTableDataRow, highlightTableHeadingRow } = require("../../utility/excelExport");
 
 const getReceiverDaywiseReportService = async (
   worksheet,
@@ -301,6 +306,181 @@ const getReceiverDaywiseReportService = async (
   }
 };
 
+const getMemberLedgerService = async (memberId, chapterId) => {
+  const member = await memberModel.findMemberById(memberId, chapterId);
+  const memberPackages = await packageModel.getPackagesByChapterId(
+    chapterId,
+    memberId
+  );
+  const memberMeetings =
+    await meetingModel.getAllMeetingsUsingMemberIdAndChapterId(
+      memberId,
+      chapterId
+    );
+  const memberTransactions = await paymentModel.getTransactionsByMemberId(
+    memberId,
+    chapterId
+  );
+
+  const memberLedger = {
+    member,
+    memberPackages,
+    memberMeetings,
+    memberTransactions,
+  };
+
+  // 1st find if there is a transaction and too the oldest one with transactionType as 'Balance Update'
+  // 2nd then loop through transactions and add it one by one in the following procedure:
+  // 2.1 if there is any amount in originalPayableAmount add it as "package charges" and add it in debit column
+  // 2.2 if there is any penalty add it as "Penalty" and add it in debit column
+  // 2.3 if there is any discount add it as "Discount" and add it in the credit column
+  // 2.4 if there is any receiverFee add it as "Online Fee" and add it in the debit column
+  // 2.5 if there is and platformFee add it as "Platform Fee" and add it in the debit column
+  // 2.6 then add the paidAmount as "Package Paid" in the credit column
+  // Step 2 ended - make sure to update the latest balanceAmount at each time
+
+  const columns = ["Date", "Type", "Description", "Debit", "Credit", "Balance"];
+  const ledger = [];
+
+  let balance = 0;
+
+  console.log({ memberTransactions });
+
+  for (let i = 0; i < memberLedger.memberTransactions.length; i++) {
+    const transaction = memberLedger.memberTransactions[i];
+    if (transaction.transactionType === "Balance Update") {
+      memberLedger.balance = transaction.balanceAmount;
+      balance = transaction.balanceAmount;
+      ledger.push([
+        transaction.transactionDate,
+        "Balance Update",
+        "Balance Update",
+        "",
+        "",
+        transaction.balanceAmount,
+      ]);
+    } else if (transaction.transactionType === "Package Payment") {
+      if (transaction.originalPayableAmount) {
+        balance += transaction.originalPayableAmount;
+        ledger.push([
+          transaction.transactionDate,
+          "Package Charges",
+          "Package Charges",
+          transaction.originalPayableAmount,
+          "",
+          balance,
+        ]);
+      }
+      if (transaction.penaltyAmount) {
+        balance += transaction.penaltyAmount;
+        ledger.push([
+          transaction.transactionDate,
+          "Penalty",
+          "Penalty",
+          transaction.penaltyAmount,
+          "",
+          balance,
+        ]);
+      }
+      if (transaction.discountAmount) {
+        balance -= transaction.discountAmount;
+        ledger.push([
+          transaction.transactionDate,
+          "Discount",
+          "Discount",
+          "",
+          transaction.discountAmount,
+          balance,
+        ]);
+      }
+      if (transaction.receiverFee) {
+        balance += transaction.receiverFee;
+        ledger.push([
+          transaction.transactionDate,
+          "Online Fee",
+          "Online Fee",
+          transaction.receiverFee,
+          "",
+          balance,
+        ]);
+      }
+      if (transaction.platformFee) {
+        balance += transaction.platformFee;
+        ledger.push([
+          transaction.transactionDate,
+          "Platform Fee",
+          "Platform Fee",
+          transaction.platformFee,
+          "",
+          balance,
+        ]);
+      }
+      balance -= transaction.paidAmount;
+      ledger.push([
+        transaction.transactionDate,
+        "Package Paid",
+        "Package Paid",
+        "",
+        transaction.paidAmount,
+        balance,
+      ]);
+    }
+  }
+
+  memberLedger.data = ledger;
+
+  return memberLedger;
+};
+
+const convertMemberLedgerToExcel = (worksheet, memberLedger) => {
+  worksheet.columns = [
+    { width: 15 },
+    { width: 15 },
+    { width: 25 },
+    { width: 15 },
+    { width: 15 },
+    { width: 15 },
+  ];
+  worksheet.addRow(["Member Ledger"]);
+  worksheet.mergeCells("A1:F1");
+  const headingRow = worksheet.getRow(1);
+  headingRow.font = { bold: true, size: 16 };
+  headingRow.alignment = { horizontal: "center", vertical: "middle" };
+  headingRow.height = 25;
+  worksheet.addRow(["Export Date-Time:", new Date().toLocaleString()]);
+  worksheet.addRow([
+    "Member Name:",
+    `${memberLedger.member.firstName} ${memberLedger.member.lastName}`,
+  ]);
+  if (memberLedger.member.email)
+    worksheet.addRow(["Member Email:", memberLedger.member.email]);
+  if (memberLedger.member.phoneNumber)
+    worksheet.addRow(["Member Phone:", memberLedger.member.phoneNumber]);
+  worksheet.mergeCells("A6:F6");
+  const packageHeadingRow = worksheet.getRow(6);
+  packageHeadingRow.font = { bold: true };
+  packageHeadingRow.alignment = { horizontal: "center", vertical: "middle" };
+  packageHeadingRow.height = 25;
+  highlightTableHeadingRow(
+    worksheet.addRow([
+      "Date",
+      "Type",
+      "Description",
+      "Debit",
+      "Credit",
+      "Balance",
+    ])
+  );
+  for (let i = 0; i < memberLedger.data.length; i++) {
+    highlightTableDataRow(worksheet.addRow(memberLedger.data[i]));
+  }
+  return worksheet;
+};
+
+
+
 module.exports = {
   getReceiverDaywiseReportService,
+  getMemberLedgerService,
+  convertMemberLedgerToExcel,
 };

@@ -78,7 +78,7 @@ const SelectReceiver = ({ setStep, handlePackagePayModalClose }) => {
           onValueChange={handleSelectChange}
           value={paymentData.selectedReceiver}
         >
-          <SelectTrigger className="w-[380px]">
+          <SelectTrigger>
             <SelectValue
               className="text-black placeholder-gray-500 placeholder-opacity-100"
               placeholder="Select a Receiver"
@@ -96,6 +96,12 @@ const SelectReceiver = ({ setStep, handlePackagePayModalClose }) => {
       </div>
     );
   };
+
+  useEffect(() => {
+    console.log(
+      `paymentData.paymentMethod for the 1st time: ${paymentData.paymentMethod}`,
+    );
+  }, []);
 
   useEffect(() => {
     if (!paymentData.paymentMethod) {
@@ -147,8 +153,12 @@ const SelectReceiver = ({ setStep, handlePackagePayModalClose }) => {
             paymentMethod: 'cash',
           }));
         }
-      } else {
-        setShowPaymentMethod(true);
+      } else if (
+        paymentData.receivers.filter(
+          (receiver) => receiver.paymentType !== paymentData.paymentMethod,
+        ).length === 0
+      ) {
+        setShowPaymentMethod(false);
       }
     }
   }, [paymentData.receivers]);

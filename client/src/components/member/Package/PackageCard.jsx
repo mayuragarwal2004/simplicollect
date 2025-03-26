@@ -314,7 +314,7 @@ const PackageCard = ({
       {selectedPackage && receivers && (
         <Dialog open={isModalOpen} onOpenChange={handlePackagePayModalClose}>
           <DialogTrigger />
-          <DialogContent className="sm:max-w-[425px]">
+          <DialogContent className="sm:max-w-[425px] p-4 max-w-[90%] rounded-lg">
             <PackagePayMain
               selectedPackage={selectedPackage}
               pendingPayments={pendingPayments}
