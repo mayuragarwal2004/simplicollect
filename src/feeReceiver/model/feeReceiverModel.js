@@ -2,7 +2,7 @@
 const db = require("../../config/db");
 
 const getCurrentReceivers = async (chapterId, date) => {
-  return db("feeReceivers")
+  return db("fee_receivers")
     .where("chapterId", chapterId)
     .andWhere("enableDate", "<=", date)
     .andWhere("disableDate", ">=", date)
@@ -10,7 +10,7 @@ const getCurrentReceivers = async (chapterId, date) => {
 };
 
 const getCashReceivers = async (chapterId) => {
-  return db("feeReceivers")
+  return db("fee_receivers")
     .where("paymentType", "cash")
     .andWhere("chapterId", chapterId)
     .select("*");
@@ -29,11 +29,11 @@ const addCashReceiver = async (data) => {
       disableDate,
   */
   }
-  return db("feeReceivers").insert(data);
+  return db("fee_receivers").insert(data);
 };
 
 const getQRReceivers = async (chapterId) => {
-  return db("feeReceivers")
+  return db("fee_receivers")
     .where("paymentType", "online")
     .andWhere("chapterId", chapterId)
     .select("*");
@@ -55,7 +55,7 @@ const addQRReceiver = async (data) => {
       receiverAmount,
   */
   }
-  return db("feeReceivers").insert(data);
+  return db("fee_receivers").insert(data);
 };
 
 const getAmountCollected = async (chapterId, date) => {
