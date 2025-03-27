@@ -70,9 +70,8 @@ export const MemberColumn = [
 
       ////////////////////////////////////////////actions ///////////////////////////
       const handleChangeRole = () => {
-        axiosInstance.post("/api/admin/change-role", {
-          memberId: row.original.memberId,
-          newRole: selectedRole,
+        axiosInstance.put(`/api/admin/chapter-member-list/${chapterSlug}/members/${row.original.memberId}/role`, {
+          role: "President, admin",
         })
         .then(() => toast.success("Role updated successfully"))
         .catch(() => toast.error("Failed to update role"));

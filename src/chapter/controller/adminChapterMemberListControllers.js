@@ -58,7 +58,6 @@ const deleteChapterMember = async (req, res) => {
 const updateMemberRole = async (req, res) => {
   const { chapterSlug, userId } = req.params;
   const { role } = req.body;
-
   if (!role) {
     return res.status(400).json({ error: "Role is required" });
   }

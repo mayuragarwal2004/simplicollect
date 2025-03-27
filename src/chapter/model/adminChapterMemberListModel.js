@@ -109,13 +109,11 @@ const updateMemberRole = async (chapterSlug, userId, newRole) => {
   const roles = await db("roles")
     .select("roleId", "roleName")
     .whereIn("roleName", roleNames);
-
   if (roles.length !== roleNames.length) {
     throw new Error("One or more invalid role names");
   }
 
   const roleIds = roles.map(role => role.roleId).join(',');
-  
   const chapter = await db("chapters")
     .select("chapterId")
     .where({ chapterSlug })
