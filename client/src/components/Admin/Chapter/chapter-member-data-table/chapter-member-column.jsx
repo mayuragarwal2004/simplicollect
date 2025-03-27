@@ -13,6 +13,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useState } from "react";
 import { axiosInstance } from "../../../../utils/config";
 import { toast } from "react-toastify";
+import { useParams } from "react-router-dom";
 
 export const MemberColumn = [
   {
@@ -60,6 +61,7 @@ export const MemberColumn = [
     id: "actions",
     header: () => <div>Actions</div>,
     cell: ({ row }) => {
+      const { chapterSlug } = useParams();
       const [leaveDate, setLeaveDate] = useState("");
       const [selectedRole, setSelectedRole] = useState("");
       const [balance, setBalance] = useState(row.original.balance);
@@ -77,8 +79,7 @@ export const MemberColumn = [
       };
 
       const handleUpdateBalance = () => {
-        axiosInstance.post("/api/admin/update-balance", {
-          memberId: row.original.memberId,
+        axiosInstance.put(`/api/admin/chapter-member-list/${chapterSlug}/members/${row.original.memberId}/balance`, {
           balance,
           addToTransaction,
         })
@@ -87,8 +88,7 @@ export const MemberColumn = [
       };
 
       const handleRemove = () => {
-        axiosInstance.post("/api/admin/remove-member", {
-          memberId: row.original.memberId,
+        axiosInstance.put(`/api/admin/chapter-member-list/${chapterSlug}/members/${row.original.memberId}/remove`, {
           leaveDate,
         })
         .then(() => toast.success("Member removed successfully"))
@@ -96,8 +96,7 @@ export const MemberColumn = [
       };
 
       const handleDelete = () => {
-        axiosInstance.post("/api/admin/delete-member", {
-          memberId: row.original.memberId,
+        axiosInstance.delete(`/api/admin/chapter-member-list/${chapterSlug}/members/${row.original.memberId}`, {
         })
         .then(() => toast.success("Member deleted successfully"))
         .catch(() => toast.error("Failed to delete member"));

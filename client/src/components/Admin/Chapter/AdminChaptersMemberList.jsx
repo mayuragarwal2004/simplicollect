@@ -43,7 +43,6 @@ const AdminChaptersMemberList = () => {
         setLoading(false);
       });
   };
-
   const handleOpenModal = (member = null) => {
     if (member) {
       setFormData({ memberName: member.memberName, email: member.email });
