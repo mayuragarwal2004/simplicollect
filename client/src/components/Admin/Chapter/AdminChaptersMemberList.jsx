@@ -3,8 +3,13 @@ import { axiosInstance } from '../../../utils/config';
 import { useLocation, useParams } from 'react-router-dom';
 import { MemberTable } from '../Chapter/chapter-member-data-table/chapter-member-table';
 import { MemberColumn } from '../Chapter/chapter-member-data-table/chapter-member-column';
-import { toast, ToastContainer } from 'react-toastify';
+import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
 
 const AdminChaptersMemberList = () => {
   const [members, setMembers] = useState([]);
@@ -18,7 +23,7 @@ const AdminChaptersMemberList = () => {
   const page = searchParams.get('page') || 0;
   const [formData, setFormData] = useState({ memberName: '', email: '' });
   const [selectedOrganisation, setSelectedOrganisation] = useState(null);
-     
+  
   const { chapterSlug } = useParams();
 
   useEffect(() => {
@@ -38,7 +43,6 @@ const AdminChaptersMemberList = () => {
         setLoading(false);
       });
   };
-
   const handleOpenModal = (member = null) => {
     if (member) {
       setFormData({ memberName: member.memberName, email: member.email });
@@ -92,14 +96,10 @@ const AdminChaptersMemberList = () => {
   };
 
   return (
-    <div className="rounded-sm border border-stroke bg-white p-5 shadow-md dark:border-strokedark dark:bg-boxdark">
-      <ToastContainer position="top-right" autoClose={3000} />
-
+    <Card className="p-5 shadow-md">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-semibold">Super Admin Chapter Slug Member Table</h2>
-        <button onClick={() => handleOpenModal()} className="px-4 py-2 bg-primary text-white dark:bg-black rounded hover:bg-opacity-90">
-          Add Member
-        </button>
+        <h2 className="text-xl font-semibold">Super Admin Chapter Member Table</h2>
+        <Button onClick={() => handleOpenModal()}>Add Member</Button>
       </div>
 
       {loading ? (
@@ -114,46 +114,38 @@ const AdminChaptersMemberList = () => {
         />
       )}
 
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-          <div className="bg-background p-6 rounded-lg w-full max-w-lg dark:bg-boxdark">
-            <h3 className="text-xl font-semibold mb-4">{editingMember ? 'Edit Member' : 'Add Member'}</h3>
-            <form onSubmit={handleSubmit}>
-              <div className="mb-4">
-                <label className="block mb-2">Member Name</label>
-                <input 
-                  type="text" 
-                  name="memberName" 
-                  value={formData.memberName} 
-                  onChange={(e) => setFormData({ ...formData, memberName: e.target.value })} 
-                  className="w-full p-2 border rounded bg-background dark:bg-boxdark dark:text-white" 
-                  required 
-                />
-              </div>
-              <div className="mb-4">
-                <label className="block mb-2">Email</label>
-                <input 
-                  type="email" 
-                  name="email" 
-                  value={formData.email} 
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })} 
-                  className="w-full p-2 border rounded bg-background dark:bg-boxdark dark:text-white" 
-                  required 
-                />
-              </div>
-              <div className="flex justify-end space-x-3">
-                <button type="button" onClick={handleCloseModal} className="px-4 py-2 border rounded">
-                  Cancel
-                </button>
-                <button type="submit" className="px-4 py-2 bg-primary text-white rounded">
-                  {editingMember ? 'Update' : 'Add'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-    </div>
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{editingMember ? 'Edit Member' : 'Add Member'}</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <Label>Member Name</Label>
+              <Input 
+                type="text" 
+                value={formData.memberName} 
+                onChange={(e) => setFormData({ ...formData, memberName: e.target.value })} 
+                required 
+              />
+            </div>
+            <div>
+              <Label>Email</Label>
+              <Input 
+                type="email" 
+                value={formData.email} 
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })} 
+                required 
+              />
+            </div>
+            <div className="flex justify-end space-x-3">
+              <Button type="button" variant="outline" onClick={handleCloseModal}>Cancel</Button>
+              <Button type="submit">{editingMember ? 'Update' : 'Add'}</Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </Card>
   );
 };
 
