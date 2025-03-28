@@ -94,6 +94,21 @@ export const MemberColumn = [
         .catch(() => toast.error("Failed to remove member"));
       };
 
+
+      // const handleChangeRole = () => {
+      //   if (!selectedRole) {
+      //     toast.error("Please select a role");
+      //     return;
+      //   }
+      
+      //   axiosInstance.put(`/api/admin/chapter-member-list/${chapterSlug}/members/${row.original.memberId}/role`, {
+      //     role: selectedRole,
+      //   })
+      //   .then(() => toast.success("Role updated successfully"))
+      //   .catch(() => toast.error("Failed to update role"));
+      // };
+
+      
       const handleDelete = () => {
         axiosInstance.delete(`/api/admin/chapter-member-list/${chapterSlug}/members/${row.original.memberId}`, {
         })
