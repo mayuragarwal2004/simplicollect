@@ -10,18 +10,10 @@ import {
 import 'react-toastify/dist/ReactToastify.css';
 
 import Loader from './common/Loader';
-import PageTitle from './components/PageTitle';
 import SignIn from './pages/Authentication/SignIn';
 import OtpVerification from './pages/Authentication/OtpVerification';
 import ForgotPassword from './pages/Authentication/ForgotPassword';
-import SignUp from './pages/Authentication/SignUp';
-// import Continue from './pages/Authentication/Continue';
-import Calendar from './pages/Calendar';
-import Chart from './pages/Chart';
-import ECommerce from './pages/Member/Dashboard/ECommerce';
 import EOI from './pages/Visitor/EOI';
-import FormElements from './pages/Form/FormElements';
-import FormLayout from './pages/Form/FormLayout';
 import Profile from './pages/Member/Profile';
 import Settings from './pages/Settings';
 // import Tables from './pages/Tables';
@@ -36,23 +28,23 @@ import PackageViewerPage from './pages/Member/Package/PackageViewerPage';
 import MemberFeeApproval from './pages/Member/MemberFeeApproval';
 import FeeReciever from './pages/Member/FeeReciever';
 import RequireAuth from './utils/RequireAut';
-import PrivacyPolicy from './pages/PrivacyPolicy';
+import PrivacyPolicy from './pages/simpliCollectPrivacyPolicy';
 import TermsAndConditions from './pages/TermsAndConditions';
 import NoChapterPage from './pages/NoChapterPage';
 import { Bounce, ToastContainer } from 'react-toastify';
-import { Password } from '@mui/icons-material';
 import AdminSignIn from './pages/Authentication/AdminSignIn';
 import AdminOrganisationsPage from './pages/Admin/organisation/AdminOrganisationsTablePage';
 import AdminChaptersTablePage from './pages/Admin/chapters/AdminChaptersTablePage';
+import AdminChapterLayout from './pages/Admin/chapters/AdminChapterLayout';
+import AdminChapterMemberList from './pages/Admin/chapters/AdminChapterMemberList';
+import AdminMembersTablePage from './pages/Admin/members/AdminMembersTablePage';
+import AcceptChapterPaymentPage from './pages/Member/FeeReceiver/AcceptChapterPaymentPage';
+import ChapterRules from './components/Admin/Chapter/CreateNew/ChapterRules'
 
 const routes = [
   {
     index: true,
     element: <Navigate to="/auth/signin" />,
-  },
-  {
-    path: 'profile',
-    element: <Profile />,
   },
   {
     path: '/admin',
@@ -78,8 +70,33 @@ const routes = [
       },
       {
         path: 'chapters',
-        element: <AdminChaptersTablePage />,
+        children:[
+          {
+            index: true,
+            element: <AdminChaptersTablePage />,
+          },
+          {
+            path: ':chapterSlug',
+            element: <AdminChapterLayout />,//////
+            children:[
+              {
+                path:"member",
+                element:<AdminChapterMemberList />
+              },
+              {
+                path:"roles",
+                element: <ChapterRules />,
+              }
+            ]
+          }
+        ]
       },
+
+     
+      {
+        path: 'members',
+        element: <AdminMembersTablePage />,
+      }
     ],
   },
   {
@@ -150,6 +167,10 @@ const routes = [
           {
             path: 'profile',
             element: <Profile />,
+          },
+          {
+            path: 'accept-chapter-transaction',
+            element: <AcceptChapterPaymentPage />,
           }
         ],
       },

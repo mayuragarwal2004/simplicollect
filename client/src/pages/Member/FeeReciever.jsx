@@ -6,7 +6,7 @@ import { IconButton } from '@mui/material';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import { axiosInstance } from '../../utils/config';
 import { useData } from '../../context/DataContext';
-import { Button } from "@/components/ui/button"
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -14,7 +14,9 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog"
+} from '@/components/ui/dialog';
+import AddCashReceiver from '../../components/member/FeeReceiver/AddCashReceiver';
+import AddOnlineReceiver from '../../components/member/FeeReceiver/AddOnlineReceiver';
 
 const FeeReciever = () => {
   const [cashReceivers, setCashReceivers] = useState([]);
@@ -32,7 +34,6 @@ const FeeReciever = () => {
     disableDate: '',
   });
   const [qrRecieverFormData, setQrRecieverFormData] = useState({
-    qrCode: '',
     memberId: '',
     chapterId: chapterData.chapterId,
     imageFile: null,
@@ -44,14 +45,16 @@ const FeeReciever = () => {
 
   useEffect(() => {
     fetchCashReceivers();
-    fetchQrReceivers();
+    fetchOnlineReceivers ();
     fetchMembersList();
     getAmountCollected();
   }, []);
 
   const fetchMembersList = async () => {
-    const response = await axiosInstance.post('/api/member/memberList', {
-      chapterId: chapterData.chapterId,
+    const response = await axiosInstance.get('/api/member/all', {
+      params: {
+        chapterId: chapterData.chapterId,
+      },
     });
     setMembersList(response.data);
   };
@@ -63,7 +66,7 @@ const FeeReciever = () => {
     setCashReceivers(response.data);
   };
 
-  const fetchQrReceivers = async () => {
+  const fetchOnlineReceivers  = async () => {
     const response = await axiosInstance.get(
       `/api/feeReciever/qr/${chapterData.chapterId}`,
     );
@@ -76,12 +79,15 @@ const FeeReciever = () => {
   };
 
   const handleModalClose = () => {
+    setModalType('');
     setIsModalOpen(false);
   };
 
   const handleCashSubmit = async (e) => {
     e.preventDefault();
     try {
+      console.log('recieverFormData:', recieverFormData);
+
       const member = membersList.find(
         (member) => member.memberId === recieverFormData.memberId,
       );
@@ -119,7 +125,7 @@ const FeeReciever = () => {
         qrImageLink: imageLink,
         imageFile: undefined,
       });
-      fetchQrReceivers();
+      fetchOnlineReceivers ();
       handleModalClose();
     } catch (error) {
       console.error(error);
@@ -146,17 +152,11 @@ const FeeReciever = () => {
                 </IconButton> */}
         </div>
         <div>
-          <div className="mb-4 flex gap-4">
-            <Button
-              color="primary"
-              onClick={() => handleAddNew('cash')}
-            >
+          <div className="mb-4 flex flex-wrap gap-4">
+            <Button color="primary" onClick={() => handleAddNew('cash')}>
               Add New Cash Receiver
             </Button>
-            <Button
-              color="primary"
-              onClick={() => handleAddNew('qr')}
-            >
+            <Button color="primary" onClick={() => handleAddNew('qr')}>
               Add New QR Receiver
             </Button>
           </div>
@@ -197,7 +197,7 @@ const FeeReciever = () => {
                       className="border-b border-gray-300 dark:border-strokedark"
                     >
                       <td className="py-3 px-4 text-black dark:text-white">
-                        {receiver.cashRecieverName}
+                        {receiver.receiverName}
                       </td>
                       <td className="py-3 px-4 text-black dark:text-white">
                         {new Date(receiver.enableDate).toLocaleDateString()}
@@ -256,7 +256,7 @@ const FeeReciever = () => {
                       className="border-b border-gray-300 dark:border-strokedark"
                     >
                       <td className="py-3 px-4 text-black dark:text-white">
-                        {receiver.qrCodeName}
+                        {receiver.receiverName}
                       </td>
                       <td className="py-3 px-4 text-black dark:text-white">
                         <img
@@ -283,7 +283,23 @@ const FeeReciever = () => {
             </table>
           </div>
 
-          <Dialog  open={isModalOpen} onOpenChange={handleModalClose}>
+          <AddCashReceiver
+            isModalOpen={isModalOpen && modalType === 'cash'}
+            handleModalClose={handleModalClose}
+            membersList={membersList}
+            fetchCashReceivers={fetchCashReceivers}
+            chapterData={chapterData}
+          />
+
+          <AddOnlineReceiver
+            isModalOpen={isModalOpen && modalType === 'qr'}
+            handleModalClose={handleModalClose}
+            membersList={membersList}
+            fetchOnlineReceivers ={fetchOnlineReceivers }
+            chapterData={chapterData}
+          />
+
+          <Dialog open={false} onOpenChange={handleModalClose}>
             <DialogTrigger />
             <DialogContent className="sm:max-w-[425px]">
               <div className="modal-content p-4 bg-white rounded shadow-md">
@@ -307,14 +323,15 @@ const FeeReciever = () => {
                             }))
                           }
                         >
-                          {membersList.map((member) => (
-                            <option
-                              key={member.memberId}
-                              value={member.memberId}
-                            >
-                              {member.firstName} {member.lastName}
-                            </option>
-                          ))}
+                          {membersList &&
+                            membersList.map((member) => (
+                              <option
+                                key={member.memberId}
+                                value={member.memberId}
+                              >
+                                {member.firstName} {member.lastName}
+                              </option>
+                            ))}
                         </select>
                       </div>
                        <div className="mb-4">
@@ -349,18 +366,16 @@ const FeeReciever = () => {
                           }
                         />
                       </div>
-                      <div className="flex justify-end">
+                      <div className="flex justify-between">
+                        <Button variant="outline" onClick={handleModalClose}>
+                          Close
+                        </Button>
                         <Button
-                          variant="contained"
-                          color="primary"
                           type="submit"
                           className="mr-2"
                           onClick={handleCashSubmit}
                         >
                           Save
-                        </Button>
-                        <Button variant="contained" onClick={handleModalClose}>
-                          Close
                         </Button>
                       </div>
                     </>
@@ -380,14 +395,15 @@ const FeeReciever = () => {
                             }))
                           }
                         >
-                          {membersList.map((member) => (
-                            <option
-                              key={member.memberId}
-                              value={member.memberId}
-                            >
-                              {member.firstName} {member.lastName}
-                            </option>
-                          ))}
+                          {membersList &&
+                            membersList.map((member) => (
+                              <option
+                                key={member.memberId}
+                                value={member.memberId}
+                              >
+                                {member.firstName} {member.lastName}
+                              </option>
+                            ))}
                         </select>
                       </div>
                       <div className="mb-4">
@@ -454,18 +470,16 @@ const FeeReciever = () => {
                           }
                         />
                       </div>
-                      <div className="flex justify-end">
+                      <div className="flex justify-between">
+                        <Button variant="outline" onClick={handleModalClose}>
+                          Close
+                        </Button>
                         <Button
-                          variant="contained"
-                          color="primary"
                           type="submit"
                           className="mr-2"
                           onClick={handleQRSubmit}
                         >
                           Save
-                        </Button>
-                        <Button variant="contained" onClick={handleModalClose}>
-                          Close
                         </Button>
                       </div>
                     </>

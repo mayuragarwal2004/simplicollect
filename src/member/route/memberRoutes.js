@@ -8,7 +8,10 @@ router.get("/me", memberController.getMemberById);
 // add members
 router.post("/add", memberController.addMember);
 
-// list of all members
+// list of paginated members
 router.post("/memberList", memberController.memberList);
+
+// get all members
+router.get("/all", memberController.getAllMembersListController);
 
 module.exports = router;

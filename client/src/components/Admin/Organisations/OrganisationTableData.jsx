@@ -3,6 +3,8 @@ import { axiosInstance } from '../../../utils/config';
 import { useLocation } from 'react-router-dom';
 import { OrgTable } from './organisation-data-table/org-table';
 import { OrgColumns } from './organisation-data-table/org-column';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const OrganisationTableData = () => {
   const [organisations, setOrganisations] = useState([]);
@@ -14,11 +16,6 @@ const OrganisationTableData = () => {
   const searchParams = new URLSearchParams(location.search);
   const rows = searchParams.get('rows') || 10;
   const page = searchParams.get('page') || 0;
-  const [notification, setNotification] = useState({
-    show: false,
-    message: '',
-    type: '',
-  });
   const [formData, setFormData] = useState({
     organisationName: '',
   });
@@ -26,24 +23,6 @@ const OrganisationTableData = () => {
   useEffect(() => {
     fetchOrganisations();
   }, [rows, page]);
-
-  // Hide notification after 3 seconds
-  useEffect(() => {
-    if (notification.show) {
-      const timer = setTimeout(() => {
-        setNotification({ show: false, message: '', type: '' });
-      }, 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [notification.show]);
-
-  const showNotification = (message, type) => {
-    setNotification({
-      show: true,
-      message,
-      type,
-    });
-  };
 
   const fetchOrganisations = () => {
     axiosInstance
@@ -56,7 +35,7 @@ const OrganisationTableData = () => {
       })
       .catch((err) => {
         console.error('Error fetching organisations:', err);
-        showNotification('Failed to fetch organisations', 'error');
+        toast.error('Failed to fetch organisations');
         setLoading(false);
       });
   };
@@ -87,7 +66,6 @@ const OrganisationTableData = () => {
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     console.log('Input changed:', name, value);
-
     setFormData((prev) => ({
       ...prev,
       [name]: value,
@@ -96,7 +74,7 @@ const OrganisationTableData = () => {
 
   const validateForm = () => {
     if (!formData.organisationName.trim()) {
-      showNotification('Organisation name is required', 'error');
+      toast.error('Organisation name is required');
       return false;
     }
     return true;
@@ -130,7 +108,7 @@ const OrganisationTableData = () => {
                 : org,
             ),
           );
-          showNotification('Organisation updated successfully', 'success');
+          toast.success('Organisation updated successfully');
         }
       } else {
         response = await axiosInstance.post('/api/organisations', payload);
@@ -139,7 +117,7 @@ const OrganisationTableData = () => {
             ...response.data,
           };
           setOrganisations((prevOrgs) => [...prevOrgs, newOrg]);
-          showNotification('Organisation created successfully', 'success');
+          toast.success('Organisation created successfully');
         }
       }
 
@@ -153,7 +131,7 @@ const OrganisationTableData = () => {
         (editingOrg
           ? 'Failed to update organisation'
           : 'Failed to create organisation');
-      showNotification(errorMessage, 'error');
+      toast.error(errorMessage);
     }
   };
 
@@ -161,12 +139,12 @@ const OrganisationTableData = () => {
     if (window.confirm('Are you sure you want to delete this organisation?')) {
       try {
         await axiosInstance.delete(`/api/organisations/${orgId}`);
-        showNotification('Organisation deleted successfully', 'success');
+        toast.success('Organisation deleted successfully');
         fetchOrganisations();
       } catch (error) {
         const errorMessage =
           error.response?.data?.error || 'Failed to delete organisation';
-        showNotification(errorMessage, 'error');
+        toast.error(errorMessage);
         console.error('Error deleting organisation:', error);
       }
     }
@@ -174,16 +152,7 @@ const OrganisationTableData = () => {
 
   return (
     <div className="rounded-2xl border border-stroke bg-white p-5 shadow-md dark:border-strokedark dark:bg-boxdark">
-      {/* Notification */}
-      {notification.show && (
-        <div
-          className={`fixed top-4 right-4 p-4 rounded shadow-lg ${
-            notification.type === 'success' ? 'bg-green-500' : 'bg-red-500'
-          } text-white z-50`}
-        >
-          {notification.message}
-        </div>
-      )}
+      <ToastContainer position="top-right" autoClose={3000} />
 
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-xl font-semibold">
@@ -201,17 +170,17 @@ const OrganisationTableData = () => {
         <p>Loading...</p>
       ) : (
         <OrgTable
-          data={organisations.map(org => ({
+          data={organisations.map((org) => ({
             ...org,
             onEdit: handleOpenModal,
-            onDelete: handleDelete
+            onDelete: handleDelete,
           }))}
           columns={OrgColumns}
           searchInputField="organisationName"
           totalRecord={totalRecord}
           pagination={{
             pageSize: parseInt(rows),
-            pageIndex: parseInt(page)
+            pageIndex: parseInt(page),
           }}
         />
       )}

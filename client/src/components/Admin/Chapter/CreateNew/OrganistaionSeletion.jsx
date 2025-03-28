@@ -1,76 +1,148 @@
-import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
-import { ChevronDownIcon } from "@radix-ui/react-icons";
-import { useState } from "react";
+'use client';
 
-const OrganisationSelection = () => {
-  const [step, setStep] = useState(1);
+import React, { useState, useEffect } from 'react';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import {
+  Command,
+  CommandInput,
+  CommandList,
+  CommandItem,
+  CommandEmpty,
+} from '@/components/ui/command';
+import ChapterBasicDetails from './ChapterBasicDetails';
+import { cn } from '@/lib/utils'; // Ensure you have this utility for conditional classNames
+import { axiosInstance } from '../../../../utils/config';
+import { toast } from 'react-toastify';
+
+// Simulated API call to fetch organizations
+const fetchOrganisations = async () => {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve([
+        { id: 'org1', name: 'Organisation One' },
+        { id: 'org2', name: 'Organisation Two' },
+        { id: 'org3', name: 'Organisation Three' },
+      ]);
+    }, 500);
+  });
+};
+
+const OrganisationSelection = ({ onCancel }) => {
+  const [organisations, setOrganisations] = useState([]);
+  const [selectedOrg, setSelectedOrg] = useState(null);
+  const [showNext, setShowNext] = useState(false);
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    const loadOrganisations = async () => {
+      const data = await fetchOrganisations();
+      setOrganisations(data);
+    };
+    loadOrganisations();
+  }, []);
+
+  const handleSelect = (org) => {
+    setSelectedOrg(org);
+    setOpen(false);
+  };
+
+  const handleAddChapter = (data) => {
+    console.log('Chapter Data:', data);
+    axiosInstance
+      .post('/api/admin/add-chapter', {
+        organisationId: selectedOrg.id,
+        ...data,
+      })
+      .then((response) => {
+        console.log('Chapter Added:', response.data);
+        if (response.data.success) {
+          toast.success('Chapter added successfully');
+          if (onCancel) onCancel();
+        } else {
+          toast.error('Failed to add chapter');
+        }
+      })
+      .catch((err) => {
+        toast.error('Failed to add chapter');
+      });
+  };
+
+  if (showNext) {
+    return (
+      <ChapterBasicDetails
+        onNext={(data) => {
+          handleAddChapter(data);
+        }}
+        onCancel={() => setShowNext(false)}
+      />
+    );
+  }
 
   return (
-    <div className="flex items-center justify-center bg-pink-200">
-      {step === 1 && (
-        <div className="p-6 bg-white rounded-2xl shadow-lg text-center w-[600px]">
-          <h2 className="text-2xl font-bold mb-6">Choose an Organisation</h2>
-          <DropdownMenu.Root>
-            <DropdownMenu.Trigger className="px-4 py-2 bg-gray-400 text-black rounded-lg flex items-center">
-              Choose from the below dropdown <ChevronDownIcon className="ml-2" />
-            </DropdownMenu.Trigger>
-            <DropdownMenu.Content className="bg-white shadow-md rounded-md w-48 mt-2 p-2">
-              <DropdownMenu.Item className="px-4 py-2 cursor-pointer hover:bg-gray-200 rounded">Organisation 1</DropdownMenu.Item>
-              <DropdownMenu.Item className="px-4 py-2 cursor-pointer hover:bg-gray-200 rounded">Organisation 2</DropdownMenu.Item>
-              <DropdownMenu.Item className="px-4 py-2 cursor-pointer hover:bg-gray-200 rounded">Organisation 3</DropdownMenu.Item>
-            </DropdownMenu.Content>
-          </DropdownMenu.Root>
-          <div className="flex justify-between mt-6">
-            <button className="bg-gray-400 text-black px-6 py-2 rounded-lg">&lt; Cancel</button>
-            <button className="bg-gray-400 text-black px-6 py-2 rounded-lg" onClick={() => setStep(2)}>Next &gt;</button>
-          </div>
-        </div>
-      )}
+    <Dialog open={true} onOpenChange={setShowNext}>
+      <DialogContent className="max-w-md">
+        <h3 className="text-2xl font-semibold mb-4 text-center">
+          Choose an Organisation
+        </h3>
 
-      {/* {step === 2 && (
-        <div className="p-6 bg-white rounded-2xl shadow-lg w-[700px]">
-          <h2 className="text-3xl font-bold mb-6 text-center">Enter chapter’s basic details</h2>
-          <div className="grid grid-cols-2 gap-6">
-            <div>
-              <label className="font-semibold">Chapter Name</label>
-              <input type="text" className="w-full px-4 py-2 bg-gray-400 text-black rounded-lg mt-1" placeholder="Enter the name" />
-            </div>
-            <div>
-              <label className="font-semibold">Chapter Slug</label>
-              <input type="text" className="w-full px-4 py-2 bg-gray-400 text-black rounded-lg mt-1" placeholder="Enter the slug" />
-            </div>
-            <div>
-              <label className="font-semibold">City</label>
-              <input type="text" className="w-full px-4 py-2 bg-gray-400 text-black rounded-lg mt-1" placeholder="Enter the city" />
-            </div>
-            <div>
-              <label className="font-semibold">State</label>
-              <input type="text" className="w-full px-4 py-2 bg-gray-400 text-black rounded-lg mt-1" placeholder="Enter the state" />
-            </div>
-            <div className="col-span-2">
-              <label className="font-semibold">Country</label>
-              <DropdownMenu.Root>
-                <DropdownMenu.Trigger className="w-full px-4 py-2 bg-gray-400 text-black rounded-lg mt-1 flex justify-between items-center">
-                  Select Country <ChevronDownIcon />
-                </DropdownMenu.Trigger>
-                <DropdownMenu.Content className="bg-white shadow-md rounded-md w-full mt-2 p-2">
-                  <DropdownMenu.Item className="px-4 py-2 cursor-pointer hover:bg-gray-200 rounded">India</DropdownMenu.Item>
-                  <DropdownMenu.Item className="px-4 py-2 cursor-pointer hover:bg-gray-200 rounded">USA</DropdownMenu.Item>
-                  <DropdownMenu.Item className="px-4 py-2 cursor-pointer hover:bg-gray-200 rounded">UK</DropdownMenu.Item>
-                </DropdownMenu.Content>
-              </DropdownMenu.Root>
-            </div>
-          </div>
-          <div className="flex justify-end mt-6">
-            <button className="bg-gray-400 text-black px-6 py-2 rounded-lg">Next &gt;</button>
-          </div>
+        {/* Combobox for selecting organization */}
+        <Popover open={open} onOpenChange={setOpen}>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              className="w-full justify-between text-left border"
+            >
+              {selectedOrg ? selectedOrg.name : 'Select an Organisation'}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent
+            className="w-full p-0"
+            collisionPadding={10}
+            align="start"
+          >
+            <Command>
+              <CommandInput placeholder="Search organisation..." />
+              <CommandList>
+                <CommandEmpty>No organisations found.</CommandEmpty>
+                {organisations.map((org) => (
+                  <CommandItem key={org.id} onSelect={() => handleSelect(org)}>
+                    {org.name}
+                  </CommandItem>
+                ))}
+              </CommandList>
+            </Command>
+          </PopoverContent>
+        </Popover>
+
+        {/* Action Buttons */}
+        <div className="flex justify-between mt-6">
+          <Button
+            variant="outline"
+            onClick={onCancel}
+            className="border-gray-300"
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={() => setShowNext(true)}
+            className={cn(
+              'border-gray-300',
+              selectedOrg ? '' : 'bg-gray-100 text-gray-400 cursor-not-allowed',
+            )}
+            disabled={!selectedOrg}
+          >
+            Next
+          </Button>
         </div>
-      )} */}
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 };
 
-
-
 export default OrganisationSelection;
-

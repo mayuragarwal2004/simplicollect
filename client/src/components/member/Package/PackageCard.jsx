@@ -1,8 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import Box from '@mui/material/Box';
-import AcceptPaymentMember from './AcceptPaymentMember';
-import { axiosInstance } from '../../../utils/config';
-import { useData } from '../../../context/DataContext';
 import { Button } from '@mui/material';
 import formatDateDDMMYYYY from '../../../utils/dateUtility';
 import PackagePayMain from './PackagePayMain';
@@ -22,17 +19,10 @@ const PackageCard = ({
   paymentSuccessHandler,
 }) => {
   const {
-    paymentData: {
-      receivers,
-      chapterMeetings,
-      due,
-      packageParents,
-      packageData,
-    },
+    paymentData: { receivers, chapterMeetings, packageParents,selectedPackage, packageData },
     setPaymentData,
   } = usePaymentData();
   const [showUnpaidOnly, setShowUnpaidOnly] = useState(false);
-  const [selectedPackage, setSelectedPackage] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(true);
   console.log('From PackageCard', { receivers });
 
@@ -41,6 +31,14 @@ const PackageCard = ({
 
     setIsModalOpen(false);
   };
+
+  useEffect(() => {
+    if (selectedPackage) {
+      setIsModalOpen(true);
+    } else {
+      setIsModalOpen(false);
+    }
+  }, [selectedPackage]);
 
   console.log({ selectedPackage });
 
@@ -194,13 +192,12 @@ const PackageCard = ({
       return {
         ...prev,
         selectedPackage: pkg,
+        lastSelectedPackageTime: new Date(),
       };
     });
-    setSelectedPackage(pkg);
   };
 
   const handlePaymentSuccess = () => {
-    setSelectedPackage(null);
     paymentSuccessHandler();
   };
 
@@ -263,11 +260,12 @@ const PackageCard = ({
                         - ₹{pkg.discountAmount}
                       </span>
                     )}
-                    {pkg.previousDue !== 0 && (
+                    {pkg.previousBalance !== 0 && (
                       <span className={`text-orange-500`}>
                         {' '}
-                        + ₹{pkg.previousDue} (
-                        {pkg.previousDue > 0 ? 'Previous Due' : 'Advance'})
+                        {pkg.previousBalance > 0 ? '-' : '+'} ₹
+                        {pkg.previousBalance} (
+                        {pkg.previousBalance > 0 ? 'Advance' : 'Previous Due'})
                       </span>
                     )}
                     {/* {pkg.unpaidFeesFromEarlierPackages > 0 && (
@@ -316,7 +314,7 @@ const PackageCard = ({
       {selectedPackage && receivers && (
         <Dialog open={isModalOpen} onOpenChange={handlePackagePayModalClose}>
           <DialogTrigger />
-          <DialogContent className="sm:max-w-[425px]">
+          <DialogContent className="sm:max-w-[425px] p-4 max-w-[90%] rounded-lg">
             <PackagePayMain
               selectedPackage={selectedPackage}
               pendingPayments={pendingPayments}
@@ -329,12 +327,6 @@ const PackageCard = ({
             />
           </DialogContent>
         </Dialog>
-        // <AcceptPaymentMember
-        //   selectedPackage={selectedPackage}
-        //   onClose={() => setSelectedPackage(null)}
-        //   onPaymentSuccess={handlePaymentSuccess}
-        //   chapterMeetings={chapterMeetings}
-        // />
       )}
     </div>
   );

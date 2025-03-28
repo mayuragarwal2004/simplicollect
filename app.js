@@ -32,9 +32,9 @@ app.use("/api/payment", authenticateToken, paymentRoutes);
 app.use("/api/feeReciever", authenticateToken, feeRecieverRoutes);
 app.use("/api/meetings", authenticateToken, meetingRoutes);
 app.use("/api/report", authenticateToken, require("./src/report/route/reportRoutes"));
+app.use("/api/chapter-payment", authenticateToken, require("./src/chapterPayment/route/chapterPaymentRoutes"));
 app.get("/api/testWA", async (req, res) => {
   const result = await sendWhatsAppOtp("919921318237", "1234");
-  console.log({ result });
   if (result.ok) {
     res.send("Success");
   } else {
@@ -45,6 +45,8 @@ app.get("/api/testWA", async (req, res) => {
 // admin routes
 app.use("/api/organisations", authenticateToken, require("./src/organisation/route/organisationRoutes"));
 app.use("/api/admin/chapters", authenticateToken, require("./src/chapter/route/adminChapterRoutes"));
+app.use("/api/admin/chapter-member-list", authenticateToken, require("./src/chapter/route/adminChapterMemberListRoutes"));
+
 
 app.use("/api/*", (req, res) => {
   res.status(404).send("Not Found - Please check the URL and try again");

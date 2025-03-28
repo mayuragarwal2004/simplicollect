@@ -1,5 +1,6 @@
 
 import formatDateDDMMYYYY from '@/utils/dateUtility';
+import { Link } from 'react-router-dom';
 
 export const ChapterColumn = [
   {
@@ -32,7 +33,10 @@ export const ChapterColumn = [
     header: () => <div className>Actions</div>,
     cell: ({ row }) => (
       <div className="flex space-x-3">
-        <button>view</button>
+        <Link to={`/admin/chapters/${row.original.chapterSlug}/member`} className="text-primary hover:underline">
+          View
+        </Link>
+     
         <button
           onClick={() => row.original.onEdit(row.original)}
           className="text-primary hover:underline"

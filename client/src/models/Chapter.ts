@@ -23,5 +23,5 @@ export interface Chapter {
   organisationId?: string;
   organisationName?: string;
   testMode?: boolean;
-  due?: number;
+  balance?: number;
 }

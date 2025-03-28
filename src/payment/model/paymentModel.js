@@ -6,7 +6,7 @@ const addTransaction = async (data) => {
 
 const addPayment = async (newRecords) => {
   try {
-    const result = await db("membersmeetingmapping").insert(newRecords);
+    const result = await db("members_meeting_mapping").insert(newRecords);
     return result;
   } catch (error) {
     throw error;
@@ -15,7 +15,7 @@ const addPayment = async (newRecords) => {
 
 const getMembersPendingPayments = async (memberId) => {
   try {
-    const pendingPayments = await db("membersmeetingmapping")
+    const pendingPayments = await db("members_meeting_mapping")
       .where({ memberId, status: "pending" })
       .select();
     return pendingPayments;
@@ -26,7 +26,7 @@ const getMembersPendingPayments = async (memberId) => {
 
 const getMembersPendingPaymentsWithPackageDetails = async (memberId) => {
   try {
-    const pendingPayments = await db("membersmeetingmapping as mmm")
+    const pendingPayments = await db("members_meeting_mapping as mmm")
       .leftJoin("transactions as t", "mmm.transactionId", "t.transactionId")
       .join("packages as p", "t.packageId", "p.packageId")
       .where({ "mmm.memberId": memberId, "t.status": "pending" })
@@ -85,7 +85,7 @@ const getChapterPendingPayments = async (chapterId) => {
 
 const deletePendingRequest = async (memberId, transactionId) => {
   try {
-    const result = await db("membersmeetingmapping")
+    const result = await db("members_meeting_mapping")
       .where({ memberId, transactionId })
       .del();
     await db("transactions").where({ transactionId }).del();
@@ -122,7 +122,7 @@ const approvePendingPayment = async (data, trx) => {
 const setIsPaid = async (transactionIdsArray, trx) => {
   try {
     const updatePromises = transactionIdsArray.map((transactionId) => {
-      return trx("membersmeetingmapping")
+      return trx("members_meeting_mapping")
         .where({ transactionId })
         .update({ isPaid: true });
     });
@@ -132,28 +132,28 @@ const setIsPaid = async (transactionIdsArray, trx) => {
   }
 };
 
-const addDues = async (dueList, trx) => {
-  for (const { memberId, chapterId, due } of dueList) {
-    await trx("memberChapterMapping")
+const addBalance = async (balanceList, trx) => {
+  for (const { memberId, chapterId, balance } of balanceList) {
+    await trx("member_chapter_mapping")
       .where({ memberId, chapterId })
       .update({
-        due: trx.raw("due + ?", [due]), // Directly add/subtract due
+        balance: trx.raw("balance + ?", [balance]), // Directly add/subtract balance
       });
   }
 };
 
-const updateDue = async (dueList) => {
-  for (const { memberId, chapterId, due } of dueList) {
-    await db("memberChapterMapping").where({ memberId, chapterId }).update({
-      due, // Directly set due
+const updateBalance = async (balanceList) => {
+  for (const { memberId, chapterId, balance } of balanceList) {
+    await db("member_chapter_mapping").where({ memberId, chapterId }).update({
+      balance, // Directly set balance
     });
   }
 };
 
 const getMemberChapterDue = async (memberId, chapterId) => {
-  return db("memberChapterMapping")
+  return db("member_chapter_mapping")
     .where({ memberId, chapterId })
-    .select("due")
+    .select("balance")
     .first();
 };
 const getTransactions = async (chapterId, rows, page) => {
@@ -162,14 +162,14 @@ const getTransactions = async (chapterId, rows, page) => {
   const transactions = await db("transactions as t")
     .join("members as m", "t.memberId", "m.memberId")
     .join("packages as p", "t.packageId", "p.packageId")
-    .where("p.chapterId", chapterId)  // Ensure chapter filtering
+    .where("p.chapterId", chapterId) // Ensure chapter filtering
     .select(
       "t.transactionId",
       "m.firstName",
       "m.lastName",
       "t.payableAmount",
       "t.paidAmount",
-      "t.dueAmount",
+      "t.balanceAmount",
       "p.packageName",
       "t.paymentType",
       "t.paymentReceivedByName",
@@ -188,8 +188,7 @@ const getTransactions = async (chapterId, rows, page) => {
   return { transactions, totalRecords: parseInt(count, 10) };
 };
 
-
-const getMemberFinancialSummary = async (chapterId,row,page) => {
+const getMemberFinancialSummary = async (chapterId, row, page) => {
   const offset = parseInt(page, 10) * parseInt(row, 10);
   const transactionreport = await db("transactions as t")
     .join("members as m", "t.memberId", "m.memberId")
@@ -199,7 +198,7 @@ const getMemberFinancialSummary = async (chapterId,row,page) => {
       "m.memberId",
       db.raw("CONCAT(m.firstName, ' ', m.lastName) as memberName"),
       db.raw("SUM(t.paidAmount) as amountTotal"),
-      db.raw("SUM(t.dueAmount) as totalDues")
+      db.raw("SUM(t.balanceAmount) as totalDues")
     )
     .groupBy("m.memberId", "m.firstName", "m.lastName")
     .limit(parseInt(row, 10))
@@ -208,9 +207,16 @@ const getMemberFinancialSummary = async (chapterId,row,page) => {
     .count("t.transactionId as count")
     .join("packages as p", "t.packageId", "p.packageId")
     .where("p.chapterId", chapterId);
-  return { transactionreport,chapterId, totalRecords: parseInt(count, 10) };
-}
-;
+  return { transactionreport, chapterId, totalRecords: parseInt(count, 10) };
+};
+
+const getTransactionsByMemberId = async (memberId, chapterId) => {
+  return db("transactions as t")
+    .join("packages as p", "t.packageId", "p.packageId")
+    .where({ "t.memberId": memberId, "p.chapterId": chapterId })
+    .orderBy("t.transactionDate", "desc")
+    .select("t.*");
+};
 
 module.exports = {
   addTransaction,
@@ -223,9 +229,10 @@ module.exports = {
   getTransactionById,
   approvePendingPayment,
   setIsPaid,
-  addDues,
-  updateDue,
+  addBalance,
+  updateBalance,
   getMemberChapterDue,
   getTransactions,
   getMemberFinancialSummary,
+  getTransactionsByMemberId,
 };

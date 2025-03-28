@@ -6,6 +6,7 @@ import Breadcrumb from '../../components/Breadcrumbs/BreadcrumbOriginal';
 import { Checkbox, IconButton } from '@mui/material';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import { toast } from 'react-toastify';
+import TransferAmountToChapter from '../../components/member/FeeReceiver/TransferAmountToChapter';
 
 interface MemberFee {
   transactionId: string;
@@ -100,7 +101,7 @@ const MemberFeeApproval: React.FC = () => {
         selectedApprovals.includes(fee.transactionId),
       );
       console.log({ data });
-      
+
       await axiosInstance.put('/api/payment/approvePendingPayment', {
         transactionDetails: data, // Send the first selected transactionId (or adjust for multiple approvals)
       });
@@ -127,6 +128,7 @@ const MemberFeeApproval: React.FC = () => {
             <RefreshIcon className="dark:text-white" />
           </IconButton>
         </div>
+        <TransferAmountToChapter />
         <div className="flex mb-4">
           <button
             className={`px-4 py-2 rounded-l ${
@@ -232,7 +234,7 @@ const MemberFeeApproval: React.FC = () => {
                             ₹{fee.paidAmount}
                           </td>
                           <td className="py-3 px-4 text-black dark:text-white">
-                            ₹{fee.dueAmount}
+                            ₹{fee.balanceAmount}
                           </td>
                           <td className="py-3 px-4">
                             <Checkbox
@@ -277,7 +279,7 @@ const MemberFeeApproval: React.FC = () => {
                         Amount Paid: ₹{fee.paidAmount}
                       </p>
                       <p className="text-sm text-gray-600 dark:text-gray-300">
-                        Dues: ₹{fee.dueAmount}
+                        Dues: ₹{fee.balanceAmount}
                       </p>
                       <div className="mt-2">
                         <Checkbox
@@ -361,7 +363,7 @@ const MemberFeeApproval: React.FC = () => {
                             ₹{fee.paidAmount}
                           </td>
                           <td className="py-3 px-4 text-black dark:text-white">
-                            ₹{fee.dueAmount}
+                            ₹{fee.balanceAmount}
                           </td>
                         </tr>
                       ))
@@ -395,7 +397,7 @@ const MemberFeeApproval: React.FC = () => {
                         Amount Paid: ₹{fee.paidAmount}
                       </p>
                       <p className="text-sm text-gray-600 dark:text-gray-300">
-                        Dues: ₹{fee.dueAmount}
+                        Dues: ₹{fee.balanceAmount}
                       </p>
                     </div>
                   ))

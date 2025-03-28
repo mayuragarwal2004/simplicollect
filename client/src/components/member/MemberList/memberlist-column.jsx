@@ -50,9 +50,9 @@ export const MemberListColumns = [
     enableHiding: false,
   },
   {
-    accessorKey: 'due',
+    accessorKey: 'balance',
     header: 'Due',
-    cell: ({ row }) => <p>{row.original.due}</p>,
+    cell: ({ row }) => <p>{row.original.balance}</p>,
     enableSorting: true,
     enableHiding: false,
   },

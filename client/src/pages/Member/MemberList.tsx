@@ -118,7 +118,7 @@ const MemberList: React.FC = () => {
                   {member.roleName}
                 </td>
                 <td className="py-2 px-4 border-b dark:border-gray-600">
-                  ₹{member.due}
+                  ₹{member.balance}
                 </td>
                 <td className="py-2 px-4 border-b dark:border-gray-600">
                   <div className="flex space-x-2">

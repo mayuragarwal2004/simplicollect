@@ -17,11 +17,11 @@ const getRightsByMemberIdAndChapterIdAndMenu = async (memberId, chapterId) => {
     fm.featureOrder,
     fm.featureDisabled
 FROM 
-    memberChapterMapping mcm
+    member_chapter_mapping mcm
 JOIN 
     roles ro ON mcm.roleId = ro.roleId
 JOIN 
-    featuresMaster fm ON FIND_IN_SET(fm.featureId, ro.rights) > 0
+    features_master fm ON FIND_IN_SET(fm.featureId, ro.rights) > 0
 WHERE 
     mcm.memberId = ? 
     AND mcm.chapterId = ?
@@ -33,10 +33,10 @@ WHERE
 const getAllRightsByMemberIdAndChapterId = async (memberId, chapterId) => {
   console.log({ memberId, chapterId });
   
-  return db("memberChapterMapping as mcm")
+  return db("member_chapter_mapping as mcm")
     .join("roles as ro", "mcm.roleId", "ro.roleId")
     .joinRaw(
-      "JOIN featuresMaster fm ON FIND_IN_SET(fm.featureId, ro.rights) > 0"
+      "JOIN features_master fm ON FIND_IN_SET(fm.featureId, ro.rights) > 0"
     )
     .select(
       "fm.featureId",

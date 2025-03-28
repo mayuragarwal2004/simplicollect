@@ -18,6 +18,7 @@ const getPackagesByParentType = async (parentType) => {
 const getAllPackages = async () => {
   return db("packages as p")
     .leftJoin("transactions as t", "p.packageId", "t.packageId")
+    .orderBy("p.packagePayableStartDate", "asc")
     .select("t.*", "p.*");
 };
 
@@ -70,6 +71,7 @@ const getPackagesByChapterId = async (chapterId, memberId) => {
     })
     .distinct("p.packageId")
     .where({ "m.chapterId": chapterId })
+    .orderBy("p.packagePayableStartDate", "asc")
     .select("t.*", "p.*");
 }
 
