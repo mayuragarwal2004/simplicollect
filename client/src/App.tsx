@@ -12,7 +12,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import Loader from './common/Loader';
 import PageTitle from './components/PageTitle';
 import SignIn from './pages/Authentication/SignIn';
-import OtpVerification from './pages/Authentication/Otpverification';
+import OtpVerification from './pages/Authentication/OtpVerification';
 import ForgotPassword from './pages/Authentication/ForgotPassword';
 import SignUp from './pages/Authentication/SignUp';
 // import Continue from './pages/Authentication/Continue';

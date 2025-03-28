@@ -1,6 +1,6 @@
 const visitorModel = require("../model/visitorModel");
 const { v4: uuidv4 } = require("uuid");
-
+const db = require("../../config/db");
 // Check if a visitor exists within 48 hours
 const checkVisitor = async (req, res) => {
   const { phone } = req.query;

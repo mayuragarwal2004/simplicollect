@@ -258,50 +258,52 @@ const EOI: React.FC = () => {
     return isValid;
   };
 
-  const handleSaveAndPay = async (e: any) => {
-    e.preventDefault();
-    if (!validateForm()) return;
+ const handleSaveAndPay = async (e: any) => {
+  e.preventDefault();
+  if (!validateForm()) return;
 
-    try {
-      const formData: any = {};
-      for (const key in visitorDetails) {
-        const fieldValue = visitorDetails[key as keyof VisitorDetails].value;
-        if (fieldValue !== undefined && fieldValue !== null && fieldValue !== '') {
-          formData[key] = fieldValue;
-        }
+  try {
+    const formData: any = {};
+    for (const key in visitorDetails) {
+      const fieldValue = visitorDetails[key as keyof VisitorDetails].value;
+      if (fieldValue !== undefined && fieldValue !== null && fieldValue !== '') {
+        formData[key] = fieldValue;
       }
-
-      formData.chapterId = chapterDetails.chapterId;
-
-      // If we have a meetingId, use its date for chapterVisitDate
-      if (formData.meetingId) {
-        const selectedMeeting = [...meetingOptions.upcoming, ...meetingOptions.recent]
-          .find(m => m.meetingId === formData.meetingId);
-        if (selectedMeeting) {
-          formData.chapterVisitDate = selectedMeeting.meetingDate;
-        }
-      }
-
-      const endpoint = visitorExists ? 'addFeedback' : 'addVisitor';
-      const response = await fetch(`/api/visitor/${endpoint}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
-      });
-
-      if (response.ok) {
-        setShowQRPage(true);
-        setPageNo(3);
-      } else {
-        const error = await response.json();
-        throw new Error(error.message || 'Error saving visitor details');
-      }
-    } catch (error) {
-      console.error('Error saving visitor:', error);
-      alert(error.message);
     }
-  };
 
+    formData.chapterId = chapterDetails.chapterId;
+
+    // If we have a meetingId, use its date for chapterVisitDate
+    if (formData.meetingId) {
+      const selectedMeeting = [...meetingOptions.upcoming, ...meetingOptions.recent]
+        .find(m => m.meetingId === formData.meetingId);
+      if (selectedMeeting) {
+        // Convert to Date object
+        const meetingDate = new Date(selectedMeeting.meetingDate);
+        // Format as YYYY-MM-DD for MySQL DATE type
+        formData.chapterVisitDate = meetingDate.toISOString().split('T')[0];
+      }
+    }
+
+    const endpoint = visitorExists ? 'addFeedback' : 'addVisitor';
+    const response = await fetch(`/api/visitor/${endpoint}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(formData)
+    });
+
+    if (response.ok) {
+      setShowQRPage(true);
+      setPageNo(3);
+    } else {
+      const error = await response.json();
+      throw new Error(error.message || 'Error saving visitor details');
+    }
+  } catch (error) {
+    console.error('Error saving visitor:', error);
+    alert(error.message);
+  }
+};
   if (verifyLink === undefined) {
     return <div>Loading...</div>;
   }

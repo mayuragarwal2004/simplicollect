@@ -12,7 +12,7 @@ import {
 import { axiosInstance } from '../../../utils/config';
 import formatDateDDMMYYYY from '../../../utils/dateUtility';
 import { usePaymentData } from './PaymentDataContext';
-import { Button } from '@/components/ui/Button';
+import { Button } from '@/components/ui/button';
 const PaymentOverview = ({ onClose, onPaymentSuccess, setStep }) => {
   const {
     paymentData: {
