@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
+// import MemberSearch from './MemberSearch';
 
 const AdminChaptersMemberList = () => {
   const [members, setMembers] = useState([]);
@@ -43,6 +44,7 @@ const AdminChaptersMemberList = () => {
         setLoading(false);
       });
   };
+  
   const handleOpenModal = (member = null) => {
     if (member) {
       setFormData({ memberName: member.memberName, email: member.email });
@@ -98,15 +100,33 @@ const AdminChaptersMemberList = () => {
   return (
     <Card className="p-5 shadow-md">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-semibold">Super Admin Chapter Member Table</h2>
+        <h2 className="text-xl font-semibold">
+          Super Admin Chapter Member Table
+        </h2>
+
+
+        
+        {/* <MemberSearch
+          onMemberAdd={(addedMember) => {
+            // Handle added member, e.g., update member list
+          }}
+          chapterId={currentChapter.id}
+        /> */}
+        
+        
+        
         <Button onClick={() => handleOpenModal()}>Add Member</Button>
       </div>
 
       {loading ? (
         <p>Loading...</p>
       ) : (
-        <MemberTable 
-          data={members.map((mem) => ({ ...mem, onEdit: handleOpenModal, onDelete: fetchMembers }))}
+        <MemberTable
+          data={members.map((mem) => ({
+            ...mem,
+            onEdit: handleOpenModal,
+            onDelete: fetchMembers,
+          }))}
           columns={MemberColumn}
           searchInputField="memberName"
           totalRecord={totalRecord}
@@ -117,29 +137,41 @@ const AdminChaptersMemberList = () => {
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{editingMember ? 'Edit Member' : 'Add Member'}</DialogTitle>
+            <DialogTitle>
+              {editingMember ? 'Edit Member' : 'Add Member'}
+            </DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <Label>Member Name</Label>
-              <Input 
-                type="text" 
-                value={formData.memberName} 
-                onChange={(e) => setFormData({ ...formData, memberName: e.target.value })} 
-                required 
+              <Input
+                type="text"
+                value={formData.memberName}
+                onChange={(e) =>
+                  setFormData({ ...formData, memberName: e.target.value })
+                }
+                required
               />
             </div>
             <div>
               <Label>Email</Label>
-              <Input 
-                type="email" 
-                value={formData.email} 
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })} 
-                required 
+              <Input
+                type="email"
+                value={formData.email}
+                onChange={(e) =>
+                  setFormData({ ...formData, email: e.target.value })
+                }
+                required
               />
             </div>
             <div className="flex justify-end space-x-3">
-              <Button type="button" variant="outline" onClick={handleCloseModal}>Cancel</Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleCloseModal}
+              >
+                Cancel
+              </Button>
               <Button type="submit">{editingMember ? 'Update' : 'Add'}</Button>
             </div>
           </form>
