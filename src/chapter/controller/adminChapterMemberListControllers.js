@@ -75,13 +75,13 @@ const updateMemberRole = async (req, res) => {
 const updateMemberBalance = async (req, res) => {
   const { chapterSlug, userId } = req.params;
   const { balance, addToTransaction } = req.body;
-
+  const { memberId } = req.user;
   if (balance === undefined) {
     return res.status(400).json({ error: "Balance amount is required" });
   }
 
   try {
-    const updatedBalance = await adminChapterMemberListModel.updateMemberBalance(chapterSlug, userId, balance, addToTransaction);
+    const updatedBalance = await adminChapterMemberListModel.updateMemberBalance(chapterSlug, userId, balance, addToTransaction,memberId);
     res.json({ message: "Balance updated successfully", updatedBalance });
   } catch (error) {
     console.error("Error updating member balance:", error);

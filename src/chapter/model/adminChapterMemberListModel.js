@@ -144,18 +144,56 @@ const updateMemberRole = async (chapterSlug, userId, newRole) => {
 };
 
 // Function to update member balance (with optional transaction record)
-const updateMemberBalance = async (chapterSlug,userId, newBalance, addToTransaction = false) => {
+const updateMemberBalance = async (chapterSlug,userId, newBalance, addToTransaction = false,memberId) => {
   const chapter =await db("chapters")
     .select("chapterId")
     .where({ chapterSlug })
     .first();
-    
   if (!chapter) {
     throw new Error(`Chapter '${chapterSlug}' does not exist`);
   }
   if(addToTransaction){
-    await db("transactions").insert({ chapterId:chapter.chapterId, memberId: userId, balanceAmount: newBalance });
-  }
+    const superAdminId = memberId; // Replace with actual super admin ID
+    const superAdmin = await db("members")
+    .select(db.raw("CONCAT(firstName, ' ', lastName) AS fullName"))
+    .where({ memberId })
+    .first();
+    if (!superAdmin) {
+      throw new Error("Super admin not found");
+    }
+
+    await db("transactions").insert({
+      transactionId: db.raw("UUID()"), // Auto-generated
+      chapterId: chapter.chapterId, 
+      memberId: userId,
+      transactionDate: db.raw("CURRENT_TIMESTAMP"), // Today's date
+      transactionType: "Balance Update",
+      originalPayableAmount: 0,
+      discountAmount: 0,
+      penaltyAmount: 0,
+      receiverFee: 0,
+      amountPaidToChapter: 0,
+      amountExpectedToChapter: 0,
+      platformFee: 0,
+      balanceAmount: newBalance,
+      payableAmount: 0,
+      paidAmount: 0,
+      userRemarks: "Balance Updated by Super Admin",
+      systemRemarks: "Balance Updated by Super Admin",
+      status: "approved",
+      statusUpdateDate: db.raw("CURRENT_TIMESTAMP"), // Today's date
+      paymentType: null,
+      paymentDate: null,
+      paymentImageLink: null,
+      paymentReceivedById: null,
+      paymentReceivedByName: null,
+      packageId: null,
+      approvedById: superAdminId, // Replace with actual super admin ID
+      approvedByName: superAdmin.fullName, // Replace with actual super admin name
+      transferedToChapter: 1,
+      transferedToChapterTransactionId: null
+  });
+    }
     await db("member_chapter_mapping").where({ chapterId:chapter.chapterId, memberId: userId }).update({ balance: newBalance });
   
   return { userId, chapterId: chapter.chapterId, newBalance };
