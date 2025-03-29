@@ -35,7 +35,7 @@ import AdminChapterLayout from './pages/Admin/chapters/AdminChapterLayout';
 import AdminChapterMemberList from './pages/Admin/chapters/AdminChapterMemberList';
 import AdminMembersTablePage from './pages/Admin/members/AdminMembersTablePage';
 import AcceptChapterPaymentPage from './pages/Member/FeeReceiver/AcceptChapterPaymentPage';
-import ChapterRules from './components/Admin/Chapter/CreateNew/ChapterRules'
+import ChapterRules from './components/Admin/Chapter/CreateNew/ChapterRules/ChapterRoles'
 
 const routes = [
   {
