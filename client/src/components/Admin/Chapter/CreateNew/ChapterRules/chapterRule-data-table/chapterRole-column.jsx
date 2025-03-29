@@ -1,6 +1,4 @@
-import { Switch } from '@/components/ui/switch';
-
-export const ChapterRuleColumns = [
+export const ChapterRoleColumns = (handleOpenModal, handleDelete) => [
   {
     id: 'srno',
     header: () => <p>Sr. No.</p>,
@@ -26,29 +24,6 @@ export const ChapterRuleColumns = [
     enableSorting: false,
     enableHiding: false,
   },
-
-  {
-    accessorKey: 'removable',
-    header: () => <div>Removable</div>,
-    cell: ({ row }) => (
-      <div className="flex items-center gap-2">
-        <label
-          htmlFor={`removable-${row.id}`}
-          className="text-sm font-medium text-gray-700"
-        >
-          {row.original.removable ? 'Yes' : 'No'}
-        </label>
-        <Switch
-          id={`removable-${row.id}`}
-          checked={row.original.removable}
-          onCheckedChange={() => row.original.onToggleRemovable(row.original)}
-        />
-      </div>
-    ),
-    enableSorting: false,
-    enableHiding: false,
-  },
-
   {
     accessorKey: 'rights',
     header: () => <div>Rights</div>,
@@ -64,13 +39,13 @@ export const ChapterRuleColumns = [
     cell: ({ row }) => (
       <div className="flex space-x-3">
         <button
-          onClick={() => row.original.onEdit(row.original)}
+          onClick={() => handleOpenModal(row.original)}
           className="text-primary hover:underline"
         >
           Edit
         </button>
         <button
-          onClick={() => row.original.onDelete(row.original.roleId)}
+          onClick={() => handleDelete(row.original.roleId)}
           className="text-danger hover:underline"
         >
           Delete

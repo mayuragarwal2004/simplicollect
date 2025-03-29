@@ -18,7 +18,7 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { createQueryString } from '@/utils/helper'
 import { usePagination } from '../../../../../../hooks/usePagination'
 
-export function ChapterRuleTable({
+export function ChapterRoleTable({
  columns,
  data,
  searchInputField,
