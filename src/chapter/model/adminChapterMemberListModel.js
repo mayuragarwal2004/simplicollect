@@ -161,10 +161,47 @@ const updateMemberBalance = async (chapterSlug,userId, newBalance, addToTransact
   return { userId, chapterId: chapter.chapterId, newBalance };
 };
 
+const searchMemberForChapter = async (searchQuery, chapterId) => {
+  return db("members as m")
+    .select(
+      "m.memberId",
+      db.raw("CONCAT(m.firstName, ' ', m.lastName) AS fullName"),
+      "m.firstName",
+      "m.lastName",
+      "m.email",
+      "m.phoneNumber",
+      db.raw("CASE WHEN mc.memberId IS NOT NULL THEN 1 ELSE 0 END AS isInChapter"),
+      db.raw(`
+        CASE 
+          WHEN m.firstName LIKE ? THEN 1
+          WHEN m.lastName LIKE ? THEN 2
+          WHEN m.email LIKE ? THEN 3
+          WHEN m.phoneNumber LIKE ? THEN 4
+          ELSE 5 
+        END AS relevance
+      `, [`${searchQuery}%`, `${searchQuery}%`, `${searchQuery}%`, `${searchQuery}%`]) 
+    )
+    .leftJoin("member_chapter_mapping as mc", function () {
+      this.on("m.memberId", "=", "mc.memberId")
+        .andOn("mc.chapterId", "=", db.raw("?", [chapterId]))
+        .andOn(db.raw("mc.status = 'joined' OR mc.status IS NULL"));
+    })
+    .where(function () {
+      this.where("m.firstName", "LIKE", `%${searchQuery}%`)
+        .orWhere("m.lastName", "LIKE", `%${searchQuery}%`)
+        .orWhere("m.email", "LIKE", `%${searchQuery}%`)
+        .orWhere("m.phoneNumber", "LIKE", `%${searchQuery}%`);
+    })
+    .orderBy("relevance", "asc")
+    .orderBy("m.firstName", "asc") 
+    .orderBy("m.lastName", "asc");
+};
+
 module.exports = {
   getChapterMembers,
   removeChapterMember,
   deleteChapterMember,
   updateMemberRole,
   updateMemberBalance,
+  searchMemberForChapter,
 };

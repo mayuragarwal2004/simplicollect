@@ -17,5 +17,8 @@ router.put("/:chapterSlug/members/:userId/role", adminChapterMemberListControlle
 // Update a member's balance
 router.put("/:chapterSlug/members/:userId/balance", adminChapterMemberListControllers.updateMemberBalance);
 
+
+router.get("/searchmembers", adminChapterMemberListControllers.searchMemberForChapter);
+
 module.exports = router;
 

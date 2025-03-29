@@ -89,10 +89,30 @@ const updateMemberBalance = async (req, res) => {
   }
 };
 
+const searchMemberForChapter = async (req, res) => {
+  const { searchQuery, chapterId } = req.query;
+  if (!searchQuery || !chapterId) {
+    return res.status(400).json({ message: "Search query and chapterId are required." });
+  }
+
+  try {
+    const members = await adminChapterMemberListModel.searchMemberForChapter(searchQuery, chapterId);
+    if (members.length > 0) {
+      res.json(members);
+    } else {
+      res.status(404).json({ message: "No matching members found." });
+    }
+  } catch (error) {
+    console.error("Error searching for members:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
 module.exports = {
   getChapterMembers,
   removeChapterMember,
   deleteChapterMember,
   updateMemberRole,
   updateMemberBalance,
+  searchMemberForChapter
 };
