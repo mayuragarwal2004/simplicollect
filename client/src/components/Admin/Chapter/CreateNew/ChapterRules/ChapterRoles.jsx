@@ -5,7 +5,7 @@ import { ChapterRoleTable } from './chapterRule-data-table/chapterRole-table';
 import { ChapterRoleColumns } from './chapterRule-data-table/chapterRole-column';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { MultiSelect } from "@/components/ui/MultiSelect";
+import { MultiSelect } from '@/components/ui/MultiSelect';
 import {
   Dialog,
   DialogContent,
@@ -65,7 +65,7 @@ function ChapterRoles() {
   const [formData, setFormData] = useState({
     roleName: '',
     roleDescription: '',
-    rights: [], 
+    rights: [],
     removable: false,
   });
 
@@ -77,7 +77,7 @@ function ChapterRoles() {
   const fetchRoles = async () => {
     try {
       const res = await axiosInstance.get(
-        `/api/chapter-Roles?rows=${rows}&page=${page}`
+        `/api/chapter-Roles?rows=${rows}&page=${page}`,
       );
 
       const updatedRoles = (res.data.data || res.data).map((role) => ({
@@ -109,12 +109,17 @@ function ChapterRoles() {
       setFormData({
         roleName: role.roleName,
         roleDescription: role.roleDescription,
-        rights: Array.isArray(role.rights) ? role.rights : [], 
+        rights: Array.isArray(role.rights) ? role.rights : [],
         removable: role.removable || false,
       });
       setEditingRole(role);
     } else {
-      setFormData({ roleName: '', roleDescription: '', rights: [], removable: false });
+      setFormData({
+        roleName: '',
+        roleDescription: '',
+        rights: [],
+        removable: false,
+      });
       setEditingRole(null);
     }
     setIsModalOpen(true);
@@ -123,11 +128,19 @@ function ChapterRoles() {
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setEditingRole(null);
-    setFormData({ roleName: '', roleDescription: '', rights: [], removable: false });
+    setFormData({
+      roleName: '',
+      roleDescription: '',
+      rights: [],
+      removable: false,
+    });
   };
 
   const handleRightsChange = (selectedValues) => {
-    setFormData((prev) => ({ ...prev, rights: Array.isArray(selectedValues) ? selectedValues : [] }));
+    setFormData((prev) => ({
+      ...prev,
+      rights: Array.isArray(selectedValues) ? selectedValues : [],
+    }));
   };
 
   const handleInputChange = (e) => {
@@ -140,7 +153,11 @@ function ChapterRoles() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.roleName.trim() || !formData.roleDescription.trim() || formData.rights.length === 0) {
+    if (
+      !formData.roleName.trim() ||
+      !formData.roleDescription.trim() ||
+      formData.rights.length === 0
+    ) {
       toast.error('All fields are required');
       return;
     }
@@ -148,20 +165,32 @@ function ChapterRoles() {
     try {
       let response;
       if (editingRole) {
-        response = await axiosInstance.put(`/api/chapter-Roles/${editingRole.roleId}`, formData);
+        response = await axiosInstance.put(
+          `/api/chapter-Roles/${editingRole.roleId}`,
+          formData,
+        );
         setRoles((prevRoles) =>
           prevRoles.map((role) =>
             role.roleId === editingRole.roleId
-              ? { ...role, ...response.data, onEdit: () => handleOpenModal(response.data), onDelete: () => handleDelete(response.data.roleId) }
-              : role
-          )
+              ? {
+                  ...role,
+                  ...response.data,
+                  onEdit: () => handleOpenModal(response.data),
+                  onDelete: () => handleDelete(response.data.roleId),
+                }
+              : role,
+          ),
         );
         toast.success('Role updated successfully');
       } else {
         response = await axiosInstance.post('/api/chapter-Roles', formData);
         setRoles((prevRoles) => [
           ...prevRoles,
-          { ...response.data, onEdit: () => handleOpenModal(response.data), onDelete: () => handleDelete(response.data.roleId) },
+          {
+            ...response.data,
+            onEdit: () => handleOpenModal(response.data),
+            onDelete: () => handleDelete(response.data.roleId),
+          },
         ]);
         toast.success('Role created successfully');
       }
@@ -175,7 +204,9 @@ function ChapterRoles() {
     if (!window.confirm('Are you sure you want to delete this role?')) return;
     try {
       await axiosInstance.delete(`/api/chapter-Roles/${roleId}`);
-      setRoles((prevRoles) => prevRoles.filter((role) => role.roleId !== roleId));
+      setRoles((prevRoles) =>
+        prevRoles.filter((role) => role.roleId !== roleId),
+      );
       toast.success('Role deleted successfully');
     } catch (error) {
       toast.error('Failed to delete role');
@@ -184,8 +215,18 @@ function ChapterRoles() {
 
   return (
     <div className="p-6 bg-white rounded-lg shadow-lg mt-4 relative">
-      <h2 className="text-xl font-semibold mb-4">Set up Roles for the Chapters</h2>
-      {loading ? <p>Loading...</p> : <ChapterRoleTable data={roles} columns={ChapterRoleColumns(handleOpenModal, handleDelete)} totalRecord={totalRecord} />}
+      <h2 className="text-xl font-semibold mb-4">
+        Set up Roles for the Chapters
+      </h2>
+      {loading ? (
+        <p>Loading...</p>
+      ) : (
+        <ChapterRoleTable
+          data={roles}
+          columns={ChapterRoleColumns(handleOpenModal, handleDelete)}
+          totalRecord={totalRecord}
+        />
+      )}
       <div className="flex justify-center mt-5">
         <Button onClick={() => handleOpenModal()}>Add Role</Button>
       </div>
@@ -194,11 +235,33 @@ function ChapterRoles() {
           <DialogHeader>
             <DialogTitle>{editingRole ? 'Edit Role' : 'Add Role'}</DialogTitle>
           </DialogHeader>
-          <Input name="roleName" placeholder="Role Name" value={formData.roleName} onChange={handleInputChange} />
-          <Input name="roleDescription" placeholder="Role Description" value={formData.roleDescription} onChange={handleInputChange} />
-          <MultiSelect options={featureMaster} onValueChange={handleRightsChange} defaultValue={formData.rights} placeholder="Select Rights" maxCount={5} />
+          <Input
+            name="roleName"
+            placeholder="Role Name"
+            value={formData.roleName}
+            onChange={handleInputChange}
+          />
+          <Input
+            name="roleDescription"
+            placeholder="Role Description"
+            value={formData.roleDescription}
+            onChange={handleInputChange}
+          />
+          <MultiSelect
+            options={featureMaster.map((feature) => ({
+              label: feature.featureName, 
+              value: feature.featureId.toString(),
+            }))}
+            onValueChange={handleRightsChange}
+            defaultValue={formData.rights.map(String)} 
+            placeholder="Select Rights"
+            maxCount={5}
+          />
+
           <DialogFooter>
-            <Button onClick={handleCloseModal} variant="secondary">Cancel</Button>
+            <Button onClick={handleCloseModal} variant="secondary">
+              Cancel
+            </Button>
             <Button onClick={handleSubmit}>Save</Button>
           </DialogFooter>
         </DialogContent>
