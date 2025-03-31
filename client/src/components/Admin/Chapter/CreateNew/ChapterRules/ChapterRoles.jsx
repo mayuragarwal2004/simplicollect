@@ -16,12 +16,13 @@ import {
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import {
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem,
-} from '@/components/ui/select';
+  AlertDialog,
+  AlertDialogTrigger,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogFooter,
+} from '@/components/ui/alert-dialog';
 
 function ChapterRoles() {
   const [roles, setRoles] = useState([
@@ -57,6 +58,7 @@ function ChapterRoles() {
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingRole, setEditingRole] = useState(null);
+  const [deleteRoleId, setDeleteRoleId] = useState(null);
   const [totalRecord, setTotalRecord] = useState(0);
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
@@ -200,17 +202,18 @@ function ChapterRoles() {
     }
   };
 
-  const handleDelete = async (roleId) => {
-    if (!window.confirm('Are you sure you want to delete this role?')) return;
+  const handleDelete = async () => {
+    if (!deleteRoleId) return;
     try {
-      await axiosInstance.delete(`/api/chapter-Roles/${roleId}`);
+      await axiosInstance.delete(`/api/chapter-Roles/${deleteRoleId}`);
       setRoles((prevRoles) =>
-        prevRoles.filter((role) => role.roleId !== roleId),
+        prevRoles.filter((role) => role.roleId !== deleteRoleId),
       );
       toast.success('Role deleted successfully');
     } catch (error) {
       toast.error('Failed to delete role');
     }
+    setDeleteRoleId(null);
   };
 
   return (
@@ -223,13 +226,33 @@ function ChapterRoles() {
       ) : (
         <ChapterRoleTable
           data={roles}
-          columns={ChapterRoleColumns(handleOpenModal, handleDelete)}
-          totalRecord={totalRecord}
+          columns={ChapterRoleColumns(handleOpenModal, setDeleteRoleId)}
         />
       )}
       <div className="flex justify-center mt-5">
         <Button onClick={() => handleOpenModal()}>Add Role</Button>
       </div>
+
+      <AlertDialog
+        open={!!deleteRoleId}
+        onOpenChange={() => setDeleteRoleId(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm Deletion</AlertDialogTitle>
+          </AlertDialogHeader>
+          <p>Are you sure you want to delete this role?</p>
+          <AlertDialogFooter>
+            <Button variant="secondary" onClick={() => setDeleteRoleId(null)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleDelete}>
+              Delete
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
         <DialogContent>
           <DialogHeader>
@@ -249,11 +272,11 @@ function ChapterRoles() {
           />
           <MultiSelect
             options={featureMaster.map((feature) => ({
-              label: feature.featureName, 
+              label: feature.featureName,
               value: feature.featureId.toString(),
             }))}
             onValueChange={handleRightsChange}
-            defaultValue={formData.rights.map(String)} 
+            defaultValue={formData.rights.map(String)}
             placeholder="Select Rights"
             maxCount={5}
           />
