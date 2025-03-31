@@ -89,14 +89,13 @@ const updateMemberBalance = async (req, res) => {
   }
 };
 
-const searchMemberForChapter = async (req, res) => {
+const searchMemberForChapterToAdd = async (req, res) => {
   const { searchQuery, chapterId } = req.query;
   if (!searchQuery || !chapterId) {
     return res.status(400).json({ message: "Search query and chapterId are required." });
   }
-
   try {
-    const members = await adminChapterMemberListModel.searchMemberForChapter(searchQuery, chapterId);
+    const members = await adminChapterMemberListModel.searchMemberForChapterToAdd(searchQuery, chapterId);
     if (members.length > 0) {
       res.json(members);
     } else {
@@ -108,11 +107,43 @@ const searchMemberForChapter = async (req, res) => {
   }
 };
 
+const searchMemberForChapter = async (req, res) => {
+  const { searchQuery, chapterId } = req.query;
+  if (!searchQuery || !chapterId) {
+    return res.status(400).json({ message: "Search query and chapterId are required." });
+  }
+
+  let { rows = 10, page = 1 } = req.query;
+  rows = parseInt(rows, 10);
+  page = parseInt(page, 10);
+
+  try {
+    const { members, total } = await adminChapterMemberListModel.searchMemberForChapter(
+      searchQuery,
+      chapterId,
+      rows,
+      page
+    );
+
+    res.json({
+      data: members,
+      totalRecords: total,
+      rows,
+      page
+    });
+  } catch (error) {
+    console.error("Error searching for members:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+
 module.exports = {
   getChapterMembers,
   removeChapterMember,
   deleteChapterMember,
   updateMemberRole,
   updateMemberBalance,
+  searchMemberForChapterToAdd,
   searchMemberForChapter
 };

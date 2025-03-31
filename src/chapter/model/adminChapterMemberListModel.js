@@ -1,4 +1,5 @@
 const db = require("../../config/db");
+const { search } = require("../route/adminChapterMemberListRoutes");
 
 const getChapterMembers = async (chapterSlug, rows, page) => {
   const chapter = await db("chapters")
@@ -199,7 +200,7 @@ const updateMemberBalance = async (chapterSlug,userId, newBalance, addToTransact
   return { userId, chapterId: chapter.chapterId, newBalance };
 };
 
-const searchMemberForChapter = async (searchQuery, chapterId) => {
+const searchMemberForChapterToAdd = async (searchQuery, chapterId) => {
   return db("members as m")
     .select(
       "m.memberId",
@@ -232,8 +233,58 @@ const searchMemberForChapter = async (searchQuery, chapterId) => {
     })
     .orderBy("relevance", "asc")
     .orderBy("m.firstName", "asc") 
-    .orderBy("m.lastName", "asc");
+    .orderBy("m.lastName", "asc")
+    .limit(50);
 };
+
+const searchMemberForChapter = async (searchQuery, chapterId, rows, page) => {
+  const offset = (page - 1) * rows; 
+
+  const members = await db("members as m")
+    .select(
+      "m.memberId",
+      db.raw("CONCAT(m.firstName, ' ', m.lastName) AS fullName"),
+      "m.firstName",
+      "m.lastName",
+      "m.email",
+      "m.phoneNumber"
+    )
+    .join("member_chapter_mapping as mc", function () {
+      this.on("m.memberId", "=", "mc.memberId")
+        .andOn("mc.chapterId", "=", db.raw("?", [chapterId]))
+        .andOn(db.raw("mc.status = 'joined'")); 
+    })
+    .where(function () {
+      this.where("m.firstName", "LIKE", `%${searchQuery}%`)
+        .orWhere("m.lastName", "LIKE", `%${searchQuery}%`)
+        .orWhere("m.email", "LIKE", `%${searchQuery}%`)
+        .orWhere("m.phoneNumber", "LIKE", `%${searchQuery}%`);
+    })
+    .orderBy("m.firstName", "asc")
+    .orderBy("m.lastName", "asc")
+    .limit(rows)
+    .offset(offset);
+
+  const totalResult = await db("members as m")
+    .count("m.memberId as count")
+    .join("member_chapter_mapping as mc", function () {
+      this.on("m.memberId", "=", "mc.memberId")
+        .andOn("mc.chapterId", "=", db.raw("?", [chapterId]))
+        .andOn(db.raw("mc.status = 'joined'")); 
+    })
+    .where(function () {
+      this.where("m.firstName", "LIKE", `%${searchQuery}%`)
+        .orWhere("m.lastName", "LIKE", `%${searchQuery}%`)
+        .orWhere("m.email", "LIKE", `%${searchQuery}%`)
+        .orWhere("m.phoneNumber", "LIKE", `%${searchQuery}%`);
+    })
+    .first();
+
+  const total = totalResult ? totalResult.count : 0; 
+
+  return { members, total };
+};
+
 
 module.exports = {
   getChapterMembers,
@@ -241,5 +292,6 @@ module.exports = {
   deleteChapterMember,
   updateMemberRole,
   updateMemberBalance,
-  searchMemberForChapter,
+  searchMemberForChapterToAdd,
+  searchMemberForChapter
 };

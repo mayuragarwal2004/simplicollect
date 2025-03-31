@@ -18,7 +18,9 @@ router.put("/:chapterSlug/members/:userId/role", adminChapterMemberListControlle
 router.put("/:chapterSlug/members/:userId/balance", adminChapterMemberListControllers.updateMemberBalance);
 
 
-router.get("/searchmembers", adminChapterMemberListControllers.searchMemberForChapter);
+router.get("/searchmemberstoadd", adminChapterMemberListControllers.searchMemberForChapterToAdd);
+
+router.get("/searchmembersforchapter", adminChapterMemberListControllers.searchMemberForChapter);
 
 module.exports = router;
 
