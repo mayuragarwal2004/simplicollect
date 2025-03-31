@@ -106,6 +106,22 @@ const searchMemberForChapterToAdd = async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
+const addMemberToChapter=async (req, res) => {
+  const { chapterSlug, userId } = req.params;
+  const { role } = req.body;
+
+  if (!userId || !role) {
+    return res.status(400).json({ error: "User ID and role are required" });
+  }
+
+  try {
+    const addedMember = await adminChapterMemberListModel.addMemberToChapter(chapterSlug, userId, role);
+    res.json({ message: "Member added successfully", addedMember });
+  } catch (error) {
+    console.error("Error adding member to chapter:", error);
+    res.status(500).json({ error: error.message });
+  }
+}
 
 const searchMemberForChapter = async (req, res) => {
   const { searchQuery, chapterId } = req.query;
@@ -145,5 +161,6 @@ module.exports = {
   updateMemberRole,
   updateMemberBalance,
   searchMemberForChapterToAdd,
-  searchMemberForChapter
+  searchMemberForChapter,
+  addMemberToChapter
 };
