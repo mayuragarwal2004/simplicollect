@@ -71,7 +71,7 @@ const VisitorList: React.FC = () => {
 
   const fetchMeetings = async () => {
     try {
-      const response = await axiosInstance(`/api/meetings/meetings/${chapterData?.chapterId}`);
+      const response = await axiosInstance(`/api/meetings/${chapterData?.chapterId}`);
       setMeetings(response.data);
       console.log("meetings",response.data)
       } catch (error) {
@@ -109,7 +109,9 @@ const VisitorList: React.FC = () => {
       fetchMeetings();
     }
   }, [chapterData, viewMode, selectedMeeting, selectedDate, dateRange]);
-
+  useEffect(() => {
+    console.log('Meetings data:', meetings); // Add this to check for duplicates
+  }, [meetings]);
   useEffect(() => {
     const filterVisitors = () => {
       let results = [...visitors];
