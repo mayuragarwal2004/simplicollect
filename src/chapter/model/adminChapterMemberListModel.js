@@ -235,6 +235,59 @@ const searchMemberForChapter = async (searchQuery, chapterId) => {
     .orderBy("m.lastName", "asc");
 };
 
+const addMemberToChapter = async (chapterSlug, userId, role) => {
+  const chapter = await db("chapters")
+    .select("chapterId")
+    .where({ chapterSlug })
+    .first();
+
+  if (!chapter) {
+    throw new Error(`Chapter '${chapterSlug}' does not exist`);
+  }
+
+  const member = await db("members")
+    .select("memberId")
+    .where({ memberId: userId })
+    .first();
+
+  if (!member) {
+    throw new Error(`Member ID '${userId}' does not exist`);
+  }
+
+  const existingMapping = await db("member_chapter_mapping")
+    .where({ chapterId: chapter.chapterId, memberId: userId })//joined
+    .first();
+
+  if (existingMapping && existingMapping.status === "joined") {
+    throw new Error(`Member ID '${userId}' is already in this chapter`);
+  }
+  const existingRole = await db("roles")
+    .select("roleId")
+    .where({ roleName: role })
+    .first();
+  if (!existingRole) {
+    throw new Error(`Role '${role}' does not exist`);
+  }
+  const roleId = existingRole.roleId;
+
+  if (existingMapping && existingMapping.status === "left") {
+    await db("member_chapter_mapping")
+      .where({ chapterId: chapter.chapterId, memberId: userId })
+      .update({ status: "joined", leaveDate: null,roleIds:role });
+
+    return { message: "Member re-added successfully", chapterSlug, userId, role };
+  }
+    
+  await db("member_chapter_mapping").insert({
+    chapterId: chapter.chapterId,
+    memberId: userId,
+    roleId: roleId,
+    status: "joined",
+  });
+
+  return { message: "Member added successfully", chapterSlug, userId, role };
+}
+
 module.exports = {
   getChapterMembers,
   removeChapterMember,
@@ -242,4 +295,5 @@ module.exports = {
   updateMemberRole,
   updateMemberBalance,
   searchMemberForChapter,
+  addMemberToChapter
 };
