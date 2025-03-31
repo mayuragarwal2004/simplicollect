@@ -70,7 +70,7 @@ const verifyVisitorLink = async (req, res) => {
 };
 const visitorList = async (req, res) => {
   const { chapterId } = req.params;
-  const {meetingId,startDate,endDate} = req.query;
+  const {meetingId,date,startDate,endDate} = req.query;
   try {
     let query=db("visitors").where("chapterId",chapterId);
     if(meetingId){
@@ -78,6 +78,9 @@ const visitorList = async (req, res) => {
     }
     if(startDate&&endDate){
       query=query.whereBeetween("chapterVisitDate",[startDate,endDate]);
+    }
+    if(date){
+      
     }
     const visitors=await query.select("*");
     res.json(visitors);

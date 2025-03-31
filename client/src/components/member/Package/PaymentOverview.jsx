@@ -12,9 +12,9 @@ import {
 import { axiosInstance } from '../../../utils/config';
 import formatDateDDMMYYYY from '../../../utils/dateUtility';
 import { usePaymentData } from './PaymentDataContext';
-import { Button } from '@/components/ui/Button';
+import { Button } from '@/components/ui/button';
 import { toast } from 'react-toastify';
-import QrScanner from 'qr-scanner';
+import QrScanner from 'qr-scanner'
 import { useData } from '../../../context/DataContext';
 import { Skeleton } from "@/components/ui/skeleton";
 

@@ -5,7 +5,7 @@ const getAllMeetings = async (req, res) => {
   const { memberId } = req.user;
   const { chapterId } = req.query;
 
-  try {
+  try { 
     const meetings = await Meeting.getAllMeetingsUsingMemberIdAndChapterId(memberId, chapterId);
     console.log({meetings});
     

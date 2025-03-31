@@ -37,6 +37,9 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 
+type ViewMode = 'meeting' | 'date' | 'dateRange';
+type DateRange = { from?: Date; to?: Date };
+
 const VisitorList: React.FC = () => {
   const [visitors, setVisitors] = useState<Visitor[]>([]);
   const [filteredVisitors, setFilteredVisitors] = useState<Visitor[]>([]);
@@ -46,11 +49,11 @@ const VisitorList: React.FC = () => {
   const [selectedVisitor, setSelectedVisitor] = useState<Visitor | null>(null);
   const [activeFilters, setActiveFilters] = useState<string[]>(['Today']);
   const [searchTerm, setSearchTerm] = useState('');
-  const [viewMode, setViewMode] = useState<'meeting' | 'dateRange'>('meeting');
+  const [viewMode, setViewMode] = useState<ViewMode>('meeting');
   const [selectedMeeting, setSelectedMeeting] = useState('All');
   const [meetings, setMeetings] = useState<any[]>([]);
-  const [dateRange, setDateRange] = useState<[Date | null, Date | null]>([null, null]);
-  const [startDate, endDate] = dateRange;
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>();
+  const [dateRange, setDateRange] = useState<DateRange>({});
   const { width } = useWindowDimensions();
 
   const allFilters = [
@@ -70,7 +73,8 @@ const VisitorList: React.FC = () => {
     try {
       const response = await axiosInstance(`/api/meetings/meetings/${chapterData?.chapterId}`);
       setMeetings(response.data);
-    } catch (error) {
+      console.log("meetings",response.data)
+      } catch (error) {
       console.error('Error fetching meetings:', error);
     }
   };
@@ -82,9 +86,16 @@ const VisitorList: React.FC = () => {
 
       if (viewMode === 'meeting' && selectedMeeting && selectedMeeting !== 'All') {
         params.append('meetingId', selectedMeeting);
+      } else if (viewMode === 'date' && selectedDate) {
+        params.append('date', selectedDate.toISOString().split('T')[0]);
+      } else if (viewMode === 'dateRange' && dateRange.from && dateRange.to) {
+        params.append('startDate', dateRange.from.toISOString().split('T')[0]);
+        params.append('endDate', dateRange.to.toISOString().split('T')[0]);
       }
+
       params.append('sortBy', 'chapterVisitDate');
       params.append('sortOrder', 'desc');
+
       const response = await axiosInstance(url + (params.toString() ? `?${params.toString()}` : ''));
       setVisitors(response.data);
     } catch (error) {
@@ -97,22 +108,36 @@ const VisitorList: React.FC = () => {
       fetchVisitors();
       fetchMeetings();
     }
-  }, [chapterData, viewMode, selectedMeeting]);
+  }, [chapterData, viewMode, selectedMeeting, selectedDate, dateRange]);
 
   useEffect(() => {
     const filterVisitors = () => {
       let results = [...visitors];
+      
+      // Sort by date (newest first)
       results.sort((a, b) => {
         const dateA = new Date(a.chapterVisitDate as string | number).getTime();
         const dateB = new Date(b.chapterVisitDate as string | number).getTime();
-        return dateA - dateA; 
+        return dateB - dateA;
       });
-      // Apply date range filter first if in dateRange mode
-      if (viewMode === 'dateRange' && startDate && endDate) {
+
+      // Apply view mode filters
+      if (viewMode === 'date' && selectedDate) {
         results = results.filter(visitor => {
           const visitDate = new Date(visitor.chapterVisitDate as string | number);
-          return visitDate >= startDate && visitDate <= endDate;
+          return (
+            visitDate.getFullYear() === selectedDate.getFullYear() &&
+            visitDate.getMonth() === selectedDate.getMonth() &&
+            visitDate.getDate() === selectedDate.getDate()
+          );
         });
+      } else if (viewMode === 'dateRange' && dateRange.from && dateRange.to) {
+        results = results.filter(visitor => {
+          const visitDate = new Date(visitor.chapterVisitDate as string | number);
+          return visitDate >= dateRange.from! && visitDate <= dateRange.to!;
+        });
+      } else if (viewMode === 'meeting' && selectedMeeting && selectedMeeting !== 'All') {
+        results = results.filter(visitor => visitor.meetingId === selectedMeeting);
       }
 
       // Apply search filter
@@ -163,10 +188,9 @@ const VisitorList: React.FC = () => {
     };
 
     setFilteredVisitors(filterVisitors());
-  }, [visitors, searchTerm, activeFilters, viewMode, startDate, endDate]);
+  }, [visitors, searchTerm, activeFilters, viewMode, selectedDate, dateRange, selectedMeeting]);
 
   useEffect(() => {
-    // Set default filter to Today if there are visitors today
     const todayVisitors = visitors.filter(visitor => {
       const today = new Date();
       return new Date(visitor.chapterVisitDate as string | number).toDateString() === today.toDateString();
@@ -225,8 +249,9 @@ const VisitorList: React.FC = () => {
             <Select
               value={viewMode}
               onValueChange={(value) => {
-                setViewMode(value as 'meeting' | 'dateRange');
-                setDateRange([null, null]);
+                setViewMode(value as ViewMode);
+                setSelectedDate(undefined);
+                setDateRange({});
               }}
             >
               <SelectTrigger>
@@ -234,12 +259,13 @@ const VisitorList: React.FC = () => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="meeting">By Meeting</SelectItem>
+                <SelectItem value="date">By Date</SelectItem>
                 <SelectItem value="dateRange">By Date Range</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
-          {viewMode === 'meeting' ? (
+          {viewMode === 'meeting' && (
             <div className="w-full md:w-1/3">
               <Label>Select Meeting</Label>
               <Select
@@ -259,7 +285,49 @@ const VisitorList: React.FC = () => {
                 </SelectContent>
               </Select>
             </div>
-          ) : (
+          )}
+
+          {viewMode === 'date' && (
+            <div className="w-full md:w-1/3">
+              <Label>Select Date</Label>
+              <div className="flex items-center gap-2">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start text-left font-normal"
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {selectedDate ? (
+                        format(selectedDate, "MMM dd, yyyy")
+                      ) : (
+                        <span>Pick a date</span>
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={selectedDate}
+                      onSelect={setSelectedDate}
+                      disabled={{ after: new Date() }}
+                    />
+                  </PopoverContent>
+                </Popover>
+                {selectedDate && (
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => setSelectedDate(undefined)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
+            </div>
+          )}
+
+          {viewMode === 'dateRange' && (
             <div className="w-full md:w-2/3">
               <Label>Select Date Range</Label>
               <div className="flex items-center gap-2">
@@ -270,14 +338,14 @@ const VisitorList: React.FC = () => {
                       className="w-full justify-start text-left font-normal"
                     >
                       <CalendarIcon className="mr-2 h-4 w-4" />
-                      {startDate ? (
-                        endDate ? (
+                      {dateRange.from ? (
+                        dateRange.to ? (
                           <>
-                            {format(startDate, "MMM dd, yyyy")} -{" "}
-                            {format(endDate, "MMM dd, yyyy")}
+                            {format(dateRange.from, "MMM dd, yyyy")} -{" "}
+                            {format(dateRange.to, "MMM dd, yyyy")}
                           </>
                         ) : (
-                          format(startDate, "MMM dd, yyyy")
+                          format(dateRange.from, "MMM dd, yyyy")
                         )
                       ) : (
                         <span>Pick a date range</span>
@@ -285,37 +353,27 @@ const VisitorList: React.FC = () => {
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
-                    <div className="p-2">
-                      <Calendar
-                        mode="range"
-                        selected={{ from: startDate || undefined, to: endDate || undefined }}
-                        onSelect={(range) => {
-                          if (range) {
-                            setDateRange([range.from || null, range.to || null]);
-                          } else {
-                            setDateRange([null, null]);
-                          }
-                        }}
-                        numberOfMonths={width > 768 ? 2 : 1}
-                        initialFocus
-                        className="rounded-md border"
-                      />
-                    </div>
+                    <Calendar
+                      mode="range"
+                      selected={dateRange}
+                      onSelect={(range) => setDateRange(range || {})}
+                      numberOfMonths={width > 768 ? 2 : 1}
+                    />
                   </PopoverContent>
                 </Popover>
-                {startDate && endDate && (
+                {(dateRange.from || dateRange.to) && (
                   <Button
                     variant="outline"
                     size="icon"
-                    onClick={() => setDateRange([null, null])}
+                    onClick={() => setDateRange({})}
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 )}
               </div>
-              {startDate && endDate && (
+              {dateRange.from && dateRange.to && (
                 <p className="text-sm text-muted-foreground mt-1">
-                  Showing visitors between {format(startDate, "MMM dd, yyyy")} and {format(endDate, "MMM dd, yyyy")}
+                  Showing visitors between {format(dateRange.from, "MMM dd, yyyy")} and {format(dateRange.to, "MMM dd, yyyy")}
                 </p>
               )}
             </div>
@@ -354,7 +412,12 @@ const VisitorList: React.FC = () => {
         <div className="mb-4">
           <p className="text-sm font-medium">
             Total visitors: <span className="font-bold">{filteredVisitors.length}</span>
-            {viewMode === 'dateRange' && startDate && endDate && (
+            {viewMode === 'date' && selectedDate && (
+              <span className="text-muted-foreground">
+                {' '}(filtered by {format(selectedDate, "MMM dd, yyyy")})
+              </span>
+            )}
+            {viewMode === 'dateRange' && dateRange.from && dateRange.to && (
               <span className="text-muted-foreground">
                 {' '}(filtered by date range)
               </span>
@@ -396,7 +459,7 @@ const VisitorList: React.FC = () => {
                       </div>
                     </TableCell>
                     <TableCell>
-                      {format(new Date(visitor.chapterVisitDate as string | number), "MMM dd, yyyy")}
+                      {format(new Date(visitor.chapterVisitDate as string | number), "MMM dd, yyyy h:mm a")}
                     </TableCell>
                     <TableCell>
                       <div className="flex gap-2">
@@ -475,7 +538,7 @@ const VisitorList: React.FC = () => {
                         {visitor.firstName} {visitor.lastName}
                       </h4>
                       <p className="text-sm text-muted-foreground">
-                        {format(new Date(visitor.chapterVisitDate as string | number), "MMM dd, yyyy")}
+                        {format(new Date(visitor.chapterVisitDate as string | number), "MMM dd, yyyy h:mm a")}
                       </p>
                       <div className="flex gap-2 mt-2">
                         <Badge
