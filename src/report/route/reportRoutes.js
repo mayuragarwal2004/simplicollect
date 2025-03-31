@@ -9,6 +9,7 @@ router.get("/:chapterId/member-transactions", reportController.getAllMemberRepor
 router.get("/:chapterId/member-Total", reportController.getMemberTotalAmountAndDues);
 
 router.get("/:chapterId/receiver-daywise-report", reportController.getReceiverDaywiseReportController);
+router.get("/:chapterId/receiver-daywise-json-report", reportController.getReceiverDaywiseJsonReportController);
 
 router.get("/:chapterId/member-ledger", reportController.getMemberLedgerController);
 
