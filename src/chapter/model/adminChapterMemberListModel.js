@@ -346,6 +346,6 @@ module.exports = {
   updateMemberRole,
   updateMemberBalance,
   searchMemberForChapterToAdd,
-  searchMemberForChapter
+  searchMemberForChapter,
   addMemberToChapter
 };
