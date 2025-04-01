@@ -108,7 +108,7 @@ const searchMemberForChapterToAdd = async (req, res) => {
 };
 const addMemberToChapter=async (req, res) => {
   const { chapterSlug, userId } = req.params;
-  const { role } = req.body;
+  const { role="member" } = req.body;
 
   if (!userId || !role) {
     return res.status(400).json({ error: "User ID and role are required" });

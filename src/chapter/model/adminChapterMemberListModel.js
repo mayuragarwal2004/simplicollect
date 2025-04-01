@@ -283,7 +283,7 @@ const addMemberToChapter = async (chapterSlug, userId, role) => {
   await db("member_chapter_mapping").insert({
     chapterId: chapter.chapterId,
     memberId: userId,
-    roleId: roleId,
+    roleIds: roleId,
     status: "joined",
   });
 

@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'react-toastify';
 import debounce from 'lodash.debounce';
 import { axiosInstance } from '../../../utils/config';
+import { useParams } from 'react-router-dom';
 
 const AddMemberSearchDialog = ({ isOpen, onClose, chapterId, fetchMembers }) => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -12,13 +13,13 @@ const AddMemberSearchDialog = ({ isOpen, onClose, chapterId, fetchMembers }) => 
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
-
+   const { chapterSlug } = useParams();
   const fetchSearchResults = async (query, pageNum = 1, reset = false) => {
     if (!query) return;
     setLoading(true);
     try {
       const response = await axiosInstance.get(
-        `/api/admin/chapter-member-list/searchmembers?searchQuery=${query}&chapterId=${chapterId}&page=${pageNum}&limit=10`
+        `/api/admin/chapter-member-list/searchmemberstoadd?searchQuery=${query}&chapterId=${chapterId}&page=${pageNum}&limit=10`
       );
       
       const newMembers = response.data || [];
@@ -56,7 +57,7 @@ const AddMemberSearchDialog = ({ isOpen, onClose, chapterId, fetchMembers }) => 
 
   const handleAddMember = async (memberId) => {
     try {
-      await axiosInstance.post('/api/admin/members', { memberId, chapterId });
+      await axiosInstance.post(`/api/admin/chapter-member-list/${chapterSlug}/members/${memberId}/addmember`);
       toast.success('Member added successfully');
       fetchMembers();
       onClose();
