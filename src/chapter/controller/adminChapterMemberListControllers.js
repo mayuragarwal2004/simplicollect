@@ -90,16 +90,16 @@ const updateMemberBalance = async (req, res) => {
 };
 
 const searchMemberForChapterToAdd = async (req, res) => {
-  const { searchQuery, chapterId } = req.query;
-  if (!searchQuery || !chapterId) {
-    return res.status(400).json({ message: "Search query and chapterId are required." });
+  const { searchQuery, chapterSlug } = req.query;
+  if (!searchQuery || !chapterSlug) {
+    return res.status(400).json({ message: "Search query and chapterSlug are required." });
   }
   try {
-    const members = await adminChapterMemberListModel.searchMemberForChapterToAdd(searchQuery, chapterId);
+    const members = await adminChapterMemberListModel.searchMemberForChapterToAdd(searchQuery, chapterSlug);
     if (members.length > 0) {
       res.json(members);
     } else {
-      res.status(404).json({ message: "No matching members found." });
+      res.status(200).json([]);
     }
   } catch (error) {
     console.error("Error searching for members:", error);

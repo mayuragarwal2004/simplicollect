@@ -62,7 +62,7 @@ const AdminChaptersMemberList = () => {
       <AddMemberSearchDialog 
         isOpen={isSearchOpen} 
         onClose={() => setIsSearchOpen(false)} 
-        chapterId={chapterSlug} 
+        chapterSlug={chapterSlug} 
         fetchMembers={fetchMembers}
       />
     </Card>

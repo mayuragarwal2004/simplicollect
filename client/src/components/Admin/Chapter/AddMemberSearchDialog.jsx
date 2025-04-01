@@ -7,19 +7,18 @@ import debounce from 'lodash.debounce';
 import { axiosInstance } from '../../../utils/config';
 import { useParams } from 'react-router-dom';
 
-const AddMemberSearchDialog = ({ isOpen, onClose, chapterId, fetchMembers }) => {
+const AddMemberSearchDialog = ({ isOpen, onClose, chapterSlug, fetchMembers }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
-   const { chapterSlug } = useParams();
   const fetchSearchResults = async (query, pageNum = 1, reset = false) => {
     if (!query) return;
     setLoading(true);
     try {
       const response = await axiosInstance.get(
-        `/api/admin/chapter-member-list/searchmemberstoadd?searchQuery=${query}&chapterId=${chapterId}&page=${pageNum}&limit=10`
+        `/api/admin/chapter-member-list/searchmemberstoadd?searchQuery=${query}&chapterSlug=${chapterSlug}&page=${pageNum}&limit=10`
       );
       
       const newMembers = response.data || [];

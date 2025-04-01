@@ -200,7 +200,11 @@ const updateMemberBalance = async (chapterSlug,userId, newBalance, addToTransact
   return { userId, chapterId: chapter.chapterId, newBalance };
 };
 
-const searchMemberForChapterToAdd = async (searchQuery, chapterId) => {
+const searchMemberForChapterToAdd = async (searchQuery, chapterSlug) => {
+  const chapterId = await db("chapters")
+    .select("chapterId")
+    .where({ chapterSlug })
+    .first();
   return db("members as m")
     .select(
       "m.memberId",
