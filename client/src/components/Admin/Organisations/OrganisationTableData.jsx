@@ -5,12 +5,22 @@ import { OrgTable } from './organisation-data-table/org-table';
 import { OrgColumns } from './organisation-data-table/org-column';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import {
+  AlertDialog,
+  AlertDialogTrigger,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogFooter,
+} from "@/components/ui/alert-dialog";
+import { Button } from '@/components/ui/button';
 
 const OrganisationTableData = () => {
   const [organisations, setOrganisations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingOrg, setEditingOrg] = useState(null);
+  const [deleteOrgId, setDeleteOrgId] = useState(null);
   const [totalRecord, setTotalRecord] = useState(0);
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
@@ -135,24 +145,24 @@ const OrganisationTableData = () => {
     }
   };
 
-  const handleDelete = async (orgId) => {
-    if (window.confirm('Are you sure you want to delete this organisation?')) {
-      try {
-        await axiosInstance.delete(`/api/organisations/${orgId}`);
-        toast.success('Organisation deleted successfully');
-        fetchOrganisations();
-      } catch (error) {
-        const errorMessage =
-          error.response?.data?.error || 'Failed to delete organisation';
-        toast.error(errorMessage);
-        console.error('Error deleting organisation:', error);
-      }
+  const handleDelete = async () => {
+    if (!deleteOrgId) return;
+
+    try {
+      await axiosInstance.delete(`/api/organisations/${deleteOrgId}`);
+      setOrganisations((prevOrgs) =>
+        prevOrgs.filter((org) => org.organisationId !== deleteOrgId)
+      );
+      toast.success('Organisation deleted successfully');
+      setDeleteOrgId(null);
+    } catch (error) {
+      console.error("Error deleting organisation:", error);
+      toast.error('Failed to delete organisation');
     }
   };
 
   return (
     <div className="rounded-2xl border border-stroke bg-white p-5 shadow-md dark:border-strokedark dark:bg-boxdark">
-      <ToastContainer position="top-right" autoClose={3000} />
 
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-xl font-semibold">
@@ -173,7 +183,7 @@ const OrganisationTableData = () => {
           data={organisations.map((org) => ({
             ...org,
             onEdit: handleOpenModal,
-            onDelete: handleDelete,
+            onDelete: (orgId) => setDeleteOrgId(orgId),
           }))}
           columns={OrgColumns}
           searchInputField="organisationName"
@@ -184,6 +194,23 @@ const OrganisationTableData = () => {
           }}
         />
       )}
+
+<AlertDialog open={!!deleteOrgId} onOpenChange={() => setDeleteOrgId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm Deletion</AlertDialogTitle>
+          </AlertDialogHeader>
+          <p>Are you sure you want to delete this organisation?</p>
+          <AlertDialogFooter>
+            <Button variant="secondary" onClick={() => setDeleteOrgId(null)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleDelete}>
+              Delete
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Modal for Add/Edit */}
       {isModalOpen && (

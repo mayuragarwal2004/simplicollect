@@ -5,20 +5,38 @@ import { MembersTable } from './members-data-table/members-table';
 import { MembersColumns } from './members-data-table/members-column';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { Input } from "@/components/ui/input";
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import {
+  AlertDialog,
+  AlertDialogTrigger,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogFooter,
+} from '@/components/ui/alert-dialog';
 
 const AdminMembersTableData = () => {
-  const [members, setMembers] = useState([]);
+  const [members, setMembers] = useState([
+    {
+      membersId: 1,
+      membersName: 'John Doe',
+      email: 'john.doe@example.com',
+      phoneNumber: '123-456-7890',
+      // numberOfMembers: '1',
+    }
+  ]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingChap, setEditingChap] = useState(null);
+  const [deleteMemberId, setDeleteMemberId] = useState(null);
   const [totalRecord, setTotalRecord] = useState(0);
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
   const rows = searchParams.get('rows') || 10;
   const page = searchParams.get('page') || 0;
   const [filteredMembers, setFilteredMembers] = useState([]);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState('');
   const [formData, setFormData] = useState({
     membersName: '',
     email: '',
@@ -69,9 +87,9 @@ const AdminMembersTableData = () => {
 
   useEffect(() => {
     setFilteredMembers(
-      members.filter(member => 
-        member.membersName.toLowerCase().includes(searchQuery.toLowerCase())
-      )
+      members.filter((member) =>
+        member.membersName.toLowerCase().includes(searchQuery.toLowerCase()),
+      ),
     );
   }, [searchQuery, members]);
 
@@ -166,35 +184,33 @@ const AdminMembersTableData = () => {
       const errorMessage =
         error.response?.data?.error ||
         error.message ||
-        (editingChap
-          ? 'Failed to update members'
-          : 'Failed to create members');
+        (editingChap ? 'Failed to update members' : 'Failed to create members');
       toast.error(errorMessage);
     }
   };
 
-  const handleDelete = async (memberId) => {
-    if (window.confirm('Are you sure you want to delete this member?')) {
+  const handleDeleteClick = (memberId) => {
+    setDeleteMemberId(memberId);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (deleteMemberId) {
       try {
-        await axiosInstance.delete(`/api/admin/members/${memberId}`);
+        await axiosInstance.delete(`/api/admin/members/${deleteMemberId}`);
         toast.success('Member deleted successfully');
         await fetchMembers();
       } catch (error) {
-        const errorMessage =
-          error.response?.data?.error || 'Failed to delete member';
-        toast.error(errorMessage);
+        toast.error('Failed to delete member');
         console.error('Error deleting member:', error);
       }
+      setDeleteMemberId(null);
     }
   };
 
   return (
     <div className="rounded-2xl border border-stroke bg-white p-5 shadow-md dark:border-strokedark dark:bg-boxdark">
-
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-semibold">
-          Super Admin Member Table
-        </h2>
+        <h2 className="text-xl font-semibold">Super Admin Member Table</h2>
         <button
           onClick={() => handleOpenModal()}
           className="px-4 py-2 bg-primary text-white rounded hover:bg-opacity-90"
@@ -216,20 +232,37 @@ const AdminMembersTableData = () => {
         <p>Loading...</p>
       ) : (
         <MembersTable
-          data={members.map(member => ({
+          data={members.map((member) => ({
             ...member,
             onEdit: handleOpenModal,
-            onDelete: handleDelete
+            onDelete: () => handleDeleteClick(member.membersId),
           }))}
           columns={MembersColumns}
           searchInputField="membersName"
           totalRecord={totalRecord}
           pagination={{
             pageSize: parseInt(rows),
-            pageIndex: parseInt(page)
+            pageIndex: parseInt(page),
           }}
         />
       )}
+
+      <AlertDialog open={!!deleteMemberId} onOpenChange={setDeleteMemberId}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm Deletion</AlertDialogTitle>
+          </AlertDialogHeader>
+          <p>Are you sure you want to delete this member?</p>
+          <AlertDialogFooter>
+            <Button variant="secondary" onClick={() => setDeleteMemberId(null)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleConfirmDelete}>
+              Delete
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Modal for Add/Edit */}
       {isModalOpen && (
