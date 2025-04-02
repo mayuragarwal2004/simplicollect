@@ -6,26 +6,26 @@ const getRightsByMemberIdAndChapterIdAndMenu = async (memberId, chapterId) => {
   console.log({ memberId, chapterId });
 
   return db.raw(
-    `SELECT 
-    fm.featureId,
-    fm.featureName,
-    fm.featureDescription,
-    fm.featureType,
-    fm.featureParent,
-    fm.featureUrl,
-    fm.featureIcon,
-    fm.featureOrder,
-    fm.featureDisabled
-FROM 
-    member_chapter_mapping mcm
-JOIN 
-    roles ro ON mcm.roleId = ro.roleId
-JOIN 
-    features_master fm ON FIND_IN_SET(fm.featureId, ro.rights) > 0
-WHERE 
-    mcm.memberId = ? 
-    AND mcm.chapterId = ?
-    AND fm.featureType = ? ;`,
+    `SELECT DISTINCT 
+      fm.featureId, 
+      fm.featureName, 
+      fm.featureDescription, 
+      fm.featureType, 
+      fm.featureParent, 
+      fm.featureUrl, 
+      fm.featureIcon, 
+      fm.featureOrder, 
+      fm.featureDisabled
+    FROM 
+      member_chapter_mapping mcm
+    JOIN 
+      roles ro ON FIND_IN_SET(ro.roleId, mcm.roleIds) > 0
+    JOIN 
+      features_master fm ON FIND_IN_SET(fm.featureId, ro.rights) > 0
+    WHERE 
+      mcm.memberId = ? 
+      AND mcm.chapterId = ?
+      AND fm.featureType = ?;`,
     [memberId, chapterId, "menu"]
   );
 };

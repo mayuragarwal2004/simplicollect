@@ -24,4 +24,5 @@ export interface Chapter {
   organisationName?: string;
   testMode?: boolean;
   balance?: number;
+  roleNames?: string[];
 }

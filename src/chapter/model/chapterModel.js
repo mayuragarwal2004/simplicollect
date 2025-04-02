@@ -14,15 +14,19 @@ const updateChapter = async (chapterId, chapterData) => {
 }
 
 const getAllChapters = async (memberId) => {
-
-  // join the current member with the chapters table using the member_chapter_mapping, also join the organisation using th eorganisation id in the chapters table
   return db("chapters")
     .join("member_chapter_mapping", "chapters.chapterId", "member_chapter_mapping.chapterId")
     .join("organisations", "chapters.organisationId", "organisations.organisationId")
+    .joinRaw("JOIN roles ro ON FIND_IN_SET(ro.roleId, member_chapter_mapping.roleIds) > 0")
     .where("member_chapter_mapping.memberId", memberId)
-    .select("chapters.*", "organisations.organisationName")
+    .select(
+      "chapters.*",
+      "organisations.organisationName",
+      db.raw("GROUP_CONCAT(ro.roleName ORDER BY ro.roleName ASC SEPARATOR ', ') as roleNames") // Adds space after comma
+    )
+    .groupBy("chapters.chapterId") // Ensuring unique chapter entries
     .orderBy("chapters.chapterName", "asc");
-}
+};
 
 module.exports = {
   findChapterById,

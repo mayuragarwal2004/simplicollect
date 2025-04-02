@@ -5,6 +5,8 @@ import UserOne from '../../images/user/user-01.png';
 import { useAuth } from '../../context/AuthContext';
 import { useData } from '../../context/DataContext';
 
+const backgroundColor = Math.floor(Math.random() * 16777215).toString(16);
+
 const DropdownUser = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const { isAuthenticated, logout } = useAuth();
@@ -25,12 +27,12 @@ const DropdownUser = () => {
           <span className="block text-sm font-medium text-black dark:text-white">
             {memberData?.firstName + ' ' + memberData?.lastName}
           </span>
-          <span className="block text-xs">{memberData?.role}</span>
+          {/* <span className="block text-xs">{memberData?.role}</span> */}
         </span>
 
         <span
           className="flex h-12 w-12 items-center justify-center rounded-full text-white"
-          style={{ backgroundColor: `#${Math.floor(Math.random() * 16777215).toString(16)}` }}
+          style={{ backgroundColor: `#${backgroundColor}` }}
         >
           {memberData?.firstName.charAt(0).toUpperCase()}
         </span>
