@@ -15,6 +15,7 @@ import { ChevronLeft, Loader2 } from 'lucide-react';
 import { usePaymentData } from './PaymentDataContext';
 import { axiosInstance } from '../../../utils/config';
 import { toast } from 'react-toastify';
+import { useData } from '../../../context/DataContext';
 
 const PackageFinalAmountInput = ({ setStep, handlePackagePayModalClose }) => {
   const {
@@ -32,6 +33,7 @@ const PackageFinalAmountInput = ({ setStep, handlePackagePayModalClose }) => {
     },
     fetchAllData,
   } = usePaymentData();
+  const { chapterData } = useData();
   const [currentPayment, setCurrentPayment] = useState(totalPayableAmount);
   const netBalance = currentPayment - totalPayableAmount;
   const [showConfirm, setShowConfirm] = useState(false);
@@ -64,6 +66,8 @@ const PackageFinalAmountInput = ({ setStep, handlePackagePayModalClose }) => {
     const paymentDetails = {
       packageId: selectedPackage.packageId,
       meetingIds: selectedPackage.meetingIds,
+      chapterId: chapterData.chapterId,
+      transactionType: 'Package Payment',
 
       paidAmount: currentPayment,
       payableAmount: totalPayableAmount,

@@ -20,6 +20,7 @@ router.get(
 
 // List of all visitor by chapter id
 router.get("/visitorList/:chapterId", visitorController.visitorList);
+router.get("/getChapterMeetings/:chapterId", visitorController.getChapterMeetings);
 
 // List of all visitor by chapter id
 router.post(

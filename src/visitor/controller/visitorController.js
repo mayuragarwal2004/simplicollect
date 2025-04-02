@@ -1,6 +1,6 @@
 const visitorModel = require("../model/visitorModel");
 const { v4: uuidv4 } = require("uuid");
-
+const db = require("../../config/db");
 // Check if a visitor exists within 48 hours
 const checkVisitor = async (req, res) => {
   const { phone } = req.query;
@@ -26,7 +26,9 @@ const addVisitor = async (req, res) => {
   try {
     const result = await visitorModel.addVisitor(visitorData);
     res.json({ message: "Visitor added successfully", visitorId: result[0] });
-  } catch (error) {
+    meetingId: visitorData.meetingId 
+  } 
+  catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
@@ -37,6 +39,8 @@ const addFeedback = async (req, res) => {
   try {
     await visitorModel.addFeedback(visitorId, feedbackData);
     res.json({ message: "Feedback added successfully" });
+    meetingId: feedbackData.meetingId 
+
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -53,16 +57,32 @@ const verifyVisitorLink = async (req, res) => {
       return res.status(200).json({ message: "Chapter not found" });
     }
 
-    res.json(chapterDetails);
+    // Get meetings for this chapter
+    const meetings = {
+      upcoming: await visitorModel.getUpcomingMeetings(chapterDetails.chapterId),
+      recent: await visitorModel.getRecentMeetings(chapterDetails.chapterId)
+    };
+
+    res.json({ ...chapterDetails, meetings });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
-
 const visitorList = async (req, res) => {
   const { chapterId } = req.params;
+  const {meetingId,date,startDate,endDate} = req.query;
   try {
-    const visitors = await visitorModel.getVisitorListByChapterId(chapterId);
+    let query=db("visitors").where("chapterId",chapterId);
+    if(meetingId){
+      query=query.where("meetingId",meetingId);
+    }
+    if(startDate&&endDate){
+      query=query.whereBeetween("chapterVisitDate",[startDate,endDate]);
+    }
+    if(date){
+      
+    }
+    const visitors=await query.select("*");
     res.json(visitors);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -98,7 +118,16 @@ const deleteVisitor = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
-
+const getChapterMeetings = async (req, res) => {
+  const { chapterId } = req.params;
+  try {
+    const upcoming = await visitorModel.getUpcomingMeetings(chapterId);
+    const recent = await visitorModel.getRecentMeetings(chapterId);
+    res.json({ upcoming, recent });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
 module.exports = {
   checkVisitor,
   addVisitor,
@@ -107,4 +136,6 @@ module.exports = {
   visitorList,
   markAsPaid,
   deleteVisitor,
+  getChapterMeetings,
+  verifyVisitorLink: verifyVisitorLink
 };

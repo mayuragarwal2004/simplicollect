@@ -11,14 +11,34 @@ import ExportVisitorData from './VisitorListComponents/ExportVisitorData';
 import VisitorDelete from './VisitorListComponents/VisitorDelete';
 import useWindowDimensions from '../../utils/useWindowDimensions';
 
-import { IconButton, Backdrop } from '@mui/material';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import {
-  FileDownload as FileDownloadIcon,
-  CurrencyRupee,
-  Refresh as RefreshIcon,
-  Visibility as VisibilityIcon,
-  DeleteForever as DeleteForeverIcon,
-} from '@mui/icons-material';
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { CalendarIcon, RefreshCw, Download, Search, Eye, Trash2, IndianRupee } from 'lucide-react';
+import { format } from 'date-fns';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+
+type ViewMode = 'meeting' | 'date' | 'dateRange';
+type DateRange = { from?: Date; to?: Date };
 
 const VisitorList: React.FC = () => {
   const [visitors, setVisitors] = useState<Visitor[]>([]);
@@ -28,6 +48,12 @@ const VisitorList: React.FC = () => {
   const [backDropOpen, setBackDropOpen] = useState(false);
   const [selectedVisitor, setSelectedVisitor] = useState<Visitor | null>(null);
   const [activeFilters, setActiveFilters] = useState<string[]>(['Today']);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [viewMode, setViewMode] = useState<ViewMode>('meeting');
+  const [selectedMeeting, setSelectedMeeting] = useState('All');
+  const [meetings, setMeetings] = useState<any[]>([]);
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>();
+  const [dateRange, setDateRange] = useState<DateRange>({});
   const { width } = useWindowDimensions();
 
   const allFilters = [
@@ -40,406 +66,541 @@ const VisitorList: React.FC = () => {
   ];
 
   const handleFilterChange = (filters: string[]) => {
-    console.log('Selected filters:', filters);
     setActiveFilters(filters);
+  };
+
+  const fetchMeetings = async () => {
+    try {
+      const response = await axiosInstance(`/api/meetings/${chapterData?.chapterId}`);
+      setMeetings(response.data);
+      console.log("meetings",response.data)
+      } catch (error) {
+      console.error('Error fetching meetings:', error);
+    }
   };
 
   const fetchVisitors = async () => {
     try {
-      const response = await axiosInstance(
-        `/api/visitor/visitorList/${chapterData?.chapterId}`,
-      );
-      const data = await response.data;
-      setVisitors(data);
+      let url = `/api/visitor/visitorList/${chapterData?.chapterId}`;
+      const params = new URLSearchParams();
+
+      if (viewMode === 'meeting' && selectedMeeting && selectedMeeting !== 'All') {
+        params.append('meetingId', selectedMeeting);
+      } else if (viewMode === 'date' && selectedDate) {
+        params.append('date', selectedDate.toISOString().split('T')[0]);
+      } else if (viewMode === 'dateRange' && dateRange.from && dateRange.to) {
+        params.append('startDate', dateRange.from.toISOString().split('T')[0]);
+        params.append('endDate', dateRange.to.toISOString().split('T')[0]);
+      }
+
+      params.append('sortBy', 'chapterVisitDate');
+      params.append('sortOrder', 'desc');
+
+      const response = await axiosInstance(url + (params.toString() ? `?${params.toString()}` : ''));
+      setVisitors(response.data);
     } catch (error) {
       console.error('Fetching visitors failed:', error);
     }
   };
 
-  const handleBackDropClose = (e: any) => {
-    console.log(e.target.className.startsWith('MuiBackdrop-root'));
-    if (!e.target.className.startsWith('MuiBackdrop-root')) return;
-    setBackDropOpen(false);
-  };
-
   useEffect(() => {
     if (chapterData?.chapterId) {
       fetchVisitors();
+      fetchMeetings();
     }
-  }, [chapterData]);
-
+  }, [chapterData, viewMode, selectedMeeting, selectedDate, dateRange]);
   useEffect(() => {
-    if (activeFilters.length === 0) {
-      setFilteredVisitors(visitors);
-      return;
-    }
-    const filteredVisitors = filterVisitors(visitors);
-    setFilteredVisitors(filteredVisitors);
-  }, [activeFilters, visitors]);
-
+    console.log('Meetings data:', meetings); // Add this to check for duplicates
+  }, [meetings]);
   useEffect(() => {
-    // check if today there is atleat 1 visitor, then set the default filter to today
-    const filteredVisitors = visitors.filter((visitor) => {
-      const today = new Date();
-      return (
-        new Date(visitor.chapterVisitDate as string | number).toDateString() ===
-        today.toDateString()
-      );
-    });
-    if (filteredVisitors.length > 0) {
-      console.log('Setting default filter to Today');
+    const filterVisitors = () => {
+      let results = [...visitors];
+      
+      // Sort by date (newest first)
+      results.sort((a, b) => {
+        const dateA = new Date(a.chapterVisitDate as string | number).getTime();
+        const dateB = new Date(b.chapterVisitDate as string | number).getTime();
+        return dateB - dateA;
+      });
 
-      setActiveFilters(['Today']);
-    } else {
-      console.log('Setting default filter to All');
-
-      setActiveFilters([]);
-    }
-  }, []);
-
-  const filterVisitors = (visitors: Visitor[]) => {
-    let filteredVisitors = visitors;
-
-    if (activeFilters.length > 0) {
-      if (activeFilters.includes('Today')) {
-        filteredVisitors = filteredVisitors.filter((visitor) => {
-          const today = new Date();
+      // Apply view mode filters
+      if (viewMode === 'date' && selectedDate) {
+        results = results.filter(visitor => {
+          const visitDate = new Date(visitor.chapterVisitDate as string | number);
           return (
-            new Date(
-              visitor.chapterVisitDate as string | number,
-            ).toDateString() === today.toDateString()
+            visitDate.getFullYear() === selectedDate.getFullYear() &&
+            visitDate.getMonth() === selectedDate.getMonth() &&
+            visitDate.getDate() === selectedDate.getDate()
           );
         });
+      } else if (viewMode === 'dateRange' && dateRange.from && dateRange.to) {
+        results = results.filter(visitor => {
+          const visitDate = new Date(visitor.chapterVisitDate as string | number);
+          return visitDate >= dateRange.from! && visitDate <= dateRange.to!;
+        });
+      } else if (viewMode === 'meeting' && selectedMeeting && selectedMeeting !== 'All') {
+        results = results.filter(visitor => visitor.meetingId === selectedMeeting);
       }
 
-      if (activeFilters.includes('Paid')) {
-        filteredVisitors = filteredVisitors.filter(
-          (visitor) => visitor.paymentAcceptedMemberId,
+      // Apply search filter
+      if (searchTerm) {
+        const term = searchTerm.toLowerCase();
+        results = results.filter(visitor =>
+          `${visitor.firstName} ${visitor.lastName}`.toLowerCase().includes(term) ||
+          (visitor.email + '').toLowerCase().includes(term) ||
+          visitor.mobileNumber.toString().includes(searchTerm)
         );
       }
 
-      if (activeFilters.includes('Unpaid')) {
-        filteredVisitors = filteredVisitors.filter(
-          (visitor) => !visitor.paymentAcceptedMemberId,
-        );
-      }
+      // Apply other filters
+      if (activeFilters.length > 0) {
+        if (activeFilters.includes('Today')) {
+          const today = new Date();
+          results = results.filter(visitor =>
+            new Date(visitor.chapterVisitDate as string | number).toDateString() === today.toDateString()
+          );
+        }
 
-      if (activeFilters.includes('6 Months')) {
-        filteredVisitors = filteredVisitors.filter((visitor) => {
+        if (activeFilters.includes('Paid')) {
+          results = results.filter(visitor => visitor.paymentAcceptedMemberId);
+        }
+
+        if (activeFilters.includes('Unpaid')) {
+          results = results.filter(visitor => !visitor.paymentAcceptedMemberId);
+        }
+
+        if (activeFilters.includes('6 Months')) {
           const sixMonthsAgo = new Date();
           sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
-          return (
+          results = results.filter(visitor =>
             new Date(visitor.chapterVisitDate as string | number) > sixMonthsAgo
           );
-        });
+        }
+
+        if (activeFilters.includes('Feedback Filled')) {
+          results = results.filter(visitor => visitor.feedbackScore);
+        }
+
+        if (activeFilters.includes('Feedback Not Filled')) {
+          results = results.filter(visitor => !visitor.feedbackScore);
+        }
       }
 
-      if (activeFilters.includes('Feedback Filled')) {
-        filteredVisitors = filteredVisitors.filter(
-          (visitor) => visitor.feedbackScore,
-        );
-      }
+      return results;
+    };
 
-      if (activeFilters.includes('Feedback Not Filled')) {
-        filteredVisitors = filteredVisitors.filter(
-          (visitor) => !visitor.feedbackScore,
-        );
-      }
-    }
+    setFilteredVisitors(filterVisitors());
+  }, [visitors, searchTerm, activeFilters, viewMode, selectedDate, dateRange, selectedMeeting]);
 
-    return filteredVisitors;
-  };
+  useEffect(() => {
+    const todayVisitors = visitors.filter(visitor => {
+      const today = new Date();
+      return new Date(visitor.chapterVisitDate as string | number).toDateString() === today.toDateString();
+    });
+    setActiveFilters(todayVisitors.length > 0 ? ['Today'] : []);
+  }, [visitors]);
 
-  console.log(activeFilters);
-
-  console.log(visitors);
   return (
     <>
       <Breadcrumb pageName="Visitor List" />
-      <div className="rounded-sm border border-stroke bg-white px-5 pt-6 pb-2.5 shadow-default dark:border-strokedark dark:bg-boxdark sm:px-7.5 xl:pb-1">
-        <Backdrop
-          sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}
-          open={backDropOpen}
-          onClick={handleBackDropClose}
-        >
-          {selectedAction === 'accept_payment' ? (
-            <AcceptPayment
-              setBackDropOpen={setBackDropOpen}
-              selectedVisitor={selectedVisitor}
-              fetchVisitors={fetchVisitors}
+      <Card className="p-6 shadow-default">
+        <Dialog open={backDropOpen} onOpenChange={setBackDropOpen}>
+          <DialogContent className="sm:max-w-[425px]">
+            {selectedAction === 'accept_payment' && (
+              <AcceptPayment
+                setBackDropOpen={setBackDropOpen}
+                selectedVisitor={selectedVisitor}
+                fetchVisitors={fetchVisitors}
+              />
+            )}
+            {selectedAction === 'view_edit' && (
+              <ViewVisitor
+                setBackDropOpen={setBackDropOpen}
+                fetchVisitors={fetchVisitors}
+                selectedVisitor={selectedVisitor}
+              />
+            )}
+            {selectedAction === 'delete' && (
+              <VisitorDelete
+                setBackDropOpen={setBackDropOpen}
+                selectedVisitor={selectedVisitor}
+                fetchVisitors={fetchVisitors}
+              />
+            )}
+            {selectedAction === 'export' && (
+              <ExportVisitorData data={filteredVisitors} />
+            )}
+          </DialogContent>
+        </Dialog>
+
+        <div className="mb-4">
+          <div className="relative">
+            <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search visitors..."
+              className="pl-8"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
             />
-          ) : selectedAction === 'view_edit' ? (
-            <ViewVisitor
-              setBackDropOpen={setBackDropOpen}
-              fetchVisitors={fetchVisitors}
-              selectedVisitor={selectedVisitor}
-            />
-          ) : selectedAction === 'delete' ? (
-            <VisitorDelete
-              setBackDropOpen={setBackDropOpen}
-              selectedVisitor={selectedVisitor}
-              fetchVisitors={fetchVisitors}
-            />
-          ) : selectedAction === 'export' ? (
-            <ExportVisitorData data={filteredVisitors} />
-          ) : (
-            <></>
+          </div>
+        </div>
+
+        <div className="mb-4 flex flex-col md:flex-row gap-4">
+          <div className="w-full md:w-1/3">
+            <Label>View By</Label>
+            <Select
+              value={viewMode}
+              onValueChange={(value) => {
+                setViewMode(value as ViewMode);
+                setSelectedDate(undefined);
+                setDateRange({});
+              }}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select view mode" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="meeting">By Meeting</SelectItem>
+                <SelectItem value="date">By Date</SelectItem>
+                <SelectItem value="dateRange">By Date Range</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {viewMode === 'meeting' && (
+            <div className="w-full md:w-1/3">
+              <Label>Select Meeting</Label>
+              <Select
+                value={selectedMeeting}
+                onValueChange={setSelectedMeeting}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select meeting" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="All">All Meetings</SelectItem>
+                  {meetings.map((meeting) => (
+                    <SelectItem key={meeting.meetingId} value={meeting.meetingId}>
+                      {meeting.meetingName} - {format(new Date(meeting.meetingDate), "MMM dd, yyyy")}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           )}
-        </Backdrop>
-        <div className="flex justify-between	">
+
+          {viewMode === 'date' && (
+            <div className="w-full md:w-1/3">
+              <Label>Select Date</Label>
+              <div className="flex items-center gap-2">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start text-left font-normal"
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {selectedDate ? (
+                        format(selectedDate, "MMM dd, yyyy")
+                      ) : (
+                        <span>Pick a date</span>
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={selectedDate}
+                      onSelect={setSelectedDate}
+                      disabled={{ after: new Date() }}
+                    />
+                  </PopoverContent>
+                </Popover>
+                {selectedDate && (
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => setSelectedDate(undefined)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
+            </div>
+          )}
+
+          {viewMode === 'dateRange' && (
+            <div className="w-full md:w-2/3">
+              <Label>Select Date Range</Label>
+              <div className="flex items-center gap-2">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start text-left font-normal"
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {dateRange.from ? (
+                        dateRange.to ? (
+                          <>
+                            {format(dateRange.from, "MMM dd, yyyy")} -{" "}
+                            {format(dateRange.to, "MMM dd, yyyy")}
+                          </>
+                        ) : (
+                          format(dateRange.from, "MMM dd, yyyy")
+                        )
+                      ) : (
+                        <span>Pick a date range</span>
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="range"
+                      selected={dateRange}
+                      onSelect={(range) => setDateRange(range || {})}
+                      numberOfMonths={width > 768 ? 2 : 1}
+                    />
+                  </PopoverContent>
+                </Popover>
+                {(dateRange.from || dateRange.to) && (
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => setDateRange({})}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
+              {dateRange.from && dateRange.to && (
+                <p className="text-sm text-muted-foreground mt-1">
+                  Showing visitors between {format(dateRange.from, "MMM dd, yyyy")} and {format(dateRange.to, "MMM dd, yyyy")}
+                </p>
+              )}
+            </div>
+          )}
+        </div>
+
+        <div className="flex justify-between items-center mb-4">
           <FilterTags
             filters={allFilters}
             activeFilters={activeFilters}
             setActiveFilters={handleFilterChange}
           />
-          <div>
-            <IconButton
-              aria-label="export"
-              onClick={() => {
-                fetchVisitors();
-              }}
+          <div className="flex gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => fetchVisitors()}
+              title="Refresh data"
             >
-              <RefreshIcon className="dark:text-white" />
-            </IconButton>
-            <IconButton
-              aria-label="export"
+              <RefreshCw className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={() => {
                 setBackDropOpen(true);
                 setSelectedAction('export');
               }}
+              title="Export data"
             >
-              <FileDownloadIcon className="dark:text-white" />
-            </IconButton>
+              <Download className="h-4 w-4" />
+            </Button>
           </div>
         </div>
-        <div className="dark:text-white">
-          Number of visitors: {filteredVisitors.length}
+
+        <div className="mb-4">
+          <p className="text-sm font-medium">
+            Total visitors: <span className="font-bold">{filteredVisitors.length}</span>
+            {viewMode === 'date' && selectedDate && (
+              <span className="text-muted-foreground">
+                {' '}(filtered by {format(selectedDate, "MMM dd, yyyy")})
+              </span>
+            )}
+            {viewMode === 'dateRange' && dateRange.from && dateRange.to && (
+              <span className="text-muted-foreground">
+                {' '}(filtered by date range)
+              </span>
+            )}
+          </p>
         </div>
 
         {width > 700 ? (
-          <div className="max-w-full overflow-x-auto">
-            <table className="w-full table-auto">
-              <thead>
-                <tr className="bg-gray-2 text-left dark:bg-meta-4">
-                  <th className="min-w-[220px] py-4 px-4 font-medium text-black dark:text-white xl:pl-11">
-                    Visitor Name
-                  </th>
-                  <th className="min-w-[150px] py-4 px-4 font-medium text-black dark:text-white">
-                    Date
-                  </th>
-                  <th className="min-w-[120px] py-4 px-4 font-medium text-black dark:text-white">
-                    Status
-                  </th>
-                  <th className="py-4 px-4 font-medium text-black dark:text-white">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredVisitors.length === 0 && (
-                  <>
-                    <tr>
-                      <td
-                        colSpan={4}
-                        className="text-center py-5 text-black dark:text-white"
-                      >
-                        No visitors found
-                      </td>
-                    </tr>
-                    <tr>
-                      <td
-                        colSpan={4}
-                        className="text-center py-5 text-black dark:text-white"
-                      >
-                        <Link to="/visitor/shareform">
-                          Share the link to invite visitors
-                        </Link>
-                      </td>
-                    </tr>
-                  </>
-                )}
-                {filteredVisitors.map((visitor_i, key) => (
-                  <tr key={key}>
-                    <td className="border-b border-[#eee] py-5 px-4 pl-9 dark:border-strokedark xl:pl-11">
-                      <h5 className="font-medium text-black dark:text-white">
-                        {visitor_i.firstName} {visitor_i.lastName}
-                      </h5>
-                      {/* <p className="text-sm">${visitor_i.price}</p> */}
-                    </td>
-                    <td className="border-b border-[#eee] py-5 px-4 dark:border-strokedark">
-                      <p className="text-black dark:text-white">
-                        {new Date(
-                          visitor_i.chapterVisitDate as string | number,
-                        ).toLocaleDateString()}
-                      </p>
-                    </td>
-                    <td className="border-b border-[#eee] py-5 px-4 dark:border-strokedark">
-                      <p
-                        className={`inline-flex rounded-full bg-opacity-10 py-1 px-3 text-sm font-medium ${
-                          visitor_i.paymentAcceptedMemberId
-                            ? 'bg-success text-success'
-                            : 'bg-danger text-danger'
-                        }`}
-                      >
-                        {visitor_i.paymentAcceptedMemberId ? 'Paid' : 'Unpaid'}
-                      </p>
-                      {visitor_i.paymentAcceptedMemberId && (
-                        <p
-                          className={`inline-flex rounded-full bg-opacity-10 py-1 px-3 text-sm font-medium ${'bg-warning text-warning'}`}
-                        >
-                          {visitor_i.paymentType}
-                        </p>
-                      )}
-                      {/* <p
-                      className={`inline-flex rounded-full bg-opacity-10 py-1 px-3 text-sm font-medium ${
-                        visitor_i.feedbackScore
-                          ? 'bg-success text-success'
-                          : 'bg-warning text-warning'
-                      }`}
-                    >
-                      {visitor_i.feedbackScore
-                        ? 'Feedback Filled'
-                        : 'Feedback Not Filled'}
-                    </p> */}
-                      {/* <p
-                    className={`inline-flex rounded-full bg-opacity-10 py-1 px-3 text-sm font-medium ${
-                      visitor_i.status === 'Paid'
-                        ? 'bg-success text-success'
-                        : visitor_i.status === 'Unpaid'
-                        ? 'bg-danger text-danger'
-                        : 'bg-warning text-warning'
-                    }`}
-                  >
-                    {visitor_i.status}
-                  </p> */}
-                    </td>
-                    <td className="border-b border-[#eee] py-5 px-4 dark:border-strokedark">
-                      <div className="flex items-center space-x-3.5">
-                        <IconButton
-                          aria-label="accept payment"
-                          onClick={() => {
-                            setBackDropOpen(true);
-                            setSelectedAction('accept_payment');
-                            setSelectedVisitor(visitor_i);
-                          }}
-                        >
-                          <CurrencyRupee className="dark:text-white" />
-                        </IconButton>
-                        <IconButton
-                          aria-label="accept payment"
-                          onClick={() => {
-                            setBackDropOpen(true);
-                            setSelectedAction('view_edit');
-                            setSelectedVisitor(visitor_i);
-                          }}
-                        >
-                          <VisibilityIcon className="dark:text-white" />
-                        </IconButton>
-                        <IconButton
-                          aria-label="accept payment"
-                          onClick={() => {
-                            setBackDropOpen(true);
-                            setSelectedAction('delete');
-                            setSelectedVisitor(visitor_i);
-                          }}
-                        >
-                          <DeleteForeverIcon className="dark:text-white" />
-                        </IconButton>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="min-w-[220px]">Visitor Name</TableHead>
+                <TableHead className="min-w-[150px]">Visit Date</TableHead>
+                <TableHead className="min-w-[120px]">Status</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredVisitors.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={4} className="text-center py-5 h-24">
+                    <div className="flex flex-col items-center gap-2">
+                      <p>No visitors found</p>
+                      <Link to="/visitor/shareform" className="text-primary text-sm">
+                        Share the link to invite visitors
+                      </Link>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                filteredVisitors.map((visitor) => (
+                  <TableRow key={visitor.visitorId}>
+                    <TableCell>
+                      <div className="font-medium">
+                        {visitor.firstName} {visitor.lastName}
                       </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <>
-            <div className="flex flex-col space-y-4">
-              {filteredVisitors.length === 0 && (
-                <>
-                  <div className="text-center py-5 text-black dark:text-white">
-                    No visitors found
-                  </div>
-                  <div className="text-center py-5 text-black dark:text-white">
-                    <Link to="/visitor/shareform">
-                      Share the link to invite visitors
-                    </Link>
-                  </div>
-                </>
+                      <div className="text-sm text-muted-foreground">
+                        {visitor.email}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      {format(new Date(visitor.chapterVisitDate as string | number), "MMM dd, yyyy h:mm a")}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex gap-2">
+                        <Badge
+                          variant={visitor.paymentAcceptedMemberId ? "default" : "destructive"}
+                        >
+                          {visitor.paymentAcceptedMemberId ? 'Paid' : 'Unpaid'}
+                        </Badge>
+                        {visitor.paymentAcceptedMemberId && (
+                          <Badge variant="secondary">
+                            {visitor.paymentType}
+                          </Badge>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => {
+                            setSelectedVisitor(visitor);
+                            setSelectedAction('accept_payment');
+                            setBackDropOpen(true);
+                          }}
+                          title="Accept payment"
+                        >
+                          <IndianRupee className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => {
+                            setSelectedVisitor(visitor);
+                            setSelectedAction('view_edit');
+                            setBackDropOpen(true);
+                          }}
+                          title="View details"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => {
+                            setSelectedVisitor(visitor);
+                            setSelectedAction('delete');
+                            setBackDropOpen(true);
+                          }}
+                          title="Delete visitor"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
               )}
-              {filteredVisitors.map((visitor_i, key) => (
-                <div
-                  key={key}
-                  className="border border-stroke dark:border-strokedark rounded-lg p-4 shadow-default bg-white dark:bg-boxdark"
-                >
-                  <div className="flex justify-between items-center mb-2">
-                    <h5 className="font-medium text-black dark:text-white">
-                      {visitor_i.firstName} {visitor_i.lastName}
-                    </h5>
-                    <div className="flex items-center space-x-3.5">
-                      <IconButton
-                        aria-label="accept payment"
+            </TableBody>
+          </Table>
+        ) : (
+          <div className="flex flex-col gap-4">
+            {filteredVisitors.length === 0 ? (
+              <Card className="p-4 text-center">
+                <p>No visitors found</p>
+                <Link to="/visitor/shareform" className="text-primary text-sm">
+                  Share the link to invite visitors
+                </Link>
+              </Card>
+            ) : (
+              filteredVisitors.map((visitor) => (
+                <Card key={visitor.visitorId} className="p-4">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h4 className="font-medium">
+                        {visitor.firstName} {visitor.lastName}
+                      </h4>
+                      <p className="text-sm text-muted-foreground">
+                        {format(new Date(visitor.chapterVisitDate as string | number), "MMM dd, yyyy h:mm a")}
+                      </p>
+                      <div className="flex gap-2 mt-2">
+                        <Badge
+                          variant={visitor.paymentAcceptedMemberId ? "default" : "destructive"}
+                          className="text-xs"
+                        >
+                          {visitor.paymentAcceptedMemberId ? 'Paid' : 'Unpaid'}
+                        </Badge>
+                        {visitor.paymentAcceptedMemberId && (
+                          <Badge variant="secondary" className="text-xs">
+                            {visitor.paymentType}
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex gap-1">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
                         onClick={() => {
-                          setBackDropOpen(true);
+                          setSelectedVisitor(visitor);
                           setSelectedAction('accept_payment');
-                          setSelectedVisitor(visitor_i);
+                          setBackDropOpen(true);
                         }}
                       >
-                        <CurrencyRupee className="dark:text-white" />
-                      </IconButton>
-                      <IconButton
-                        aria-label="view edit"
+                        <IndianRupee className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
                         onClick={() => {
-                          setBackDropOpen(true);
+                          setSelectedVisitor(visitor);
                           setSelectedAction('view_edit');
-                          setSelectedVisitor(visitor_i);
-                        }}
-                      >
-                        <VisibilityIcon className="dark:text-white" />
-                      </IconButton>
-                      <IconButton
-                        aria-label="delete"
-                        onClick={() => {
                           setBackDropOpen(true);
-                          setSelectedAction('delete');
-                          setSelectedVisitor(visitor_i);
                         }}
                       >
-                        <DeleteForeverIcon className="dark:text-white" />
-                      </IconButton>
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={() => {
+                          setSelectedVisitor(visitor);
+                          setSelectedAction('delete');
+                          setBackDropOpen(true);
+                        }}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                     </div>
                   </div>
-                  <div className="mb-2">
-                    <p className="text-black dark:text-white">
-                      {new Date(
-                        visitor_i.chapterVisitDate as string | number,
-                      ).toLocaleDateString()}
-                    </p>
-                  </div>
-                  <div>
-                    <p
-                      className={`inline-flex rounded-full bg-opacity-10 py-1 px-3 text-sm font-medium ${
-                        visitor_i.paymentAcceptedMemberId
-                          ? 'bg-success text-success'
-                          : 'bg-danger text-danger'
-                      }`}
-                    >
-                      {visitor_i.paymentAcceptedMemberId ? 'Paid' : 'Unpaid'}
-                    </p>
-                    {visitor_i.paymentAcceptedMemberId && (
-                      <p
-                        className={`inline-flex rounded-full bg-opacity-10 py-1 px-3 text-sm font-medium ${'bg-warning text-warning'}`}
-                      >
-                        {visitor_i.paymentType}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </>
+                </Card>
+              ))
+            )}
+          </div>
         )}
-      </div>
+      </Card>
     </>
   );
 };

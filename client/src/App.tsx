@@ -11,10 +11,14 @@ import 'react-toastify/dist/ReactToastify.css';
 
 import Loader from './common/Loader';
 import SignIn from './pages/Authentication/SignIn';
-import OtpVerification from './pages/Authentication/Otpverification';
+import OtpVerification from './pages/Authentication/OtpVerification';
 import ForgotPassword from './pages/Authentication/ForgotPassword';
 import EOI from './pages/Visitor/EOI';
 import Profile from './pages/Member/Profile';
+import Settings from './pages/Settings';
+// import Tables from './pages/Tables';
+import AlertsPage from './pages/UiElements/AlertsPage';
+import Buttons from './pages/UiElements/Buttons';
 import DefaultLayout from './layout/DefaultLayout';
 import ShareForm from './pages/Visitor/ShareForm';
 import VisitorList from './pages/Visitor/VisitorList';

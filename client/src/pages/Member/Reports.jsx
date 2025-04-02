@@ -14,6 +14,7 @@ import MemberLedger from '../../components/member/Reports/MemberLedger';
 import AllTransactions from '../../components/member/Reports/AllTransactions';
 import ReceiverDaywiseReport  from '../../components/member/Reports/ReceiverDaywiseReport';
 import ReportC from '../../components/member/Reports/ReportC';
+import MemberLedgerReport from '../../components/member/Reports/MemberLedgerReport';
 
 const reportComponents = {
     all_members: () => <AllMembersReports />,
@@ -26,8 +27,8 @@ const reportComponents = {
 const Reports = () => {
   const [reportType, setReportType] = React.useState('');
 
-  
-  
+
+
   return (
     <>
       <Breadcrumb pageName="Reports" />

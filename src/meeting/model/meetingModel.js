@@ -7,6 +7,21 @@ const getMeetingById = async (meetingId) => {
 const getAllMeetings = async () => {
   return db("meetings").select("*");
 };
+const getAllMeetingsByChapterId = async (chapterId) => {
+  return db("meetings")
+    .where("chapterId", chapterId)
+    .select(
+      "meetingId",
+      "chapterId",
+      "meetingName",
+      "meetingDate",
+      "meetingTime",
+      "meetingFeeMembers",
+      "meetingFeeVisitors",
+      "disabled as meetingDisabled"
+    )
+    .orderBy("meetingDate", "asc");
+}
 
 const getAllMeetingsUsingMemberIdAndChapterId = async (memberId, chapterId) => {
   return db("meetings as m")
@@ -53,4 +68,5 @@ module.exports = {
   getAllMeetings,
   getAllMeetingsUsingMemberIdAndChapterId,
   updatePaymentStatus,
+  getAllMeetingsByChapterId
 };
