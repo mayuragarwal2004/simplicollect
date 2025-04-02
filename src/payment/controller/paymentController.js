@@ -15,6 +15,7 @@ const addPayment = async (req, res) => {
     memberId,
     packageId: paymentDetails.packageId,
     transactionDate: new Date(),
+    transactionType: paymentDetails.transactionType || "Package Payment",
     payableAmount: paymentDetails.payableAmount,
     status: "pending",
     statusUpdateDate: new Date(),
