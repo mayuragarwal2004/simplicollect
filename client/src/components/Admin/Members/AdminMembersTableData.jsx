@@ -15,6 +15,14 @@ import {
   AlertDialogTitle,
   AlertDialogFooter,
 } from '@/components/ui/alert-dialog';
+import {
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
 
 const AdminMembersTableData = () => {
   const [members, setMembers] = useState([
@@ -23,8 +31,7 @@ const AdminMembersTableData = () => {
       membersName: 'John Doe',
       email: 'john.doe@example.com',
       phoneNumber: '123-456-7890',
-      // numberOfMembers: '1',
-    }
+    },
   ]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -37,6 +44,10 @@ const AdminMembersTableData = () => {
   const page = searchParams.get('page') || 0;
   const [filteredMembers, setFilteredMembers] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingMember, setEditingMember] = useState(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [formData, setFormData] = useState({
     membersName: '',
     email: '',
@@ -93,21 +104,9 @@ const AdminMembersTableData = () => {
     );
   }, [searchQuery, members]);
 
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-    setEditingChap(null);
-    setFormData({
-      membersName: '',
-      email: '',
-      phoneNumber: '',
-      numberOfMembers: '',
-    });
-  };
-
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     console.log('Input changed:', name, value);
-
     setFormData((prev) => ({
       ...prev,
       [name]: value,
@@ -136,56 +135,32 @@ const AdminMembersTableData = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+    
     if (!validateForm()) {
       return;
     }
-
     try {
       const payload = {
-        membersName: formData.membersName.trim(),
-        email: formData.email.trim(),
-        phoneNumber: formData.phoneNumber.trim(),
+        membersName: formData.membersName,
+        email: formData.email,
+        phoneNumber: formData.phoneNumber,
         numberOfMembers: parseInt(formData.numberOfMembers),
       };
-      console.log('Sending payload:', payload);
 
-      let response;
-      if (editingChap) {
-        response = await axiosInstance.put(
-          `/api/admin/members/${editingChap.membersId}`,
+      if (editingMember) {
+        await axiosInstance.put(
+          `/api/admin/members/${editingMember.membersId}`,
           payload,
         );
-        if (response.data) {
-          setMembers((prevMembers) =>
-            prevMembers.map((member) =>
-              member.membersId === editingChap.membersId
-                ? { ...member, ...response.data }
-                : member,
-            ),
-          );
-          toast.success('Members updated successfully');
-        }
+        toast.success('Member updated successfully');
       } else {
-        response = await axiosInstance.post('/api/admin/members', payload);
-        if (response.data && response.data.membersId) {
-          const newMember = {
-            ...response.data,
-          };
-          setMembers((prevMembers) => [...prevMembers, newMember]);
-          toast.success('Members created successfully');
-        }
+        await axiosInstance.post('/api/admin/members', payload);
+        toast.success('Member added successfully');
       }
-
-      handleCloseModal();
-      await fetchMembers();
+      handleCloseDialog();
+      fetchMembers();
     } catch (error) {
-      console.error('Error details:', error);
-      const errorMessage =
-        error.response?.data?.error ||
-        error.message ||
-        (editingChap ? 'Failed to update members' : 'Failed to create members');
-      toast.error(errorMessage);
+      toast.error('Failed to submit member');
     }
   };
 
@@ -207,16 +182,118 @@ const AdminMembersTableData = () => {
     }
   };
 
+  const handleOpenAddDialog = () => {
+    setFormData({
+      membersName: '',
+      email: '',
+      phoneNumber: '',
+      numberOfMembers: '',
+    });
+    setIsAddDialogOpen(true);
+  };
+
+  const handleAddMember = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await axiosInstance.post('/api/admin/members', formData);
+      setMembers((prevMembers) => [...prevMembers, response.data]);
+      toast.success('Member added successfully');
+      handleCloseDialog();
+    } catch (error) {
+      toast.error('Failed to add member');
+    }
+  };
+
+  const handleOpenDialog = (member = null) => {
+    if (member) {
+      setFormData({
+        membersName: member.membersName,
+        email: member.email,
+        phoneNumber: member.phoneNumber,
+        numberOfMembers: member.numberOfMembers,
+      });
+      setEditingMember(member);
+    } else {
+      setFormData({
+        membersName: '',
+        email: '',
+        phoneNumber: '',
+        numberOfMembers: '',
+      });
+      setEditingMember(null);
+    }
+    setIsDialogOpen(true);
+  };
+
+  const handleCloseDialog = () => {
+    setIsAddDialogOpen(false);
+    setIsEditDialogOpen(false);
+    setEditingMember(null);
+    setFormData({
+      membersName: '',
+      email: '',
+      phoneNumber: '',
+      numberOfMembers: '',
+    });
+  };
+
   return (
     <div className="rounded-2xl border border-stroke bg-white p-5 shadow-md dark:border-strokedark dark:bg-boxdark">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-xl font-semibold">Super Admin Member Table</h2>
-        <button
-          onClick={() => handleOpenModal()}
-          className="px-4 py-2 bg-primary text-white rounded hover:bg-opacity-90"
-        >
-          Add Member
-        </button>
+        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+          <DialogTrigger asChild>
+            <Button onClick={handleOpenAddDialog}>Add Member</Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Add Member</DialogTitle>
+            </DialogHeader>
+            <form onSubmit={handleAddMember}>
+              <Input
+                name="membersName"
+                placeholder="Member Name"
+                value={formData.membersName}
+                onChange={handleInputChange}
+                className="mb-4"
+                required
+              />
+              <Input
+                name="email"
+                type="email"
+                placeholder="Email"
+                value={formData.email}
+                onChange={handleInputChange}
+                className="mb-4"
+                required
+              />
+              <Input
+                name="phoneNumber"
+                type="number"
+                placeholder="Phone Number"
+                value={formData.phoneNumber}
+                onChange={handleInputChange}
+                className="mb-4"
+                required
+              />
+              <Input
+                name="numberOfMembers"
+                type="number"
+                placeholder="Number of Members"
+                value={formData.numberOfMembers}
+                onChange={handleInputChange}
+                className="mb-4"
+                required
+              />
+              <DialogFooter>
+                <Button variant="secondary" onClick={handleCloseDialog}>
+                  Cancel
+                </Button>
+                <Button type="submit">Add</Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
       </div>
       <div className="mb-4">
         <Input
@@ -234,7 +311,7 @@ const AdminMembersTableData = () => {
         <MembersTable
           data={members.map((member) => ({
             ...member,
-            onEdit: handleOpenModal,
+            onEdit: handleOpenDialog,
             onDelete: () => handleDeleteClick(member.membersId),
           }))}
           columns={MembersColumns}
@@ -264,77 +341,62 @@ const AdminMembersTableData = () => {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Modal for Add/Edit */}
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-          <div className="bg-white p-6 rounded-lg w-full max-w-md">
-            <h3 className="text-xl font-semibold mb-4">
-              {editingChap ? 'Edit Member' : 'Add Member'}
-            </h3>
-            <form onSubmit={handleSubmit}>
-              <div className="mb-4">
-                <label className="block mb-2">Member Name</label>
-                <input
-                  type="text"
-                  name="membersName"
-                  value={formData.membersName}
-                  onChange={handleInputChange}
-                  className="w-full p-2 border rounded"
-                  required
-                />
-              </div>
-              <div className="mb-4">
-                <label className="block mb-2">Email</label>
-                <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  className="w-full p-2 border rounded"
-                  required
-                />
-              </div>
-              <div className="mb-4">
-                <label className="block mb-2">Phone Number</label>
-                <input
-                  type="number"
-                  name="phoneNumber"
-                  value={formData.phoneNumber}
-                  onChange={handleInputChange}
-                  className="w-full p-2 border rounded"
-                  required
-                />
-              </div>
-              <div className="mb-4">
-                <label className="block mb-2">Number of Members</label>
-                <input
-                  type="number"
-                  name="numberOfMembers"
-                  value={formData.numberOfMembers}
-                  onChange={handleInputChange}
-                  className="w-full p-2 border rounded"
-                  required
-                />
-              </div>
-              <div className="flex justify-end space-x-3">
-                <button
-                  type="button"
-                  onClick={handleCloseModal}
-                  className="px-4 py-2 border rounded"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-primary text-white rounded"
-                >
-                  {editingChap ? 'Update' : 'Add'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {editingMember ? 'Edit Member' : 'Add Member'}
+            </DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <Input
+              type="text"
+              name="membersName"
+              placeholder="Member Name"
+              value={formData.membersName}
+              onChange={handleInputChange}
+              required
+            />
+            <Input
+              type="email"
+              name="email"
+              placeholder="Email"
+              value={formData.email}
+              onChange={handleInputChange}
+              required
+            />
+            <Input
+              type="number"
+              name="phoneNumber"
+              placeholder="Phone Number"
+              value={formData.phoneNumber}
+              onChange={handleInputChange}
+              required
+            />
+            <Input
+              type="number"
+              name="numberOfMembers"
+              placeholder="Number of Members"
+              value={formData.numberOfMembers}
+              onChange={handleInputChange}
+              required
+            />
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => {
+                  setIsDialogOpen(false);
+                  setEditingMember(null);
+                }}
+              >
+                Cancel
+              </Button>
+              <Button type="submit">{editingMember ? 'Update' : 'Add'}</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
