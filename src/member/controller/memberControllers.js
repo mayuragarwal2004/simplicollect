@@ -71,13 +71,14 @@ const addMember = async (req, res) => {
 };
 
 const memberList = async (req, res) => {
+  let { rows = 10, page = 1, searchQuery } = req.query;
   const { chapterId } = req.body;
   if (!chapterId) {
     return res.status(400).json({ message: "Chapter ID is required" });
   }
 
   try {
-    const members = await memberModel.getMembers(chapterId);
+    const members = await memberModel.getMembers(chapterId, searchQuery, page, rows);
     res.json(members);
   } catch (error) {
     res.status(500).json({ error: error.message });

@@ -10,6 +10,8 @@ import {
 import { useLocation } from 'react-router-dom';
 import { MemberListTable } from '../../components/member/MemberList/memberlist-table';
 import { MemberListColumns } from '../../components/member/MemberList/memberlist-column';
+import { Input } from '@/components/ui/input';
+import { SearchBar } from '@/components/ui/search-bar';
 
 const MemberList = () => {
   const location = useLocation();
@@ -34,25 +36,25 @@ const MemberList = () => {
   const rows = searchParams.get('rows') || 10;
   const page = searchParams.get('page') || 0;
 
+  const fetchMembers = async () => {
+    try {
+      const response = await axiosInstance.post(
+        `/api/member/memberList?page=${page}&rows=${rows}&searchQuery=${search}`,
+        {
+          chapterId: chapterData.chapterId,
+        },
+      );
+      setMembers(response.data.data);
+      setFilteredMembers(response.data.data);
+      setTotalRecord(response.data.totalRecords);
+    } catch (error) {
+      console.error('Error fetching members:', error);
+    }
+  };
+  
   useEffect(() => {
-    const fetchMembers = async () => {
-      try {
-        const response = await axiosInstance.post(
-          `/api/member/memberList?page=${page}&rows=${rows}`,
-          {
-            chapterId: chapterData.chapterId,
-          },
-        );
-        setMembers(response.data.data);
-        setFilteredMembers(response.data.data);
-        setTotalRecord(response.data.totalRecords);
-      } catch (error) {
-        console.error('Error fetching members:', error);
-      }
-    };
-
     fetchMembers();
-  }, [chapterData, rows, page, location.search]);
+  }, [chapterData, rows, page, location.search, search]);
 
   useEffect(() => {
     setFilteredMembers(
@@ -89,20 +91,12 @@ const MemberList = () => {
   return (
     <div className="container mx-auto p-4 dark:bg-gray-800 dark:text-white">
       <Breadcrumb pageName="Member List" />
-      <div className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-bold">Member List</h1>
-        <div className="flex space-x-2">
-          <input
-            type="text"
-            placeholder="Search members..."
-            value={search}
-            onChange={handleSearchChange}
-            className="px-4 py-2 border rounded dark:bg-gray-700 dark:border-gray-600"
-          />
-          {/* <Button variant="contained" color="primary" onClick={() => setOpenModal(true)}>
-            Add Member
-          </Button> */}
-        </div>
+      <div>
+        <SearchBar
+          onChange={handleSearchChange}
+          value={search}
+          className="mb-3 w-full"
+        />
       </div>
       <div className="overflow-x-auto">
         <MemberListTable

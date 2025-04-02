@@ -43,9 +43,9 @@ export const MemberListColumns = [
     enableHiding: false,
   },
   {
-    accessorKey: 'roleName',
+    accessorKey: 'roleNames',
     header: 'Role',
-    cell: ({ row }) => <p>{row.original.roleName}</p>,
+    cell: ({ row }) => <p>{row.original.roleNames}</p>,
     enableSorting: true,
     enableHiding: false,
   },
