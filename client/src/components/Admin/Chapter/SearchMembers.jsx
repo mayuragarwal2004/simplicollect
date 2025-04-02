@@ -26,7 +26,7 @@ const SearchMembers = ({ chapterId }) => {
     const fetchResults = async () => {
       setLoading(true);
       try {
-        const response = await axios.get("/api/searchmembersforchapter", {
+        const response = await axios.get("/api/admin/chapter-member-list/searchmembersforchapter", {
           params: { searchQuery: debouncedQuery, chapterId }
         });
         setResults(response.data.data);

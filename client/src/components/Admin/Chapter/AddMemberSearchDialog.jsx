@@ -1,3 +1,5 @@
+
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -6,6 +8,8 @@ import { toast } from 'react-toastify';
 import debounce from 'lodash.debounce';
 import { axiosInstance } from '../../../utils/config';
 import { useParams } from 'react-router-dom';
+import { Select } from '@/components/ui/select'; // Assuming this is a ShadCN component
+import { DatePicker } from '@/components/ui/datepicker'; // Assuming this is a ShadCN component
 
 const AddMemberSearchDialog = ({ isOpen, onClose, chapterSlug, fetchMembers }) => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -13,6 +17,10 @@ const AddMemberSearchDialog = ({ isOpen, onClose, chapterSlug, fetchMembers }) =
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
+  const [selectedMember, setSelectedMember] = useState(null); // Track selected member for adding
+  const [role, setRole] = useState(''); // Role input
+  const [joinDate, setJoinDate] = useState(null); // Join date input
+
   const fetchSearchResults = async (query, pageNum = 1, reset = false) => {
     if (!query) return;
     setLoading(true);
@@ -54,12 +62,26 @@ const AddMemberSearchDialog = ({ isOpen, onClose, chapterSlug, fetchMembers }) =
     }
   };
 
-  const handleAddMember = async (memberId) => {
+  const handleAddMember = (member) => {
+    setSelectedMember(member);
+  };
+
+  const handleSubmitMemberDetails = async () => {
+    if (!role || !joinDate) {
+      toast.error('Please provide all details');
+      return;
+    }
     try {
-      await axiosInstance.post(`/api/admin/chapter-member-list/${chapterSlug}/members/${memberId}/addmember`);
+      await axiosInstance.post(`/api/admin/chapter-member-list/${chapterSlug}/members/${selectedMember.memberId}/addmember`, {
+        role,
+        joinDate,
+      });
       toast.success('Member added successfully');
       fetchMembers();
       onClose();
+      setSelectedMember(null); // Reset selected member
+      setRole('');
+      setJoinDate(null);
     } catch (error) {
       toast.error(error.response?.data?.error || 'Failed to add member');
     }
@@ -84,7 +106,7 @@ const AddMemberSearchDialog = ({ isOpen, onClose, chapterSlug, fetchMembers }) =
               <div key={member.memberId} className="flex justify-between items-center p-2 border rounded-md">
                 <p>{member.fullName} ({member.phoneNumber})</p>
                 {member.isInChapter === 0 && (
-                  <Button size="sm" onClick={() => handleAddMember(member.memberId)}>
+                  <Button size="sm" onClick={() => handleAddMember(member)}>
                     Add
                   </Button>
                 )}
@@ -94,6 +116,33 @@ const AddMemberSearchDialog = ({ isOpen, onClose, chapterSlug, fetchMembers }) =
             <p>No results found</p>
           )}
         </div>
+
+        {/* Dialog for entering role and join date */}
+        <Dialog open={selectedMember !== null} onOpenChange={() => setSelectedMember(null)}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Enter Member Details</DialogTitle>
+            </DialogHeader>
+            <div className="mb-4">
+              <label>Role</label>
+              <Input
+                value={role}
+                onChange={(e) => setRole(e.target.value)}
+                placeholder="Enter role"
+                className="mt-2"
+              />
+            </div>
+            <div className="mb-4">
+              <label>Join Date</label>
+              <DatePicker
+                selected={joinDate}
+                onChange={setJoinDate}
+                className="mt-2"
+              />
+            </div>
+            <Button onClick={handleSubmitMemberDetails}>Add Member</Button>
+          </DialogContent>
+        </Dialog>
       </DialogContent>
     </Dialog>
   );
