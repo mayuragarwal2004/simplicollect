@@ -24,15 +24,22 @@ const getChapterMembers = async (chapterSlug, rows, page) => {
   const members = await db("member_chapter_mapping")
     .join("members", "member_chapter_mapping.memberId", "members.memberId")
     .where("member_chapter_mapping.chapterId", chapterId)
-    .andWhere("member_chapter_mapping.status", "joined") 
+    .andWhere("member_chapter_mapping.status", "joined")
     .select(
       "members.memberId",
       "members.firstName",
       "members.lastName",
       "members.email",
-      "members.role",
+      "member_chapter_mapping.roleIds",
       "members.phoneNumber",
-      "member_chapter_mapping.balance"
+      "member_chapter_mapping.balance",
+      db.raw(`
+      (
+        SELECT GROUP_CONCAT(roleName ORDER BY roleName SEPARATOR ', ')
+        FROM roles
+        WHERE FIND_IN_SET(roleId, member_chapter_mapping.roleIds)
+      ) as roleNames
+    `)
     )
     .orderBy("members.firstName", "asc")
     .limit(rows)
@@ -40,9 +47,6 @@ const getChapterMembers = async (chapterSlug, rows, page) => {
 
   return { members: members || [], total: total.count };
 };
-
-
-
 
 // Function to remove a member from a chapter (keeps record, adds leave date)
 const removeChapterMember = async (chapterSlug, memberId, leaveDate) => {
@@ -57,10 +61,10 @@ const removeChapterMember = async (chapterSlug, memberId, leaveDate) => {
   }
 
   const removedMember = await db("member_chapter_mapping")
-    .where({ 
-      chapterId: chapter.chapterId, 
+    .where({
+      chapterId: chapter.chapterId,
       memberId: memberId,
-      status: "joined" 
+      status: "joined",
     })
     .update({
       leaveDate: leaveDate,
@@ -74,7 +78,7 @@ const removeChapterMember = async (chapterSlug, memberId, leaveDate) => {
   return { memberId, chapterId: chapter.chapterId, status: "left", leaveDate };
 };
 
-const deleteChapterMember = async (chapterSlug,memberId) => {
+const deleteChapterMember = async (chapterSlug, memberId) => {
   const chapter = await db("chapters")
     .select("chapterId")
     .where({ chapterSlug })
@@ -94,27 +98,25 @@ const deleteChapterMember = async (chapterSlug,memberId) => {
   }
 
   await db("member_chapter_mapping")
-    .where({ chapterId:chapter.chapterId, memberId })
+    .where({ chapterId: chapter.chapterId, memberId })
     .del();
 
-  await db("members")
-    .where({ memberId })
-    .del();
+  await db("members").where({ memberId }).del();
   return member;
 };
 
 // Function to update a member's role in a chapter
 const updateMemberRole = async (chapterSlug, userId, newRole) => {
-  const roleNames = newRole.split(',').map(role => role.trim());
-  
+  const roleIds = newRole.split(",").map((role) => role.trim());
+
   const roles = await db("roles")
     .select("roleId", "roleName")
-    .whereIn("roleName", roleNames);
-  if (roles.length !== roleNames.length) {
-    throw new Error("One or more invalid role names");
+    .whereIn("roleId", roleIds);
+  if (roles.length !== roleIds.length) {
+    throw new Error("One or more invalid role IDs");
   }
 
-  const roleIds = roles.map(role => role.roleId).join(',');
+  const newRoleIds = roles.map((role) => role.roleId).join(",");
   const chapter = await db("chapters")
     .select("chapterId")
     .where({ chapterSlug })
@@ -124,9 +126,7 @@ const updateMemberRole = async (chapterSlug, userId, newRole) => {
     throw new Error(`Chapter '${chapterSlug}' does not exist`);
   }
 
-  await db("members")
-    .where({ memberId: userId })
-    .update({ role: newRole });
+  await db("members").where({ memberId: userId }).update({ role: newRole });
 
   const existingMapping = await db("member_chapter_mapping")
     .where({ chapterId: chapter.chapterId, memberId: userId })
@@ -135,37 +135,51 @@ const updateMemberRole = async (chapterSlug, userId, newRole) => {
   if (existingMapping) {
     await db("member_chapter_mapping")
       .where({ chapterId: chapter.chapterId, memberId: userId })
-      .update({ roleIds: roleIds });
+      .update({ roleIds: newRoleIds });
   } else {
-    await db("member_chapter_mapping")
-      .insert({ chapterId: chapter.chapterId, memberId: userId, roleIds: roleIds });
+    await db("member_chapter_mapping").insert({
+      chapterId: chapter.chapterId,
+      memberId: userId,
+      roleIds: newRoleIds,
+    });
   }
 
-  return { userId, roleIds, chapterId: chapter.chapterId, roleName: newRole };
+  return {
+    userId,
+    roleIds: newRoleIds,
+    chapterId: chapter.chapterId,
+    roleName: newRole,
+  };
 };
 
 // Function to update member balance (with optional transaction record)
-const updateMemberBalance = async (chapterSlug,userId, newBalance, addToTransaction = false,memberId) => {
-  const chapter =await db("chapters")
+const updateMemberBalance = async (
+  chapterSlug,
+  userId,
+  newBalance,
+  addToTransaction = false,
+  memberId
+) => {
+  const chapter = await db("chapters")
     .select("chapterId")
     .where({ chapterSlug })
     .first();
   if (!chapter) {
     throw new Error(`Chapter '${chapterSlug}' does not exist`);
   }
-  if(addToTransaction){
+  if (addToTransaction) {
     const superAdminId = memberId; // Replace with actual super admin ID
     const superAdmin = await db("members")
-    .select(db.raw("CONCAT(firstName, ' ', lastName) AS fullName"))
-    .where({ memberId })
-    .first();
+      .select(db.raw("CONCAT(firstName, ' ', lastName) AS fullName"))
+      .where({ memberId })
+      .first();
     if (!superAdmin) {
       throw new Error("Super admin not found");
     }
 
     await db("transactions").insert({
       transactionId: db.raw("UUID()"), // Auto-generated
-      chapterId: chapter.chapterId, 
+      chapterId: chapter.chapterId,
       memberId: userId,
       transactionDate: db.raw("CURRENT_TIMESTAMP"), // Today's date
       transactionType: "Balance Update",
@@ -192,19 +206,21 @@ const updateMemberBalance = async (chapterSlug,userId, newBalance, addToTransact
       approvedById: superAdminId, // Replace with actual super admin ID
       approvedByName: superAdmin.fullName, // Replace with actual super admin name
       transferedToChapter: 1,
-      transferedToChapterTransactionId: null
-  });
-    }
-    await db("member_chapter_mapping").where({ chapterId:chapter.chapterId, memberId: userId }).update({ balance: newBalance });
-  
+      transferedToChapterTransactionId: null,
+    });
+  }
+  await db("member_chapter_mapping")
+    .where({ chapterId: chapter.chapterId, memberId: userId })
+    .update({ balance: newBalance });
+
   return { userId, chapterId: chapter.chapterId, newBalance };
 };
 
 const searchMemberForChapterToAdd = async (searchQuery, chapterSlug) => {
   const chapter = await db("chapters")
-  .select("chapterId")
-  .where({ chapterSlug })
-  .first();
+    .select("chapterId")
+    .where({ chapterSlug })
+    .first();
 
   const chapterId = chapter?.chapterId;
   return db("members as m")
@@ -215,8 +231,11 @@ const searchMemberForChapterToAdd = async (searchQuery, chapterSlug) => {
       "m.lastName",
       "m.email",
       "m.phoneNumber",
-      db.raw("CASE WHEN mc.memberId IS NOT NULL THEN 1 ELSE 0 END AS isInChapter"),
-      db.raw(`
+      db.raw(
+        "CASE WHEN mc.memberId IS NOT NULL THEN 1 ELSE 0 END AS isInChapter"
+      ),
+      db.raw(
+        `
         CASE 
           WHEN m.firstName LIKE ? THEN 1
           WHEN m.lastName LIKE ? THEN 2
@@ -224,7 +243,14 @@ const searchMemberForChapterToAdd = async (searchQuery, chapterSlug) => {
           WHEN m.phoneNumber LIKE ? THEN 4
           ELSE 5 
         END AS relevance
-      `, [`${searchQuery}%`, `${searchQuery}%`, `${searchQuery}%`, `${searchQuery}%`]) 
+      `,
+        [
+          `${searchQuery}%`,
+          `${searchQuery}%`,
+          `${searchQuery}%`,
+          `${searchQuery}%`,
+        ]
+      )
     )
     .leftJoin("member_chapter_mapping as mc", function () {
       this.on("m.memberId", "=", "mc.memberId")
@@ -238,7 +264,7 @@ const searchMemberForChapterToAdd = async (searchQuery, chapterSlug) => {
         .orWhere("m.phoneNumber", "LIKE", `%${searchQuery}%`);
     })
     .orderBy("relevance", "asc")
-    .orderBy("m.firstName", "asc") 
+    .orderBy("m.firstName", "asc")
     .orderBy("m.lastName", "asc")
     .limit(50);
 };
@@ -263,7 +289,7 @@ const addMemberToChapter = async (chapterSlug, userId, role) => {
   }
 
   const existingMapping = await db("member_chapter_mapping")
-    .where({ chapterId: chapter.chapterId, memberId: userId })//joined
+    .where({ chapterId: chapter.chapterId, memberId: userId }) //joined
     .first();
 
   if (existingMapping && existingMapping.status === "joined") {
@@ -281,11 +307,16 @@ const addMemberToChapter = async (chapterSlug, userId, role) => {
   if (existingMapping && existingMapping.status === "left") {
     await db("member_chapter_mapping")
       .where({ chapterId: chapter.chapterId, memberId: userId })
-      .update({ status: "joined", leaveDate: null,roleIds:role });
+      .update({ status: "joined", leaveDate: null, roleIds: role });
 
-    return { message: "Member re-added successfully", chapterSlug, userId, role };
+    return {
+      message: "Member re-added successfully",
+      chapterSlug,
+      userId,
+      role,
+    };
   }
-    
+
   await db("member_chapter_mapping").insert({
     chapterId: chapter.chapterId,
     memberId: userId,
@@ -294,10 +325,10 @@ const addMemberToChapter = async (chapterSlug, userId, role) => {
   });
 
   return { message: "Member added successfully", chapterSlug, userId, role };
-}
+};
 
 const searchMemberForChapter = async (searchQuery, chapterId, rows, page) => {
-  const offset = (page - 1) * rows; 
+  const offset = (page - 1) * rows;
 
   const members = await db("members as m")
     .select(
@@ -311,7 +342,7 @@ const searchMemberForChapter = async (searchQuery, chapterId, rows, page) => {
     .join("member_chapter_mapping as mc", function () {
       this.on("m.memberId", "=", "mc.memberId")
         .andOn("mc.chapterId", "=", db.raw("?", [chapterId]))
-        .andOn(db.raw("mc.status = 'joined'")); 
+        .andOn(db.raw("mc.status = 'joined'"));
     })
     .where(function () {
       this.where("m.firstName", "LIKE", `%${searchQuery}%`)
@@ -329,7 +360,7 @@ const searchMemberForChapter = async (searchQuery, chapterId, rows, page) => {
     .join("member_chapter_mapping as mc", function () {
       this.on("m.memberId", "=", "mc.memberId")
         .andOn("mc.chapterId", "=", db.raw("?", [chapterId]))
-        .andOn(db.raw("mc.status = 'joined'")); 
+        .andOn(db.raw("mc.status = 'joined'"));
     })
     .where(function () {
       this.where("m.firstName", "LIKE", `%${searchQuery}%`)
@@ -339,11 +370,10 @@ const searchMemberForChapter = async (searchQuery, chapterId, rows, page) => {
     })
     .first();
 
-  const total = totalResult ? totalResult.count : 0; 
+  const total = totalResult ? totalResult.count : 0;
 
   return { members, total };
 };
-
 
 module.exports = {
   getChapterMembers,
@@ -353,5 +383,5 @@ module.exports = {
   updateMemberBalance,
   searchMemberForChapterToAdd,
   searchMemberForChapter,
-  addMemberToChapter
+  addMemberToChapter,
 };

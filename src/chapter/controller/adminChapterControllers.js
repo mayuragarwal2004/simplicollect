@@ -97,9 +97,26 @@ const deleteChapter = async (req, res) => {
   }
 };
 
+const getRolesByChapterSlug = async (req, res) => {
+  const { chapterSlug } = req.params;
+  try {
+    const roles = await adminChapterModel.getRolesByChapterSlug(chapterSlug);
+    if (roles) {
+      res.json(roles);
+    } else {
+      res.status(404).json({ message: "Roles not found" });
+    }
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: error.message });
+  }
+}
+
 module.exports = {
   getChapterById,
   updateChapterDetails,
   getAllChaptersController,
   deleteChapter,
-  createChapter,};
+  createChapter,
+  getRolesByChapterSlug,
+};

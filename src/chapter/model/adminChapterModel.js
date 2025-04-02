@@ -58,10 +58,19 @@ const deleteChapter = async (chapterId) => {
     .del();
 };
 
+const getRolesByChapterSlug = async (chapterSlug) => {
+  const roles = await db("roles")
+    .join("chapters", "roles.chapterId", "chapters.chapterId")
+    .where("chapters.chapterSlug", chapterSlug)
+    .select("roles.*");
+  return roles;
+}
+
 module.exports = {
   findChapterById,
   updateChapter,
   getAllChapters,
   createChapter,
   deleteChapter,
+  getRolesByChapterSlug,
 };

@@ -8,8 +8,17 @@ import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { MultiSelect } from '@/components/ui/MultiSelect';
 import AddMemberSearchDialog from './AddMemberSearchDialog';
-import SearchMembers from './SearchMembers'
+import SearchMembers from './SearchMembers';
+import {
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog';
 
 const AdminChaptersMemberList = () => {
   const [members, setMembers] = useState([]);
@@ -21,22 +30,76 @@ const AdminChaptersMemberList = () => {
   const rows = searchParams.get('rows') || 10;
   const page = searchParams.get('page') || 0;
   const { chapterSlug } = useParams();
+  const [allRoles, setAllRoles] = useState([
+    {
+      roleId: 1,
+      roleName: 'Admin',
+      roleDescription: 'Administrator role with full access',
+      rights: 'all',
+      removable: false,
+    },
+    {
+      roleId: 2,
+      roleName: 'Editor',
+      roleDescription: 'Editor role with limited access',
+      rights: 'edit',
+      removable: true,
+    },
+    {
+      roleId: 3,
+      roleName: 'Viewer',
+      roleDescription: 'Viewer role with read-only access',
+      rights: 'view',
+      removable: true,
+    },
+    {
+      roleId: 6,
+      roleName: 'Member',
+      roleDescription: 'Member role with limited access',
+      rights: 'view',
+      removable: true,
+    },
+  ]);
 
   useEffect(() => {
     fetchMembers();
+    fetchRoles();
   }, [rows, page, chapterSlug]);
 
   const fetchMembers = () => {
     axiosInstance
-      .get(`/api/admin/chapter-member-list/${chapterSlug}/members?rows=${rows}&page=${page}`)
+      .get(
+        `/api/admin/chapter-member-list/${chapterSlug}/members?rows=${rows}&page=${page}`,
+      )
       .then((res) => {
-        setMembers(res.data.data || res.data);
+        const updatedMembers = res.data.data.map((member) => ({
+          ...member,
+          onRoleEdit: () => {
+            handleRoleSelection(
+              member.memberId,
+              member.roles.map((role) => role.roleId),
+              allRoles,
+            );
+          },
+        }));
+        setMembers(updatedMembers);
         setTotalRecord(res.data.totalRecords || res.data.length);
         setLoading(false);
       })
       .catch(() => {
         toast.error('Failed to fetch Members');
         setLoading(false);
+      });
+  };
+
+  const fetchRoles = () => {
+    axiosInstance
+      .get(`/api/admin/chapters/${chapterSlug}/roles`)
+      .then((res) => {
+        setAllRoles(res.data);
+      })
+      .catch(() => {
+        toast.error('Failed to fetch roles');
       });
   };
 
@@ -59,7 +122,7 @@ const AdminChaptersMemberList = () => {
       ) : (
         <MemberTable
           data={members.map((mem) => ({ ...mem, fetchMembers }))}
-          columns={MemberColumn}
+          columns={MemberColumn(allRoles)}
           searchInputField="memberName"
           totalRecord={totalRecord}
           pagination={{ pageSize: parseInt(rows), pageIndex: parseInt(page) }}
