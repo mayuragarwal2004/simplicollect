@@ -32,9 +32,11 @@ const getRightsByMemberIdAndChapterIdAndMenu = async (memberId, chapterId) => {
 
 const getAllRightsByMemberIdAndChapterId = async (memberId, chapterId) => {
   console.log({ memberId, chapterId });
-  
+
   return db("member_chapter_mapping as mcm")
-    .join("roles as ro", "mcm.roleId", "ro.roleId")
+    .joinRaw(
+      "JOIN roles ro ON FIND_IN_SET(ro.roleId, mcm.roleIds) > 0"
+    )
     .joinRaw(
       "JOIN features_master fm ON FIND_IN_SET(fm.featureId, ro.rights) > 0"
     )
@@ -50,9 +52,14 @@ const getAllRightsByMemberIdAndChapterId = async (memberId, chapterId) => {
       "fm.featureDisabled",
       "mcm.*"
     )
+    .select(
+      db.raw("GROUP_CONCAT(DISTINCT ro.roleName ORDER BY ro.roleId ASC) as roleNames")
+    )
     .where("mcm.memberId", memberId)
-    .andWhere("mcm.chapterId", chapterId);
+    .andWhere("mcm.chapterId", chapterId)
+    .groupBy("mcm.memberId", "mcm.chapterId", "fm.featureId");
 };
+
 
 module.exports = {
   getRightsByMemberIdAndChapterIdAndMenu,
