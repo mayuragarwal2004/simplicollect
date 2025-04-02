@@ -22,8 +22,10 @@ import {
 const ReceiverDaywiseReport = () => {
   const { chapterData } = useData();
   const [members, setMembers] = useState([]);
+  const [filteredMembers, setFilteredMembers] = useState([]); // Filtered list
   const [selectedMember, setSelectedMember] = useState(null);
   const [open, setOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState(''); // Search query
 
   useEffect(() => {
     const fetchMembers = async () => {
@@ -32,6 +34,7 @@ const ReceiverDaywiseReport = () => {
           params: { chapterId: chapterData?.chapterId },
         });
         setMembers(response.data);
+        setFilteredMembers(response.data); // Initialize filtered list
       } catch (error) {
         toast.error('Error fetching members');
       }
@@ -41,6 +44,29 @@ const ReceiverDaywiseReport = () => {
       fetchMembers();
     }
   }, [chapterData]);
+
+  // Handle search input changes
+  const handleSearch = (query) => {
+    setSearchQuery(query);
+    if (!query) {
+      setFilteredMembers(members);
+      return;
+    }
+
+    const lowerCaseQuery = query.toLowerCase();
+    const filtered = members.filter(
+      (member) =>
+        member.firstName.toLowerCase().includes(lowerCaseQuery) ||
+        member.lastName.toLowerCase().includes(lowerCaseQuery) ||
+        `${member.firstName} ${member.lastName}`
+          .toLowerCase()
+          .includes(lowerCaseQuery) ||
+        member.email.toLowerCase().includes(lowerCaseQuery) ||
+        member.phoneNumber.includes(query), // Allow phone search without lowercasing
+    );
+
+    setFilteredMembers(filtered);
+  };
 
   const handleExportData = async () => {
     if (!selectedMember) {
@@ -90,21 +116,27 @@ const ReceiverDaywiseReport = () => {
               variant="outline"
               role="combobox"
               aria-expanded={open}
-              className="w-[200px] justify-between"
+              className="w-[250px] justify-between"
             >
               {selectedMember ? selectedMember.label : 'Select member...'}
               <ChevronsUpDown className="opacity-50" />
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-[200px] p-0">
+          <PopoverContent className="w-[250px] p-0">
             <Command>
-              <CommandInput placeholder="Search member..." className="h-9" />
+              <CommandInput
+                placeholder="Search member..."
+                className="h-9"
+                value={searchQuery}
+                onValueChange={handleSearch}
+              />
               <CommandList>
                 <CommandEmpty>No member found.</CommandEmpty>
                 <CommandGroup>
-                  {members.map((member) => (
+                  {filteredMembers.map((member) => (
                     <CommandItem
                       key={member.memberId}
+                      label={`${member.firstName} ${member.lastName}`}
                       value={member.memberId.toString()}
                       onSelect={() => {
                         setSelectedMember({
@@ -114,7 +146,7 @@ const ReceiverDaywiseReport = () => {
                         setOpen(false);
                       }}
                     >
-                      {member.firstName} {member.lastName}
+                      {`${member.firstName} ${member.lastName}`}
                       <Check
                         className={cn(
                           'ml-auto',

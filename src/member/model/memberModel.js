@@ -82,16 +82,17 @@ const getAllMembers = async (chapterId) => {
   return db("member_chapter_mapping as mmm")
     .where("mmm.chapterId", chapterId)
     .join("members as m", "mmm.memberId", "m.memberId")
-    .leftJoin("roles as r", "mmm.roleId", "r.roleId")
+    .joinRaw("JOIN roles as r ON FIND_IN_SET(r.roleId, mmm.roleIds) > 0")
     .select(
-      "r.*",
       "m.memberId",
       "m.firstName",
       "m.lastName",
       "m.phoneNumber",
       "m.email",
-      "mmm.*"
-    );
+      "mmm.*",
+      db.raw("GROUP_CONCAT(DISTINCT r.roleName ORDER BY r.roleName ASC SEPARATOR ', ') as roleNames")
+    )
+    .groupBy("m.memberId"); // Ensure one row per member
 };
 
 module.exports = {

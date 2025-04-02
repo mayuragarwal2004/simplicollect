@@ -54,7 +54,7 @@ const AllMembersReports = () => {
         setMemberPackageSummary(res.data.data);
         // make more columns
         const newColumns = [];
-        const packageData = res.data.data[0].packageData;
+        const packageData = res.data.data[0].packageData || [];
         console.log({ packageData });
 
         for (let i = 0; i < packageData.length; i++) {
