@@ -153,7 +153,6 @@ export const MemberColumn = (allRoles) => [
         .split(',')
         .map((role) => role.trim())
         .filter((role) => role !== '');
-        console.log({ currentUserRoles });
 
       return (
         <div className="flex flex-wrap gap-2">
