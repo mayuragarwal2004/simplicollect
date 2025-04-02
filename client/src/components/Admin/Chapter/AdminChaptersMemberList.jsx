@@ -9,6 +9,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import AddMemberSearchDialog from './AddMemberSearchDialog';
+import SearchMembers from './SearchMembers'
 
 const AdminChaptersMemberList = () => {
   const [members, setMembers] = useState([]);
@@ -41,9 +42,16 @@ const AdminChaptersMemberList = () => {
 
   return (
     <Card className="p-5 shadow-md">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-semibold">Super Admin Chapter Member Table</h2>
-        <Button onClick={() => setIsSearchOpen(true)}>Add Member</Button>
+      <div className="mb-6">
+        <div className="flex justify-between items-center">
+          <h2 className="text-xl font-semibold">
+            Super Admin Chapter Member Table
+          </h2>
+          <Button onClick={() => setIsSearchOpen(true)}>Add Member</Button>
+        </div>
+        <div className="mt-2">
+          <SearchMembers chapterId={1} />
+        </div>
       </div>
 
       {loading ? (
@@ -59,10 +67,10 @@ const AdminChaptersMemberList = () => {
       )}
 
       {/* Member Search Dialog */}
-      <AddMemberSearchDialog 
-        isOpen={isSearchOpen} 
-        onClose={() => setIsSearchOpen(false)} 
-        chapterSlug={chapterSlug} 
+      <AddMemberSearchDialog
+        isOpen={isSearchOpen}
+        onClose={() => setIsSearchOpen(false)}
+        chapterSlug={chapterSlug}
         fetchMembers={fetchMembers}
       />
     </Card>
