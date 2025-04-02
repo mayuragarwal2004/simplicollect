@@ -13,6 +13,7 @@ const addPayment = async (req, res) => {
   const transactionTableData = {
     transactionId: uuidv4(),
     memberId,
+    chapterId: paymentDetails.chapterId,
     packageId: paymentDetails.packageId,
     transactionDate: new Date(),
     transactionType: paymentDetails.transactionType || "Package Payment",
