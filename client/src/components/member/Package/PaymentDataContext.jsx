@@ -99,7 +99,7 @@ export const PaymentDataProvider = ({ children }) => {
         // find the unique parent types
         const parentTypes = [
           ...new Set(data.data.map((pkg) => pkg.packageParent)),
-        ];
+        ].sort((a, b) => a.localeCompare(b));
         const responseData = processPackageData(data.data, paymentData.balance);
         setPaymentData((prev) => ({
           ...prev,
