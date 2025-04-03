@@ -74,9 +74,7 @@ const SelectReceiver = ({ setStep, handlePackagePayModalClose }) => {
 
     return (
       <div>
-        <h2>
-          {showPaymentMethod ? 'Select Payment Method' : 'Select a receiver'}
-        </h2>
+        <h2>Select a receiver</h2>
         <Select
           onValueChange={handleSelectChange}
           value={paymentData.selectedReceiver}
@@ -203,10 +201,12 @@ const SelectReceiver = ({ setStep, handlePackagePayModalClose }) => {
         <Button variant="outline" onClick={() => handlePackagePayModalClose()}>
           Cancel
         </Button>
-        {paymentData.receivers.length === 0 ? null : <Button onClick={validateAndNext}>
-          Next
-          <ChevronRight />
-        </Button>}
+        {paymentData.receivers.length === 0 ? null : (
+          <Button onClick={validateAndNext}>
+            Next
+            <ChevronRight />
+          </Button>
+        )}
       </div>
     </div>
   );
