@@ -18,6 +18,9 @@ import {
   CommandItem,
   CommandList,
 } from '@/components/ui/command';
+import { Skeleton } from '@/components/ui/skeleton';
+import { MemberLedgerReportTable } from './memberLedgerDataTable/MemberLedgerReportTable';
+import { MemberLedgerReportcolumn } from './memberLedgerDataTable/MemberLedgerReportcolumn';
 
 const ReceiverDaywiseReport = () => {
   const { chapterData } = useData();
@@ -26,24 +29,32 @@ const ReceiverDaywiseReport = () => {
   const [selectedMember, setSelectedMember] = useState(null);
   const [open, setOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState(''); // Search query
+  const [ledgerData, setLedgerData] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  const fetchMembers = async () => {
+    try {
+      const response = await axiosInstance.get(`/api/member/all`, {
+        params: { chapterId: chapterData?.chapterId },
+      });
+      setMembers(response.data);
+      setFilteredMembers(response.data); // Initialize filtered list
+    } catch (error) {
+      toast.error('Error fetching members');
+    }
+  };
 
   useEffect(() => {
-    const fetchMembers = async () => {
-      try {
-        const response = await axiosInstance.get(`/api/member/all`, {
-          params: { chapterId: chapterData?.chapterId },
-        });
-        setMembers(response.data);
-        setFilteredMembers(response.data); // Initialize filtered list
-      } catch (error) {
-        toast.error('Error fetching members');
-      }
-    };
-
     if (chapterData?.chapterId) {
       fetchMembers();
     }
   }, [chapterData]);
+
+  useEffect(() => {
+    if (selectedMember) {
+      fetchLedgerData();
+    }
+  }, [selectedMember]);
 
   // Handle search input changes
   const handleSearch = (query) => {
@@ -107,6 +118,25 @@ const ReceiverDaywiseReport = () => {
     }
   };
 
+  const fetchLedgerData = async () => {
+    if (!selectedMember) return;
+    setLoading(true);
+    setLedgerData([]); // Reset ledger data before fetching new data
+    try {
+      const response = await axiosInstance.get(
+        `/api/report/${chapterData?.chapterId}/member-ledger-json`,
+        {
+          params: { memberId: selectedMember.value },
+        },
+      );
+      setLedgerData(response.data);
+      setLoading(false);
+    } catch (error) {
+      toast.error('Error fetching ledger data');
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="flex flex-col gap-4 mt-5">
       <div className="flex items-center gap-4">
@@ -164,6 +194,21 @@ const ReceiverDaywiseReport = () => {
         </Popover>
         <Button onClick={handleExportData}>Export Data</Button>
       </div>
+      {loading ? (
+        <Skeleton className="h-10 w-full mb-4" />
+      ) : selectedMember ? (
+        <MemberLedgerReportTable
+          data={ledgerData}
+          columns={MemberLedgerReportcolumn}
+          searchInputField="firstName"
+          totalRecord={0}
+          pagination={{
+            pageSize: 10,
+            pageIndex: 0,
+          }}
+          state={{ pagination: { pageSize: 10, pageIndex: 0 } }}
+        />
+      ) : null}
     </div>
   );
 };

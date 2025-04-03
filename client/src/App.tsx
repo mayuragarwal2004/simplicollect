@@ -40,6 +40,7 @@ import AdminChapterMemberList from './pages/Admin/chapters/AdminChapterMemberLis
 import AdminMembersTablePage from './pages/Admin/members/AdminMembersTablePage';
 import AcceptChapterPaymentPage from './pages/Member/FeeReceiver/AcceptChapterPaymentPage';
 import ChapterRules from './components/Admin/Chapter/CreateNew/ChapterRules/ChapterRoles'
+import MyLedger from './pages/Member/MyLedger';
 
 const routes = [
   {
@@ -147,6 +148,10 @@ const routes = [
           {
             path: 'fee',
             element: <PackageViewerPage />,
+          },
+          {
+            path: 'my-ledger',
+            element: <MyLedger />,
           },
           {
             path: 'fee_approval',

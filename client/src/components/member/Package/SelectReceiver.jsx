@@ -74,6 +74,9 @@ const SelectReceiver = ({ setStep, handlePackagePayModalClose }) => {
 
     return (
       <div>
+        <h2>
+          {showPaymentMethod ? 'Select Payment Method' : 'Select a receiver'}
+        </h2>
         <Select
           onValueChange={handleSelectChange}
           value={paymentData.selectedReceiver}
@@ -167,9 +170,7 @@ const SelectReceiver = ({ setStep, handlePackagePayModalClose }) => {
 
   return (
     <div>
-      <h2>
-        {showPaymentMethod ? 'Select Payment Method' : 'Select a receiver'}
-      </h2>
+      <h2>{showPaymentMethod && 'Select Payment Method'}</h2>
       <Tabs
         value={paymentData.paymentMethod}
         className="w-full"
@@ -193,14 +194,19 @@ const SelectReceiver = ({ setStep, handlePackagePayModalClose }) => {
         <TabsContent value="cash">{ReveiverSelector('cash')}</TabsContent>
         <TabsContent value="online">{ReveiverSelector('online')}</TabsContent>
       </Tabs>
+      {paymentData.receivers.length === 0 && (
+        <p className="text-red-500 my-5">
+          No receivers available as of now, please contact admin
+        </p>
+      )}
       <div className="flex justify-between mt-2">
         <Button variant="outline" onClick={() => handlePackagePayModalClose()}>
           Cancel
         </Button>
-        <Button onClick={validateAndNext}>
+        {paymentData.receivers.length === 0 ? null : <Button onClick={validateAndNext}>
           Next
           <ChevronRight />
-        </Button>
+        </Button>}
       </div>
     </div>
   );

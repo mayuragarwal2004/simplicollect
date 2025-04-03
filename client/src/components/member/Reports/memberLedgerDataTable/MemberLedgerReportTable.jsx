@@ -119,7 +119,7 @@ export function MemberLedgerReportTable({
      </TableBody>
     </Table>
    </div>
-   <MemberLedgerReportpagination table={table} totalRecord={totalRecord} />
+   {/* <MemberLedgerReportpagination table={table} totalRecord={totalRecord} /> */}
   </div>
  )
 }

@@ -12,5 +12,6 @@ router.get("/:chapterId/receiver-daywise-report", reportController.getReceiverDa
 router.get("/:chapterId/receiver-daywise-json-report", reportController.getReceiverDaywiseJsonReportController);
 
 router.get("/:chapterId/member-ledger", reportController.getMemberLedgerController);
+router.get("/:chapterId/member-ledger-json", reportController.getMemberLedgerJSONController);
 
 module.exports = router;

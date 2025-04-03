@@ -128,36 +128,39 @@ const getReceiverDaywiseReportController = async (req, res) => {
     res.status(500).json({ message: "Error generating Excel report" });
   }
 };
-const { getReceiverDaywiseJsonReportService } = require("../service/reportService");
+const {
+  getReceiverDaywiseJsonReportService,
+} = require("../service/reportService");
 
 const getReceiverDaywiseJsonReportController = async (req, res) => {
   const { date } = req.query;
   const { chapterId } = req.params;
-  
+
   try {
     const reportData = await getReceiverDaywiseJsonReportService(
       chapterId,
       date ? new Date(date) : new Date()
     );
-    
+
     res.json({
       success: true,
-      data: reportData
+      data: reportData,
     });
-    
   } catch (err) {
     console.error(err);
-    res.status(500).json({ 
+    res.status(500).json({
       success: false,
       message: "Error generating JSON report",
-      error: err.message 
+      error: err.message,
     });
   }
 };
 
-
 const getMemberLedgerController = async (req, res) => {
-  const { memberId } = req.query;
+  let { memberId } = req.query;
+  if (!memberId) {
+    memberId = req.user.memberId;
+  }
   const { chapterId } = req.params;
   try {
     const ledgerData = await getMemberLedgerService(memberId, chapterId);
@@ -186,6 +189,21 @@ const getMemberLedgerController = async (req, res) => {
   }
 };
 
+const getMemberLedgerJSONController = async (req, res) => {
+  let { memberId } = req.query;
+  if (!memberId) {
+    memberId = req.user.memberId;
+  }
+  const { chapterId } = req.params;
+  try {
+    const { labelledData } = await getMemberLedgerService(memberId, chapterId);
+    res.json(labelledData);
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
 module.exports = {
   getPackageSummaryController,
   getAllMemberReports,
@@ -193,4 +211,5 @@ module.exports = {
   getReceiverDaywiseReportController,
   getReceiverDaywiseJsonReportController,
   getMemberLedgerController,
+  getMemberLedgerJSONController,
 };

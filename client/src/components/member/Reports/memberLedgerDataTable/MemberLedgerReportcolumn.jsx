@@ -1,87 +1,65 @@
-import { Link } from 'react-router-dom';
-import { Eye, Upload } from 'lucide-react';
+import { format } from 'date-fns';
 
 export const MemberLedgerReportcolumn = [
   {
     id: 'srno',
-    header: () => <p className>Sr. No.</p>,
+    header: () => <p>Sr. No.</p>,
     cell: (info) => <p>{info.row.index + 1}</p>,
     enableSorting: false,
     enableHiding: false,
   },
   {
-    accessorKey: 'Date',
+    accessorKey: 'transactionDate',
     header: () => <p>Date</p>,
     cell: ({ row }) => (
       <p className="text-sm font-medium">
-        {row.original.Date}
+        {format(new Date(row.original.transactionDate), 'dd-MM-yyyy')}
       </p>
     ),
     enableSorting: false,
     enableHiding: false,
   },
   {
-    accessorKey: 'name',
-    header: () => <p>Full Name</p>,
-    cell: ({ row }) => (
-      <p className="text-sm font-medium">
-        {row.original.firstName} {row.original.lastName}
-      </p>
-    ),
-    enableSorting: false,
-    enableHiding: false,
-  },
-  {
-    accessorKey: 'Type',
+    accessorKey: 'type',
     header: () => <p>Type</p>,
     cell: ({ row }) => (
-      <p className="text-sm font-medium">
-        {row.original.Type}
-      </p>
+      <p className="text-sm font-medium">{row.original.type}</p>
     ),
     enableSorting: false,
     enableHiding: false,
   },
   {
-    accessorKey: 'Description',
+    accessorKey: 'description',
     header: () => <p>Description</p>,
     cell: ({ row }) => (
-      <p className="text-sm font-medium">
-        {row.original.Description}
-      </p>
+      <p className="text-sm font-medium">{row.original.description}</p>
     ),
     enableSorting: false,
     enableHiding: false,
   },
   {
-    accessorKey: 'Debit',
+    accessorKey: 'debit',
     header: () => <p>Debit</p>,
     cell: ({ row }) => (
-      <p className="text-sm font-medium">
-        {row.original.Debit}
-      </p>
+      <p className="text-sm font-medium">{row.original.debit}</p>
     ),
     enableSorting: false,
     enableHiding: false,
   },
   {
-    accessorKey: 'Credit',
+    accessorKey: 'credit',
     header: () => <p>Credit</p>,
     cell: ({ row }) => (
-      <p className="text-sm font-medium">
-        {row.original.Credit}
-      </p>
+      <p className="text-sm font-medium">{row.original.credit}</p>
     ),
     enableSorting: false,
     enableHiding: false,
   },
   {
-    accessorKey: 'Balance',
+    accessorKey: 'balance',
     header: () => <p>Balance</p>,
     cell: ({ row }) => (
-      <p className="text-sm font-medium">
-        {row.original.Balace}
-      </p>
+      <p className="text-sm font-medium">{row.original.balance}</p>
     ),
     enableSorting: false,
     enableHiding: false,

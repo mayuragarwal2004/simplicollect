@@ -466,6 +466,7 @@ const getMemberLedgerService = async (memberId, chapterId) => {
 
   const columns = ["Date", "Type", "Description", "Debit", "Credit", "Balance"];
   const ledger = [];
+  const ledger_labelled = []
 
   let balance = 0;
 
@@ -476,6 +477,14 @@ const getMemberLedgerService = async (memberId, chapterId) => {
     if (transaction.transactionType === "Balance Update") {
       memberLedger.balance = transaction.balanceAmount;
       balance = transaction.balanceAmount;
+      ledger_labelled.push({
+        transactionDate: transaction.transactionDate,
+        type: "Balance Update",
+        description: "Balance Update",
+        debit: "",
+        credit: "",
+        balance: transaction.balanceAmount,
+      });
       ledger.push([
         transaction.transactionDate,
         "Balance Update",
@@ -487,6 +496,14 @@ const getMemberLedgerService = async (memberId, chapterId) => {
     } else if (transaction.transactionType === "Package Payment") {
       if (transaction.originalPayableAmount) {
         balance += transaction.originalPayableAmount;
+        ledger_labelled.push({
+          transactionDate: transaction.transactionDate,
+          type: "Package Charges",
+          description: "Package Charges",
+          debit: transaction.originalPayableAmount,
+          credit: "",
+          balance: balance,
+        });
         ledger.push([
           transaction.transactionDate,
           "Package Charges",
@@ -498,6 +515,14 @@ const getMemberLedgerService = async (memberId, chapterId) => {
       }
       if (transaction.penaltyAmount) {
         balance += transaction.penaltyAmount;
+        ledger_labelled.push({
+          transactionDate: transaction.transactionDate,
+          type: "Penalty",
+          description: "Penalty",
+          debit: transaction.penaltyAmount,
+          credit: "",
+          balance: balance,
+        });
         ledger.push([
           transaction.transactionDate,
           "Penalty",
@@ -509,6 +534,14 @@ const getMemberLedgerService = async (memberId, chapterId) => {
       }
       if (transaction.discountAmount) {
         balance -= transaction.discountAmount;
+        ledger_labelled.push({
+          transactionDate: transaction.transactionDate,
+          type: "Discount",
+          description: "Discount",
+          debit: "",
+          credit: transaction.discountAmount,
+          balance: balance,
+        });
         ledger.push([
           transaction.transactionDate,
           "Discount",
@@ -520,6 +553,14 @@ const getMemberLedgerService = async (memberId, chapterId) => {
       }
       if (transaction.receiverFee) {
         balance += transaction.receiverFee;
+        ledger_labelled.push({
+          transactionDate: transaction.transactionDate,
+          type: "Online Fee",
+          description: "Online Fee",
+          debit: transaction.receiverFee,
+          credit: "",
+          balance: balance,
+        });
         ledger.push([
           transaction.transactionDate,
           "Online Fee",
@@ -531,6 +572,14 @@ const getMemberLedgerService = async (memberId, chapterId) => {
       }
       if (transaction.platformFee) {
         balance += transaction.platformFee;
+        ledger_labelled.push({
+          transactionDate: transaction.transactionDate,
+          type: "Platform Fee",
+          description: "Platform Fee",
+          debit: transaction.platformFee,
+          credit: "",
+          balance: balance,
+        });
         ledger.push([
           transaction.transactionDate,
           "Platform Fee",
@@ -541,6 +590,14 @@ const getMemberLedgerService = async (memberId, chapterId) => {
         ]);
       }
       balance -= transaction.paidAmount;
+      ledger_labelled.push({
+        transactionDate: transaction.transactionDate,
+        type: "Package Paid",
+        description: "Package Paid",
+        debit: "",
+        credit: transaction.paidAmount,
+        balance: balance,
+      });
       ledger.push([
         transaction.transactionDate,
         "Package Paid",
@@ -553,6 +610,7 @@ const getMemberLedgerService = async (memberId, chapterId) => {
   }
 
   memberLedger.data = ledger;
+  memberLedger.labelledData = ledger_labelled;
 
   return memberLedger;
 };
