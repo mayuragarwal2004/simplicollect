@@ -147,13 +147,20 @@ function ChapterBasicDetails({ onNext, onCancel }) {
     onNext(data);
   };
 
+  const isClosed = () => {
+    if (onCancel) {
+      onCancel();
+    }
+  };
+  
+
   const handleCancel = () => {
     onCancel();
     setIsDialogOpen(false);
   };
 
   return (
-    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+    <Dialog open={isDialogOpen} onOpenChange={isClosed}>
       <DialogContent className="max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Enter Chapter’s Basic Details</DialogTitle>

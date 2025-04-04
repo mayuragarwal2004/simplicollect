@@ -39,6 +39,13 @@ const OrganisationSelection = ({ onCancel }) => {
   const [showNext, setShowNext] = useState(false);
   const [open, setOpen] = useState(false);
 
+  const isClosed = () => {
+    if (onCancel) {
+      onCancel();
+    }
+  };
+  
+
   useEffect(() => {
     const loadOrganisations = async () => {
       const data = await fetchOrganisations();
@@ -85,7 +92,7 @@ const OrganisationSelection = ({ onCancel }) => {
   }
 
   return (
-    <Dialog open={true} onOpenChange={setShowNext}>
+    <Dialog open={true} onOpenChange={isClosed}>
       <DialogContent className="max-w-md">
         <h3 className="text-2xl font-semibold mb-4 text-center">
           Choose an Organisation

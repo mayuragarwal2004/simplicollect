@@ -1,31 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-// import { Button } from '@material-ui/core';
 import Breadcrumb from '../../components/Breadcrumbs/BreadcrumbOriginal';
-import { IconButton } from '@mui/material';
-import RefreshIcon from '@mui/icons-material/Refresh';
 import { axiosInstance } from '../../utils/config';
 import { useData } from '../../context/DataContext';
 import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
+import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
+import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
+import { Pencil, Trash } from 'lucide-react';
 import AddCashReceiver from '../../components/member/FeeReceiver/AddCashReceiver';
 import AddOnlineReceiver from '../../components/member/FeeReceiver/AddOnlineReceiver';
 
-const FeeReciever = () => {
+const FeeReceiver = () => {
   const [cashReceivers, setCashReceivers] = useState([]);
   const [qrReceivers, setQrReceivers] = useState([]);
-  const [selectedApprovals, setSelectedApprovals] = useState([]);
+  const { chapterData } = useData();
+  // const [selectedApprovals, setSelectedApprovals] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalType, setModalType] = useState('');
   const [membersList, setMembersList] = useState([]);
-  const { chapterData } = useData();
   const [recieverFormData, setRecieverFormData] = useState({
     cashRecieverName: '',
     memberId: '',
@@ -60,49 +52,34 @@ const FeeReciever = () => {
   };
 
   const fetchCashReceivers = async () => {
-    const response = await axiosInstance.get(
-      `/api/feeReciever/cash/${chapterData.chapterId}`,
-    );
+    const response = await axiosInstance.get(`/api/feeReciever/cash/${chapterData.chapterId}`);
     setCashReceivers(response.data);
   };
 
-  const fetchOnlineReceivers  = async () => {
-    const response = await axiosInstance.get(
-      `/api/feeReciever/qr/${chapterData.chapterId}`,
-    );
+  const fetchOnlineReceivers = async () => {
+    const response = await axiosInstance.get(`/api/feeReciever/qr/${chapterData.chapterId}`);
     setQrReceivers(response.data);
   };
 
-  const handleAddNew = (type) => {
-    setModalType(type);
-    setIsModalOpen(true);
+  const handleDelete = async (id, type) => {
+    await axiosInstance.delete(`/api/feeReciever/${type}/${id}`);
+    type === 'cash' ? fetchCashReceivers() : fetchOnlineReceivers();
   };
-
   const handleModalClose = () => {
     setModalType('');
     setIsModalOpen(false);
   };
 
-  const handleCashSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      console.log('recieverFormData:', recieverFormData);
+  const getAmountCollected = async () => {
+    const response = await axiosInstance.get(
+      `/api/feeReciever/amountCollected/${chapterData.chapterId}`,
+    );
+    setAmountCollected(response.data);
+  };
 
-      const member = membersList.find(
-        (member) => member.memberId === recieverFormData.memberId,
-      );
-      await axiosInstance.post(
-        `/api/feeReciever/cash/${chapterData.chapterId}`,
-        {
-          ...recieverFormData,
-          cashRecieverName: `${member.firstName} ${member.lastName}`,
-        },
-      );
-      fetchCashReceivers();
-      handleModalClose();
-    } catch (error) {
-      console.error(error);
-    }
+  const handleAddNew = (type) => {
+    setModalType(type);
+    setIsModalOpen(true);
   };
 
   const handleQRSubmit = async (e) => {
@@ -132,18 +109,33 @@ const FeeReciever = () => {
     }
   };
 
-  const getAmountCollected = async () => {
-    const response = await axiosInstance.get(
-      `/api/feeReciever/amountCollected/${chapterData.chapterId}`,
-    );
-    setAmountCollected(response.data);
+  const handleCashSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      console.log('recieverFormData:', recieverFormData);
+
+      const member = membersList.find(
+        (member) => member.memberId === recieverFormData.memberId,
+      );
+      await axiosInstance.post(
+        `/api/feeReciever/cash/${chapterData.chapterId}`,
+        {
+          ...recieverFormData,
+          cashRecieverName: `${member.firstName} ${member.lastName}`,
+        },
+      );
+      fetchCashReceivers();
+      handleModalClose();
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   return (
     <>
       <Breadcrumb pageName="Fee Receiver List" />
-      <div className="rounded-sm border border-stroke bg-white p-5 shadow-md dark:border-strokedark dark:bg-boxdark">
-        <div className="flex justify-between items-center mb-4">
+      <div className="rounded-sm border bg-white p-5 shadow-md">
+      <div className="flex justify-between items-center mb-4">
           <h2 className="text-lg font-medium dark:text-white">
             Pending Fee Approvals
           </h2>
@@ -151,8 +143,7 @@ const FeeReciever = () => {
                     <RefreshIcon className="dark:text-white" />
                 </IconButton> */}
         </div>
-        <div>
-          <div className="mb-4 flex flex-wrap gap-4">
+        <div className="mb-4 flex flex-wrap gap-4">
             <Button color="primary" onClick={() => handleAddNew('cash')}>
               Add New Cash Receiver
             </Button>
@@ -161,129 +152,79 @@ const FeeReciever = () => {
             </Button>
           </div>
 
-          <div className="overflow-x-auto mb-8">
-            <h2>Cash Receivers</h2>
-            <table className="w-full table-auto">
-              <thead>
-                <tr className="bg-gray-200 text-left dark:bg-meta-4">
-                  <th className="py-3 px-4 text-black dark:text-white">
-                    Receiver Name
-                  </th>
-                  <th className="py-3 px-4 text-black dark:text-white">
-                    Enable Date
-                  </th>
-                  <th className="py-3 px-4 text-black dark:text-white">
-                    Disable Date
-                  </th>
-                  <th className="py-3 px-4 text-black dark:text-white">
-                    Amount Collected
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {cashReceivers.length === 0 ? (
-                  <tr>
-                    <td
-                      colSpan={4}
-                      className="text-center py-4 text-black dark:text-white"
-                    >
-                      No cash receivers found.
-                    </td>
-                  </tr>
-                ) : (
-                  cashReceivers.map((receiver) => (
-                    <tr
-                      key={receiver.cashRecieverId}
-                      className="border-b border-gray-300 dark:border-strokedark"
-                    >
-                      <td className="py-3 px-4 text-black dark:text-white">
-                        {receiver.receiverName}
-                      </td>
-                      <td className="py-3 px-4 text-black dark:text-white">
-                        {new Date(receiver.enableDate).toLocaleDateString()}
-                      </td>
-                      <td className="py-3 px-4 text-black dark:text-white">
-                        {new Date(receiver.disableDate).toLocaleDateString()}
-                      </td>
-                      <td className="py-3 px-4 text-black dark:text-white">
-                        {amountCollected.find(
-                          (amount) => amount.receiverId === receiver.memberId,
-                        )?.totalAmountCollected || 0}
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+        <h2 className="text-lg font-medium mb-4">Cash Receivers</h2>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="text-white">Receiver Name</TableHead>
+              <TableHead className="text-white">Enable Date</TableHead>
+              <TableHead className="text-white">Disable Date</TableHead>
+              <TableHead className="text-white">Amount Collected</TableHead>
+              <TableHead className="text-white">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {cashReceivers.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={4} className="text-center py-4 text-black dark:text-white">
+                  No cash receivers found.
+                </TableCell>
+              </TableRow>
+            ) : (
+              cashReceivers.map(receiver => (
+                <TableRow key={receiver.cashRecieverId} className="border-b border-gray-300 dark:border-strokedark">
+                  <TableCell className="py-3 px-4 text-black dark:text-white">{receiver.receiverName}</TableCell>
+                  <TableCell className="py-3 px-4 text-black dark:text-white">{new Date(receiver.enableDate).toLocaleDateString()}</TableCell>
+                  <TableCell className="py-3 px-4 text-black dark:text-white">{new Date(receiver.disableDate).toLocaleDateString()}</TableCell>
+                  <TableCell className="py-3 px-4 text-black dark:text-white">
+                    {amountCollected.find(amount => amount.receiverId === receiver.memberId)?.totalAmountCollected || 0}
+                  </TableCell>
+                  <TableCell className="py-3 px-4 text-black dark:text-white">
+                    <Button variant="outline" className="text-red-500 border-none" onClick={() => handleModalClose()}>Edit</Button>
+                    <Button variant="outline" className="text-black" onClick={() => handleDelete(receiver.cashRecieverId, 'cash')}>Delete</Button>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
 
-          <div className="overflow-x-auto">
-            <h2>QR Code Receivers</h2>
-            <table className="w-full table-auto">
-              <thead>
-                <tr className="bg-gray-200 text-left dark:bg-meta-4">
-                  <th className="py-3 px-4 text-black dark:text-white">
-                    QR Name
-                  </th>
-                  <th className="py-3 px-4 text-black dark:text-white">
-                    QR Code Image
-                  </th>
-                  <th className="py-3 px-4 text-black dark:text-white">
-                    Enable Date
-                  </th>
-                  <th className="py-3 px-4 text-black dark:text-white">
-                    Disable Date
-                  </th>
-                  <th className="py-3 px-4 text-black dark:text-white">
-                    Amount Collected
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {qrReceivers.length === 0 ? (
-                  <tr>
-                    <td
-                      colSpan={3}
-                      className="text-center py-4 text-black dark:text-white"
-                    >
-                      No QR code receivers found.
-                    </td>
-                  </tr>
-                ) : (
-                  qrReceivers.map((receiver) => (
-                    <tr
-                      key={receiver.qrCodeId}
-                      className="border-b border-gray-300 dark:border-strokedark"
-                    >
-                      <td className="py-3 px-4 text-black dark:text-white">
-                        {receiver.receiverName}
-                      </td>
-                      <td className="py-3 px-4 text-black dark:text-white">
-                        <img
-                          src={receiver.qrImageLink}
-                          alt="QR Code"
-                          className="w-16 h-16"
-                        />
-                      </td>
-                      <td className="py-3 px-4 text-black dark:text-white">
-                        {new Date(receiver.enableDate).toLocaleDateString()}
-                      </td>
-                      <td className="py-3 px-4 text-black dark:text-white">
-                        {new Date(receiver.disableDate).toLocaleDateString()}
-                      </td>
-                      <td className="py-3 px-4 text-black dark:text-white">
-                        {amountCollected.find(
-                          (amount) => amount.receiverId === receiver.memberId,
-                        )?.totalAmountCollected || 0}
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+        <h2 className="text-lg font-medium mt-8 mb-4">QR Code Receivers</h2>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="text-white">QR Name</TableHead>
+              <TableHead className="text-white">QR Code Image</TableHead>
+              <TableHead className="text-white">Enable Date</TableHead>
+              <TableHead className="text-white">Disable Date</TableHead>
+              <TableHead className="text-white">Amount Collected</TableHead>
+              <TableHead className="text-white">Receiver Amount</TableHead>
+              <TableHead className="text-white">Receiver Amount Type</TableHead>
+              <TableHead className="text-white">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {qrReceivers.map(receiver => (
+              <TableRow key={receiver.qrCodeId}>
+                <TableCell>{receiver.receiverName}</TableCell>
+                <TableCell><img src={receiver.qrImageLink} alt="QR Code" className="w-16 h-16" /></TableCell>
+                <TableCell>{new Date(receiver.enableDate).toLocaleDateString()}</TableCell>
+                <TableCell>{new Date(receiver.disableDate).toLocaleDateString()}</TableCell>
+                <TableCell className="py-3 px-4 text-black dark:text-white">
+                    {amountCollected.find(amount => amount.receiverId === receiver.memberId)?.totalAmountCollected || 0}
+                  </TableCell>
+                  <TableCell className="py-3 px-4 text-black dark:text-white">{receiver.receiverAmount}</TableCell>
+                  <TableCell className="py-3 px-4 text-black dark:text-white">{receiver.receiverAmountType}</TableCell>
+                <TableCell>
+                  <Button variant="outline" className="text-red-500">Edit</Button>
+                  <Button variant="outline" className="text-black" onClick={() => handleDelete(receiver.qrCodeId, 'qr')}>Delete</Button>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
 
-          <AddCashReceiver
+        <AddCashReceiver
             isModalOpen={isModalOpen && modalType === 'cash'}
             handleModalClose={handleModalClose}
             membersList={membersList}
@@ -299,7 +240,7 @@ const FeeReciever = () => {
             chapterData={chapterData}
           />
 
-          <Dialog open={false} onOpenChange={handleModalClose}>
+<Dialog open={false} onOpenChange={handleModalClose}>
             <DialogTrigger />
             <DialogContent className="sm:max-w-[425px]">
               <div className="modal-content p-4 bg-white rounded shadow-md">
@@ -488,10 +429,9 @@ const FeeReciever = () => {
               </div>
             </DialogContent>
           </Dialog>
-        </div>
       </div>
     </>
   );
 };
 
-export default FeeReciever;
+export default FeeReceiver;
