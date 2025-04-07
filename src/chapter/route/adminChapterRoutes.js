@@ -12,5 +12,8 @@ router.post("/", adminChapterControllers.createChapter);
 router.delete("/:chapterId", adminChapterControllers.deleteChapter);
 
 router.get("/:chapterSlug/roles", adminChapterControllers.getRolesByChapterSlug);
+router.post("/:chapterSlug/addRole", adminChapterControllers.addRole);
+router.put("/:chapterSlug/editRole/:roleId", adminChapterControllers.editRole);
+router.delete("/:chapterSlug/deleteRole/:roleId", adminChapterControllers.deleteRole);
 
 module.exports = router;

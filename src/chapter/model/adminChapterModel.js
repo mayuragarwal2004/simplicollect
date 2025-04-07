@@ -65,6 +65,46 @@ const getRolesByChapterSlug = async (chapterSlug) => {
     .select("roles.*");
   return roles;
 }
+const addRole = async (chapterSlug, roleData) => {
+  const chapter = await db("chapters")
+    .where("chapterSlug", chapterSlug)
+    .first();
+
+  if (!chapter) {
+    throw new Error("Chapter not found");
+  }
+
+  return db("roles")
+    .insert({ ...roleData, chapterId: chapter.chapterId })
+    .returning("*");
+}
+const editRole = async (chapterSlug, roleId, updatedRoleData) => {
+  const chapter = await db("chapters")
+    .where("chapterSlug", chapterSlug)
+    .first();
+
+  if (!chapter) {
+    throw new Error("Chapter not found");
+  }
+
+  return db("roles")
+    .where({ roleId, chapterId: chapter.chapterId })
+    .update(updatedRoleData)
+    .returning("*");
+}
+const deleteRole = async (chapterSlug, roleId) => {
+  const chapter = await db("chapters")
+    .where("chapterSlug", chapterSlug)
+    .first();
+
+  if (!chapter) {
+    throw new Error("Chapter not found");
+  }
+
+  return db("roles")
+    .where({ roleId, chapterId: chapter.chapterId })
+    .del();
+}
 
 module.exports = {
   findChapterById,
@@ -73,4 +113,7 @@ module.exports = {
   createChapter,
   deleteChapter,
   getRolesByChapterSlug,
+  addRole,
+  editRole,
+  deleteRole
 };

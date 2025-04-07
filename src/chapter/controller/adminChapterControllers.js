@@ -111,6 +111,46 @@ const getRolesByChapterSlug = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 }
+const addRole = async (req, res) => {
+  const { chapterSlug } = req.params;
+  const roleData = req.body;
+  try {
+    const newRole = await adminChapterModel.addRole(chapterSlug, roleData);
+    res.status(201).json(newRole);
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: error.message });
+  }
+};
+const editRole = async (req, res) => {
+  const { chapterSlug, roleId } = req.params;
+  const updatedRoleData = req.body;
+  try {
+    const updatedRole = await adminChapterModel.editRole(chapterSlug, roleId, updatedRoleData);
+    if (updatedRole) {
+      res.json(updatedRole);
+    } else {
+      res.status(404).json({ message: "Role not found" });
+    }
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: error.message });
+  }
+};
+const deleteRole = async (req, res) => {
+  const { chapterSlug, roleId } = req.params;
+  try {
+    const deletedRole = await adminChapterModel.deleteRole(chapterSlug, roleId);
+    if (deletedRole) {
+      res.json({ message: "Role deleted successfully" });
+    } else {
+      res.status(404).json({ message: "Role not found" });
+    }
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: error.message });
+  }
+};
 
 module.exports = {
   getChapterById,
@@ -119,4 +159,7 @@ module.exports = {
   deleteChapter,
   createChapter,
   getRolesByChapterSlug,
+  addRole,
+  editRole,
+  deleteRole
 };
