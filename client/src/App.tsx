@@ -39,7 +39,7 @@ import AdminChapterLayout from './pages/Admin/chapters/AdminChapterLayout';
 import AdminChapterMemberList from './pages/Admin/chapters/AdminChapterMemberList';
 import AdminMembersTablePage from './pages/Admin/members/AdminMembersTablePage';
 import AcceptChapterPaymentPage from './pages/Member/FeeReceiver/AcceptChapterPaymentPage';
-import ChapterRules from './components/Admin/Chapter/CreateNew/ChapterRules/ChapterRoles'
+import ChapterRoles from './components/Admin/Chapter/CreateNew/ChapterRoles/ChapterRoles'
 import MyLedger from './pages/Member/MyLedger';
 
 const routes = [
@@ -86,7 +86,7 @@ const routes = [
               },
               {
                 path:"roles",
-                element: <ChapterRules />,
+                element: <ChapterRoles />,
               }
             ]
           }

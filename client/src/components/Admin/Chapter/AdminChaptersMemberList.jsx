@@ -129,7 +129,6 @@ const AdminChaptersMemberList = () => {
         />
       )}
 
-      {/* Member Search Dialog */}
       <AddMemberSearchDialog
         isOpen={isSearchOpen}
         onClose={() => setIsSearchOpen(false)}

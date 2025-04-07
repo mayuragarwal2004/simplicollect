@@ -1,3 +1,5 @@
+import { CheckIcon, XIcon } from "lucide-react";
+
 export const ChapterRoleColumns = (handleOpenModal, handleDelete) => [
   {
     id: 'srno',
@@ -29,6 +31,36 @@ export const ChapterRoleColumns = (handleOpenModal, handleDelete) => [
     header: () => <div>Rights</div>,
     cell: ({ row }) => (
       <p className="text-sm font-medium">{row.original.rights}</p>
+    ),
+    enableSorting: false,
+    enableHiding: false,
+  },
+  {
+    accessorKey: 'removable',
+    header: () => <div>Removable</div>,
+    cell: ({ row }) => (
+      <div className="flex justify-center">
+        {row.original.removable ? (
+          <CheckIcon className="h-5 w-5 text-green-500" />
+        ) : (
+          <XIcon className="h-5 w-5 text-red-500" />
+        )}
+      </div>
+    ),
+    enableSorting: false,
+    enableHiding: false,
+  },
+  {
+    accessorKey: 'default',
+    header: () => <div>Default</div>,
+    cell: ({ row }) => (
+      <div className="flex justify-center">
+        {row.original.default ? (
+          <CheckIcon className="h-5 w-5 text-green-500" />
+        ) : (
+          <XIcon className="h-5 w-5 text-red-500" />
+        )}
+      </div>
     ),
     enableSorting: false,
     enableHiding: false,

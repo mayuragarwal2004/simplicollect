@@ -13,7 +13,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
-import ChapterRules from './ChapterRules/ChapterRoles';
+import ChapterRoles from './ChapterRoles/ChapterRoles';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import {
@@ -199,7 +199,7 @@ function ChapterAddMember() {
   };
 
   if (showBackComponent) {
-    return <ChapterRules />;
+    return <ChapterRoles />;
   }
 
   return (

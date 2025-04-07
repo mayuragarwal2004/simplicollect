@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { axiosInstance } from '../../../../../utils/config';
 import { useLocation } from 'react-router-dom';
-import { ChapterRoleTable } from './chapterRule-data-table/chapterRole-table';
-import { ChapterRoleColumns } from './chapterRule-data-table/chapterRole-column';
+import { ChapterRoleTable } from './chapterRole-data-table/chapterRole-table';
+import { ChapterRoleColumns } from './chapterRole-data-table/chapterRole-column';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { MultiSelect } from '@/components/ui/MultiSelect';
@@ -23,6 +23,9 @@ import {
   AlertDialogTitle,
   AlertDialogFooter,
 } from '@/components/ui/alert-dialog';
+import { Switch } from "@/components/ui/switch";
+import { CheckIcon, XIcon } from "lucide-react";
+import { Label } from "@/components/ui/label";
 
 function ChapterRoles() {
   const [roles, setRoles] = useState([
@@ -69,6 +72,7 @@ function ChapterRoles() {
     roleDescription: '',
     rights: [],
     removable: false,
+    default: false,
   });
 
   useEffect(() => {
@@ -113,6 +117,7 @@ function ChapterRoles() {
         roleDescription: role.roleDescription,
         rights: Array.isArray(role.rights) ? role.rights : [],
         removable: role.removable || false,
+        default: role.default || false,
       });
       setEditingRole(role);
     } else {
@@ -121,6 +126,7 @@ function ChapterRoles() {
         roleDescription: '',
         rights: [],
         removable: false,
+        default: false,
       });
       setEditingRole(null);
     }
@@ -135,6 +141,7 @@ function ChapterRoles() {
       roleDescription: '',
       rights: [],
       removable: false,
+      default: false,
     });
   };
 
@@ -169,7 +176,11 @@ function ChapterRoles() {
       if (editingRole) {
         response = await axiosInstance.put(
           `/api/chapter-Roles/${editingRole.roleId}`,
-          formData,
+          {
+            ...formData,
+            removable: formData.removable,
+            default: formData.default,
+          },
         );
         setRoles((prevRoles) =>
           prevRoles.map((role) =>
@@ -185,7 +196,11 @@ function ChapterRoles() {
         );
         toast.success('Role updated successfully');
       } else {
-        response = await axiosInstance.post('/api/chapter-Roles', formData);
+        response = await axiosInstance.post('/api/chapter-Roles', {
+          ...formData,
+          removable: formData.removable,
+          default: formData.default,
+        });
         setRoles((prevRoles) => [
           ...prevRoles,
           {
@@ -280,7 +295,26 @@ function ChapterRoles() {
             placeholder="Select Rights"
             maxCount={5}
           />
-
+          <div className="flex items-center gap-4">
+            <Label htmlFor="removable">Removable</Label>
+            <Switch
+              id="removable"
+              checked={formData.removable}
+              onCheckedChange={(checked) =>
+                setFormData((prev) => ({ ...prev, removable: checked }))
+              }
+            />
+          </div>
+          <div className="flex items-center gap-4">
+            <Label htmlFor="default">Default</Label>
+            <Switch
+              id="default"
+              checked={formData.default}
+              onCheckedChange={(checked) =>
+                setFormData((prev) => ({ ...prev, default: checked }))
+              }
+            />
+          </div>
           <DialogFooter>
             <Button onClick={handleCloseModal} variant="secondary">
               Cancel
