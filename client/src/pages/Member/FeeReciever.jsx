@@ -33,14 +33,15 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const FeeReceiver = () => {
-  const [cashReceivers, setCashReceivers] = useState([]);
-  const [qrReceivers, setQrReceivers] = useState([]);
   const { chapterData } = useData();
-  // const [selectedApprovals, setSelectedApprovals] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalType, setModalType] = useState('');
+  const [cashReceivers, setCashReceivers] = useState([]);
+  const [qrReceivers, setQrReceivers] = useState([]);
   const [membersList, setMembersList] = useState([]);
   const [recieverFormData, setRecieverFormData] = useState({
     cashRecieverName: '',
@@ -70,33 +71,49 @@ const FeeReceiver = () => {
   }, []);
 
   const fetchMembersList = async () => {
-    const response = await axiosInstance.get('/api/member/all', {
-      params: {
-        chapterId: chapterData.chapterId,
-      },
-    });
-    setMembersList(response.data);
+    try {
+      const response = await axiosInstance.get('/api/member/all', {
+        params: {
+          chapterId: chapterData.chapterId,
+        },
+      });
+      setMembersList(response.data);
+    } catch (error) {
+      toast.error('Failed to fetch members list');
+    }
   };
 
   const fetchCashReceivers = async () => {
-    const response = await axiosInstance.get(
-      `/api/feeReciever/cash/${chapterData.chapterId}`,
-    );
-    setCashReceivers(response.data);
+    try {
+      const response = await axiosInstance.get(
+        `/api/feeReciever/cash/${chapterData.chapterId}`,
+      );
+      setCashReceivers(response.data);
+    } catch (error) {
+      toast.error('Failed to fetch cash receivers');
+    }
   };
 
   const fetchOnlineReceivers = async () => {
-    const response = await axiosInstance.get(
-      `/api/feeReciever/qr/${chapterData.chapterId}`,
-    );
-    setQrReceivers(response.data);
+    try {
+      const response = await axiosInstance.get(
+        `/api/feeReciever/qr/${chapterData.chapterId}`,
+      );
+      setQrReceivers(response.data);
+    } catch (error) {
+      toast.error('Failed to fetch QR receivers');
+    }
   };
 
   const getAmountCollected = async () => {
-    const response = await axiosInstance.get(
-      `/api/feeReciever/amountCollected/${chapterData.chapterId}`,
-    );
-    setAmountCollected(response.data);
+    try {
+      const response = await axiosInstance.get(
+        `/api/feeReciever/amountCollected/${chapterData.chapterId}`,
+      );
+      setAmountCollected(response.data);
+    } catch (error) {
+      toast.error('Failed to fetch amount collected');
+    }
   };
 
   const handleAddNew = (type) => {
@@ -106,28 +123,73 @@ const FeeReceiver = () => {
 
   const handleQRSubmit = async (e) => {
     e.preventDefault();
+
+    // Add validation
+    if (!qrRecieverFormData.memberId) {
+      toast.error('Please select a member');
+      return;
+    }
+    if (!qrRecieverFormData.qrCodeName) {
+      toast.error('Please enter a QR code name');
+      return;
+    }
+    if (!qrRecieverFormData.enableDate) {
+      toast.error('Please select an enable date');
+      return;
+    }
+    if (!qrRecieverFormData.disableDate) {
+      toast.error('Please select a disable date');
+      return;
+    }
+    if (!isEditMode && !qrRecieverFormData.imageFile) {
+      toast.error('Please select a QR code image');
+      return;
+    }
+
     try {
       const formData = new FormData();
       formData.append('image', qrRecieverFormData.imageFile);
       formData.append('folderName', 'memberQRCodes');
 
-      const response = await axiosInstance.post('/api/image-upload', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
+      if (qrRecieverFormData.imageFile) {
+        const response = await axiosInstance.post('/api/image-upload', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+        const imageLink = response.data.imageUrl;
 
-      const imageLink = response.data.imageUrl;
+        if (isEditMode && editData) {
+          await axiosInstance.put(`/api/feeReciever/qr/${editData.qrCodeId}`, {
+            ...qrRecieverFormData,
+            qrImageLink: imageLink,
+            imageFile: undefined,
+          });
+          toast.success('QR receiver updated successfully');
+        } else {
+          await axiosInstance.post(`/api/feeReciever/qr/${chapterData.chapterId}`, {
+            ...qrRecieverFormData,
+            qrImageLink: imageLink,
+            imageFile: undefined,
+          });
+          toast.success('QR receiver added successfully');
+        }
+      } else if (isEditMode) {
+        // If no new image is uploaded during edit
+        await axiosInstance.put(`/api/feeReciever/qr/${editData.qrCodeId}`, {
+          ...qrRecieverFormData,
+          qrImageLink: editData.qrImageLink, // Keep existing image
+          imageFile: undefined,
+        });
+        toast.success('QR receiver updated successfully');
+      }
 
-      await axiosInstance.post(`/api/feeReciever/qr/${chapterData.chapterId}`, {
-        ...qrRecieverFormData,
-        qrImageLink: imageLink,
-        imageFile: undefined,
-      });
-      fetchOnlineReceivers();
-      handleModalClose();
+      await fetchOnlineReceivers(); // Refresh the table
+      handleModalClose(); // Close the modal
     } catch (error) {
-      console.error(error);
+      console.error('Error:', error);
+      toast.error(error.response?.data?.message || 'Failed to save QR receiver');
+      handleModalClose(); // Close the modal even on error
     }
   };
 
@@ -154,14 +216,23 @@ const FeeReceiver = () => {
 
   const handleCashRecieverSubmit = async (e) => {
     e.preventDefault();
-    console.log('Form submitted');
-    console.log('Is Edit Mode:', isEditMode);
-    console.log('Edit Data:', editData);
-    console.log('Form Data:', recieverFormData);
+    
+    // Add validation
+    if (!recieverFormData.memberId) {
+      toast.error('Please select a member');
+      return;
+    }
+    if (!recieverFormData.enableDate) {
+      toast.error('Please select an enable date');
+      return;
+    }
+    if (!recieverFormData.disableDate) {
+      toast.error('Please select a disable date');
+      return;
+    }
 
     try {
       const selectedMember = membersList.find(m => m.memberId === recieverFormData.memberId);
-      console.log('Selected Member:', selectedMember);
       
       const payload = {
         receiverName: selectedMember ? `${selectedMember.firstName} ${selectedMember.lastName}` : editData?.receiverName,
@@ -170,42 +241,45 @@ const FeeReceiver = () => {
         enableDate: recieverFormData.enableDate,
         disableDate: recieverFormData.disableDate,
       };
-      console.log('Payload:', payload);
 
       if (isEditMode && editData) {
-        console.log('Updating receiver with ID:', editData.cashRecieverId);
         await axiosInstance.put(
           `/api/feeReciever/cash/${editData.cashRecieverId}`,
           payload
         );
+        toast.success('Cash receiver updated successfully');
       } else {
-        console.log('Creating new receiver');
         await axiosInstance.post("/api/feeReciever/cash", payload);
+        toast.success('Cash receiver added successfully');
       }
 
-      await fetchCashReceivers();
-      handleModalClose();
+      await fetchCashReceivers(); // Refresh the table
+      handleModalClose(); // Close the modal
     } catch (error) {
       console.error('Error submitting cash receiver:', error);
+      toast.error(error.response?.data?.message || 'Failed to save cash receiver');
+      handleModalClose(); // Close the modal even on error
     }
   };
-  
 
   const handleDelete = async (id, type) => {
     try {
       if (type === 'cash') {
         await axiosInstance.delete(`/api/feeReciever/cash/${id}`);
-        fetchCashReceivers();
+        await fetchCashReceivers();
+        toast.success('Cash receiver deleted successfully');
       } else {
         await axiosInstance.delete(`/api/feeReciever/qr/${id}`);
-        fetchOnlineReceivers();
+        await fetchOnlineReceivers();
+        toast.success('QR receiver deleted successfully');
       }
       setDeleteInfo(null);
     } catch (error) {
       console.error(error);
+      toast.error(error.response?.data?.message || 'Failed to delete receiver');
+      setDeleteInfo(null);
     }
   };
-  
 
   const handleCashEdit = (receiver) => {
     setModalType("cash");
@@ -240,6 +314,7 @@ const FeeReceiver = () => {
 
   return (
     <>
+      <ToastContainer />
       <Breadcrumb pageName="Fee Receiver List" />
       <div className="rounded-sm border bg-white p-5 shadow-md">
         <div className="flex justify-between items-center mb-4">
