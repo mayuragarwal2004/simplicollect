@@ -149,7 +149,7 @@ export const MemberColumn = (allRoles) => [
       };
       // console.log('allRoles', row.original);
 
-      const currentUserRoles = row.original.roleIds
+      const currentUserRoles = (row.original.roleIds ?? '')
         .split(',')
         .map((role) => role.trim())
         .filter((role) => role !== '');
