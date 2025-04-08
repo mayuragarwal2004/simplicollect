@@ -105,7 +105,7 @@ function ChapterRoles() {
 
   const fetchFeatures = async () => {
     try {
-      const response = await axiosInstance.get('/api/featuredMasterTable');
+      const response = await axiosInstance.get('/api/admin/chapter-member-list/all-features');
       setFeatureMaster(response.data);
     } catch (error) {
       toast.error('Failed to fetch features');
@@ -117,7 +117,7 @@ function ChapterRoles() {
       setFormData({
         roleName: role.roleName,
         roleDescription: role.roleDescription,
-        rights: Array.isArray(role.rights) ? role.rights : [],
+        rights: Array.isArray(role.rights) ? role.rights : role.rights.split(','),
         removable: role.removable || false,
         default: role.default || false,
       });
@@ -180,8 +180,9 @@ function ChapterRoles() {
           `/api/admin/chapters/${chapterSlug}/editRole/${editingRole.roleId}`,
           {
             ...formData,
-            removable: formData.removable? 1 : 0,
-            default: formData.default? 1:0,
+            rights: (formData.rights ?? []).join(','),
+            removable: formData.removable ? 1 : 0,
+            default: formData.default ? 1 : 0,
           },
         );
         setRoles((prevRoles) =>
@@ -196,10 +197,12 @@ function ChapterRoles() {
               : role,
           ),
         );
+        fetchRoles();
         toast.success('Role updated successfully');
       } else {
         response = await axiosInstance.post(`/api/admin/chapters/${chapterSlug}/addRole`, {
           ...formData,
+          rights: (formData.rights ?? []).join(','),
           removable: formData.removable? 1 : 0,
           default: formData.default? 1:0,
         });
@@ -211,6 +214,7 @@ function ChapterRoles() {
             onDelete: () => handleDelete(response.data.roleId),
           },
         ]);
+        fetchRoles();
         toast.success('Role created successfully');
       }
       handleCloseModal();

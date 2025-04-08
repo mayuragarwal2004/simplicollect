@@ -375,6 +375,15 @@ const searchMemberForChapter = async (searchQuery, chapterId, rows, page) => {
   return { members, total };
 };
 
+const getAllFeatures = async () => {
+  const features = await db("features_master")
+    .select("featureId", "featureName", "featureDescription")
+    .orderBy("featureName", "asc");
+
+  return features;
+}
+
+
 module.exports = {
   getChapterMembers,
   removeChapterMember,
@@ -384,4 +393,5 @@ module.exports = {
   searchMemberForChapterToAdd,
   searchMemberForChapter,
   addMemberToChapter,
+  getAllFeatures,
 };

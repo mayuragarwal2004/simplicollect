@@ -24,5 +24,7 @@ router.get("/searchmembersforchapter", adminChapterMemberListControllers.searchM
 
 router.post("/:chapterSlug/members/:userId/addmember", adminChapterMemberListControllers.addMemberToChapter);
 
+router.get("/all-features", adminChapterMemberListControllers.getAllFeatures);
+
 module.exports = router;
 
