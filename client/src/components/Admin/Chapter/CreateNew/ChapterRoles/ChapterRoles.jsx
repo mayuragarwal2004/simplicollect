@@ -6,6 +6,7 @@ import { ChapterRoleColumns } from './chapterRole-data-table/chapterRole-column'
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { MultiSelect } from '@/components/ui/MultiSelect';
+import { useParams } from 'react-router-dom';
 import {
   Dialog,
   DialogContent,
@@ -64,6 +65,7 @@ function ChapterRoles() {
   const [deleteRoleId, setDeleteRoleId] = useState(null);
   const [totalRecord, setTotalRecord] = useState(0);
   const location = useLocation();
+  const { chapterSlug } = useParams();
   const searchParams = new URLSearchParams(location.search);
   const rows = searchParams.get('rows') || 10;
   const page = searchParams.get('page') || 0;
@@ -83,7 +85,7 @@ function ChapterRoles() {
   const fetchRoles = async () => {
     try {
       const res = await axiosInstance.get(
-        `/api/chapter-Roles?rows=${rows}&page=${page}`,
+        `/api/admin/chapters/${chapterSlug}/roles`,
       );
 
       const updatedRoles = (res.data.data || res.data).map((role) => ({
@@ -175,11 +177,11 @@ function ChapterRoles() {
       let response;
       if (editingRole) {
         response = await axiosInstance.put(
-          `/api/chapter-Roles/${editingRole.roleId}`,
+          `/api/admin/chapters/${chapterSlug}/editRole/${editingRole.roleId}`,
           {
             ...formData,
-            removable: formData.removable,
-            default: formData.default,
+            removable: formData.removable? 1 : 0,
+            default: formData.default? 1:0,
           },
         );
         setRoles((prevRoles) =>
@@ -196,10 +198,10 @@ function ChapterRoles() {
         );
         toast.success('Role updated successfully');
       } else {
-        response = await axiosInstance.post('/api/chapter-Roles', {
+        response = await axiosInstance.post(`/api/admin/chapters/${chapterSlug}/addRole`, {
           ...formData,
-          removable: formData.removable,
-          default: formData.default,
+          removable: formData.removable? 1 : 0,
+          default: formData.default? 1:0,
         });
         setRoles((prevRoles) => [
           ...prevRoles,
@@ -220,7 +222,7 @@ function ChapterRoles() {
   const handleDelete = async () => {
     if (!deleteRoleId) return;
     try {
-      await axiosInstance.delete(`/api/chapter-Roles/${deleteRoleId}`);
+      await axiosInstance.delete(`/api/admin/chapters/${chapterSlug}/deleteRole/${deleteRoleId}`);
       setRoles((prevRoles) =>
         prevRoles.filter((role) => role.roleId !== deleteRoleId),
       );
