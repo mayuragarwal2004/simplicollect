@@ -2,14 +2,18 @@ const adminChapterMemberListModel = require("../model/adminChapterMemberListMode
 
 // Get all members of a chapter by chapterSlug
 const getChapterMembers = async (req, res) => {
+  const { searchQuery = ""} = req.query;
   const { chapterSlug } = req.params;
-  let { rows = 10, page = 1 } = req.query;
-
+  let {  rows = 10, page = 1 } = req.query;
+  if (!chapterSlug) {
+    return res.status(400).json({ error: "Chapter slug is required" });
+  }
+  
   rows = parseInt(rows, 10);
   page = parseInt(page, 10);
 
   try {
-    const { members, total } = await adminChapterMemberListModel.getChapterMembers(chapterSlug, rows, page);
+    const { members, total } = await adminChapterMemberListModel.getChapterMembers(searchQuery,chapterSlug, rows, page);
     
     res.json({
       data:members,
@@ -44,7 +48,6 @@ const removeChapterMember = async (req, res) => {
 // Delete a member completely (wrong entry)
 const deleteChapterMember = async (req, res) => {
   const { chapterSlug, userId } = req.params;
-
   try {
     const deletedMember = await adminChapterMemberListModel.deleteChapterMember(chapterSlug, userId);
     res.json({ message: "Member deleted successfully", deletedMember });

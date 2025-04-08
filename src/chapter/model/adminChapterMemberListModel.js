@@ -1,7 +1,7 @@
 const db = require("../../config/db");
 const { search } = require("../route/adminChapterMemberListRoutes");
 
-const getChapterMembers = async (chapterSlug, rows, page) => {
+const getChapterMembers = async (searchQuery = "",chapterSlug, rows, page) => {
   const chapter = await db("chapters")
     .where("chapters.chapterSlug", chapterSlug)
     .select("chapterId")
@@ -12,19 +12,27 @@ const getChapterMembers = async (chapterSlug, rows, page) => {
   }
 
   const chapterId = chapter.chapterId;
-
-  const total = await db("member_chapter_mapping")
-    .where("chapterId", chapterId)
-    .andWhere("status", "joined")
-    .count("memberId as count")
-    .first();
-
   const offsetValue = Math.max(0, (page - 1) * rows);
 
-  const members = await db("member_chapter_mapping")
+  const baseQuery = db("member_chapter_mapping")
     .join("members", "member_chapter_mapping.memberId", "members.memberId")
     .where("member_chapter_mapping.chapterId", chapterId)
-    .andWhere("member_chapter_mapping.status", "joined")
+    .andWhere("member_chapter_mapping.status", "joined");
+
+  if (searchQuery.trim() !== "") {
+    baseQuery.andWhere(function () {
+      this.where("members.firstName", "like", `%${searchQuery}%`)
+        .orWhere("members.lastName", "like", `%${searchQuery}%`)
+        .orWhereRaw(
+          "CONCAT(members.firstName, ' ', members.lastName) LIKE ?",
+          [`%${searchQuery}%`]
+        );
+    });
+  }
+
+  const totalQuery = baseQuery.clone().count("members.memberId as count").first();
+
+  const dataQuery = baseQuery
     .select(
       "members.memberId",
       "members.firstName",
@@ -34,16 +42,18 @@ const getChapterMembers = async (chapterSlug, rows, page) => {
       "members.phoneNumber",
       "member_chapter_mapping.balance",
       db.raw(`
-      (
-        SELECT GROUP_CONCAT(roleName ORDER BY roleName SEPARATOR ', ')
-        FROM roles
-        WHERE FIND_IN_SET(roleId, member_chapter_mapping.roleIds)
-      ) as roleNames
-    `)
+        (
+          SELECT GROUP_CONCAT(roleName ORDER BY roleName SEPARATOR ', ')
+          FROM roles
+          WHERE FIND_IN_SET(roleId, member_chapter_mapping.roleIds)
+        ) as roleNames
+      `)
     )
     .orderBy("members.firstName", "asc")
     .limit(rows)
     .offset(offsetValue);
+
+  const [total, members] = await Promise.all([totalQuery, dataQuery]);
 
   return { members: members || [], total: total.count };
 };
@@ -327,54 +337,6 @@ const addMemberToChapter = async (chapterSlug, userId, role) => {
   return { message: "Member added successfully", chapterSlug, userId, role };
 };
 
-const searchMemberForChapter = async (searchQuery, chapterId, rows, page) => {
-  const offset = (page - 1) * rows;
-
-  const members = await db("members as m")
-    .select(
-      "m.memberId",
-      db.raw("CONCAT(m.firstName, ' ', m.lastName) AS fullName"),
-      "m.firstName",
-      "m.lastName",
-      "m.email",
-      "m.phoneNumber"
-    )
-    .join("member_chapter_mapping as mc", function () {
-      this.on("m.memberId", "=", "mc.memberId")
-        .andOn("mc.chapterId", "=", db.raw("?", [chapterId]))
-        .andOn(db.raw("mc.status = 'joined'"));
-    })
-    .where(function () {
-      this.where("m.firstName", "LIKE", `%${searchQuery}%`)
-        .orWhere("m.lastName", "LIKE", `%${searchQuery}%`)
-        .orWhere("m.email", "LIKE", `%${searchQuery}%`)
-        .orWhere("m.phoneNumber", "LIKE", `%${searchQuery}%`);
-    })
-    .orderBy("m.firstName", "asc")
-    .orderBy("m.lastName", "asc")
-    .limit(rows)
-    .offset(offset);
-
-  const totalResult = await db("members as m")
-    .count("m.memberId as count")
-    .join("member_chapter_mapping as mc", function () {
-      this.on("m.memberId", "=", "mc.memberId")
-        .andOn("mc.chapterId", "=", db.raw("?", [chapterId]))
-        .andOn(db.raw("mc.status = 'joined'"));
-    })
-    .where(function () {
-      this.where("m.firstName", "LIKE", `%${searchQuery}%`)
-        .orWhere("m.lastName", "LIKE", `%${searchQuery}%`)
-        .orWhere("m.email", "LIKE", `%${searchQuery}%`)
-        .orWhere("m.phoneNumber", "LIKE", `%${searchQuery}%`);
-    })
-    .first();
-
-  const total = totalResult ? totalResult.count : 0;
-
-  return { members, total };
-};
-
 const getAllFeatures = async () => {
   const features = await db("features_master")
     .select("featureId", "featureName", "featureDescription")
@@ -391,7 +353,6 @@ module.exports = {
   updateMemberRole,
   updateMemberBalance,
   searchMemberForChapterToAdd,
-  searchMemberForChapter,
   addMemberToChapter,
   getAllFeatures,
 };
