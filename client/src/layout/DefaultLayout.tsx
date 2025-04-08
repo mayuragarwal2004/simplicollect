@@ -73,7 +73,7 @@ const DefaultLayout: React.FC<DefaultLayoutProps> = ({ admin = false }) => {
           {/* <!-- ===== Main Content Start ===== --> */}
           <main>
             <div className="mx-auto max-w-screen-2xl p-4 md:p-6 2xl:p-10">
-              {chapterData && currentOutlet}
+              {currentOutlet}
             </div>
           </main>
           {/* <!-- ===== Main Content End ===== --> */}
