@@ -113,7 +113,7 @@ const AdminChaptersMemberList = () => {
           <Button onClick={() => setIsSearchOpen(true)}>Add Member</Button>
         </div>
         <div className="mt-2">
-          <SearchMembers chapterId={1} />
+         {/* searchbox to be added here  */}
         </div>
       </div>
 

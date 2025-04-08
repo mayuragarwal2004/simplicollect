@@ -41,6 +41,7 @@ import AdminMembersTablePage from './pages/Admin/members/AdminMembersTablePage';
 import AcceptChapterPaymentPage from './pages/Member/FeeReceiver/AcceptChapterPaymentPage';
 import ChapterRoles from './components/Admin/Chapter/CreateNew/ChapterRoles/ChapterRoles'
 import MyLedger from './pages/Member/MyLedger';
+import DashboardPage from './pages/Admin/Dashboard/DashboardPage'
 
 const routes = [
   {
@@ -63,6 +64,10 @@ const routes = [
       {
         path: 'organisations',
         element: <AdminOrganisationsPage />,
+      },
+      {
+        path: 'dashboard',
+        element: <DashboardPage />,
       },
       {
         path: '',
@@ -92,6 +97,7 @@ const routes = [
           }
         ]
       },
+      
 
      
       {

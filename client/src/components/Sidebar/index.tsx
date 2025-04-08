@@ -44,6 +44,16 @@ const adminSidebarData = [
       },
     ],
   },
+  {
+    title: 'Dashboard',
+    icon: 'Users',
+    links: [
+      {
+        title: 'Dashboard',
+        to: '/admin/dashboard',
+      },
+    ],
+  },
 ];
 
 const Sidebar = ({ sidebarOpen, setSidebarOpen, admin }: SidebarProps) => {
