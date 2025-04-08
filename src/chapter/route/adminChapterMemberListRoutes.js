@@ -20,7 +20,7 @@ router.put("/:chapterSlug/members/:userId/balance", adminChapterMemberListContro
 
 router.get("/searchmemberstoadd", adminChapterMemberListControllers.searchMemberForChapterToAdd);
 
-router.get("/searchmembersforchapter", adminChapterMemberListControllers.searchMemberForChapter);
+router.get("/:chapterSlug/searchmembersforchapter", adminChapterMemberListControllers.getChapterMembers);
 
 router.post("/:chapterSlug/members/:userId/addmember", adminChapterMemberListControllers.addMemberToChapter);
 

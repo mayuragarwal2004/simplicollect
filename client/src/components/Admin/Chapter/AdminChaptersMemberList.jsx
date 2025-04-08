@@ -27,8 +27,8 @@ const AdminChaptersMemberList = () => {
   const [totalRecord, setTotalRecord] = useState(0);
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
-  const rows = searchParams.get('rows') || 10;
-  const page = searchParams.get('page') || 0;
+  const rows = parseInt(searchParams.get('rows')) || 10;
+  const page = parseInt(searchParams.get('page')) || 0;
   const { chapterSlug } = useParams();
   const [allRoles, setAllRoles] = useState([
     {
@@ -69,7 +69,7 @@ const AdminChaptersMemberList = () => {
   const fetchMembers = () => {
     axiosInstance
       .get(
-        `/api/admin/chapter-member-list/${chapterSlug}/members?rows=${rows}&page=${page}`,
+        `/api/admin/chapter-member-list/${chapterSlug}/members?rows=${rows}&page=${page+1}`,
       )
       .then((res) => {
         const updatedMembers = res.data.data.map((member) => ({

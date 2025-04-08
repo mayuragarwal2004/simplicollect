@@ -40,8 +40,8 @@ const AdminMembersTableData = () => {
   const [totalRecord, setTotalRecord] = useState(0);
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
-  const rows = searchParams.get('rows') || 10;
-  const page = searchParams.get('page') || 0;
+  const rows = parseInt(searchParams.get('rows')) || 10;
+  const page = parseInt(searchParams.get('page')) || 0;
   const [filteredMembers, setFilteredMembers] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -61,9 +61,8 @@ const AdminMembersTableData = () => {
 
   const fetchMembers = () => {
     axiosInstance
-      .get(`/api/admin/members?rows=${rows}&page=${page}`)
+      .get(`/api/admin/members/getandsearchmembers?rows=${rows}&page=${page+1}`)
       .then((res) => {
-        console.log('Fetched members:', res.data);
         setMembers(res.data.data || res.data);
         setTotalRecord(res.data.totalRecords || res.data.length);
         setLoading(false);
@@ -96,13 +95,13 @@ const AdminMembersTableData = () => {
     setIsModalOpen(true);
   };
 
-  useEffect(() => {
-    setFilteredMembers(
-      members.filter((member) =>
-        member.membersName.toLowerCase().includes(searchQuery.toLowerCase()),
-      ),
-    );
-  }, [searchQuery, members]);
+  // useEffect(() => {
+  //   setFilteredMembers(
+  //     members.filter((member) =>
+  //       member.membersName.toLowerCase().includes(searchQuery.toLowerCase()),
+  //     ),
+  //   );
+  // }, [searchQuery, members]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;

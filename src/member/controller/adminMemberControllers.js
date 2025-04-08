@@ -82,10 +82,34 @@ const deleteMember = async (req, res) => {
   }
 };
 
+const getAndSearchMembersController = async (req, res) => {
+  const { searchQuery = "" } = req.query;
+  let { rows = 10, page = 1 } = req.query;
+  console.log("searchQuery is ", searchQuery);
+  rows = parseInt(rows, 10);
+  page = parseInt(page, 10);
+
+  try {
+    const { members, total } = await adminMembersModel.getAndSearchMembersController(searchQuery, rows, page);
+
+    res.json({
+      data:members,
+      totalRecords: total,
+      rows,
+      page
+    });
+  } catch (error) {
+    console.error("Error searching for members:", error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+
 module.exports = {
   getMemberById,
   updateMemberDetails,
   getAllMembersController,
   deleteMember,
   createMember,
+  getAndSearchMembersController,
 };
