@@ -39,9 +39,10 @@ import AdminChapterLayout from './pages/Admin/chapters/AdminChapterLayout';
 import AdminChapterMemberList from './pages/Admin/chapters/AdminChapterMemberList';
 import AdminMembersTablePage from './pages/Admin/members/AdminMembersTablePage';
 import AcceptChapterPaymentPage from './pages/Member/FeeReceiver/AcceptChapterPaymentPage';
-import ChapterRoles from './components/Admin/Chapter/CreateNew/ChapterRoles/ChapterRoles'
+import ChapterRoles from './components/Admin/Chapter/CreateNew/ChapterRoles/ChapterRoles';
 import MyLedger from './pages/Member/MyLedger';
-import DashboardPage from './pages/Admin/Dashboard/DashboardPage'
+import DashboardPage from './pages/Admin/Dashboard/DashboardPage';
+import { useData } from './context/DataContext';
 
 const routes = [
   {
@@ -76,34 +77,32 @@ const routes = [
       },
       {
         path: 'chapters',
-        children:[
+        children: [
           {
             index: true,
             element: <AdminChaptersTablePage />,
           },
           {
             path: ':chapterSlug',
-            element: <AdminChapterLayout />,//////
-            children:[
+            element: <AdminChapterLayout />, //////
+            children: [
               {
-                path:"member",
-                element:<AdminChapterMemberList />
+                path: 'member',
+                element: <AdminChapterMemberList />,
               },
               {
-                path:"roles",
+                path: 'roles',
                 element: <ChapterRoles />,
-              }
-            ]
-          }
-        ]
+              },
+            ],
+          },
+        ],
       },
-      
 
-     
       {
         path: 'members',
         element: <AdminMembersTablePage />,
-      }
+      },
     ],
   },
   {
@@ -182,7 +181,7 @@ const routes = [
           {
             path: 'accept-chapter-transaction',
             element: <AcceptChapterPaymentPage />,
-          }
+          },
         ],
       },
       {
@@ -206,7 +205,8 @@ const routes = [
 const router = createBrowserRouter(routes);
 
 function App() {
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loadingLocal, setLoadingLocal] = useState<boolean>(true);
+  const { loading } = useData();
   // const { pathname } = useLocation();
 
   // useEffect(() => {
@@ -214,9 +214,9 @@ function App() {
   // }, [pathname]);
 
   useEffect(() => {
-    setTimeout(() => setLoading(false), 1000);
+    setTimeout(() => setLoadingLocal(false), 1000);
   }, []);
-  return loading ? (
+  return loadingLocal ? (
     <Loader />
   ) : (
     <>

@@ -10,25 +10,22 @@ interface DataContextProps {
   memberData: Member | null;
   chapterData: Chapter | null;
   allChaptersData: Chapter[] | null;
+  loading: boolean;
   getChapterDetails: (chapterId: string) => Promise<void>;
   switchChapter: (chapterId: string) => void;
 }
 
-// Create the context with an initial default value
 const DataContext = createContext<DataContextProps | undefined>(undefined);
 
-// Provider component to wrap around the app or component subtree
-export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
-  children,
-}) => {
+export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated } = useAuth();
   const [memberData, setMemberData] = useState<Member | null>(null);
-  const [allChaptersData, setAllChaptersData] = useState<Chapter[] | null>(
-    null,
-  );
+  const [allChaptersData, setAllChaptersData] = useState<Chapter[] | null>(null);
   const [chapterData, setChapterData] = useState<Chapter | null>(null);
+  const [loading, setLoading] = useState<boolean>(false); // 👈 NEW
 
   const fetchAllChapters = async () => {
+    setLoading(true); // 👈 START
     try {
       const response = await axiosInstance('/api/chapter');
       const data = await response.data;
@@ -38,6 +35,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
       setAllChaptersData(data);
     } catch (error) {
       console.error('Fetching all chapters failed:', error);
+    } finally {
+      setLoading(false); // 👈 END
     }
   };
 
@@ -46,35 +45,33 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
     setChapterData(chapter || null);
   }
 
-  // Function to fetch chapter details
   const getChapterDetails = async (chapterId: string) => {
+    setLoading(true); // 👈 START
     try {
       const response = await axiosInstance(`/api/chapter/${chapterId}`);
       const data = await response.data;
       setChapterData(data);
     } catch (error) {
       console.error('Fetching chapter details failed:', error);
+    } finally {
+      setLoading(false); // 👈 END
     }
   };
 
-  // Fetch member details
   const fetchMember = async () => {
+    setLoading(true); // 👈 START
     try {
       const response = await axiosInstance('/api/member/me');
       const data = await response.data;
       setMemberData(data);
     } catch (error) {
       console.error('Fetching member details failed:', error);
+    } finally {
+      setLoading(false); // 👈 END
     }
   };
 
-  console.log({ chapterData });
-
-  
-
   useEffect(() => {
-    console.log('I am called');
-
     if (isAuthenticated) {
       if (!memberData) fetchMember();
       if (!allChaptersData) fetchAllChapters();
@@ -87,14 +84,20 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
 
   return (
     <DataContext.Provider
-      value={{ memberData, chapterData, allChaptersData, switchChapter, getChapterDetails }}
+      value={{
+        memberData,
+        chapterData,
+        allChaptersData,
+        loading, // 👈 EXPOSE IT
+        switchChapter,
+        getChapterDetails,
+      }}
     >
       {children}
     </DataContext.Provider>
   );
 };
 
-// Hook to access the DataContext
 export const useData = () => {
   const context = useContext(DataContext);
   if (!context) {
