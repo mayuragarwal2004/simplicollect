@@ -151,7 +151,7 @@ const SignIn: React.FC = () => {
           {showPasswordField && (
             <div className="mt-4 text-center">
               <Link
-                to="/forgot-password"
+                to="/auth/forgot-password"
                 className="text-blue-500 hover:underline"
               >
                 Forgot Password?
