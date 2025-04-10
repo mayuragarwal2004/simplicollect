@@ -104,6 +104,36 @@ const getAndSearchMembersController = async (req, res) => {
   }
 };
 
+const changeUserDetails = async (req, res) => {
+  const { memberId, firstName,lastName, phoneNumber, email } = req.body;
+
+  // Validate required fields
+  if (!memberId || !firstName || !lastName || !phoneNumber || !email) {
+    return res.status(400).json({ error: "All fields are required" });
+  }
+
+  try {
+    // Check if the member exists
+    const existingMember = await adminMembersModel.findMemberById(memberId);
+    if (!existingMember) {
+      return res.status(404).json({ message: "Member not found" });
+    }
+
+    // Update member details
+    const updatedMember = await adminMembersModel.updateMember(memberId, {
+      firstName,
+      lastName,
+      phoneNumber,
+      email,
+    });
+
+    res.json(updatedMember);
+  } catch (error) {
+    console.error("Error updating user details:", error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
 
 module.exports = {
   getMemberById,
@@ -112,4 +142,5 @@ module.exports = {
   deleteMember,
   createMember,
   getAndSearchMembersController,
+  changeUserDetails
 };
