@@ -69,7 +69,30 @@ const getAmountCollected = async (chapterId, date) => {
     .groupBy("receiverId");
   return payments;
 };
-
+const deleteCashReceiver = async (chapterId, receiverId) => {
+  return db("fee_receivers")
+    .where("chapterId", chapterId)
+    .andWhere("receiverId", receiverId)
+    .del();
+}
+const deleteQRReceiver = async (chapterId, receiverId) => {
+  return db("fee_receivers")
+    .where("chapterId", chapterId)
+    .andWhere("receiverId", receiverId)
+    .del();
+};
+const updateCashReceiver = async (chapterId, receiverId, data) => {
+  return db("fee_receivers")
+    .where("chapterId", chapterId)
+    .andWhere("receiverId", receiverId)
+    .update(data);
+}
+const updateQRReceiver = async (chapterId, receiverId, data) => {
+  return db("fee_receivers")
+    .where("chapterId", chapterId)
+    .andWhere("receiverId", receiverId)
+    .update(data);
+};
 module.exports = {
   getCurrentReceivers,
   getCashReceivers,
@@ -77,4 +100,8 @@ module.exports = {
   getQRReceivers,
   addQRReceiver,
   getAmountCollected,
+  deleteCashReceiver,
+  deleteQRReceiver,
+  updateCashReceiver,
+  updateQRReceiver,
 };

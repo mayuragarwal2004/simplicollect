@@ -39,12 +39,12 @@ const getCashReceiversController = async (req, res) => {
 
 const addCashReceiversController = async (req, res) => {
   const { chapterId } = req.params;
-  const { cashRecieverName, memberId, enableDate, disableDate } = req.body;
+  const { receiverName, memberId, enableDate, disableDate } = req.body;
   try {
     const receiverId = uuidv4();
     const newCashReceiver = await feeReceiverModel.addCashReceiver({
       receiverId,
-      receiverName: cashRecieverName,
+      receiverName: receiverName,
       memberId,
       chapterId,
       paymentType: "cash",
@@ -109,7 +109,72 @@ const getAmountCollectedController = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
-
+const deleteCashReceiversController = async (req, res) => {
+  const { chapterId,receiverId } = req.params;
+  try {
+    const deletedReceiver = await feeReceiverModel.deleteCashReceiver(
+      chapterId,
+      receiverId
+    );
+    res.json(deletedReceiver);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: error.message });
+  }
+}
+const deleteQRReceiversController = async (req, res) => {
+  const { chapterId,receiverId } = req.params;
+  try {
+    const deletedReceiver = await feeReceiverModel.deleteQRReceiver(
+      chapterId,
+      receiverId
+    );
+    res.json(deletedReceiver);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: error.message });
+  }
+}
+const updateCashReceiversController = async (req, res) => {
+  const { chapterId, receiverId } = req.params;
+  const { cashRecieverName, memberId, enableDate, disableDate } = req.body;
+  try {
+    const updatedCashReceiver = await feeReceiverModel.updateCashReceiver({
+      receiverId,
+      receiverName: cashRecieverName,
+      memberId,
+      chapterId,
+      paymentType: "cash",
+      enableDate,
+      disableDate,
+    });
+    res.json(updatedCashReceiver);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: error.message });
+  }
+}
+const updateQRReceiversController = async (req, res) => {
+  const { chapterId, receiverId } = req.params;
+  const { qrCodeName, memberId, qrImageLink, enableDate, disableDate } =
+    req.body;
+  try {
+    const updatedQRReceiver = await feeReceiverModel.updateQRReceiver({
+      receiverId,
+      receiverName: qrCodeName,
+      memberId,
+      chapterId,
+      qrImageLink,
+      enableDate,
+      disableDate,
+      paymentType: "online",
+    });
+    res.json(updatedQRReceiver);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: error.message });
+  }
+};
 module.exports = {
   getCurrentReceiversController,
   getCashReceiversController,
@@ -117,4 +182,8 @@ module.exports = {
   getQRReceiversController,
   addQRReceiversController,
   getAmountCollectedController,
+  deleteCashReceiversController,
+  deleteQRReceiversController,
+  updateCashReceiversController,
+  updateQRReceiversController
 };
