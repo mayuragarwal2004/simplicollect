@@ -30,6 +30,7 @@ const PackageFinalAmountInput = ({ setStep, handlePackagePayModalClose }) => {
       receiverFeeAmount,
       platformFeeAmount,
       totalPayableAmount,
+      selectedMemberId,
     },
     fetchAllData,
   } = usePaymentData();
@@ -38,6 +39,9 @@ const PackageFinalAmountInput = ({ setStep, handlePackagePayModalClose }) => {
   const netBalance = currentPayment - totalPayableAmount;
   const [showConfirm, setShowConfirm] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  console.log({selectedMemberId});
+
 
   const handleConfirm = async () => {
     setLoading(true);
@@ -63,7 +67,10 @@ const PackageFinalAmountInput = ({ setStep, handlePackagePayModalClose }) => {
       console.log('Payment Proof Link:', paymentProofLink);
     }
 
+    
+
     const paymentDetails = {
+      memberId: selectedMemberId,
       packageId: selectedPackage.packageId,
       meetingIds: selectedPackage.meetingIds,
       chapterId: chapterData.chapterId,

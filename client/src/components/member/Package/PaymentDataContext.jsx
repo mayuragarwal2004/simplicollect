@@ -60,10 +60,12 @@ export const PaymentDataProvider = ({ children }) => {
     }
   };
 
-  const fetchMeetings = async () => {
+  const fetchMeetings = async (memberId) => {
     // Fetch all meetings
     axiosInstance
-      .get(`/api/meetings/meetings/${chapterData?.chapterId}`)
+      .get(`/api/meetings/meetings/${chapterData?.chapterId}`, {
+        params: { memberId: memberId || '' },
+      })
       .then((data) => {
         console.log('Fetched Chapter Meetings:', data.data);
         setPaymentData((prev) => ({
@@ -76,10 +78,14 @@ export const PaymentDataProvider = ({ children }) => {
       );
   };
 
-  const fetchDueAmount = async () => {
+  const fetchDueAmount = async (memberId) => {
     // Fetch all balance payments
     axiosInstance
-      .get(`/api/payment/balance/${chapterData?.chapterId}`)
+      .get(`/api/payment/balance/${chapterData?.chapterId}`, {
+        params: {
+          memberId: memberId || '',
+        },
+      })
       .then((data) => {
         console.log('Fetched Due Amounts:', data.data);
         setPaymentData((prev) => ({
@@ -92,9 +98,14 @@ export const PaymentDataProvider = ({ children }) => {
       );
   };
 
-  const fetchPackages = () => {
+  const fetchPackages = async (memberId) => {
     axiosInstance
-      .get(`/api/packages/all/${chapterData?.chapterId}`)
+      .get(`/api/packages/all/${chapterData?.chapterId}`, {
+        params: {
+          memberId: memberId || '',
+          date: formatDateDDMMYYYY(calculationDate),
+        },
+      })
       .then((data) => {
         // find the unique parent types
         const parentTypes = [
@@ -128,9 +139,13 @@ export const PaymentDataProvider = ({ children }) => {
   // Pending Payments start
 
   // Fetch pending payments data
-  const fetchPendingPayments = async () => {
+  const fetchPendingPayments = async (memberId) => {
     await axiosInstance
-      .get('/api/payment/pendingPayments')
+      .get(`/api/payment/pendingPayments`, {
+        params: {
+          memberId: memberId || '',
+        },
+      })
       .then((response) => {
         console.log('Fetched Pending Payments:', response.data);
         setPaymentData((prev) => ({
@@ -155,11 +170,14 @@ export const PaymentDataProvider = ({ children }) => {
 
   // Pending Payments end
 
-  const fetchAllData = async () => {
+  let selectedMemberId = null;
+
+  const fetchAllData = async (memberId) => {
+    selectedMemberId = memberId;
     await fetchCurrentReceivers();
-    await fetchPendingPayments();
-    await fetchMeetings();
-    await fetchDueAmount();
+    await fetchPendingPayments(memberId);
+    await fetchMeetings(memberId);
+    await fetchDueAmount(memberId);
   };
 
   useEffect(() => {
@@ -169,9 +187,13 @@ export const PaymentDataProvider = ({ children }) => {
     ) {
       console.log('Fetching Packages');
 
-      fetchPackages();
+      fetchPackages(paymentData.selectedMemberId);
     }
-  }, [paymentData.chapterMeetings, paymentData.balance]);
+  }, [
+    paymentData.chapterMeetings,
+    paymentData.balance,
+    paymentData.selectedMemberId,
+  ]);
 
   useEffect(() => {
     if (chapterData?.chapterId) {

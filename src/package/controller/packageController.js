@@ -69,7 +69,10 @@ const approvedMeeting = async (req, res) => {
 };
 
 const getPackagesByChapterController = async (req, res) => {
-  const { memberId } = req.user;
+  let { memberId } = req.query;
+  if (!memberId) {
+    memberId = req.user.memberId;
+  }
   const { chapterId } = req.params;
   try {
     const packages = await Package.getPackagesByChapterId(chapterId, memberId);

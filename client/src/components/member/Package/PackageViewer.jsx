@@ -13,6 +13,22 @@ import { TextField } from '@mui/material';
 import formatDateDDMMYYYY from '../../../utils/dateUtility';
 import PackagePayMain from '../../../components/member/Package/PackagePayMain';
 import { usePaymentData } from './PaymentDataContext';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command';
+import { Button } from '@/components/ui/button';
+import { ChevronsUpDown, Check } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 const PackageViewer = () => {
   const {
@@ -28,17 +44,70 @@ const PackageViewer = () => {
     fetchAllData,
     handleDeletePendingRequest,
   } = usePaymentData();
+  const { chapterData, memberData } = useData();
   const [tabValue, setTabValue] = React.useState(0);
   const [calculationDate, setCalculationDate] = useState(new Date());
-  const { chapterData } = useData();
+  const [selectedMember, setSelectedMember] = useState({
+    value: memberData?.memberId,
+    label: `${memberData?.firstName} ${memberData?.lastName}`,
+  });
+  const [filteredMembers, setFilteredMembers] = useState([]); // Filtered list
+  const [members, setMembers] = useState([]);
+  const [open, setOpen] = useState(false);
+
+  const [changeMemberRights, setChangeMemberRights] = useState(true);
+
+  console.log({ selectedMember });
 
   const paymentSuccessHandler = () => {
-    fetchAllData();
+    fetchAllData(selectedMember.value);
   };
 
   const handleChange = (event, newValue) => {
     setTabValue(newValue);
   };
+
+  const fetchMembers = async () => {
+    try {
+      const response = await axiosInstance.get(`/api/member/all`, {
+        params: { chapterId: chapterData?.chapterId },
+      });
+      setMembers(response.data);
+      setFilteredMembers(response.data); // Initialize filtered list
+    } catch (error) {
+      toast.error('Error fetching members');
+    }
+  };
+
+  useEffect(() => {
+    if (chapterData?.chapterId && changeMemberRights) {
+      fetchMembers();
+    }
+  }, [chapterData, changeMemberRights]);
+
+  useEffect(() => {
+    if (selectedMember) {
+      fetchAllData(selectedMember.value);
+      setPaymentData((prev) => ({
+        ...prev,
+        selectedMemberId: selectedMember.value,
+        selectedMemberName: selectedMember.label,
+      }));
+    }
+  }, [selectedMember]);
+
+  useEffect(() => {
+    if (chapterData?.chapterId) {
+      axiosInstance
+        .get(`/api/rights/anyMemberMaketransaction/${chapterData.chapterId}`)
+        .then((response) => {
+          setChangeMemberRights(response.data.allowed);
+        });
+    }
+  }, [chapterData]);
+
+  console.log({changeMemberRights});
+  
 
   return (
     <div className="rounded-sm border border-stroke bg-white px-5 pt-6 pb-2.5 shadow-default dark:border-strokedark dark:bg-boxdark sm:px-7.5 xl:pb-1">
@@ -145,6 +214,60 @@ const PackageViewer = () => {
           </div>
         )}
       </div>
+      {changeMemberRights && (
+        <div className="flex items-center mt-4">
+          {/* Options to switch to another member's data */}
+
+          <Popover open={open} onOpenChange={setOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                role="combobox"
+                aria-expanded={open}
+                className="w-[250px] justify-between"
+              >
+                {selectedMember ? selectedMember.label : 'Select member...'}
+                <ChevronsUpDown className="opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[250px] p-0">
+              <Command>
+                <CommandInput placeholder="Search member..." className="h-9" />
+
+                <CommandList>
+                  <CommandEmpty>No member found.</CommandEmpty>
+                  <CommandGroup>
+                    {filteredMembers.map((member) => (
+                      <CommandItem
+                        key={member.memberId}
+                        label={`${member.firstName} ${member.lastName}`}
+                        value={member.memberId.toString()}
+                        onSelect={() => {
+                          setSelectedMember({
+                            value: member.memberId,
+                            label: `${member.firstName} ${member.lastName}`,
+                          });
+                          setOpen(false);
+                        }}
+                      >
+                        {member.label}
+                        <Check
+                          className={cn(
+                            'ml-auto',
+                            selectedMember?.value === member.memberId
+                              ? 'opacity-100'
+                              : 'opacity-0',
+                          )}
+                        />
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
+        </div>
+      )}
 
       <Box sx={{ width: '100%' }}>
         <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>

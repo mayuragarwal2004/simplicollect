@@ -6,7 +6,10 @@ const paymentService = require("../service/paymentService");
 const { v4: uuidv4 } = require("uuid");
 
 const addPayment = async (req, res) => {
-  const { memberId } = req.user;
+  let {memberId} = req.body;
+  if (!memberId) {
+    memberId = req.user.memberId;
+  }
   console.log({ check: req.user });
 
   const paymentDetails = req.body;
@@ -81,7 +84,10 @@ const chapterPendingPayments = async (req, res) => {
 };
 
 const checkPendingPayments = async (req, res) => {
-  const { memberId } = req.user;
+  let { memberId } = req.query;
+  if (!memberId) {
+    memberId = req.user.memberId;
+  }
   try {
     const pendingPayments =
       await paymentModel.getMembersPendingPaymentsWithPackageDetails(memberId);
@@ -208,7 +214,10 @@ const getPaymentRequestsController = async (req, res) => {
 };
 
 const getMemberChapterBalancesController = async (req, res) => {
-  const { memberId } = req.user;
+  let { memberId } = req.query;
+  if (!memberId) {
+    memberId = req.user.memberId;
+  }
   const { chapterId } = req.params;
 
   try {
@@ -228,13 +237,16 @@ const getMetaDataController = async (req, res) => {
   const { chapterId } = req.params;
 
   try {
-    const metaData = await paymentService.getMetaDataService(memberId, chapterId);
+    const metaData = await paymentService.getMetaDataService(
+      memberId,
+      chapterId
+    );
     res.json(metaData);
   } catch (error) {
     console.log(error);
     res.status(500).json({ error: error.message });
   }
-}
+};
 
 module.exports = {
   addPayment,

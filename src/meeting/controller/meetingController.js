@@ -2,13 +2,19 @@
 const Meeting = require("../model/meetingModel");
 
 const getAllMeetings = async (req, res) => {
-  const { memberId } = req.user;
+  let { memberId } = req.query;
+  if (!memberId) {
+    memberId = req.user.memberId;
+  }
   const { chapterId } = req.query;
 
-  try { 
-    const meetings = await Meeting.getAllMeetingsUsingMemberIdAndChapterId(memberId, chapterId);
-    console.log({meetings});
-    
+  try {
+    const meetings = await Meeting.getAllMeetingsUsingMemberIdAndChapterId(
+      memberId,
+      chapterId
+    );
+    console.log({ meetings });
+
     res.json(meetings);
   } catch (error) {
     console.error("Error fetching meetings:", error);
@@ -16,18 +22,17 @@ const getAllMeetings = async (req, res) => {
   }
 };
 const getAllMeetingsByChapterId = async (req, res) => {
-
   const { chapterId } = req.params;
   try {
     const meetings = await Meeting.getAllMeetingsByChapterId(chapterId);
-    console.log({meetings});
-    
+    console.log({ meetings });
+
     res.json(meetings);
   } catch (error) {
     console.error("Error fetching meetings:", error);
     res.status(500).json({ error: "Failed to fetch meetings" });
   }
-}
+};
 
 const updatePaymentStatus = async (req, res) => {
   const { meetingId } = req.params;
@@ -43,5 +48,5 @@ const updatePaymentStatus = async (req, res) => {
 module.exports = {
   getAllMeetings,
   updatePaymentStatus,
-  getAllMeetingsByChapterId
+  getAllMeetingsByChapterId,
 };

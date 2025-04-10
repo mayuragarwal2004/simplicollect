@@ -7,4 +7,6 @@ router.get("/sidebar", rightsController.getSidebarRightsController);
 // Get if a member of a chapter is allowed to approve a payment request of another member
 router.get("/anyMemberApprovePayment/:chapterId", rightsController.getApprovePaymentRightsController);
 
+router.get("/anyMemberMaketransaction/:chapterId", rightsController.getMakeTransactionRightsController);
+
 module.exports = router;
