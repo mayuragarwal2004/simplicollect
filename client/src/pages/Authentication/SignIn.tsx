@@ -16,6 +16,7 @@ const SignIn: React.FC = () => {
   ); // Email or Phone
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [loadingMsg, setLoadingMsg] = useState('');
   const [error, setError] = useState('');
   const [showPasswordField, setShowPasswordField] = useState(false);
 
@@ -43,7 +44,8 @@ const SignIn: React.FC = () => {
         setError('User does not exist!');
       } else if (response.data.defaultOTP) {
         // Send OTP automatically and navigate to OTP verification
-        await axios.post('/api/auth/send-otp', { identifier });
+        // await axios.post('/api/auth/send-otp', { identifier });
+        setLoadingMsg('Sending OTP...');
         navigate('/auth/otp-verification', { state: { identifier } }); // No password → OTP verification
       } else if (response.data.exists && !response.data.defaultOTP) {
         setShowPasswordField(true); // Show password field for login
@@ -51,6 +53,21 @@ const SignIn: React.FC = () => {
     } catch (err) {
       console.error('Error:', err);
       setError('Error checking user.');
+    } finally {
+      setLoading(false);
+      setLoadingMsg('');
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    try {
+      setLoading(true);
+      setLoadingMsg('Sending OTP...');
+      // await axios.post('/api/auth/send-otp', { identifier });
+      navigate('/auth/otp-verification', { state: { identifier } }); // No password → OTP verification
+    } catch (error) {
+      console.error('Error sending OTP:', error);
+      setError('Error sending OTP.'); // Handle error appropriately
     } finally {
       setLoading(false);
     }
@@ -140,22 +157,24 @@ const SignIn: React.FC = () => {
               disabled={loading}
             >
               {loading
-                ? 'Checking...'
+                ? loadingMsg || 'Checking...'
                 : showPasswordField
-                ? 'Sign In'
-                : 'Continue'}
+                  ? 'Sign In'
+                  : 'Continue'}
             </button>
           </form>
 
           {/* Forgot Password Link (only shown after password field is displayed) */}
           {showPasswordField && (
             <div className="mt-4 text-center">
-              <Link
-                to="/auth/forgot-password"
-                className="text-blue-500 hover:underline"
+              <button
+                type="button"
+                className="text-blue-500 hover:underline disabled:opacity-50"
+                disabled={loading}
+                onClick={handleForgotPassword}
               >
                 Forgot Password?
-              </Link>
+              </button>
             </div>
           )}
         </div>

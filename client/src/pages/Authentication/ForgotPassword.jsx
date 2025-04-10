@@ -11,8 +11,12 @@ const ForgotPassword = () => {
   const [newPassword, setNewPassword] = useState("");
   const [otpSent, setOtpSent] = useState(false);
   const [error, setError] = useState("");
+  const [loadingOtp, setLoadingOtp] = useState(false);
+  const [loadingReset, setLoadingReset] = useState(false);
 
   const handleSendOtp = async () => {
+    setLoadingOtp(true);
+    setError("");
     try {
       const response = await fetch("/api/auth/forgot-password", {
         method: "POST",
@@ -28,11 +32,15 @@ const ForgotPassword = () => {
       }
     } catch (error) {
       setError("Failed to send OTP.");
+    } finally {
+      setLoadingOtp(false);
     }
   };
 
   const handleResetPassword = async (e) => {
     e.preventDefault();
+    setLoadingReset(true);
+    setError("");
     try {
       const response = await fetch("/api/auth/reset-password", {
         method: "POST",
@@ -47,6 +55,8 @@ const ForgotPassword = () => {
       }
     } catch (error) {
       setError("Failed to reset password.");
+    } finally {
+      setLoadingReset(false);
     }
   };
 
@@ -64,7 +74,6 @@ const ForgotPassword = () => {
           </div>
 
           <form className="w-full" onSubmit={handleResetPassword}>
-            {/* Email Input */}
             <div className="mb-4">
               <label className="block text-gray-700 dark:text-gray-300 mb-2" htmlFor="email">
                 Email
@@ -76,66 +85,65 @@ const ForgotPassword = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                disabled={loadingOtp || loadingReset}
               />
             </div>
 
-            {/* OTP Input */}
             {otpSent && (
-              <div className="mb-4">
-                <label className="block text-gray-700 dark:text-gray-300 mb-2" htmlFor="otp">
-                  Enter OTP
-                </label>
-                <input
-                  type="text"
-                  id="otp"
-                  className="w-full p-3 border border-stroke rounded-md dark:border-strokedark dark:bg-boxdark"
-                  value={otp}
-                  onChange={(e) => setOtp(e.target.value)}
-                  required
-                />
-              </div>
+              <>
+                <div className="mb-4">
+                  <label className="block text-gray-700 dark:text-gray-300 mb-2" htmlFor="otp">
+                    Enter OTP
+                  </label>
+                  <input
+                    type="text"
+                    id="otp"
+                    className="w-full p-3 border border-stroke rounded-md dark:border-strokedark dark:bg-boxdark"
+                    value={otp}
+                    onChange={(e) => setOtp(e.target.value)}
+                    required
+                    disabled={loadingReset}
+                  />
+                </div>
+                <div className="mb-6">
+                  <label className="block text-gray-700 dark:text-gray-300 mb-2" htmlFor="newPassword">
+                    New Password
+                  </label>
+                  <input
+                    type="password"
+                    id="newPassword"
+                    className="w-full p-3 border border-stroke rounded-md dark:border-strokedark dark:bg-boxdark"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    required
+                    disabled={loadingReset}
+                  />
+                </div>
+              </>
             )}
 
-            {/* New Password Input */}
-            {otpSent && (
-              <div className="mb-6">
-                <label className="block text-gray-700 dark:text-gray-300 mb-2" htmlFor="newPassword">
-                  New Password
-                </label>
-                <input
-                  type="password"
-                  id="newPassword"
-                  className="w-full p-3 border border-stroke rounded-md dark:border-strokedark dark:bg-boxdark"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  required
-                />
-              </div>
-            )}
-
-            {/* Error Message */}
             {error && <div className="text-red-500 mb-4">{error}</div>}
 
-            {/* Send OTP or Reset Password Button */}
             {!otpSent ? (
               <button
                 type="button"
-                className="w-full py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition"
+                className="w-full py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition disabled:opacity-60"
                 onClick={handleSendOtp}
+                disabled={loadingOtp || !email}
               >
-                Send OTP
+                {loadingOtp ? "Sending OTP..." : "Send OTP"}
               </button>
             ) : (
               <button
                 type="submit"
-                className="w-full py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition"
+                className="w-full py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition disabled:opacity-60"
+                disabled={loadingReset || !otp || !newPassword}
               >
-                Reset Password
+                {loadingReset ? "Resetting Password..." : "Reset Password"}
               </button>
             )}
           </form>
 
-          {/* Back to Login Link */}
           <div className="mt-4 text-center">
             <Link to="/auth/signin" className="text-blue-500 hover:underline">
               Back to Login

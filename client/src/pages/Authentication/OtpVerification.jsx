@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
@@ -13,37 +13,47 @@ const OtpVerification = () => {
   const { verifyOTP } = useAuth();
   const [identifier, setIdentifier] = useState(location.state?.identifier || ''); // Email or Phone
   const [otp, setOtp] = useState('');
+  const [otpMessage, setOtpMessage] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [confirmPassword, setConfirmPassword] = useState('');
+  const hasSentOtp = useRef(false);
 
   useEffect(() => {
     if (!location.state?.identifier) {
-      navigate('/auth/forgot-password');
+      navigate('/auth/signin');
     }
   }, [location.state, navigate]);
 
   // Automatically send OTP when the component mounts
   useEffect(() => {
-    const sendOtp = async () => {
-      try {
-        const response = await fetch('/api/auth/send-otp', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ identifier }),
-        });
-        const data = await response.json();
-        if (!response.ok) {
-          setError(data.message);
-        }
-      } catch (error) {
-        setError('Failed to send OTP.');
-      }
-    };
+    if (!identifier) return;
 
-    sendOtp();
+    // 👇 Run only once (even in Strict Mode)
+    if (!hasSentOtp.current) {
+      sendOtp();
+      hasSentOtp.current = true;
+    }
   }, [identifier]);
+
+  const sendOtp = async () => {
+    try {
+      const response = await fetch('/api/auth/send-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ identifier }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        setError(data.message);
+      } else {
+        setOtpMessage(data.message);
+      }
+    } catch (error) {
+      setError('Failed to send OTP.');
+    }
+  };
 
   const handleVerifyOtp = async (e) => {
     e.preventDefault();
@@ -119,6 +129,7 @@ const OtpVerification = () => {
                 onChange={(e) => setOtp(e.target.value)}
                 required
               />
+              <p className="text-gray-500">{otpMessage}</p>
             </div>
 
             {/* New Password Input */}

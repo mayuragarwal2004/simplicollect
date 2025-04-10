@@ -12,7 +12,8 @@ const sendOTP = async (identifier) => {
   try {
     const otp = generateOTP();
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
-    console.log(identifier);
+
+    // Lookup user by either email or phone number
     const user = await db("members")
       .where("email", identifier)
       .orWhere("phoneNumber", identifier)
@@ -22,26 +23,70 @@ const sendOTP = async (identifier) => {
       return { success: false, message: "User not found" };
     }
 
+    // Save OTP to DB
     await db("otp_verifications").insert({
       member_id: user.memberId,
       otp_code: otp,
       expires_at: expiresAt,
     });
 
-    if (identifier.includes("@")) {
+    // Send OTP to both email and phone
+    const messages = [];
+
+    if (user.email) {
       await sendEMail({
-        to: identifier,
+        to: user.email,
         subject: "Your OTP for Login",
         text: `Your OTP is: ${otp}. It will expire in 10 minutes.`,
       });
-    } else {
-      await sendWhatsAppOtp("91"+identifier, `${otp}`);
+      messages.push("Email sent");
     }
 
-    return { success: true, message: "OTP sent successfully" };
+    if (user.phoneNumber) {
+      await sendWhatsAppOtp("91" + user.phoneNumber, `${otp}`);
+      messages.push("WhatsApp sent");
+    }
+
+    // Masking helpers
+    const maskEmail = (email) => {
+      const [name, domain] = email.split("@");
+      const maskedName =
+        name[0] + "*".repeat(Math.max(0, name.length - 2)) + name.slice(-1);
+      return `${maskedName}@${domain}`;
+    };
+
+    const maskPhone = (phone) => {
+      return phone.replace(
+        /^(\d{2})\d+(\d{2})$/,
+        (_, start, end) => `${start}${"*".repeat(phone.length - 4)}${end}`
+      );
+    };
+
+    return {
+      success: true,
+      message: buildOtpSentMessage(
+        user.email ? maskEmail(user.email) : null,
+        user.phoneNumber ? maskPhone(user.phoneNumber) : null
+      ),
+      email: user.email ? maskEmail(user.email) : null,
+      phoneNumber: user.phoneNumber ? maskPhone(user.phoneNumber) : null,
+      notes: messages,
+    };
   } catch (error) {
     console.error("Error sending OTP:", error);
     return { success: false, message: "Failed to send OTP" };
+  }
+};
+
+const buildOtpSentMessage = (maskedEmail, maskedPhone) => {
+  if (maskedEmail && maskedPhone) {
+    return `OTP has been sent to your email (${maskedEmail}) and phone number (${maskedPhone}).`;
+  } else if (maskedEmail) {
+    return `OTP has been sent to your email (${maskedEmail}).`;
+  } else if (maskedPhone) {
+    return `OTP has been sent to your phone number (${maskedPhone}).`;
+  } else {
+    return `OTP was generated, but no email or phone number was available to send it. Please contact support.`;
   }
 };
 
@@ -91,7 +136,6 @@ const verifyOTP = async (identifier, otp) => {
     return { success: false, message: "Failed to verify OTP" };
   }
 };
-
 
 const memberExistOrNot = async (identifier) => {
   const member = await db("members")
