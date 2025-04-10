@@ -20,6 +20,7 @@ const PackageCard = ({
 }) => {
   const {
     paymentData: { receivers, chapterMeetings, packageParents,selectedPackage, packageData },
+    resetPaymentData,
     setPaymentData,
   } = usePaymentData();
   const [showUnpaidOnly, setShowUnpaidOnly] = useState(false);
@@ -28,6 +29,8 @@ const PackageCard = ({
 
   const handlePackagePayModalClose = () => {
     console.log('Triggered handlePackagePayModalClose');
+
+    resetPaymentData();
 
     setIsModalOpen(false);
   };

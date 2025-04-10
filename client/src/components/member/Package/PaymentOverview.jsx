@@ -14,9 +14,11 @@ import formatDateDDMMYYYY from '../../../utils/dateUtility';
 import { usePaymentData } from './PaymentDataContext';
 import { Button } from '@/components/ui/button';
 import { toast } from 'react-toastify';
-import QrScanner from 'qr-scanner'
+import QrScanner from 'qr-scanner';
 import { useData } from '../../../context/DataContext';
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton } from '@/components/ui/skeleton';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 
 const PaymentOverview = ({
   onClose,
@@ -47,9 +49,12 @@ const PaymentOverview = ({
   const [showMeetings, setShowMeetings] = useState(false); // Toggle meeting details
   const [selectedMeetings, setSelectedMeetings] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [feeReceiverSwitch, setFeeReceiverSwitch] = useState(true); // Toggle for fee receiver
 
   const [amountPaid, setAmountPaid] = useState(selectedPackage.totalAmount); // Amount paid by the member
   const [minimumPayable, setMinimumPayable] = useState(0); // Minimum payable amount
+
+  console.log({ feeReceiverSwitch });
 
   useEffect(() => {
     if (selectedPackage.meetingIds && chapterMeetings) {
@@ -70,12 +75,18 @@ const PaymentOverview = ({
   // Calculate receiver fee
   useEffect(() => {
     if (selectedReceiverObject) {
-      if (selectedReceiverObject.receiverAmountType === 'Lumpsum') {
+      if (
+        selectedReceiverObject.receiverAmountType === 'Lumpsum' &&
+        feeReceiverSwitch
+      ) {
         setPaymentData((prev) => ({
           ...prev,
           receiverFeeAmount: selectedReceiverObject.receiverAmount,
         }));
-      } else if (selectedReceiverObject.receiverAmountType === 'Percentage') {
+      } else if (
+        selectedReceiverObject.receiverAmountType === 'Percentage' &&
+        feeReceiverSwitch
+      ) {
         const receiverFee =
           (selectedPackage.totalAmount *
             selectedReceiverObject.receiverAmount) /
@@ -91,7 +102,7 @@ const PaymentOverview = ({
         }));
       }
     }
-  }, [selectedReceiverObject, selectedPackage]);
+  }, [selectedReceiverObject, selectedPackage, feeReceiverSwitch]);
 
   useEffect(() => {
     if (chapterData) {
@@ -192,6 +203,21 @@ const PaymentOverview = ({
             )}
           </div>
         </div>
+
+        {selectedReceiverObject.receiverFeeOptional !== 0 &&
+          selectedReceiverObject?.receiverFeeOptional && (
+            <div className="flex items-center space-x-4 my-4">
+              <Switch
+                checked={feeReceiverSwitch}
+                onCheckedChange={(checked) => setFeeReceiverSwitch(checked)}
+                className="h-5" // Increased size of the switch
+              />
+              <Label className="text-lg">
+                Do You Want the GST Bill? (charges applicable)
+              </Label>{' '}
+              {/* Increased text size */}
+            </div>
+          )}
 
         {/* Meetings Included */}
         <div className="mb-4">

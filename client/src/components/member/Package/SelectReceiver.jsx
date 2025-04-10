@@ -11,24 +11,10 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ChevronRight } from 'lucide-react';
 
-// paymentData.receivers = [
-//     {
-//         "receiverId": "61863305-98d6-45cc-a1c7-eb9659c4dfd0",
-//         "receiverName": "Ruturaj Shinde",
-//         "memberId": "ergioheohjgbiehjgbdl",
-//         "chapterId": "1",
-//         "paymentType": "cash",
-//         "receiverAmount": null,
-//         "receiverAmountType": null,
-//         "qrImageLink": null,
-//         "enableDate": "2024-12-31T18:30:00.000Z",
-//         "disableDate": "2025-04-29T18:30:00.000Z"
-//     },
-// ]
 const SelectReceiver = ({ setStep, handlePackagePayModalClose }) => {
   const { paymentData, setPaymentData } = usePaymentData();
-
   const [showPaymentMethod, setShowPaymentMethod] = useState(false);
+  const [error, setError] = useState('');
 
   const handleChange = (value) => {
     setPaymentData((prev) => ({
@@ -37,14 +23,12 @@ const SelectReceiver = ({ setStep, handlePackagePayModalClose }) => {
     }));
   };
 
-  const [error, setError] = useState('');
   const validateAndNext = () => {
     if (!paymentData.paymentMethod) {
       setError('Please select a payment method');
     } else if (!paymentData.selectedReceiver) {
       setError('Please select a receiver');
     } else if (
-      //check if the selectedReceiver is valid for the selected paymentMethod and is present in the paymentData.receivers array
       paymentData.receivers.filter(
         (receiver) =>
           receiver.receiverId === paymentData.selectedReceiver &&
@@ -77,7 +61,7 @@ const SelectReceiver = ({ setStep, handlePackagePayModalClose }) => {
         <h2>Select a receiver</h2>
         <Select
           onValueChange={handleSelectChange}
-          value={paymentData.selectedReceiver}
+          value={paymentData.selectedReceiver || undefined}
         >
           <SelectTrigger>
             <SelectValue
@@ -99,76 +83,39 @@ const SelectReceiver = ({ setStep, handlePackagePayModalClose }) => {
   };
 
   useEffect(() => {
-    console.log(
-      `paymentData.paymentMethod for the 1st time: ${paymentData.paymentMethod}`,
+    const cashReceivers = paymentData.receivers.filter(
+      (receiver) => receiver.paymentType === 'cash',
     );
-  }, []);
+    const onlineReceivers = paymentData.receivers.filter(
+      (receiver) => receiver.paymentType === 'online',
+    );
 
-  useEffect(() => {
-    if (!paymentData.paymentMethod) {
-      if (paymentData.receivers.length === 0) {
-        setShowPaymentMethod(false);
-      } else if (
-        paymentData.receivers.filter(
-          (receiver) => receiver.paymentType === 'cash',
-        ).length === 0
-      ) {
-        setPaymentData((prev) => ({
-          ...prev,
-          paymentMethod: 'online',
-        }));
-        setShowPaymentMethod(false);
-      } else if (
-        paymentData.receivers.filter(
-          (receiver) => receiver.paymentType === 'online',
-        ).length === 0
-      ) {
-        setPaymentData((prev) => ({
-          ...prev,
-          paymentMethod: 'cash',
-        }));
-        setShowPaymentMethod(false);
-      } else {
-        setPaymentData((prev) => ({
-          ...prev,
-          paymentMethod: 'cash',
-        }));
-        setShowPaymentMethod(true);
-      }
+    if (cashReceivers.length > 0 && onlineReceivers.length > 0) {
+      setPaymentData((prev) => ({
+        ...prev,
+        paymentMethod: prev.paymentMethod || 'cash',
+      }));
+      setShowPaymentMethod(true);
+    } else if (cashReceivers.length > 0) {
+      setPaymentData((prev) => ({
+        ...prev,
+        paymentMethod: 'cash',
+      }));
+      setShowPaymentMethod(false);
+    } else if (onlineReceivers.length > 0) {
+      setPaymentData((prev) => ({
+        ...prev,
+        paymentMethod: 'online',
+      }));
+      setShowPaymentMethod(false);
     } else {
-      // check if the selected paymentMethod is present in the paymentData.receivers array
-      if (
-        paymentData.receivers.filter(
-          (receiver) => receiver.paymentType === paymentData.paymentMethod,
-        ).length === 0
-      ) {
-        setShowPaymentMethod(false);
-        if (paymentData.paymentMethod === 'cash') {
-          setPaymentData((prev) => ({
-            ...prev,
-            paymentMethod: 'online',
-          }));
-        } else {
-          setPaymentData((prev) => ({
-            ...prev,
-            paymentMethod: 'cash',
-          }));
-        }
-      } else if (
-        paymentData.receivers.filter(
-          (receiver) => receiver.paymentType !== paymentData.paymentMethod,
-        ).length === 0
-      ) {
-        setShowPaymentMethod(false);
-      }
+      setShowPaymentMethod(false);
     }
   }, [paymentData.receivers]);
 
-  console.log({ paymentMethod: paymentData.paymentMethod });
-
   return (
     <div>
-      <h2>{showPaymentMethod && 'Select Payment Method'}</h2>
+      <h2>{showPaymentMethod ? 'Select Payment Method' : 'Payment Method'}</h2>
       <Tabs
         value={paymentData.paymentMethod}
         className="w-full"
@@ -177,26 +124,32 @@ const SelectReceiver = ({ setStep, handlePackagePayModalClose }) => {
             ...prev,
             paymentMethod: value,
           }));
-
           if (value === 'cash' || value === 'online') {
             setError('');
           }
         }}
       >
-        {showPaymentMethod && (
+        {showPaymentMethod ? (
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="cash">Cash</TabsTrigger>
             <TabsTrigger value="online">Online</TabsTrigger>
           </TabsList>
+        ) : (
+          <div className="my-2 p-2 border rounded">
+            <strong className="capitalize">{paymentData.paymentMethod}</strong> is the only available method.
+          </div>
         )}
+
         <TabsContent value="cash">{ReveiverSelector('cash')}</TabsContent>
         <TabsContent value="online">{ReveiverSelector('online')}</TabsContent>
       </Tabs>
+
       {paymentData.receivers.length === 0 && (
         <p className="text-red-500 my-5">
           No receivers available as of now, please contact admin
         </p>
       )}
+
       <div className="flex justify-between mt-2">
         <Button variant="outline" onClick={() => handlePackagePayModalClose()}>
           Cancel
