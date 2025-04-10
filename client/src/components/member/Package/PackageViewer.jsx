@@ -57,7 +57,14 @@ const PackageViewer = () => {
 
   const [changeMemberRights, setChangeMemberRights] = useState(true);
 
-  console.log({ selectedMember });
+  useEffect(() => {
+    if (memberData?.memberId && !selectedMember.value) {
+      setSelectedMember({
+        value: memberData?.memberId,
+        label: `${memberData?.firstName} ${memberData?.lastName}`,
+      });
+    }
+  }, [memberData]);
 
   const paymentSuccessHandler = () => {
     fetchAllData(selectedMember.value);
@@ -106,8 +113,7 @@ const PackageViewer = () => {
     }
   }, [chapterData]);
 
-  console.log({changeMemberRights});
-  
+  console.log({ changeMemberRights });
 
   return (
     <div className="rounded-sm border border-stroke bg-white px-5 pt-6 pb-2.5 shadow-default dark:border-strokedark dark:bg-boxdark sm:px-7.5 xl:pb-1">
