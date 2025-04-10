@@ -28,7 +28,7 @@ const MemberList = () => {
     email: '',
     phoneNumber: '',
     role: '',
-    chapterId: chapterData.chapterId, // Example chapterId
+    chapterId: chapterData?.chapterId, // Example chapterId
     password: '', // Added password to the state
   });
 
@@ -53,6 +53,7 @@ const MemberList = () => {
   };
   
   useEffect(() => {
+    if (!chapterData || !chapterData?.chapterId) return; // Ensure chapterData is available before fetching
     fetchMembers();
   }, [chapterData, rows, page, location.search, search]);
 
@@ -87,6 +88,10 @@ const MemberList = () => {
       console.error('Error adding member:', error);
     }
   };
+
+  if (!chapterData) {
+    return <div>Loading...</div>; // Handle loading state
+  }
 
   return (
     <div className="container mx-auto p-4 dark:bg-gray-800 dark:text-white">

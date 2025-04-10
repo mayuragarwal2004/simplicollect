@@ -15,8 +15,9 @@ const MyLedgerComponent = () => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    if (!chapterData || !chapterData?.chapterId) return; // Ensure chapterData is available before fetching
     axiosInstance
-      .get(`/api/report/${chapterData.chapterId}/member-ledger-json`) // Replace with your actual API endpoint
+      .get(`/api/report/${chapterData?.chapterId}/member-ledger-json`) // Replace with your actual API endpoint
       .then((response) => {
         setLedgerData(response.data);
         setLoading(false);
@@ -25,7 +26,7 @@ const MyLedgerComponent = () => {
         setError('Failed to load ledger data');
         setLoading(false);
       });
-  }, []);
+  }, [chapterData?.chapterId, axiosInstance]);
 
   const handleExportData = async () => {
     try {
@@ -49,7 +50,7 @@ const MyLedgerComponent = () => {
       link.href = url;
       link.setAttribute(
         'download',
-        `${""} - ${new Date().toLocaleString()} - Member Ledger.xlsx`,
+        `${''} - ${new Date().toLocaleString()} - Member Ledger.xlsx`,
       );
       document.body.appendChild(link);
       link.click();

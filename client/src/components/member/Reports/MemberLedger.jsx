@@ -137,6 +137,9 @@ const ReceiverDaywiseReport = () => {
     }
   };
 
+  if (!chapterData || !chapterData?.chapterId) return null; // Ensure chapterData is available
+  
+
   return (
     <div className="flex flex-col gap-4 mt-5">
       <div className="flex items-center gap-4">
