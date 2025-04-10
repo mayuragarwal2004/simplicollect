@@ -106,7 +106,7 @@ const TransferAmountToChapter = () => {
           </DialogHeader>
 
           <div className="mb-4 space-y-4">
-            <div className="overflow-y-auto rounded-md border">
+            <div className="overflow-y-auto rounded-md border max-h-64">
               <Table>
                 <TableHeader>
                   <TableRow>

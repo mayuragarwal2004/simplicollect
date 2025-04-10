@@ -122,7 +122,7 @@ const ReceiverDaywiseReport = () => {
 
         <Button
           onClick={handleExportData}
-          disabled={jsonData.data.transactions.length === 0}
+          disabled={jsonData?.data.transactions.length === 0}
         >
           Export Data
         </Button>
@@ -152,16 +152,16 @@ const ReceiverDaywiseReport = () => {
       {jsonData && (
         <div className="space-y-8">
           <h1 className="text-2xl font-bold">
-            Transaction Report for {jsonData.data.date}
+            Transaction Report for {jsonData?.data.date}
           </h1>
 
-          {jsonData.data.transactions.length === 0 && (
+          {jsonData?.data.transactions.length === 0 && (
             <div className="text-center text-lg font-semibold text-gray-500">
               No transactions found for the selected date.
             </div>
           )}
 
-          {jsonData.data.transactions.map((group, groupIndex) => (
+          {jsonData?.data.transactions.map((group, groupIndex) => (
             <Card
               key={`${group.receiverName}-${group.paymentType}-${groupIndex}`}
             >
@@ -217,7 +217,7 @@ const ReceiverDaywiseReport = () => {
             </Card>
           ))}
 
-          {jsonData.data.transactions.length > 0 && (
+          {jsonData?.data.transactions.length > 0 && (
             <Card>
               <CardHeader>
                 <CardTitle>Grand Totals</CardTitle>
@@ -238,55 +238,55 @@ const ReceiverDaywiseReport = () => {
                     <TableRow>
                       <TableCell>Cash</TableCell>
                       <TableCell>
-                        {jsonData.data.totals.cash.amountPaid}
+                        {jsonData?.data.totals.cash.amountPaid}
                       </TableCell>
                       <TableCell>
-                        {jsonData.data.totals.cash.receiverFee}
+                        {jsonData?.data.totals.cash.receiverFee}
                       </TableCell>
                       <TableCell>
-                        {jsonData.data.totals.cash.platformFee}
+                        {jsonData?.data.totals.cash.platformFee}
                       </TableCell>
                       <TableCell>
-                        {jsonData.data.totals.cash.penaltyAmount}
+                        {jsonData?.data.totals.cash.penaltyAmount}
                       </TableCell>
                       <TableCell>
-                        {jsonData.data.totals.cash.discountAmount}
+                        {jsonData?.data.totals.cash.discountAmount}
                       </TableCell>
                     </TableRow>
                     <TableRow>
                       <TableCell>Online</TableCell>
                       <TableCell>
-                        {jsonData.data.totals.online.amountPaid}
+                        {jsonData?.data.totals.online.amountPaid}
                       </TableCell>
                       <TableCell>
-                        {jsonData.data.totals.online.receiverFee}
+                        {jsonData?.data.totals.online.receiverFee}
                       </TableCell>
                       <TableCell>
-                        {jsonData.data.totals.online.platformFee}
+                        {jsonData?.data.totals.online.platformFee}
                       </TableCell>
                       <TableCell>
-                        {jsonData.data.totals.online.penaltyAmount}
+                        {jsonData?.data.totals.online.penaltyAmount}
                       </TableCell>
                       <TableCell>
-                        {jsonData.data.totals.online.discountAmount}
+                        {jsonData?.data.totals.online.discountAmount}
                       </TableCell>
                     </TableRow>
                     <TableRow className="font-bold bg-muted/50">
                       <TableCell>Grand Total</TableCell>
                       <TableCell>
-                        {jsonData.data.totals.grand.amountPaid}
+                        {jsonData?.data.totals.grand.amountPaid}
                       </TableCell>
                       <TableCell>
-                        {jsonData.data.totals.grand.receiverFee}
+                        {jsonData?.data.totals.grand.receiverFee}
                       </TableCell>
                       <TableCell>
-                        {jsonData.data.totals.grand.platformFee}
+                        {jsonData?.data.totals.grand.platformFee}
                       </TableCell>
                       <TableCell>
-                        {jsonData.data.totals.grand.penaltyAmount}
+                        {jsonData?.data.totals.grand.penaltyAmount}
                       </TableCell>
                       <TableCell>
-                        {jsonData.data.totals.grand.discountAmount}
+                        {jsonData?.data.totals.grand.discountAmount}
                       </TableCell>
                     </TableRow>
                   </TableBody>

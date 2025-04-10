@@ -240,12 +240,11 @@ const PackageViewer = () => {
                     {filteredMembers.map((member) => (
                       <CommandItem
                         key={member.memberId}
-                        label={`${member.firstName} ${member.lastName}`}
-                        value={member.memberId.toString()}
+                        value={member.label}
                         onSelect={() => {
                           setSelectedMember({
                             value: member.memberId,
-                            label: `${member.firstName} ${member.lastName}`,
+                            label: member.label,
                           });
                           setOpen(false);
                         }}
