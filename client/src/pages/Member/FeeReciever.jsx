@@ -68,7 +68,6 @@ const FeeReceiver = () => {
   const [editData, setEditData] = useState(null);
   const [isEditMode, setIsEditMode] = useState(false);
   const [deleteInfo, setDeleteInfo] = useState(null);
-
   useEffect(() => {
     fetchCashReceivers();
     fetchOnlineReceivers();
@@ -263,12 +262,12 @@ const FeeReceiver = () => {
 
       if (isEditMode && editData) {
         await axiosInstance.put(
-          `/api/feeReciever/cash/${editData.cashRecieverId}`,
+          `/api/feeReciever/cash/${chapterData.chapterId}/${editData.receiverId}`,
           payload,
         );
         toast.success('Cash receiver updated successfully');
       } else {
-        await axiosInstance.post('/api/feeReciever/cash', payload);
+        await axiosInstance.post(`/api/feeReciever/cash/${chapterData.chapterId}`, payload);
         toast.success('Cash receiver added successfully');
       }
 
@@ -283,14 +282,14 @@ const FeeReceiver = () => {
     }
   };
 
-  const handleDelete = async (id, type) => {
+  const handleDelete = async (rid, type) => {
     try {
       if (type === 'cash') {
-        await axiosInstance.delete(`/api/feeReciever/cash/${id}`);
+        await axiosInstance.delete(`/api/feeReciever/cash/${chapterData.chapterId}/${rid}`);
         await fetchCashReceivers();
         toast.success('Cash receiver deleted successfully');
       } else {
-        await axiosInstance.delete(`/api/feeReciever/qr/${id}`);
+        await axiosInstance.delete(`/api/feeReciever/qr/${chapterData.chapterId}/${rid}`);
         await fetchOnlineReceivers();
         toast.success('QR receiver deleted successfully');
       }
@@ -428,7 +427,7 @@ const FeeReceiver = () => {
                             <AlertDialogAction
                               className="bg-red-500 text-white hover:bg-red-600"
                               onClick={() =>
-                                handleDelete(receiver.cashRecieverId, 'cash')
+                                handleDelete(receiver.receiverId, 'cash')
                               }
                             >
                               Delete
@@ -520,7 +519,7 @@ const FeeReceiver = () => {
                           <AlertDialogAction
                             className="bg-red-500 text-white hover:bg-red-600"
                             onClick={() =>
-                              handleDelete(receiver.qrCodeId, 'qr')
+                              handleDelete(receiver.receiverId, 'qr')
                             }
                           >
                             Delete
