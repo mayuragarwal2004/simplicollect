@@ -3,6 +3,9 @@ const getApprovedTransactionsController = async (req, res) => {
   const { memberId } = req.user;
   const { filter } = req.query;
   const { chapterId } = req.params;
+  if (filter && filter.date) {
+    filter.date = new Date(filter.date);
+  }
   try {
     const approvedTransactions =
       await chapterPaymentService.getApprovedTransactionsService(

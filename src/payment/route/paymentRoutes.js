@@ -26,4 +26,7 @@ router.post("/paymentRequests/:chapterId", paymentController.getPaymentRequestsC
 // Route to get the balance of a member of a chapter
 router.get("/balance/:chapterId", paymentController.getMemberChapterBalancesController);
 
+// Route to get meta data
+router.get("/metaData/:chapterId", paymentController.getMetaDataController);
+
 module.exports = router;

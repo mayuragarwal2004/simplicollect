@@ -2,6 +2,7 @@
 const db = require("../../config/db");
 const memberModel = require("../../member/model/memberModel");
 const paymentModel = require("../model/paymentModel");
+const paymentService = require("../service/paymentService");
 const { v4: uuidv4 } = require("uuid");
 
 const addPayment = async (req, res) => {
@@ -222,6 +223,19 @@ const getMemberChapterBalancesController = async (req, res) => {
   }
 };
 
+const getMetaDataController = async (req, res) => {
+  const { memberId } = req.user;
+  const { chapterId } = req.params;
+
+  try {
+    const metaData = await paymentService.getMetaDataService(memberId, chapterId);
+    res.json(metaData);
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: error.message });
+  }
+}
+
 module.exports = {
   addPayment,
   checkPendingPayments,
@@ -230,4 +244,5 @@ module.exports = {
   approvePendingPaymentController,
   getPaymentRequestsController,
   getMemberChapterBalancesController,
+  getMetaDataController,
 };

@@ -218,6 +218,39 @@ const getTransactionsByMemberId = async (memberId, chapterId) => {
     .select("t.*");
 };
 
+const getMetaData = async (memberId, chapterId) => {
+  try {
+    const metaData = await db("transactions")
+      .where("chapterId", chapterId)
+      .andWhere("paymentReceivedById", memberId)
+      .select(
+        db.raw(
+          `COALESCE(SUM(CASE WHEN status IN ('Pending', 'Approved') THEN paidAmount ELSE 0 END), 0) as totalCollected`
+        ),
+        db.raw(
+          `COALESCE(SUM(CASE WHEN status = 'Pending' THEN paidAmount ELSE 0 END), 0) as pendingAmount`
+        ),
+        db.raw(
+          `COALESCE(SUM(CASE WHEN status = 'Approved' THEN paidAmount ELSE 0 END), 0) as approvedAmount`
+        ),
+        db.raw(
+          `COALESCE(SUM(CASE WHEN transferedToChapterTransactionId IS NOT NULL THEN amountPaidToChapter ELSE 0 END), 0) as totalTransferredToChapter`
+        ),
+        db.raw(`
+      GREATEST(
+        COALESCE(SUM(CASE WHEN status = 'Approved' THEN paidAmount ELSE 0 END), 0) -
+        COALESCE(SUM(CASE WHEN transferedToChapterTransactionId IS NOT NULL THEN amountPaidToChapter ELSE 0 END), 0),
+        0
+      ) as remainingToTransfer
+    `)
+      )
+      .first();
+    return metaData;
+  } catch (error) {
+    throw error;
+  }
+};
+
 module.exports = {
   addTransaction,
   addPayment,
@@ -235,4 +268,5 @@ module.exports = {
   getTransactions,
   getMemberFinancialSummary,
   getTransactionsByMemberId,
+  getMetaData,
 };

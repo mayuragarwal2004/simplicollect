@@ -33,6 +33,13 @@ const MemberFeeApproval: React.FC = () => {
   const [currentTab, setCurrentTab] = useState<'pending' | 'approved'>(
     'pending',
   );
+  const [metaData, setMetaData] = useState<any>({
+    totalCollected: 0,
+    pendingAmount: 0,
+    approvedAmount: 0,
+    totalTransferredToChapter: 0,
+    remainingToTransfer: 0,
+  });
 
   console.log({ pendingFees });
 
@@ -46,8 +53,9 @@ const MemberFeeApproval: React.FC = () => {
   useEffect(() => {
     if (chapterData?.chapterId) {
       fetchFeeRequests();
+      fetchMetaData();
     }
-  }, [config.currentState, currentTab]);
+  }, [config.currentState, currentTab, chapterData]);
 
   const fetchIsAllowedAllMembersApproval = async () => {
     try {
@@ -83,6 +91,18 @@ const MemberFeeApproval: React.FC = () => {
       console.error('Fetching fees failed:', error);
     }
   };
+
+  const fetchMetaData = async () => {
+    try {
+      const response = await axiosInstance.get(
+        `/api/payment/metaData/${chapterData?.chapterId}`,
+      );
+      console.log({ response });
+      setMetaData(response.data);
+    } catch (error) {
+      console.error('Fetching metadata failed:', error);
+    }
+  }
 
   const handleApprovalChange = (transactionId: string) => {
     setSelectedApprovals((prev) =>
@@ -128,7 +148,49 @@ const MemberFeeApproval: React.FC = () => {
             <RefreshIcon className="dark:text-white" />
           </IconButton>
         </div>
-        <TransferAmountToChapter />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <div className="bg-gray-100 dark:bg-meta-4 p-4 rounded-md shadow">
+            <p className="text-sm text-gray-600 dark:text-gray-300">
+              Total Collected
+            </p>
+            <p className="text-lg font-semibold dark:text-white">
+              ₹{metaData.totalCollected}
+            </p>
+          </div>
+          <div className="bg-yellow-100 dark:bg-yellow-700 p-4 rounded-md shadow">
+            <p className="text-sm text-gray-600 dark:text-gray-300">
+              Pending Approvals
+            </p>
+            <p className="text-lg font-semibold dark:text-white">
+              ₹{metaData.pendingAmount}
+            </p>
+          </div>
+          <div className="bg-green-100 dark:bg-green-700 p-4 rounded-md shadow">
+            <p className="text-sm text-gray-600 dark:text-gray-300">
+              Approved Fees
+            </p>
+            <p className="text-lg font-semibold dark:text-white">
+              ₹{metaData.approvedAmount}
+            </p>
+          </div>
+          <div className="bg-blue-100 dark:bg-blue-700 p-4 rounded-md shadow">
+            <p className="text-sm text-gray-600 dark:text-gray-300">
+              Transferred to Chapter
+            </p>
+            <p className="text-lg font-semibold dark:text-white">
+              ₹{metaData.totalTransferredToChapter}
+            </p>
+          </div>
+        </div>
+
+        {metaData.remainingToTransfer > 0 ? (
+          <TransferAmountToChapter />
+        ) : (
+          <div className="text-center text-gray-600 dark:text-gray-300 mt-4">
+            🎉 All approved fees have been transferred to the chapter!
+          </div>
+        )}
+
         <div className="flex mb-4">
           <button
             className={`px-4 py-2 rounded-l ${

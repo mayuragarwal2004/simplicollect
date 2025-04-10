@@ -24,30 +24,23 @@ const getApprovedTransactions = async (memberId, chapterId, filter) => {
   console.log({ memberId, chapterId, filter });
 
   const transactions = await db("transactions as t")
-    .join("members as m", "t.memberId", "m.memberId")
-    .where({
-      "t.paymentReceivedById": memberId,
-      "t.status": "approved",
-      "t.chapterId": chapterId,
-      "t.paymentType": "cash",
-      "t.transferedToChapterTransactionId": null,
-    })
-    .andWhere(function () {
-      if (filter.date) {
-        this.where(
-          "t.transactionDate",
-          `${filter.date.getFullYear()}-${
-            filter.date.getMonth() + 1
-          }-${filter.date.getDate()}`
-        );
-      } else if (filter.startDate && filter.endDate) {
-        this.whereBetween("t.transactionDate", [
-          filter.startDate,
-          filter.endDate,
-        ]);
-      }
-    })
-    .select("t.*", "m.firstName", "m.lastName", "m.email", "m.phoneNumber");
+  .join("members as m", "t.memberId", "m.memberId")
+  .where({
+    "t.paymentReceivedById": memberId,
+    "t.status": "approved",
+    "t.chapterId": chapterId,
+    "t.paymentType": "cash",
+    "t.transferedToChapterTransactionId": null,
+  })
+  .modify((query) => {
+    if (filter && filter.date) {
+      const formattedDate = `${filter.date.getFullYear()}-${String(filter.date.getMonth() + 1).padStart(2, '0')}-${String(filter.date.getDate()).padStart(2, '0')}`;
+      query.where("t.transactionDate", formattedDate);
+    } else if (filter && filter.startDate && filter.endDate) {
+      query.whereBetween("t.transactionDate", [filter.startDate, filter.endDate]);
+    }
+  })
+  .select("t.*", "m.firstName", "m.lastName", "m.email", "m.phoneNumber");
   return transactions;
 };
 
