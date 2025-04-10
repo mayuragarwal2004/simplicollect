@@ -156,6 +156,16 @@ const searchMemberForChapter = async (req, res) => {
   }
 };
 
+const getAllFeatures = async (req, res) => {
+  try {
+    const features = await adminChapterMemberListModel.getAllFeatures();
+    res.json(features);
+  } catch (error) {
+    console.error("Error fetching all features:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
 
 module.exports = {
   getChapterMembers,
@@ -165,5 +175,6 @@ module.exports = {
   updateMemberBalance,
   searchMemberForChapterToAdd,
   searchMemberForChapter,
-  addMemberToChapter
+  addMemberToChapter,
+  getAllFeatures,
 };

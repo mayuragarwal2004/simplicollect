@@ -19,10 +19,12 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
+import { SearchBar } from '@/components/ui/search-bar';
 
 const AdminChaptersMemberList = () => {
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [totalRecord, setTotalRecord] = useState(0);
   const location = useLocation();
@@ -64,12 +66,12 @@ const AdminChaptersMemberList = () => {
   useEffect(() => {
     fetchMembers();
     fetchRoles();
-  }, [rows, page, chapterSlug]);
+  }, [rows, page, chapterSlug, searchQuery]);
 
   const fetchMembers = () => {
     axiosInstance
       .get(
-        `/api/admin/chapter-member-list/${chapterSlug}/members?rows=${rows}&page=${page+1}`,
+        `/api/admin/chapter-member-list/${chapterSlug}/members?rows=${rows}&page=${page+1}&searchQuery=${searchQuery}`,
       )
       .then((res) => {
         const updatedMembers = res.data.data.map((member) => ({
@@ -113,7 +115,12 @@ const AdminChaptersMemberList = () => {
           <Button onClick={() => setIsSearchOpen(true)}>Add Member</Button>
         </div>
         <div className="mt-2">
-          <SearchMembers chapterId={1} />
+         {/* searchbox to be added here  */}
+         <SearchBar 
+          onChange={(e) => setSearchQuery(e.target.value)}
+          value={searchQuery}
+          placeholder="Search by member name, email, phone number or role"
+          className="mb-3 w-full"/>
         </div>
       </div>
 

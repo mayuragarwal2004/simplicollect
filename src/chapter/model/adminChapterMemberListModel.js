@@ -337,6 +337,15 @@ const addMemberToChapter = async (chapterSlug, userId, role) => {
   return { message: "Member added successfully", chapterSlug, userId, role };
 };
 
+const getAllFeatures = async () => {
+  const features = await db("features_master")
+    .select("featureId", "featureName", "featureDescription")
+    .orderBy("featureName", "asc");
+
+  return features;
+}
+
+
 module.exports = {
   getChapterMembers,
   removeChapterMember,
@@ -345,4 +354,5 @@ module.exports = {
   updateMemberBalance,
   searchMemberForChapterToAdd,
   addMemberToChapter,
+  getAllFeatures,
 };

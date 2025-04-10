@@ -30,7 +30,7 @@ export const ChapterRoleColumns = (handleOpenModal, handleDelete) => [
     accessorKey: 'rights',
     header: () => <div>Rights</div>,
     cell: ({ row }) => (
-      <p className="text-sm font-medium">{row.original.rights}</p>
+      <p className="text-sm font-medium">{row.original.featureNames}</p>
     ),
     enableSorting: false,
     enableHiding: false,

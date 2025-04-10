@@ -766,6 +766,43 @@ const FeeReceiver = () => {
                       required
                     />
                   </div>
+
+                  <div className='gird gap-2'>
+                    <Label htmlFor="receiverAmount">Receiver Amount</Label>
+                    <Input
+                      id="receiverAmount"
+                      type="number"
+                      value={qrRecieverFormData.receiverAmount}
+                      onChange={(e) =>
+                        setQrRecieverFormData((prev) => ({
+                          ...prev,
+                          receiverAmount: e.target.value,
+                        }))
+                      }
+                      required
+                    />
+
+                    <div className='grid gap-2'>
+                      <Label htmlFor="receiverAmountType">Receiver Amount Type</Label>
+                      <Select
+                        value={qrRecieverFormData.receiverAmountType}
+                        onValueChange={(value) =>
+                          setQrRecieverFormData((prev) => ({
+                            ...prev,
+                            receiverAmountType: value,
+                          }))
+                        }
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select Amount Type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="fixed">Fixed</SelectItem>
+                          <SelectItem value="percentage">Percentage</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
                 </div>
 
                 <DialogFooter>

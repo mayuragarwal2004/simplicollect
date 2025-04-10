@@ -13,7 +13,7 @@ export const MembersColumns = [
     header: () => <div className>Member Name</div>,
     cell: ({ row }) => (
       <p className='text-sm font-medium'>
-        {row.original.memberName}
+        {row.original.firstName} {row.original.lastName}
       </p>
     ),
     enableSorting: false,
