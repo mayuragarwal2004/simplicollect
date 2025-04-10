@@ -20,9 +20,12 @@ const getPackageSummaryController = async (req, res) => {
   try {
     const { data: chapterMembers, totalRecords } = await memberModel.getMembers(
       chapterId,
+      "",
       page,
       rows
     );
+    console.log({ chapterMembers });
+    
     for (let i = 0; i < chapterMembers.length; i++) {
       console.log(`Processing member ${i + 1}/${chapterMembers.length}`);
 

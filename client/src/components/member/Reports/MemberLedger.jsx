@@ -138,7 +138,6 @@ const ReceiverDaywiseReport = () => {
   };
 
   if (!chapterData || !chapterData?.chapterId) return null; // Ensure chapterData is available
-  
 
   return (
     <div className="flex flex-col gap-4 mt-5">
@@ -157,12 +156,8 @@ const ReceiverDaywiseReport = () => {
           </PopoverTrigger>
           <PopoverContent className="w-[250px] p-0">
             <Command>
-              <CommandInput
-                placeholder="Search member..."
-                className="h-9"
-                value={searchQuery}
-                onValueChange={handleSearch}
-              />
+              <CommandInput placeholder="Search member..." className="h-9" />
+
               <CommandList>
                 <CommandEmpty>No member found.</CommandEmpty>
                 <CommandGroup>
@@ -179,7 +174,7 @@ const ReceiverDaywiseReport = () => {
                         setOpen(false);
                       }}
                     >
-                      {`${member.firstName} ${member.lastName}`}
+                      {member.label}
                       <Check
                         className={cn(
                           'ml-auto',

@@ -90,9 +90,10 @@ const getAllMembers = async (chapterId) => {
       "m.phoneNumber",
       "m.email",
       "mmm.*",
+      db.raw("CONCAT(m.firstName, ' ', m.lastName) as label"),
       db.raw("GROUP_CONCAT(DISTINCT r.roleName ORDER BY r.roleName ASC SEPARATOR ', ') as roleNames")
     )
-    .groupBy("m.memberId"); // Ensure one row per member
+    .groupBy("m.memberId");
 };
 
 module.exports = {
