@@ -1,5 +1,7 @@
 
+const { update } = require("../../config/db");
 const adminMembersModel = require("../model/adminMembersModel");
+const bcrypt = require("bcrypt");
 
 const getMemberById = async (req, res) => {
   const { memberId } = req.params;
@@ -22,7 +24,7 @@ const updateMemberDetails = async (req, res) => {
   try {
     const updatedMember = await adminMembersModel.updateMember(memberId, updatedDetails);
     if (updatedMember) {
-      res.json(updatedMember);
+      res.status(200).json({message:"Member updated successfully", updatedMember});
     } else {
       res.status(404).json({ message: "Member not found" });
     }
@@ -31,6 +33,27 @@ const updateMemberDetails = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+const updatePassword = async (req, res) => {
+  const {password,confirmPassword} = req.body;
+  const { memberId } = req.params;
+  try {
+    if (password !== confirmPassword) {
+      return res.status(400).json({ message: "Passwords do not match" });
+    }
+      const hashedPassword = await bcrypt.hash(password, 10);
+    
+    const updatedMember = await adminMembersModel.updateMember(memberId, { password:hashedPassword });
+    if (updatedMember) {
+      res.status(200).json({message:"Password updated successfully", updatedMember});
+    } else {
+      res.status(404).json({ message: "Member not found" });
+    }
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: error.message });
+  }
+}
 
 const getAllMembersController = async (req, res) => {
   const { memberId } = req.user;
@@ -104,7 +127,6 @@ const getAndSearchMembersController = async (req, res) => {
   }
 };
 
-
 module.exports = {
   getMemberById,
   updateMemberDetails,
@@ -112,4 +134,5 @@ module.exports = {
   deleteMember,
   createMember,
   getAndSearchMembersController,
+  updatePassword
 };

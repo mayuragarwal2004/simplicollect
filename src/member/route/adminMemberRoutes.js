@@ -5,6 +5,8 @@ const { route } = require("./memberRoutes");
 
 router.get("/getandsearchmembers", adminMembersControllers.getAndSearchMembersController);
 router.get("/", adminMembersControllers.getAllMembersController);
+router.put("/updatememberdetails/:memberId",adminMembersControllers.updateMemberDetails);
+router.put("/updatepassword/:memberId",adminMembersControllers.updatePassword);
 // Member routes
 router.get("/:memberId", adminMembersControllers.getMemberById);
 router.put("/:memberId", adminMembersControllers.updateMemberDetails);
