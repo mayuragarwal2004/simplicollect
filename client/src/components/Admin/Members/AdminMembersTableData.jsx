@@ -28,7 +28,8 @@ const AdminMembersTableData = () => {
   const [members, setMembers] = useState([
     {
       membersId: 1,
-      membersName: 'John Doe',
+      firstName: 'John',
+      lastName: 'Doe',
       email: 'john.doe@example.com',
       phoneNumber: '123-456-7890',
     },
@@ -49,10 +50,10 @@ const AdminMembersTableData = () => {
   const [editingMember, setEditingMember] = useState(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [formData, setFormData] = useState({
-    membersName: '',
+    firstName: '',
+    lastName: '',
     email: '',
     phoneNumber: '',
-    numberOfMembers: '',
   });
 
   useEffect(() => {
@@ -77,31 +78,23 @@ const AdminMembersTableData = () => {
   const handleOpenModal = (member = null) => {
     if (member) {
       setFormData({
-        membersName: member.membersName,
+        firstName: member.firstName,
+        lastName: member.lastName,
         email: member.email,
         phoneNumber: member.phoneNumber,
-        numberOfMembers: member.numberOfMembers,
       });
       setEditingChap(member);
     } else {
       setFormData({
-        membersName: '',
+        firstName: '',
+        lastName: '',
         email: '',
         phoneNumber: '',
-        numberOfMembers: '',
       });
       setEditingChap(null);
     }
     setIsModalOpen(true);
   };
-
-  // useEffect(() => {
-  //   setFilteredMembers(
-  //     members.filter((member) =>
-  //       member.membersName.toLowerCase().includes(searchQuery.toLowerCase()),
-  //     ),
-  //   );
-  // }, [searchQuery, members]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -113,8 +106,12 @@ const AdminMembersTableData = () => {
   };
 
   const validateForm = () => {
-    if (!formData.membersName.trim()) {
-      toast.error('Members name is required');
+    if (!formData.firstName.trim()) {
+      toast.error('First name is required');
+      return false;
+    }
+    if (!formData.lastName.trim()) {
+      toast.error('Last name is required');
       return false;
     }
     if (!formData.email.trim()) {
@@ -123,10 +120,6 @@ const AdminMembersTableData = () => {
     }
     if (!formData.phoneNumber.trim()) {
       toast.error('Phone number is required');
-      return false;
-    }
-    if (!formData.numberOfMembers.trim()) {
-      toast.error('Number of members is required');
       return false;
     }
     return true;
@@ -140,10 +133,10 @@ const AdminMembersTableData = () => {
     }
     try {
       const payload = {
-        membersName: formData.membersName,
+        firstName: formData.firstName,
+        lastName: formData.lastName,
         email: formData.email,
         phoneNumber: formData.phoneNumber,
-        numberOfMembers: parseInt(formData.numberOfMembers),
       };
 
       if (editingMember) {
@@ -183,10 +176,10 @@ const AdminMembersTableData = () => {
 
   const handleOpenAddDialog = () => {
     setFormData({
-      membersName: '',
+      firstName: '',
+      lastName: '',
       email: '',
       phoneNumber: '',
-      numberOfMembers: '',
     });
     setIsAddDialogOpen(true);
   };
@@ -206,18 +199,18 @@ const AdminMembersTableData = () => {
   const handleOpenDialog = (member = null) => {
     if (member) {
       setFormData({
-        membersName: member.membersName,
+        firstName: member.firstName,
+        lastName: member.lastName,
         email: member.email,
         phoneNumber: member.phoneNumber,
-        numberOfMembers: member.numberOfMembers,
       });
       setEditingMember(member);
     } else {
       setFormData({
-        membersName: '',
+        firstName: '',
+        lastName: '',
         email: '',
         phoneNumber: '',
-        numberOfMembers: '',
       });
       setEditingMember(null);
     }
@@ -229,10 +222,10 @@ const AdminMembersTableData = () => {
     setIsEditDialogOpen(false);
     setEditingMember(null);
     setFormData({
-      membersName: '',
+      firstName: '',
+      lastName: '',
       email: '',
       phoneNumber: '',
-      numberOfMembers: '',
     });
   };
 
@@ -250,9 +243,17 @@ const AdminMembersTableData = () => {
             </DialogHeader>
             <form onSubmit={handleAddMember}>
               <Input
-                name="membersName"
-                placeholder="Member Name"
-                value={formData.membersName}
+                name="firstName"
+                placeholder="First Name"
+                value={formData.firstName}
+                onChange={handleInputChange}
+                className="mb-4"
+                required
+              />
+              <Input
+                name="lastName"
+                placeholder="Last Name"
+                value={formData.lastName}
                 onChange={handleInputChange}
                 className="mb-4"
                 required
@@ -271,15 +272,6 @@ const AdminMembersTableData = () => {
                 type="number"
                 placeholder="Phone Number"
                 value={formData.phoneNumber}
-                onChange={handleInputChange}
-                className="mb-4"
-                required
-              />
-              <Input
-                name="numberOfMembers"
-                type="number"
-                placeholder="Number of Members"
-                value={formData.numberOfMembers}
                 onChange={handleInputChange}
                 className="mb-4"
                 required
@@ -310,6 +302,7 @@ const AdminMembersTableData = () => {
         <MembersTable
           data={members.map((member) => ({
             ...member,
+            membersName: `${member.firstName} ${member.lastName}`, // Combine for display
             onEdit: handleOpenDialog,
             onDelete: () => handleDeleteClick(member.membersId),
           }))}
@@ -350,9 +343,17 @@ const AdminMembersTableData = () => {
           <form onSubmit={handleSubmit} className="space-y-4">
             <Input
               type="text"
-              name="membersName"
-              placeholder="Member Name"
-              value={formData.membersName}
+              name="firstName"
+              placeholder="First Name"
+              value={formData.firstName}
+              onChange={handleInputChange}
+              required
+            />
+            <Input
+              type="text"
+              name="lastName"
+              placeholder="Last Name"
+              value={formData.lastName}
               onChange={handleInputChange}
               required
             />
@@ -369,14 +370,6 @@ const AdminMembersTableData = () => {
               name="phoneNumber"
               placeholder="Phone Number"
               value={formData.phoneNumber}
-              onChange={handleInputChange}
-              required
-            />
-            <Input
-              type="number"
-              name="numberOfMembers"
-              placeholder="Number of Members"
-              value={formData.numberOfMembers}
               onChange={handleInputChange}
               required
             />
