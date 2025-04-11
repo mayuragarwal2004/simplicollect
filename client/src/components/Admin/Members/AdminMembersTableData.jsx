@@ -27,7 +27,7 @@ import {
 const AdminMembersTableData = () => {
   const [members, setMembers] = useState([
     {
-      membersId: 1,
+      memberId: '1',
       firstName: 'John',
       lastName: 'Doe',
       email: 'john.doe@example.com',
@@ -49,6 +49,13 @@ const AdminMembersTableData = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingMember, setEditingMember] = useState(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isChangePasswordDialogOpen, setIsChangePasswordDialogOpen] = useState(false);
+  const [selectedMemberForPasswordChange, setSelectedMemberForPasswordChange] = useState(null);
+  const [changePasswordForm, setChangePasswordForm] = useState({
+    newPassword: '',
+  confirmPassword: '',
+});
+
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -141,7 +148,7 @@ const AdminMembersTableData = () => {
 
       if (editingMember) {
         await axiosInstance.put(
-          `/api/admin/members/${editingMember.membersId}`,
+          `/api/admin/members/${editingMember.memberId}`,
           payload,
         );
         toast.success('Member updated successfully');
@@ -229,6 +236,47 @@ const AdminMembersTableData = () => {
     });
   };
 
+  const handleOpenChangePasswordDialog = (memberId) => {
+    setSelectedMemberForPasswordChange(memberId);
+    setChangePasswordForm({
+      newPassword: '',
+      confirmPassword: '',
+    });
+    setIsChangePasswordDialogOpen(true);
+  };
+  
+  const handleChangePasswordInput = (e) => {
+    const { name, value } = e.target;
+    setChangePasswordForm((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+  
+  const handleChangePasswordSubmit = async (e) => {
+    e.preventDefault();
+    const { newPassword, confirmPassword } = changePasswordForm;
+  
+    if (newPassword !== confirmPassword) {
+      toast.error('Passwords do not match');
+      return;
+    }
+  
+    try {
+      await axiosInstance.put(`/api/admin/members/updatepassword/${selectedMemberForPasswordChange}`, {
+        password: newPassword,
+        confirmPassword:confirmPassword
+      });
+      toast.success('Password changed successfully');
+      setIsChangePasswordDialogOpen(false);
+    } catch (error) {
+      console.error(error);
+      toast.error('Failed to change password');
+    }
+  };
+  
+console.log({members})
+
   return (
     <div className="rounded-2xl border border-stroke bg-white p-5 shadow-md dark:border-strokedark dark:bg-boxdark">
       <div className="flex justify-between items-center mb-6">
@@ -304,7 +352,8 @@ const AdminMembersTableData = () => {
             ...member,
             membersName: `${member.firstName} ${member.lastName}`, // Combine for display
             onEdit: handleOpenDialog,
-            onDelete: () => handleDeleteClick(member.membersId),
+            onDelete: () => handleDeleteClick(member.memberId),
+            onChangePassword: () => handleOpenChangePasswordDialog(member.memberId),
           }))}
           columns={MembersColumns}
           searchInputField="membersName"
@@ -385,6 +434,47 @@ const AdminMembersTableData = () => {
                 Cancel
               </Button>
               <Button type="submit">{editingMember ? 'Update' : 'Add'}</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isChangePasswordDialogOpen} onOpenChange={setIsChangePasswordDialogOpen}>
+      <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              Change Password
+            </DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleChangePasswordSubmit} className="space-y-4">
+            <Input
+              type="text"
+              name="newPassword"
+              placeholder="New Password"
+              value={changePasswordForm.newPassword}
+              onChange={handleChangePasswordInput}
+              required
+            />
+            <Input
+              type="text"
+              name="confirmPassword"
+              placeholder="Confirm Password"
+              value={changePasswordForm.confirmPassword}
+              onChange={handleChangePasswordInput}
+              required
+            />
+            
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => {
+                  setIsChangePasswordDialogOpen(false);
+                }}
+              >
+                Cancel
+              </Button>
+              <Button type="submit">Change Password </Button>
             </DialogFooter>
           </form>
         </DialogContent>

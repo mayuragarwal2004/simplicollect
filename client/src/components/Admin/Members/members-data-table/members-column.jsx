@@ -70,10 +70,16 @@ export const MembersColumns = [
           Edit
         </button>
         <button
-          onClick={() => row.original.onDelete(row.original.organisationId)}
+          onClick={() => row.original.onDelete(row.original.memberId)}
           className="text-danger hover:underline"
         >
           Delete
+        </button>
+        <button
+          onClick={() => row.original.onChangePassword(row.original.memberId)}
+          className="text-primary hover:underline"
+        >
+          ChangePassword
         </button>
       </div>
     ),
