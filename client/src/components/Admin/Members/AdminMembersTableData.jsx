@@ -113,22 +113,16 @@ const AdminMembersTableData = () => {
   };
 
   const validateForm = () => {
-    if (!formData.firstName.trim()) {
+    if (!formData.firstName?.trim()) {
       toast.error('First name is required');
       return false;
     }
-    if (!formData.lastName.trim()) {
-      toast.error('Last name is required');
+    
+    if (!formData.email?.trim() && !formData.phoneNumber?.trim()) {
+      toast.error('Email is required or Phone number is required ');
       return false;
     }
-    if (!formData.email.trim()) {
-      toast.error('Email is required');
-      return false;
-    }
-    if (!formData.phoneNumber.trim()) {
-      toast.error('Phone number is required');
-      return false;
-    }
+   
     return true;
   };
 
@@ -141,9 +135,9 @@ const AdminMembersTableData = () => {
     try {
       const payload = {
         firstName: formData.firstName,
-        lastName: formData.lastName,
-        email: formData.email,
-        phoneNumber: formData.phoneNumber,
+        lastName: formData.lastName || null,
+        email: formData.email || null ,
+        phoneNumber: formData.phoneNumber || null,
       };
 
       if (editingMember) {
@@ -152,6 +146,7 @@ const AdminMembersTableData = () => {
           payload,
         );
         toast.success('Member updated successfully');
+        setIsDialogOpen(false);
       } else {
         await axiosInstance.post('/api/admin/members', payload);
         toast.success('Member added successfully');
@@ -404,7 +399,7 @@ console.log({members})
               placeholder="Last Name"
               value={formData.lastName}
               onChange={handleInputChange}
-              required
+              
             />
             <Input
               type="email"
@@ -412,7 +407,7 @@ console.log({members})
               placeholder="Email"
               value={formData.email}
               onChange={handleInputChange}
-              required
+              
             />
             <Input
               type="number"
@@ -420,7 +415,7 @@ console.log({members})
               placeholder="Phone Number"
               value={formData.phoneNumber}
               onChange={handleInputChange}
-              required
+              
             />
             <DialogFooter>
               <Button
@@ -433,7 +428,7 @@ console.log({members})
               >
                 Cancel
               </Button>
-              <Button type="submit">{editingMember ? 'Update' : 'Add'}</Button>
+              <Button  type="submit">{editingMember ? 'Update' : 'Add'}</Button>
             </DialogFooter>
           </form>
         </DialogContent>
@@ -448,7 +443,7 @@ console.log({members})
           </DialogHeader>
           <form onSubmit={handleChangePasswordSubmit} className="space-y-4">
             <Input
-              type="text"
+              type="password"
               name="newPassword"
               placeholder="New Password"
               value={changePasswordForm.newPassword}
@@ -456,7 +451,7 @@ console.log({members})
               required
             />
             <Input
-              type="text"
+              type="password"
               name="confirmPassword"
               placeholder="Confirm Password"
               value={changePasswordForm.confirmPassword}
@@ -474,7 +469,7 @@ console.log({members})
               >
                 Cancel
               </Button>
-              <Button type="submit">Change Password </Button>
+              <Button onClick={()=>isChangePasswordDialogOpen(false)} type="submit">Change Password </Button>
             </DialogFooter>
           </form>
         </DialogContent>
