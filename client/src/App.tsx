@@ -41,7 +41,8 @@ import AdminMembersTablePage from './pages/Admin/members/AdminMembersTablePage';
 import AcceptChapterPaymentPage from './pages/Member/FeeReceiver/AcceptChapterPaymentPage';
 import ChapterRoles from './components/Admin/Chapter/CreateNew/ChapterRoles/ChapterRoles';
 import MyLedger from './pages/Member/MyLedger';
-import DashboardPage from './pages/Admin/Dashboard/DashboardPage';
+import DashboardPage from './pages/Admin/Dashboard/DashboardPage'
+import TrackVisitor from './pages/Visitor/TrackVisitor';
 import { useData } from './context/DataContext';
 
 const routes = [
@@ -192,6 +193,10 @@ const routes = [
             element: <VisitorList />,
           },
         ],
+      },
+      {
+        path: 'track-visitor/:visitorId',
+        element: <TrackVisitor/>,
       },
       {
         path: '*',
