@@ -7,44 +7,39 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import { Mail, PhoneCall, MessageSquareText, StickyNote } from 'lucide-react';
 
 const TrackVisitor = () => {
-  const [visitor, setVisitor] = useState<any>({
-    firstName: '',
-    lastName: '',
-    email: '',
-    mobileNumber: '',
-    invitedBy: '',
-    companyName: '',
-    classification: '',
-    industry: '',
-    heardAboutBni: '',
-  });
+  const [visitor, setVisitor] = useState<any>({});
   const [editMode, setEditMode] = useState(false);
+  const [history, setHistory] = useState<any[]>([]);
   const visitorId = useParams().visitorId;
 
   useEffect(() => {
     const fetchVisitor = async () => {
       try {
-        // setLoading(true);
         const response = await fetch(`/api/visitor/${visitorId}`);
         if (!response.ok) throw new Error('Failed to fetch visitor data');
         const data = await response.json();
         setVisitor(data);
-        toast.success('Visitor data loaded successfully');
       } catch (error) {
-        console.error(error);
-        toast.error(
-          error instanceof Error
-            ? error.message
-            : 'Failed to load visitor data',
-        );
-      } finally {
-        // setLoading(false);
+        toast.error('Error fetching visitor');
       }
     };
+
+    const fetchHistory = async () => {
+      try {
+        const res = await fetch(`/api/visitor/${visitorId}/history`);
+        const data = await res.json();
+        setHistory(data);
+      } catch (error) {
+        toast.error('Error fetching history');
+      }
+    };
+
     if (visitorId) {
       fetchVisitor();
+      fetchHistory();
     }
   }, [visitorId]);
 
@@ -61,30 +56,35 @@ const TrackVisitor = () => {
       });
 
       if (!response.ok) throw new Error('Failed to save visitor data');
-
       setEditMode(false);
-      toast.success('Visitor data saved successfully');
+      toast.success('Visitor updated');
     } catch (error) {
-      console.error(error);
-      toast.error(
-        error instanceof Error ? error.message : 'Failed to save visitor data',
-      );
+      toast.error('Error saving visitor');
+    }
+  };
+
+  const getIcon = (type: string) => {
+    switch (type) {
+      case 'call':
+        return <PhoneCall className="text-blue-500" />;
+      case 'email':
+        return <Mail className="text-red-500" />;
+      case 'whatsapp':
+        return <MessageSquareText className="text-green-500" />;
+      case 'note':
+        return <StickyNote className="text-yellow-500" />;
+      default:
+        return null;
     }
   };
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4">
       <Card className="w-full">
-        <CardHeader className="flex justify-between items-center">
+        <CardHeader>
           <CardTitle>Visitor Information</CardTitle>
-          <Button
-            variant="outline"
-            onClick={() => setEditMode(true)}
-            disabled={editMode}
-          >
-            Edit Information
-          </Button>
         </CardHeader>
+
         <CardContent>
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-2">
@@ -92,7 +92,7 @@ const TrackVisitor = () => {
                 <Label htmlFor="firstName">First Name</Label>
                 <Input
                   name="firstName"
-                  value={visitor.firstName}
+                  value={visitor.firstName || ''}
                   onChange={handleChange}
                   disabled={!editMode}
                 />
@@ -101,19 +101,18 @@ const TrackVisitor = () => {
                 <Label htmlFor="lastName">Last Name</Label>
                 <Input
                   name="lastName"
-                  value={visitor.lastName}
+                  value={visitor.lastName || ''}
                   onChange={handleChange}
                   disabled={!editMode}
                 />
               </div>
             </div>
-
             <div className="grid grid-cols-2 gap-2">
               <div>
                 <Label htmlFor="email">Email</Label>
                 <Input
                   name="email"
-                  value={visitor.email}
+                  value={visitor.email || ''}
                   onChange={handleChange}
                   disabled={!editMode}
                 />
@@ -122,19 +121,18 @@ const TrackVisitor = () => {
                 <Label htmlFor="mobileNumber">Phone</Label>
                 <Input
                   name="mobileNumber"
-                  value={visitor.mobileNumber}
+                  value={visitor.mobileNumber || ''}
                   onChange={handleChange}
                   disabled={!editMode}
                 />
               </div>
             </div>
-
             <div className="grid grid-cols-2 gap-2">
               <div>
                 <Label htmlFor="invitedBy">Invited By</Label>
                 <Input
                   name="invitedBy"
-                  value={visitor.invitedBy}
+                  value={visitor.invitedBy || ''}
                   onChange={handleChange}
                   disabled={!editMode}
                 />
@@ -143,19 +141,18 @@ const TrackVisitor = () => {
                 <Label htmlFor="companyName">Company Name</Label>
                 <Input
                   name="companyName"
-                  value={visitor.companyName}
+                  value={visitor.companyName || ''}
                   onChange={handleChange}
                   disabled={!editMode}
                 />
               </div>
             </div>
-
             <div className="grid grid-cols-2 gap-2">
               <div>
                 <Label htmlFor="classification">Classification</Label>
                 <Input
                   name="classification"
-                  value={visitor.classification}
+                  value={visitor.classification || ''}
                   onChange={handleChange}
                   disabled={!editMode}
                 />
@@ -164,25 +161,39 @@ const TrackVisitor = () => {
                 <Label htmlFor="industry">Industry</Label>
                 <Input
                   name="industry"
-                  value={visitor.industry}
+                  value={visitor.industry || ''}
                   onChange={handleChange}
                   disabled={!editMode}
                 />
               </div>
             </div>
-
             <div>
-              <Label htmlFor="heardAboutBni">How Heard About BNI</Label>
+              <Label htmlFor="heardAboutBni">Heard About BNI</Label>
               <Input
                 name="heardAboutBni"
-                value={visitor.heardAboutBni}
+                value={visitor.heardAboutBni || ''}
                 onChange={handleChange}
                 disabled={!editMode}
               />
             </div>
+          </div>
+        </CardContent>
+        
+        <CardContent>
+          <div className="space-y-4">
+
+            {!editMode && (
+              <Button
+                className="mt-4"
+                variant="outline"
+                onClick={() => setEditMode(true)}
+              >
+                Edit
+              </Button>
+            )}
 
             {editMode && (
-              <div className="flex gap-2">
+              <div className="flex gap-2 mt-2">
                 <Button onClick={handleSave}>Save</Button>
                 <Button variant="outline" onClick={() => setEditMode(false)}>
                   Cancel
@@ -194,100 +205,75 @@ const TrackVisitor = () => {
       </Card>
 
       <Card className="w-full">
-        <CardContent className='mt-10'>
+        <CardContent className="mt-10">
           <Tabs defaultValue="history" className="w-full">
-            <TabsList className="grid w-full grid-cols-4 mb-4">
+            <TabsList className="grid w-full grid-cols-5 mb-4">
               <TabsTrigger value="call">Call</TabsTrigger>
+              <TabsTrigger value="note">Note</TabsTrigger>
               <TabsTrigger value="email">Email</TabsTrigger>
               <TabsTrigger value="whatsapp">WhatsApp</TabsTrigger>
               <TabsTrigger value="history">History</TabsTrigger>
             </TabsList>
+
             <TabsContent value="call">
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="callPhoneNumber">Phone Number</Label>
-                  <Input
-                    id="callPhoneNumber"
-                    value={visitor.mobileNumber}
-                    disabled
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="callRemark">Remark</Label>
-                  <Textarea
-                    id="callRemark"
-                    placeholder="Enter call remarks..."
-                    // optionally handle remark state if needed
-                  />
-                </div>
-                <Button className="mt-2">Save Call Log</Button>
-              </div>
+              <Label>Phone Number</Label>
+              <Input value={visitor.mobileNumber || ''} disabled />
+              <Label className="mt-2">Remark</Label>
+              <Textarea placeholder="Enter call remarks..." />
+              <Button className="mt-2">Save Call Log</Button>
+            </TabsContent>
+
+            <TabsContent value="note">
+              <Label>Note</Label>
+              <Textarea placeholder="Enter note..." />
+              <Button className="mt-2">Save</Button>
             </TabsContent>
 
             <TabsContent value="email">
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="emailAddress">Email</Label>
-                  <Input id="emailAddress" value={visitor.email} disabled />
-                </div>
-                <div>
-                  <Label htmlFor="emailTitle">Title</Label>
-                  <Input
-                    id="emailTitle"
-                    placeholder="Enter email title"
-                    // You can manage state here if needed
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="emailSubject">Subject</Label>
-                  <Textarea
-                    id="emailSubject"
-                    placeholder="Enter email subject or message..."
-                    // You can manage state here if needed
-                  />
-                </div>
-                <Button className="mt-2">Send Email</Button>
-              </div>
+              <Label>Email</Label>
+              <Input value={visitor.email || ''} disabled />
+              <Label className="mt-2">Title</Label>
+              <Input placeholder="Enter email title" />
+              <Label className="mt-2">Subject</Label>
+              <Textarea placeholder="Enter email subject or message..." />
+              <Button className="mt-2">Send Email</Button>
             </TabsContent>
 
             <TabsContent value="whatsapp">
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="whatsappNumber">WhatsApp Number</Label>
-                  <Input
-                    id="whatsappNumber"
-                    value={visitor.mobileNumber}
-                    disabled
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="whatsappTitle">Title</Label>
-                  <Input
-                    id="whatsappTitle"
-                    placeholder="Enter WhatsApp title"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="whatsappContent">Content</Label>
-                  <Textarea
-                    id="whatsappContent"
-                    placeholder="Enter WhatsApp message content..."
-                  />
-                </div>
-                <Button className="mt-2">Send WhatsApp</Button>
-              </div>
+              <Label>WhatsApp Number</Label>
+              <Input value={visitor.mobileNumber || ''} disabled />
+              <Label className="mt-2">Title</Label>
+              <Input placeholder="Enter WhatsApp title" />
+              <Label className="mt-2">Content</Label>
+              <Textarea placeholder="Enter WhatsApp message content..." />
+              <Button className="mt-2">Send WhatsApp</Button>
             </TabsContent>
 
             <TabsContent value="history">
-              <div className="mt-6 space-y-4">
-                <div>
-                  <p className="text-sm text-muted-foreground">example</p>
-                </div>
+              <div className="flex gap-4 justify-center mb-6">
+                {history.map((item, index) => (
+                  <div key={index}>{getIcon(item.type)}</div>
+                ))}
+              </div>
+
+              <div className="space-y-6">
+                {history.map((item, index) => (
+                  <div key={index} className="flex items-start gap-4">
+                    <div className="pt-1">{getIcon(item.type)}</div>
+                    <div>
+                      <p className="text-sm font-medium capitalize">
+                        {item.type}
+                      </p>
+                      <p className="text-muted-foreground text-xs">
+                        {item.timestamp}
+                      </p>
+                      <p className="mt-1">{item.message || item.title}</p>
+                    </div>
+                  </div>
+                ))}
               </div>
             </TabsContent>
           </Tabs>
-
-          {/* History Section Below Tabs */}
         </CardContent>
       </Card>
     </div>
