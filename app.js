@@ -26,7 +26,7 @@ app.use("/api/visitor", visitorRoutes);
 app.use("/api/chapter", authenticateToken, chapterRoutes);
 app.use("/api/member", authenticateToken, memberRoutes);
 app.use("/api/rights", authenticateToken, rightsRoutes);
-app.use("/api/image-upload", authenticateToken, imageUploadRoutes);
+app.use("/api/image-upload",  imageUploadRoutes);
 app.use("/api/packages", authenticateToken, packageRoutes);
 app.use("/api/payment", authenticateToken, paymentRoutes);
 app.use("/api/feeReciever", authenticateToken, feeRecieverRoutes);

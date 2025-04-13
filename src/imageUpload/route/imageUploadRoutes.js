@@ -10,4 +10,8 @@ const upload = multer({ storage });
 // Route to upload image
 router.post("/", upload.single("image"), imageUploadController.uploadImage);
 
+// Route to upload Excel file
+router.post("/upload-excel", upload.single("excelFile"), imageUploadController.uploadExcelFile);
+
+
 module.exports = router;
