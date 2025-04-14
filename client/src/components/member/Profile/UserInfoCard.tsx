@@ -1,21 +1,201 @@
 import { useState } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { useData } from '@/context/DataContext';
-// import Button from "../ui/button/Button";
-// import Input from "../form/input/InputField";
-// import Label from "../form/Label";
+import { axiosInstance } from '../../../utils/config';
 
 export default function UserInfoCard() {
   const { chapterData, memberData } = useData();
-
+  const [currentMemberData, setCurrentMemberData] = useState(memberData);
   const [isOpen, setIsOpen] = useState(false);
-  const openModal = () => setIsOpen(true);
-  const closeModal = () => setIsOpen(false);
-  const handleSave = () => {
-    // Handle save logic here
-    console.log('Saving changes...');
-    closeModal();
+  const [editMode, setEditMode] = useState({
+    names: false,
+    email: false,
+    phone: false
+  });
+  
+  const [formData, setFormData] = useState({
+    firstName: memberData?.firstName || '',
+    lastName: memberData?.lastName || '',
+    email: memberData?.email || '',
+    phoneNumber: memberData?.phoneNumber || ''
+  });
+
+  // Email OTP states
+  const [emailUpdateState, setEmailUpdateState] = useState({
+    step: 0, // 0 = not started, 1 = verify old email, 2 = enter new email, 3 = verify new email
+    token: '',
+    newEmail: '',
+    otp: ''
+  });
+
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
+
+  const updateLocalMemberData = (updatedFields) => {
+    setCurrentMemberData(prev => ({
+      ...prev,
+      ...updatedFields
+    }));
+  };
+
+  const handleOTPChange = (e) => {
+    setEmailUpdateState(prev => ({ ...prev, otp: e.target.value }));
+  };
+
+  const handleSave = async (field) => {
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      let payload = {};
+      let endpoint = '';
+      
+      if (field === 'names') {
+        payload = {
+          firstName: formData.firstName,
+          lastName: formData.lastName
+        };
+        endpoint = `/api/profile/${memberData.memberId}/name`;
+      } else if (field === 'phone') {
+        payload = { phoneNumber: formData.phoneNumber };
+        endpoint = `/api/profile/${memberData.memberId}/phone`;
+      }
+
+      const response = await axiosInstance.put(endpoint, payload);
+      updateLocalMemberData(response.data.data);
+      setEditMode(prev => ({ ...prev, [field]: false }));
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to update member');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const initiateEmailChange = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await axiosInstance.post(
+        `/api/profile/${memberData.memberId}/initiate-email-change`
+      );
+
+      setEmailUpdateState({
+        step: 1,
+        token: response.data.token,
+        newEmail: '',
+        otp: ''
+      });
+    } catch (error) {
+      setError(error.response?.data?.message || 'Failed to initiate email change');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const verifyOldEmailOTP = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      await axiosInstance.post(
+        `/api/profile/${memberData.memberId}/verify-old-email-otp`,
+        {
+          otp: emailUpdateState.otp,
+          token: emailUpdateState.token
+        }
+      );
+
+      setEmailUpdateState(prev => ({
+        ...prev,
+        step: 2,
+        otp: ''
+      }));
+    } catch (error) {
+      setError(error.response?.data?.message || 'Invalid OTP');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  const sendNewEmailOTP = async () => {
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      // Validate email format
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+        throw new Error('Please enter a valid email address');
+      }
+  
+      const response = await axiosInstance.post(
+        `/api/profile/${memberData.memberId}/send-new-email-otp`,
+        {
+          newEmail: formData.email,
+          token: emailUpdateState.token
+        }
+      );
+  
+      // Only proceed to step 3 if OTP was successfully sent
+      if (response.data.success) {
+        setEmailUpdateState(prev => ({
+          ...prev,
+          step: 3, // Move to verification step
+          newEmail: formData.email,
+          otp: '' // Reset OTP field
+        }));
+      } else {
+        throw new Error(response.data.message || 'Failed to send OTP');
+      }
+    } catch (error) {
+      setError(error.response?.data?.message || error.message || 'Failed to send OTP');
+      // Keep the dialog open on error
+      setEditMode(prev => ({ ...prev, email: true }));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  const verifyNewEmailAndUpdate = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await axiosInstance.post(
+        `/api/profile/${memberData.memberId}/verify-new-email-and-update`,
+        {
+          otp: emailUpdateState.otp,
+          token: emailUpdateState.token,
+          newEmail: emailUpdateState.newEmail
+        }
+      );
+
+      updateLocalMemberData({ email: emailUpdateState.newEmail });
+      setEditMode(prev => ({ ...prev, email: false }));
+    } catch (error) {
+      setError(error.response?.data?.message || 'Failed to update email');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const resendOTP = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const endpoint = emailUpdateState.step === 1
+        ? `/api/profile/${memberData.memberId}/resend-old-email-otp`
+        : `/api/profile/${memberData.memberId}/resend-new-email-otp`;
+
+      await axiosInstance.post(endpoint, { token: emailUpdateState.token });
+    } catch (error) {
+      setError(error.response?.data?.message || 'Failed to resend OTP');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="p-5 border border-gray-200 rounded-2xl dark:border-gray-800 lg:p-6">
       <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
@@ -25,167 +205,344 @@ export default function UserInfoCard() {
           </h4>
 
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-7 2xl:gap-x-32">
+            {/* First Name */}
             <div>
-              <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
-                First Name
-              </p>
-              <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                {memberData?.firstName}
-              </p>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
+                    First Name
+                  </p>
+                  <p className="text-sm font-medium text-gray-800 dark:text-white/90">
+                    {currentMemberData?.firstName}
+                  </p>
+                </div>
+              </div>
             </div>
 
+            {/* Last Name */}
             <div>
-              <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
-                Last Name
-              </p>
-              <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                {memberData?.lastName}
-              </p>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
+                    Last Name
+                  </p>
+                  <p className="text-sm font-medium text-gray-800 dark:text-white/90">
+                    {currentMemberData?.lastName}
+                  </p>
+                </div>
+                <button
+                  onClick={() => setEditMode(prev => ({ ...prev, names: true }))}
+                  className="text-blue-500 hover:text-blue-700 mt-6"
+                >
+                  Edit
+                </button>
+              </div>
             </div>
 
-            <div>
-              <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
-                Email address
-              </p>
-              <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                {memberData?.email}
-              </p>
+            {/* Email */}
+            <div className="flex items-center justify-between lg:col-span-2">
+              <div>
+                <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
+                  Email address
+                </p>
+                <p className="text-sm font-medium text-gray-800 dark:text-white/90">
+                  {currentMemberData?.email}
+                </p>
+              </div>
+              <button
+                onClick={() => {
+                  setFormData(prev => ({ ...prev, email: currentMemberData.email }));
+                  setEmailUpdateState({
+                    step: 0,
+                    token: '',
+                    newEmail: '',
+                    otp: ''
+                  });
+                  setEditMode(prev => ({ ...prev, email: true }));
+                }}
+                className="text-blue-500 hover:text-blue-700 mt-6"
+              >
+                Edit
+              </button>
             </div>
 
-            <div>
-              <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
-                Phone
-              </p>
-              <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                {memberData?.phoneNumber}
-              </p>
+            {/* Phone */}
+            <div className="flex items-center justify-between lg:col-span-2">
+              <div>
+                <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
+                  Phone
+                </p>
+                <p className="text-sm font-medium text-gray-800 dark:text-white/90">
+                  {memberData?.phoneNumber}
+                </p>
+              </div>
+              <button
+                onClick={() => setEditMode(prev => ({ ...prev, phone: true }))}
+                className="text-blue-500 hover:text-blue-700 mt-6"
+              >
+                Edit
+              </button>
             </div>
-
-            {/* <div>
-              <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
-                Bio
-              </p>
-              <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                Team Manager
-              </p>
-            </div> */}
           </div>
         </div>
 
-        {/* <button
-          onClick={openModal}
-          className="flex w-full items-center justify-center gap-2 rounded-full border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] dark:hover:text-gray-200 lg:inline-flex lg:w-auto"
-        >
-          <svg
-            className="fill-current"
-            width="18"
-            height="18"
-            viewBox="0 0 18 18"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              fillRule="evenodd"
-              clipRule="evenodd"
-              d="M15.0911 2.78206C14.2125 1.90338 12.7878 1.90338 11.9092 2.78206L4.57524 10.116C4.26682 10.4244 4.0547 10.8158 3.96468 11.2426L3.31231 14.3352C3.25997 14.5833 3.33653 14.841 3.51583 15.0203C3.69512 15.1996 3.95286 15.2761 4.20096 15.2238L7.29355 14.5714C7.72031 14.4814 8.11172 14.2693 8.42013 13.9609L15.7541 6.62695C16.6327 5.74827 16.6327 4.32365 15.7541 3.44497L15.0911 2.78206ZM12.9698 3.84272C13.2627 3.54982 13.7376 3.54982 14.0305 3.84272L14.6934 4.50563C14.9863 4.79852 14.9863 5.2734 14.6934 5.56629L14.044 6.21573L12.3204 4.49215L12.9698 3.84272ZM11.2597 5.55281L5.6359 11.1766C5.53309 11.2794 5.46238 11.4099 5.43238 11.5522L5.01758 13.5185L6.98394 13.1037C7.1262 13.0737 7.25666 13.003 7.35947 12.9002L12.9833 7.27639L11.2597 5.55281Z"
-              fill=""
-            />
-          </svg>
-          Edit
-        </button> */}
-      </div>
+        {/* Edit Name Modal */}
+        {editMode.names && (
+          <Dialog open={editMode.names} onOpenChange={() => setEditMode(prev => ({ ...prev, names: false }))}>
+            <DialogContent>
+              <h3 className="text-lg font-medium mb-4">Edit Name</h3>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    First Name
+                  </label>
+                  <input
+                    type="text"
+                    name="firstName"
+                    value={formData.firstName}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Last Name
+                  </label>
+                  <input
+                    type="text"
+                    name="lastName"
+                    value={formData.lastName}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                  />
+                </div>
+              </div>
+              <div className="mt-6 flex justify-end space-x-3">
+                <button
+                  onClick={() => setEditMode(prev => ({ ...prev, names: false }))}
+                  className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => handleSave('names')}
+                  disabled={isLoading}
+                  className="px-4 py-2 bg-blue-600 rounded-md text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+                >
+                  {isLoading ? 'Saving...' : 'Save'}
+                </button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        )}
 
-      <Dialog open={isOpen} onOpenChange={closeModal}>
-        <DialogContent className="max-w-[700px] m-4">
-          <div className="no-scrollbar relative w-full max-w-[700px] overflow-y-auto rounded-3xl bg-white p-4 dark:bg-gray-900 lg:p-11">
-            <div className="px-2 pr-14">
-              <h4 className="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90">
-                Edit Personal Information
-              </h4>
-              <p className="mb-6 text-sm text-gray-500 dark:text-gray-400 lg:mb-7">
-                Update your details to keep your profile up-to-date.
-              </p>
-            </div>
-            {/* <form className="flex flex-col">
-            <div className="custom-scrollbar h-[450px] overflow-y-auto px-2 pb-3">
+        {/* Edit Email Modal */}
+        {editMode.email && (
+          <Dialog open={editMode.email} onOpenChange={() => setEditMode(prev => ({ ...prev, email: false }))}>
+            <DialogContent>
+              <h3 className="text-lg font-medium mb-4">
+                {emailUpdateState.step === 0 ? 'Update Email' : 
+                 emailUpdateState.step === 1 ? 'Verify Current Email' : 
+                 emailUpdateState.step === 2 ? 'Enter New Email' : 'Verify New Email'}
+              </h3>
+              
+              {emailUpdateState.step === 0 && (
+                <>
+                  <div className="mb-4">
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      To change your email, we'll need to verify both your current and new email addresses.
+                    </p>
+                  </div>
+                  <div className="mt-6 flex justify-end space-x-3">
+                    <button
+                      onClick={() => setEditMode(prev => ({ ...prev, email: false }))}
+                      className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={initiateEmailChange}
+                      disabled={isLoading}
+                      className="px-4 py-2 bg-blue-600 rounded-md text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+                    >
+                      {isLoading ? 'Sending OTP...' : 'Continue'}
+                    </button>
+                  </div>
+                </>
+              )}
+
+              {emailUpdateState.step === 1 && (
+                <>
+                  <div className="mb-4">
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      We've sent a 6-digit OTP to your current email address: {memberData.email}
+                    </p>
+                  </div>
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      Enter OTP
+                    </label>
+                    <input
+                      type="text"
+                      value={emailUpdateState.otp}
+                      onChange={handleOTPChange}
+                      maxLength={6}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                    />
+                  </div>
+                  <div className="flex justify-between items-center mt-2">
+                    <button
+                      onClick={resendOTP}
+                      disabled={isLoading}
+                      className="text-sm text-blue-600 hover:text-blue-800 disabled:opacity-50"
+                    >
+                      Resend OTP
+                    </button>
+                    <span className="text-sm text-gray-500">Valid for 10 minutes</span>
+                  </div>
+                  {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
+                  <div className="mt-6 flex justify-end space-x-3">
+                    <button
+                      onClick={() => setEditMode(prev => ({ ...prev, email: false }))}
+                      className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={verifyOldEmailOTP}
+                      disabled={isLoading || emailUpdateState.otp.length !== 6}
+                      className="px-4 py-2 bg-blue-600 rounded-md text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+                    >
+                      {isLoading ? 'Verifying...' : 'Verify'}
+                    </button>
+                  </div>
+                </>
+              )}
+
+              {emailUpdateState.step === 2 && (
+                <>
+                  <div className="mb-4">
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      Please enter your new email address
+                    </p>
+                  </div>
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      New Email Address
+                    </label>
+                    <input
+                      type="email"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleInputChange}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                    />
+                  </div>
+                  <div className="mt-6 flex justify-end space-x-3">
+                    <button
+                      onClick={() => setEditMode(prev => ({ ...prev, email: false }))}
+                      className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={sendNewEmailOTP}
+                      disabled={isLoading || !formData.email}
+                      className="px-4 py-2 bg-blue-600 rounded-md text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+                    >
+                      {isLoading ? 'Sending OTP...' : 'Send OTP'}
+                    </button>
+                  </div>
+                </>
+              )}
+
+              {emailUpdateState.step === 3 && (
+                <>
+                  <div className="mb-4">
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      We've sent a 6-digit OTP to your new email address: {emailUpdateState.newEmail}
+                    </p>
+                  </div>
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      Enter OTP
+                    </label>
+                    <input
+                      type="text"
+                      value={emailUpdateState.otp}
+                      onChange={handleOTPChange}
+                      maxLength={6}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                    />
+                  </div>
+                  <div className="flex justify-between items-center mt-2">
+                    <button
+                      onClick={resendOTP}
+                      disabled={isLoading}
+                      className="text-sm text-blue-600 hover:text-blue-800 disabled:opacity-50"
+                    >
+                      Resend OTP
+                    </button>
+                    <span className="text-sm text-gray-500">Valid for 10 minutes</span>
+                  </div>
+                  {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
+                  <div className="mt-6 flex justify-end space-x-3">
+                    <button
+                      onClick={() => setEditMode(prev => ({ ...prev, email: false }))}
+                      className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={verifyNewEmailAndUpdate}
+                      disabled={isLoading || emailUpdateState.otp.length !== 6}
+                      className="px-4 py-2 bg-blue-600 rounded-md text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+                    >
+                      {isLoading ? 'Updating...' : 'Update Email'}
+                    </button>
+                  </div>
+                </>
+              )}
+            </DialogContent>
+          </Dialog>
+        )}
+
+        {/* Edit Phone Modal */}
+        {editMode.phone && (
+          <Dialog open={editMode.phone} onOpenChange={() => setEditMode(prev => ({ ...prev, phone: false }))}>
+            <DialogContent>
+              <h3 className="text-lg font-medium mb-4">Edit Phone Number</h3>
               <div>
-                <h5 className="mb-5 text-lg font-medium text-gray-800 dark:text-white/90 lg:mb-6">
-                  Social Links
-                </h5>
-
-                <div className="grid grid-cols-1 gap-x-6 gap-y-5 lg:grid-cols-2">
-                  <div>
-                    <Label>Facebook</Label>
-                    <Input
-                      type="text"
-                      value="https://www.facebook.com/PimjoHQ"
-                    />
-                  </div>
-
-                  <div>
-                    <Label>X.com</Label>
-                    <Input type="text" value="https://x.com/PimjoHQ" />
-                  </div>
-
-                  <div>
-                    <Label>Linkedin</Label>
-                    <Input
-                      type="text"
-                      value="https://www.linkedin.com/company/pimjo"
-                    />
-                  </div>
-
-                  <div>
-                    <Label>Instagram</Label>
-                    <Input type="text" value="https://instagram.com/PimjoHQ" />
-                  </div>
-                </div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Phone Number
+                </label>
+                <input
+                  type="tel"
+                  name="phoneNumber"
+                  value={formData.phoneNumber}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                />
               </div>
-              <div className="mt-7">
-                <h5 className="mb-5 text-lg font-medium text-gray-800 dark:text-white/90 lg:mb-6">
-                  Personal Information
-                </h5>
-
-                <div className="grid grid-cols-1 gap-x-6 gap-y-5 lg:grid-cols-2">
-                  <div className="col-span-2 lg:col-span-1">
-                    <Label>First Name</Label>
-                    <Input type="text" value="Musharof" />
-                  </div>
-
-                  <div className="col-span-2 lg:col-span-1">
-                    <Label>Last Name</Label>
-                    <Input type="text" value="Chowdhury" />
-                  </div>
-
-                  <div className="col-span-2 lg:col-span-1">
-                    <Label>Email Address</Label>
-                    <Input type="text" value="randomuser@pimjo.com" />
-                  </div>
-
-                  <div className="col-span-2 lg:col-span-1">
-                    <Label>Phone</Label>
-                    <Input type="text" value="+09 363 398 46" />
-                  </div>
-
-                  <div className="col-span-2">
-                    <Label>Bio</Label>
-                    <Input type="text" value="Team Manager" />
-                  </div>
-                </div>
+              <div className="mt-6 flex justify-end space-x-3">
+                <button
+                  onClick={() => setEditMode(prev => ({ ...prev, phone: false }))}
+                  className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => handleSave('phone')}
+                  disabled={isLoading}
+                  className="px-4 py-2 bg-blue-600 rounded-md text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+                >
+                  {isLoading ? 'Saving...' : 'Save'}
+                </button>
               </div>
-            </div>
-            <div className="flex items-center gap-3 px-2 mt-6 lg:justify-end">
-              <Button size="sm" variant="outline" onClick={closeModal}>
-                Close
-              </Button>
-              <Button size="sm" onClick={handleSave}>
-                Save Changes
-              </Button>
-            </div>
-          </form> */}
-          </div>
-        </DialogContent>
-      </Dialog>
+            </DialogContent>
+          </Dialog>
+        )}
+      </div>
     </div>
   );
 }

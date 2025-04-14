@@ -31,6 +31,7 @@ app.use("/api/packages", authenticateToken, packageRoutes);
 app.use("/api/payment", authenticateToken, paymentRoutes);
 app.use("/api/feeReciever", authenticateToken, feeRecieverRoutes);
 app.use("/api/meetings", authenticateToken, meetingRoutes);
+app.use("/api/profile", authenticateToken, require("./src/profile/route/profileRoutes"));
 app.use("/api/report", authenticateToken, require("./src/report/route/reportRoutes"));
 app.use("/api/chapter-payment", authenticateToken, require("./src/chapterPayment/route/chapterPaymentRoutes"));
 app.get("/api/testWA", async (req, res) => {
