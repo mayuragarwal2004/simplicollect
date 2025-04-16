@@ -1,21 +1,14 @@
-const express = require("express");
+const express = require('express');
 const router = express.Router();
+const memberController = require('../controller/profileControllers');
 
-const profileControllers = require("../controller/profileControllers");
-const emailController = require('../controller/emailController');
+// Update member name
+router.put('/:memberId/name', memberController.updateName);
 
-router.put("/:memberId/name",profileControllers.updateName);
-router.post("/:memberId/initiate-email-change",emailController.initiateEmailChange);
+// Update member email (requires password verification)
+router.put('/:memberId/email', memberController.updateEmail);
 
+// Update member phone (requires password verification)
+router.put('/:memberId/phone', memberController.updatePhone);
 
-// Send OTP to new email
-router.post('/:memberId/send-new-email-otp',emailController.sendNewEmailOTP);
-router.post('/:memberId/verify-old-email-otp',emailController.verifyOldEmailOTP);
-  
-  // Verify OTP for new email and update
-  router.post('/:memberId/verify-new-email-and-update',emailController.verifyNewEmailAndUpdate);
-  
-  // Resend OTP
-  router.post('/:memberId/resend-old-email-otp',emailController.resendOldEmailOTP);
-  
 module.exports = router;
