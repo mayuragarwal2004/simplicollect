@@ -1,8 +1,10 @@
 // controllers/imageUploadController
+console.log("controller file loaded");
 const Jimp = require("jimp");
 const { v4: uuidv4 } = require("uuid");
 const { uploadToS3 } = require("../../config/aws");
 const path = require("path");
+const checkDataModel = require("../models/checkDataModel");
 
 const uploadImage = async (req, res) => {
   if (req.file) {
@@ -80,62 +82,89 @@ const uploadImage = async (req, res) => {
   }
 };
 
-const XLSX = require("xlsx");
+const checkAndSaveMembers = async (req, res) => {
+  const data = req.parsedExcel;
+  const chapterId = req.query.chapterId;
+  const errorRows = [];
+  const validMembersToAdd = [];
 
-const uploadExcelFile = async (req, res) => {
-  try {
-    if (!req.file) {
-      return res.status(400).json({ error: "No file uploaded" });
+  for (let i = 1; i < data.length; i++) {
+    const row = data[i];
+    const firstName = row["A"];
+    const lastName = row["B"];
+    const email = row["C"];
+    const phoneNumber = row["D"];
+    const roleId = row["E"];
+    const joinDate = row["F"];
+  
+    const rowErrors = { row: i + 1, errors: [] };
+    let rowHasError = false;
+  
+    const emailResult = email ? await checkDataModel.findMemberByEmail(email) : null;
+    const phoneResult = phoneNumber ? await checkDataModel.findMemberByPhone(phoneNumber) : null;
+  
+    const emailMemberId = emailResult?.[0]?.memberId;
+    const phoneMemberId = phoneResult?.[0]?.memberId;
+  
+    let emailInChapter = false;
+    if (emailMemberId) {
+      console.log("emailMemberId", emailMemberId);
+      const emailCheck = await checkDataModel.isMemberInChapter(emailMemberId, chapterId);
+      emailInChapter = emailCheck.length > 0;
     }
 
-    const buffer = req.file.buffer;
-    const workbook = XLSX.read(buffer, { type: "buffer" });
-
-    const targetSheetName = "Template";
-
-    if (!workbook.SheetNames.includes(targetSheetName)) {
-      return res.status(400).json({ error: `Sheet "${targetSheetName}" not found in Excel` });
+    const phoneInChapter = phoneMemberId
+      ? (await checkDataModel.isMemberInChapter(phoneMemberId, chapterId)).length > 0
+      : false;
+  
+    const roleValid = await checkDataModel.isValidRoleForChapter(roleId, chapterId);
+    if (!roleValid) {
+      rowErrors.errors.push({ field: "roleId", reason: "Invalid role for this chapter." });
+      rowHasError = true;
     }
-
-    const worksheet = workbook.Sheets[targetSheetName];
-
-    // Convert sheet to JSON
-    const sheetData = XLSX.utils.sheet_to_json(worksheet, {
-      defval: "", // include blank cells
-      raw: false,
-    });
-
-    if (sheetData.length === 0) {
-      return res.status(400).json({ error: `"${targetSheetName}" sheet is empty` });
+    if (emailMemberId && phoneMemberId && emailMemberId !== phoneMemberId) {
+      rowErrors.errors.push({ field: "email/phone", reason: "Email and phone belong to different members." });
+      rowHasError = true;
     }
-
-    // Optional cleanup: remove columns like __EMPTY
-    const cleanedData = sheetData.map(row => {
-      const cleanRow = {};
-      for (let key in row) {
-        if (!key.startsWith("__EMPTY") && key.trim() !== "") {
-          cleanRow[key] = row[key];
-        }
-      }
-      return cleanRow;
-    }).filter(row => Object.keys(row).length > 0); // remove empty rows
-
-    return res.status(200).json({
-      sheet: targetSheetName,
-      columns: Object.keys(cleanedData[0] || {}),
-      data: cleanedData,
-    });
-
-  } catch (err) {
-    console.error("Excel upload error:", err);
-    return res.status(500).json({ error: "Internal server error" });
+    if ((emailInChapter && emailMemberId) || (phoneInChapter && phoneMemberId)) {
+      rowErrors.errors.push({ field: "chapter", reason: "Member already exists in this chapter." });
+      rowHasError = true;
+    }
+    if (!emailMemberId && !phoneMemberId && !firstName) {
+      rowErrors.errors.push({ field: "firstName", reason: "First name is required for new members." });
+      rowHasError = true;
+    }
+    if (rowHasError) {
+      errorRows.push(rowErrors);
+    } else {
+      const memberId = emailMemberId || phoneMemberId || null;
+      validMembersToAdd.push({
+        firstName,
+        lastName,
+        email,
+        phoneNumber,
+        roleId,
+        joinDate,
+        ...(memberId && { memberId })
+      });
+    }
   }
+  
+
+  if (errorRows.length > 0) {
+    return res.status(400).json({
+      message: "Validation failed. Please fix the errors and try again.",
+      errors: errorRows
+    });
+  }
+
+  return res.status(200).json({
+    message: "Validation successful. All members are ready to be added.",
+    previewData: validMembersToAdd
+  });
 };
-
-
-
 
 module.exports = {
   uploadImage,
-  uploadExcelFile
+  checkAndSaveMembers
 };
