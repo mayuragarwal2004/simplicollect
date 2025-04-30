@@ -156,37 +156,54 @@ const getMemberChapterDue = async (memberId, chapterId) => {
     .select("balance")
     .first();
 };
-const getTransactions = async (chapterId, rows, page) => {
-  const offset = parseInt(page, 10) * parseInt(rows, 10);
+const getTransactions = async (chapterId, rows, page, startDate, endDate) => {
+  const parsedRows = parseInt(rows, 10) || 10;
+  const parsedPage = parseInt(page, 10) || 0;
+  const offset = parsedPage * parsedRows;
 
-  const transactions = await db("transactions as t")
+  let query = db("transactions as t")
     .join("members as m", "t.memberId", "m.memberId")
     .join("packages as p", "t.packageId", "p.packageId")
-    .where("p.chapterId", chapterId) // Ensure chapter filtering
+    .where("p.chapterId", chapterId);
+
+  // Add date filter if both are provided
+  if (startDate && endDate) {
+    query = query.whereBetween("t.transactionDate", [startDate, endDate]);
+  }
+
+  // Select only the required fields
+  const transactions = await query
     .select(
-      "t.transactionId",
-      "m.firstName",
-      "m.lastName",
-      "t.payableAmount",
-      "t.paidAmount",
-      "t.balanceAmount",
-      "p.packageName",
-      "t.paymentType",
-      "t.paymentReceivedByName",
-      "t.approvedByName",
-      "t.transactionDate",
-      "t.status as approvalStatus"
+      "m.firstName",  // Member Name (First Name)
+      "m.lastName",   // Member Name (Last Name)
+      "t.paidAmount", // Amount Paid
+      "t.balanceAmount", // Balance
+      "p.packageName",  // Package Name
+      "t.paymentType",  // Payment Type
+      "t.paymentReceivedByName",  // Collected By
+      "t.approvedByName",  // Approved By
+      "t.transactionDate",  // Date
+      "t.status as approvalStatus" // Approval Status
     )
-    .limit(parseInt(rows, 10))
+    .limit(parsedRows)
     .offset(offset);
 
-  const [{ count }] = await db("transactions as t")
+  // Count query with the same date filter
+  let countQuery = db("transactions as t")
     .count("t.transactionId as count")
     .join("packages as p", "t.packageId", "p.packageId")
     .where("p.chapterId", chapterId);
 
+  if (startDate && endDate) {
+    countQuery = countQuery.whereBetween("t.transactionDate", [startDate, endDate]);
+  }
+
+  const [{ count }] = await countQuery;
+
   return { transactions, totalRecords: parseInt(count, 10) };
 };
+
+
 
 const getMemberFinancialSummary = async (chapterId, row, page) => {
   const offset = parseInt(page, 10) * parseInt(row, 10);

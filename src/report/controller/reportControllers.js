@@ -59,28 +59,87 @@ const getPackageSummaryController = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+const PDFDocument = require('pdfkit');
+
 const getAllMemberReports = async (req, res) => {
-  const { chapterId, rows, page } = req.query;
+  const { chapterId } = req.params;
+  const { rows = 10, page = 0 } = req.query;
+  const { startDate, endDate } = req.body;
+
   try {
+    // Fetching transactions using the updated model
     const { transactions, totalRecords } = await paymentModel.getTransactions(
       chapterId,
       rows,
-      page
+      page,
+      startDate,
+      endDate
     );
+
     if (!transactions || transactions.length === 0) {
       return res.status(404).json({ message: "No transactions found" });
     }
 
-    res.json({
-      data: transactions,
-      totalRecords,
-      rows,
-      page,
+    const doc = new PDFDocument({ margin: 30, size: 'A4' });
+
+    // Set headers for the response (we'll serve the PDF directly)
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', 'attachment; filename="member-transactions.pdf"');
+
+    // Pipe the PDF output to the response stream
+    doc.pipe(res);
+
+    // Add Title
+    doc.fontSize(16).text('Member Transactions Report', { align: 'center' });
+    doc.moveDown();
+
+    // Column headers (specific to the data selected)
+    const columns = [
+      'Member Name', 'Amount Paid', 'Balance', 'Package Name', 'Payment Type',
+      'Collected By', 'Approved By', 'Date', 'Approval Status'
+    ];
+
+    // Set column widths (for proper table alignment)
+    const columnWidths = [
+      150, 60, 60, 100, 80, 100, 100, 100, 100
+    ];
+
+    // Draw the table header
+    doc.fontSize(12).font('Helvetica-Bold');
+    columns.forEach((header, i) => {
+      doc.text(header, 20 + columnWidths.slice(0, i).reduce((a, b) => a + b, 0), 80);
     });
+    doc.moveDown();
+
+    // Draw the table rows (Transaction data)
+    doc.font('Helvetica').fontSize(10);
+    transactions.forEach((transaction, rowIndex) => {
+      const row = [
+        `${transaction.firstName} ${transaction.lastName}`, // Member Name
+        transaction.paidAmount,  // Amount Paid
+        transaction.balanceAmount, // Balance
+        transaction.packageName,  // Package Name
+        transaction.paymentType,  // Payment Type
+        transaction.paymentReceivedByName,  // Collected By
+        transaction.approvedByName,  // Approved By
+        new Date(transaction.transactionDate).toLocaleDateString(),  // Date
+        transaction.approvalStatus  // Approval Status
+      ];
+
+      row.forEach((cell, colIndex) => {
+        doc.text(cell.toString(), 20 + columnWidths.slice(0, colIndex).reduce((a, b) => a + b, 0), 100 + (rowIndex * 20));
+      });
+    });
+
+    // Finalize the PDF (only call end after everything is done)
+    doc.end();
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
+
+
+
 const getMemberTotalAmountAndDues = async (req, res) => {
   const { chapterId, rows = 5, page = 0 } = req.query;
   try {
