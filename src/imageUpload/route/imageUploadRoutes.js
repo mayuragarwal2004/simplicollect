@@ -13,6 +13,6 @@ router.post("/", upload.single("image"), imageUploadController.uploadImage);
 
 // Route to upload Excel file
 router.post("/upload-excel", upload.single("excelFile"),verifyBulkMiddleware, imageUploadController.checkAndSaveMembers);
-
+router.post("/check-format",upload.single("excelFile"),verifyBulkMiddleware, imageUploadController.checkFormatAndReturnExcel);
 
 module.exports = router;

@@ -4,6 +4,7 @@ const Jimp = require("jimp");
 const { v4: uuidv4 } = require("uuid");
 const { uploadToS3 } = require("../../config/aws");
 const path = require("path");
+const xlsx = require('xlsx');
 const checkDataModel = require("../models/checkDataModel");
 
 const uploadImage = async (req, res) => {
@@ -83,6 +84,14 @@ const uploadImage = async (req, res) => {
 };
 
 const checkAndSaveMembers = async (req, res) => {
+  if(req.hasErrors){
+    return res.status(400).json({
+                success: false,
+                message: 'Validation errors in Excel file',
+                errors: req.expectedErrors,
+                errorDetails: req.errorDetails
+            });
+  }
   const data = req.parsedExcel;
   const chapterId = req.query.chapterId;
   const errorRows = [];
@@ -164,7 +173,49 @@ const checkAndSaveMembers = async (req, res) => {
   });
 };
 
+const checkFormatAndReturnExcel = async (req, res) => {
+  const workbook = xlsx.read(req.file.buffer, { type: 'buffer' });
+  console.log(workbook.SheetNames);
+  const worksheet = workbook.Sheets['Template']; //template sheet
+  const jsonData = xlsx.utils.sheet_to_json(worksheet, { defval: '' });
+  const errorDetails = req.errorDetails;
+  if(req.hasErrors){
+    const errorMap = new Map();
+    for (const errorType of Object.values(errorDetails)) {
+      for (const { row, message } of errorType) {
+        if (!errorMap.has(row)) {
+          errorMap.set(row, []);
+        }
+        errorMap.get(row).push(message);
+      }
+    }
+    jsonData.forEach((row, index) => {
+      const excelRow = index + 2; // Because sheet_to_json skips header, and Excel starts at 1
+      if (errorMap.has(excelRow)) {
+        row['Error Details'] = errorMap.get(excelRow).join(', ');
+      } else {
+        row['Error Details'] = '';
+      }
+    });
+  }
+  const newWorksheet = xlsx.utils.json_to_sheet(jsonData);
+    const newWorkbook = xlsx.utils.book_new();
+    const worksheet1 = workbook.Sheets['Instructions']; // instructions sheet
+  const worksheet2 = workbook.Sheets['Data Definitions (Roles)']; // roles sheet
+  xlsx.utils.book_append_sheet(newWorkbook,worksheet1,'Instructions')
+  xlsx.utils.book_append_sheet(newWorkbook,worksheet2,'Data Definitions (Roles)')
+    xlsx.utils.book_append_sheet(newWorkbook, newWorksheet, 'Template'); // Add the new worksheet to the workbook
+
+    const buffer = xlsx.write(newWorkbook, { type: 'buffer', bookType: 'xlsx' });
+
+    res.setHeader('Content-Disposition', 'attachment; filename=validated_output.xlsx');
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.send(buffer);
+
+}
+
 module.exports = {
   uploadImage,
-  checkAndSaveMembers
+  checkAndSaveMembers,
+  checkFormatAndReturnExcel
 };

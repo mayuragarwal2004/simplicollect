@@ -211,12 +211,9 @@ const verifyBulkMiddleware = (req, res, next) => {
         // Check if there are any validation errors
         const hasErrors = Object.values(expectedErrors).some(count => count > 0);
         if (hasErrors) {
-            return res.status(400).json({
-                success: false,
-                message: 'Validation errors in Excel file',
-                errors: expectedErrors,
-                errorDetails: errorDetails
-            });
+            req.hasErrors=hasErrors;
+            req.errors= expectedErrors;
+            req.errorDetails= errorDetails;
         }
         
         // Store parsed data in request for subsequent middleware/route handlers
