@@ -1,7 +1,6 @@
 const express = require("express");
 const router = express.Router();
 const imageUploadController = require("../controller/imageUploadControllers");
-const verifyBulkMiddleware = require("../../middlewares/verifyBulk.middleware");
 const multer = require("multer");
 
 // Multer configuration
@@ -10,9 +9,5 @@ const upload = multer({ storage });
 
 // Route to upload image
 router.post("/", upload.single("image"), imageUploadController.uploadImage);
-
-// Route to upload Excel file
-router.post("/upload-excel", upload.single("excelFile"),verifyBulkMiddleware, imageUploadController.checkAndSaveMembers);
-router.post("/check-format",upload.single("excelFile"),verifyBulkMiddleware, imageUploadController.checkFormatAndReturnExcel);
 
 module.exports = router;
