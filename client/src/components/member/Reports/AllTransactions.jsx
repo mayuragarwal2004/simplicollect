@@ -9,6 +9,18 @@ import Papa from 'papaparse';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { useData } from '../../../context/DataContext';
+import {
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { toast } from 'react-toastify';
+import * as XLSX from 'xlsx';
 
 const AllTransactions = () => {
   const location = useLocation();
@@ -19,6 +31,9 @@ const AllTransactions = () => {
   const [totalRecord, setTotalRecord] = useState(null);
   const rows = searchParams.get('rows') || 5;
   const page = searchParams.get('page') || 1;
+  const [openDialog, setOpenDialog] = useState(false);
+  const [fromDate, setFromDate] = useState('');
+  const [toDate, setToDate] = useState('');
 
   const columnLabels = AllTransactionsColumns.map(
     ({ accessorKey, header }) => ({
@@ -72,51 +87,103 @@ const AllTransactions = () => {
     );
   };
 
-  const exportCSV = () => {
-    const csvData = reports.map((report) => {
-      let row = {};
-      columnLabels.forEach(({ label, key }) => {
-        if (selectedColumns.includes(label)) {
-          row[label] =
-            key === 'name'
-              ? `${report.firstName} ${report.lastName}`
-              : report[key];
-        }
-      });
-      return row;
-    });
+  // const exportCSV = () => {
+  //   const csvData = reports.map((report) => {
+  //     let row = {};
+  //     columnLabels.forEach(({ label, key }) => {
+  //       if (selectedColumns.includes(label)) {
+  //         row[label] =
+  //           key === 'name'
+  //             ? `${report.firstName} ${report.lastName}`
+  //             : report[key];
+  //       }
+  //     });
+  //     return row;
+  //   });
 
-    const csv = Papa.unparse(csvData);
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', 'report.csv');
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  //   const csv = Papa.unparse(csvData);
+  //   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  //   const url = URL.createObjectURL(blob);
+  //   const link = document.createElement('a');
+  //   link.href = url;
+  //   link.setAttribute('download', 'report.csv');
+  //   document.body.appendChild(link);
+  //   link.click();
+  //   document.body.removeChild(link);
+  // };
+
+  const exportExcel = async () => {
+    try {
+      const excelData = reports.map((report) => {
+        let row = {};
+        columnLabels.forEach(({ label, key }) => {
+          if (selectedColumns.includes(label)) {
+            row[label] =
+              key === 'name'
+                ? `${report.firstName} ${report.lastName}`
+                : report[key];
+          }
+        });
+        return row;
+      });
+
+      await axiosInstance.post('/api/export/excel', {
+        data: excelData,
+        columns: selectedColumns,
+      });
+
+      toast.success('Excel data sent to backend successfully.');
+    } catch (error) {
+      console.error('Error exporting Excel:', error);
+      toast.error('Failed to export Excel. Please try again later.');
+    }
   };
 
-  const exportPDF = () => {
-    const doc = new jsPDF();
-    doc.text('Member Transactions Report', 20, 10);
-    const tableColumn = columnLabels
+  // const exportPDF = () => {
+  //   const doc = new jsPDF();
+  //   doc.text('Member Transactions Report', 20, 10);
+  //   const tableColumn = columnLabels
+  //     .filter(({ label }) => selectedColumns.includes(label))
+  //     .map(({ label }) => label);
+  //   const tableRows = reports.map((report) =>
+  //     tableColumn.map((col) =>
+  //       col === 'Member Name'
+  //         ? `${report.firstName} ${report.lastName}`
+  //         : report[col.toLowerCase().replace(/ /g, '')],
+  //     ),
+  //   );
+
+  //   doc.autoTable({
+  //     head: [tableColumn],
+  //     body: tableRows,
+  //   });
+
+  //   doc.save('report.pdf');
+  // };
+
+  const handlePDFExport = () => {
+    setOpenDialog(false);
+
+    const selectedKeys = columnLabels
       .filter(({ label }) => selectedColumns.includes(label))
-      .map(({ label }) => label);
-    const tableRows = reports.map((report) =>
-      tableColumn.map((col) =>
-        col === 'Member Name'
-          ? `${report.firstName} ${report.lastName}`
-          : report[col.toLowerCase().replace(/ /g, '')],
-      ),
-    );
+      .map(({ key }) => key);
 
-    doc.autoTable({
-      head: [tableColumn],
-      body: tableRows,
-    });
+    const payload = {
+      fromDate,
+      toDate,
+      selectedColumns: selectedKeys,
+      chapterId: chapterData.chapterId,
+    };
 
-    doc.save('report.pdf');
+    axiosInstance
+      .post(`/api/report/export-pdf`, payload)
+      .then((res) => {
+        console.log('Export request sent successfully:', res.data);
+        toast.success('PDF export request sent successfully!');
+      })
+      .catch((err) => {
+        toast.error(err.response?.data?.error || 'Failed to export PDF');
+      });
   };
 
   return (
@@ -141,12 +208,58 @@ const AllTransactions = () => {
       </div>
 
       <div className="flex gap-4 mb-4">
-        <Button onClick={exportCSV} className="bg-blue-500 text-white">
-          Export as CSV
-        </Button>
-        <Button onClick={exportPDF} className="bg-red-500 text-white">
-          Export as PDF
-        </Button>
+        <Dialog open={openDialog} onOpenChange={setOpenDialog}>
+          <DialogTrigger asChild>
+            <Button className="bg-blue-600 text-white">Export</Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Export Options</DialogTitle>
+            </DialogHeader>
+
+            <div className="flex flex-col gap-4 py-4">
+              <div>
+                <Label htmlFor="fromDate">From Date</Label>
+                <Input
+                  type="date"
+                  id="fromDate"
+                  value={fromDate}
+                  onChange={(e) => setFromDate(e.target.value)}
+                />
+              </div>
+              <div>
+                <Label htmlFor="toDate">To Date</Label>
+                <Input
+                  type="date"
+                  id="toDate"
+                  value={toDate}
+                  onChange={(e) => setToDate(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <DialogFooter className="flex justify-between gap-2">
+              <Button
+                onClick={handlePDFExport}
+                className="bg-red-500 text-white"
+                disabled={!fromDate || !toDate}
+              >
+                Export PDF
+              </Button>
+
+              <Button
+                onClick={() => {
+                  setOpenDialog(false);
+                  exportExcel();
+                }}
+                className="bg-green-700 text-white"
+                disabled={!fromDate || !toDate}
+              >
+                Export Excel
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
 
       {loading ? (
