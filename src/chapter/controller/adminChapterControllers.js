@@ -280,7 +280,6 @@ const checkAndSaveMembers = async (req, res) => {
 
 const checkFormatAndReturnExcel = async (req, res) => {
   const workbook = xlsx.read(req.file.buffer, { type: 'buffer' });
-  console.log(workbook.SheetNames);
   const worksheet = workbook.Sheets['Template']; //template sheet
   const jsonData = xlsx.utils.sheet_to_json(worksheet, { defval: '' });
   const errorDetails = req.errorDetails;

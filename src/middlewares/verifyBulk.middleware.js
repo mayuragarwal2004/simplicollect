@@ -13,7 +13,7 @@ const verifyBulkMiddleware = (req, res, next) => {
         duplicatePhoneNumber: 0,
         noFirstName: 0,
         noPhoneAndEmail: 0,
-        invalidRoleId: 0,
+        invalidRoleName: 0,
         noJoinDate: 0,
         noLastName: 0 // Optional but good to track
     };
@@ -25,7 +25,7 @@ const verifyBulkMiddleware = (req, res, next) => {
         duplicatePhoneNumber: [],
         noFirstName: [],
         noPhoneAndEmail: [],
-        invalidRoleId: [],
+        invalidRoleName: [],
         noJoinDate: [],
         noLastName: []
     };
@@ -49,34 +49,34 @@ const verifyBulkMiddleware = (req, res, next) => {
             });
         }
         
-        // Get sheet 2 for RoleIds (index 1)
+        // Get sheet 2 for RoleNames (index 1)
         const roleSheet = Bulk[sheetNames[0]];
         if (!roleSheet || roleSheet.length === 0) {
             return res.status(400).json({
                 success: false,
-                message: 'Sheet 2 (Role IDs) has no data'
+                message: 'Sheet 2 Data Definitions (Roles) has no data'
             });
         }
         
-        // Extract valid role IDs from sheet 2 (first column, starting from row 2)
-        const validRoleIds = new Set();
+        // Extract valid role Names from sheet 2 (Second column, starting from row 2)
+        const validRoleNames = new Set();
         
         for (let i = 0; i < roleSheet.length; i++) {
             const row = roleSheet[i];
-            // Get the first column value (Role ID); // First column key
-            const roleId = row['A'];
+            // Get the second column value (RoleNames); 
+            const roleName = row['B'];
             
-            if (roleId !== undefined && roleId !== null && roleId !== '') {
+            if (roleName !== undefined && roleName !== null && roleName !== '') {
                 // Convert to string for consistent comparison
-                validRoleIds.add(String(roleId));
+                validRoleNames.add(String(roleName));
             }
         }
         
-        // If no valid role IDs found, return an error
-        if (validRoleIds.size === 0) {
+        // If no valid role Names found, return an error
+        if (validRoleNames.size === 0) {
             return res.status(400).json({
                 success: false,
-                message: 'No valid Role IDs found in Sheet 2'
+                message: 'No valid Role Names found in Sheet 2'
             });
         }
         
@@ -89,7 +89,7 @@ const verifyBulkMiddleware = (req, res, next) => {
             });
         }
         // Check if all required headers exist in sheet 3
-        const requiredHeaders = ['First Name', 'Last Name', 'Email', 'Phone Number', 'Role id', 'Join Date'];
+        const requiredHeaders = ['First Name', 'Last Name', 'Email', 'Phone Number', 'Role Name', 'Join Date'];
         const headers = Object.values(memberSheet[0] || {});
         const missingHeaders = requiredHeaders.filter(header => !headers.includes(header));
         
@@ -118,7 +118,7 @@ const verifyBulkMiddleware = (req, res, next) => {
             const lastName = row['B'];
             const email = row['C'];
             const phoneNumber = row['D'];
-            const roleId = row['E'];
+            const roleName = row['E'];
             const joinDate = row['F'];
             
             // Check for missing firstName (required)
@@ -182,19 +182,19 @@ const verifyBulkMiddleware = (req, res, next) => {
             }
             
             // Check for missing role ID and validate against sheet 2
-            if (!roleId && roleId !== 0) {
-                expectedErrors.invalidRoleId++;
-                errorDetails.invalidRoleId.push({
+            if (!roleName && roleName !== 0) {
+                expectedErrors.invalidRoleName++;
+                errorDetails.invalidRoleName.push({
                     row: rowNum,
-                    message: `Row ${rowNum}: Missing role id`
+                    message: `Row ${rowNum}: Missing role Name`
                 });
-            } else if (!validRoleIds.has(String(roleId))) {
-                // Role ID is present but not in the valid list from sheet 2
-                expectedErrors.invalidRoleId++;
-                errorDetails.invalidRoleId.push({
+            } else if (!validRoleNames.has(String(roleName))) {
+                // Role Name is present but not in the valid list from sheet 2
+                expectedErrors.invalidRoleName++;
+                errorDetails.invalidRoleName.push({
                     row: rowNum,
-                    roleId: roleId,
-                    message: `Row ${rowNum}: Invalid role id - ${roleId} not found in sheet 2`
+                    roleName: roleName,
+                    message: `Row ${rowNum}: Invalid role Name - ${roleName} not found in sheet 2`
                 });
             }
             
