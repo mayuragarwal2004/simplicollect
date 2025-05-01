@@ -2,7 +2,9 @@
 const adminChapterModel = require("../model/adminChapterModel");
 const { v4: uuidv4 } = require("uuid");
 const xlsx = require("xlsx");
+const ExcelJS = require("exceljs")
 const checkDataModel = require('../model/checkDataModel');
+const {configureInstructionsSheet,configureRolesSheet,configureTemplateSheet}=require('../service/createTemplate')
 
 // Get chapter details by chapterId
 const getChapterById = async (req, res) => {
@@ -318,6 +320,49 @@ const checkFormatAndReturnExcel = async (req, res) => {
 
 }
 
+const getExcelTemplate=async(req,res)=>{
+  try {
+    // Create a new workbook
+    const {chapterSlug}=req.params;
+    const workbook = new ExcelJS.Workbook();
+    const rolesinfo=await adminChapterModel.getRolesByChapterSlug(chapterSlug);
+    // Set workbook properties
+    workbook.creator = 'SimpliCollect';
+    workbook.lastModifiedBy = 'SimpliCollect';
+    workbook.created = new Date();
+    workbook.modified = new Date();
+    
+    // Create the Instructions sheet
+    const instructionsSheet = workbook.addWorksheet('Instructions');
+    
+    // Create the Data Definitions (Roles) sheet
+    const rolesSheet = workbook.addWorksheet('Data Definition (Roles)');
+    
+    // Create the Template sheet
+    const templateSheet = workbook.addWorksheet('Template');
+    
+    // Configure Instructions sheet
+    configureInstructionsSheet(instructionsSheet);
+    
+    // Configure Roles sheet
+    configureRolesSheet(rolesSheet,rolesinfo);
+    
+    // Configure Template sheet
+    configureTemplateSheet(templateSheet);
+    
+    // Set response headers for file download
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', 'attachment; filename=ChapterMemberUploadTemplate.xlsx');
+    
+    // Write to buffer and send response
+    const buffer = await workbook.xlsx.writeBuffer();
+    res.send(buffer);
+  } catch (error) {
+    console.error('Error generating Excel template:', error);
+    res.status(500).send('Error generating template');
+  }
+}
+
 module.exports = {
   getChapterById,
   updateChapterDetails,
@@ -330,4 +375,5 @@ module.exports = {
   deleteRole,
   checkFormatAndReturnExcel,
   checkAndSaveMembers,
+  getExcelTemplate
 };
