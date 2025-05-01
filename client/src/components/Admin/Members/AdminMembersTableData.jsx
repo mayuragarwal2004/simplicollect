@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { axiosInstance } from '../../../utils/config';
 import { useLocation } from 'react-router-dom';
 import { MembersTable } from './members-data-table/members-table';
@@ -23,6 +23,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
+import { Download, Upload } from "lucide-react"
 
 const AdminMembersTableData = () => {
   const [members, setMembers] = useState([
@@ -48,6 +49,8 @@ const AdminMembersTableData = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingMember, setEditingMember] = useState(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [fileName, setFileName] = useState('');
+  const fileInputRef = useRef(null);
   const [formData, setFormData] = useState({
     membersName: '',
     email: '',
@@ -61,7 +64,9 @@ const AdminMembersTableData = () => {
 
   const fetchMembers = () => {
     axiosInstance
-      .get(`/api/admin/members/getandsearchmembers?rows=${rows}&page=${page+1}`)
+      .get(
+        `/api/admin/members/getandsearchmembers?rows=${rows}&page=${page + 1}`,
+      )
       .then((res) => {
         setMembers(res.data.data || res.data);
         setTotalRecord(res.data.totalRecords || res.data.length);
@@ -134,7 +139,7 @@ const AdminMembersTableData = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
@@ -191,15 +196,27 @@ const AdminMembersTableData = () => {
     setIsAddDialogOpen(true);
   };
 
-  const handleAddMember = async (e) => {
-    e.preventDefault();
+  const handleSubmitExcelFile = async () => {
+    const file = fileInputRef.current?.files?.[0];
+    if (!file) {
+      toast.error('Please select an Excel file to submit.');
+      return;
+    }
+  
+    const formData = new FormData();
+    formData.append('file', file);
+  
     try {
-      const response = await axiosInstance.post('/api/admin/members', formData);
-      setMembers((prevMembers) => [...prevMembers, response.data]);
-      toast.success('Member added successfully');
-      handleCloseDialog();
+      await axiosInstance.post('/api/admin/members/submit-excel', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      toast.success('Excel data submitted successfully.');
+      setFileName('');
+      setIsAddDialogOpen(false);
+      fetchMembers();
     } catch (error) {
-      toast.error('Failed to add member');
+      toast.error('Submission failed. Please try again.');
+      console.error('Submission error:', error);
     }
   };
 
@@ -236,6 +253,63 @@ const AdminMembersTableData = () => {
     });
   };
 
+  const handleDownloadSample = async () => {
+    try {
+      const response = await axiosInstance.get('/api/admin/members/download-template', {
+        responseType: 'blob',
+      });
+  
+      const blob = new Blob([response.data], { type: response.headers['content-type'] });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+  
+      link.href = url;
+      link.setAttribute('download', 'members_template.xlsx');
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (error) {
+      toast.error('Failed to download the Excel template.');
+      console.error('Template download error:', error);
+    }
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+  
+    const isExcel = file.name.endsWith('.xlsx') || file.name.endsWith('.xls');
+    if (!isExcel) {
+      toast.error('Only Excel files (.xlsx, .xls) are allowed.');
+      setFileName('');
+      return;
+    }
+  
+    setFileName(file.name);
+    toast.success(`Selected file: ${file.name}`);
+  };
+
+  const handleValidateExcelUpload = async () => {
+    const file = fileInputRef.current?.files?.[0];
+    if (!file) {
+      toast.error('Please select an Excel file to validate.');
+      return;
+    }
+  
+    const formData = new FormData();
+    formData.append('file', file);
+  
+    try {
+      await axiosInstance.post('/api/admin/members/validate-excel', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      toast.success('Excel file validated successfully.');
+    } catch (error) {
+      toast.error('Validation failed. Please check the file contents.');
+      console.error('Validation error:', error);
+    }
+  };
+
   return (
     <div className="rounded-2xl border border-stroke bg-white p-5 shadow-md dark:border-strokedark dark:bg-boxdark">
       <div className="flex justify-between items-center mb-6">
@@ -244,53 +318,51 @@ const AdminMembersTableData = () => {
           <DialogTrigger asChild>
             <Button onClick={handleOpenAddDialog}>Add Member</Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="max-w-md">
             <DialogHeader>
-              <DialogTitle>Add Member</DialogTitle>
+              <DialogTitle className="text-lg font-semibold">
+                Add Bulk Member
+              </DialogTitle>
             </DialogHeader>
-            <form onSubmit={handleAddMember}>
+
+            <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground mt-2">
+              <li>Download the template</li>
+              <li>Edit the template carefully</li>
+              <li>Upload the completed file</li>
+            </ul>
+
+            <Button
+              onClick={handleDownloadSample}
+              variant="outline"
+              className="w-full mt-4 flex items-center justify-center gap-2"
+            >
+              <Download className="w-4 h-4" />
+              Download Excel template
+            </Button>
+
+            <div
+              onClick={() => fileInputRef.current?.click()}
+              className="border-2 border-dashed border-gray-300 rounded-xl p-6 mt-4 text-center cursor-pointer hover:bg-gray-50"
+            >
+              <Upload className="mx-auto h-6 w-6 text-muted-foreground mb-2" />
+              <p className="text-sm text-muted-foreground">
+                {fileName ? `Selected: ${fileName}` : 'No file chosen'}
+              </p>
               <Input
-                name="membersName"
-                placeholder="Member Name"
-                value={formData.membersName}
-                onChange={handleInputChange}
-                className="mb-4"
-                required
+                type="file"
+                accept=".csv"
+                ref={fileInputRef}
+                onChange={handleFileChange}
+                className="hidden"
               />
-              <Input
-                name="email"
-                type="email"
-                placeholder="Email"
-                value={formData.email}
-                onChange={handleInputChange}
-                className="mb-4"
-                required
-              />
-              <Input
-                name="phoneNumber"
-                type="number"
-                placeholder="Phone Number"
-                value={formData.phoneNumber}
-                onChange={handleInputChange}
-                className="mb-4"
-                required
-              />
-              <Input
-                name="numberOfMembers"
-                type="number"
-                placeholder="Number of Members"
-                value={formData.numberOfMembers}
-                onChange={handleInputChange}
-                className="mb-4"
-                required
-              />
-              <DialogFooter>
-                <Button variant="secondary" onClick={handleCloseDialog}>
-                  Cancel
-                </Button>
-                <Button type="submit">Add</Button>
-              </DialogFooter>
-            </form>
+            </div>
+
+            <DialogFooter className="mt-6 flex justify-end gap-2">
+              <Button variant="secondary" onClick={handleValidateExcelUpload}>
+                Validate
+              </Button>
+              <Button onClick={handleSubmitExcelFile}>Submit</Button>
+            </DialogFooter>
           </DialogContent>
         </Dialog>
       </div>
