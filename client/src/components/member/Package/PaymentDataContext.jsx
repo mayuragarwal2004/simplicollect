@@ -269,7 +269,11 @@ export const PaymentDataProvider = ({ children }) => {
 
 // Create a custom hook to use the PaymentDataContext
 export const usePaymentData = () => {
-  return useContext(PaymentDataContext);
+  const context = useContext(PaymentDataContext);
+  if (!context) {
+    throw new Error("usePaymentData must be used within a PaymentDataProvider");
+  }
+  return context;
 };
 
 export default PaymentDataContext;
