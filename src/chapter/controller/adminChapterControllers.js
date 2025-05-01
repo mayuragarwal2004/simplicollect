@@ -336,7 +336,7 @@ const getExcelTemplate=async(req,res)=>{
     const instructionsSheet = workbook.addWorksheet('Instructions');
     
     // Create the Data Definitions (Roles) sheet
-    const rolesSheet = workbook.addWorksheet('Data Definition (Roles)');
+    const rolesSheet = workbook.addWorksheet('Data Definitions (Roles)');
     
     // Create the Template sheet
     const templateSheet = workbook.addWorksheet('Template');

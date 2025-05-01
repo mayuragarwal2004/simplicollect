@@ -51,6 +51,7 @@ const verifyBulkMiddleware = (req, res, next) => {
         
         // Get sheet 2 for RoleNames (index 1)
         const roleSheet = Bulk[sheetNames[0]];
+        console.log(Bulk);
         if (!roleSheet || roleSheet.length === 0) {
             return res.status(400).json({
                 success: false,
