@@ -29,6 +29,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { ChevronsUpDown, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Input } from '@/components/ui/input';
 
 const PackageViewer = () => {
   const {
@@ -113,7 +114,7 @@ const PackageViewer = () => {
     }
   }, [chapterData]);
 
-  console.log({ changeMemberRights });
+  console.log({ calculationDate });
 
   return (
     <div className="rounded-sm border border-stroke bg-white px-5 pt-6 pb-2.5 shadow-default dark:border-strokedark dark:bg-boxdark sm:px-7.5 xl:pb-1">
@@ -173,6 +174,23 @@ const PackageViewer = () => {
         {/* Left Side: DatePicker */}
         {Boolean(chapterData?.testMode) ? (
           <div className="flex items-center space-x-4">
+            <Input
+              type="date"
+              value={calculationDate.toISOString().split('T')[0]}
+              onChange={(e) => {
+                const date = new Date(e.target.value);
+                setCalculationDate(date);
+                packageAmountCalculations(
+                  date,
+                  packageData,
+                  chapterMeetings,
+                  setPaymentData,
+                  receivers,
+                );
+              }}
+              // className="w-1/2"
+              placeholder="Calculation Date"
+            />
             {/* <LocalizationProvider dateAdapter={AdapterDateFns}>
               <DatePicker
                 label="Calculation Date"
@@ -289,7 +307,7 @@ const PackageViewer = () => {
         </Box>
         {
           // Render the tab content based on the selected tab
-          packageParents?.map((parentType, index) => (
+          receivers && packageParents?.map((parentType, index) => (
             <CustomTabPanel key={index} value={tabValue} index={index}>
               <PackageCard
                 pendingPayments={pendingPayments}
