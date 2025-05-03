@@ -20,12 +20,14 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { SearchBar } from '@/components/ui/search-bar';
+import AddMemberBulkDialog from './AddMemberBulkDialog';
 
 const AdminChaptersMemberList = () => {
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isBulkOpen, setIsBulkOpen] = useState(false);
   const [totalRecord, setTotalRecord] = useState(0);
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
@@ -71,7 +73,7 @@ const AdminChaptersMemberList = () => {
   const fetchMembers = () => {
     axiosInstance
       .get(
-        `/api/admin/chapter-member-list/${chapterSlug}/members?rows=${rows}&page=${page+1}&searchQuery=${searchQuery}`,
+        `/api/admin/chapter-member-list/${chapterSlug}/members?rows=${rows}&page=${page + 1}&searchQuery=${searchQuery}`,
       )
       .then((res) => {
         const updatedMembers = res.data.data.map((member) => ({
@@ -112,15 +114,19 @@ const AdminChaptersMemberList = () => {
           <h2 className="text-xl font-semibold">
             Super Admin Chapter Member Table
           </h2>
-          <Button onClick={() => setIsSearchOpen(true)}>Add Member</Button>
+          <div className='flex gap-5'>
+            <Button onClick={() => setIsSearchOpen(true)}>Add Member</Button>
+            <Button onClick={() => setIsBulkOpen(true)}>Add Bulk Member</Button>
+          </div>
         </div>
         <div className="mt-2">
-         {/* searchbox to be added here  */}
-         <SearchBar 
-          onChange={(e) => setSearchQuery(e.target.value)}
-          value={searchQuery}
-          placeholder="Search by member name, email, phone number or role"
-          className="mb-3 w-full"/>
+          {/* searchbox to be added here  */}
+          <SearchBar
+            onChange={(e) => setSearchQuery(e.target.value)}
+            value={searchQuery}
+            placeholder="Search by member name, email, phone number or role"
+            className="mb-3 w-full"
+          />
         </div>
       </div>
 
@@ -140,6 +146,12 @@ const AdminChaptersMemberList = () => {
         isOpen={isSearchOpen}
         onClose={() => setIsSearchOpen(false)}
         chapterSlug={chapterSlug}
+        fetchMembers={fetchMembers}
+      />
+
+      <AddMemberBulkDialog
+        isAddDialogOpen={isBulkOpen}
+        onClose={() => setIsBulkOpen(false)}
         fetchMembers={fetchMembers}
       />
     </Card>
