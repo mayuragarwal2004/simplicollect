@@ -1,6 +1,6 @@
-const organisationModel = require("../model/organisationModel");
+const organisationModel = require("../model/adminOrganisationModel");
 
-const getAllOrganisations = async (req, res) => {
+const getAllOrganisationsPaginated = async (req, res) => {
   const {rows,page} = req.query;
   try {
     const organisations = await organisationModel.getAllOrganisationsWithChapterCount(rows,page);
@@ -84,10 +84,21 @@ const deleteOrganisation = async (req, res) => {
   }
 };
 
+const getAllOrganisations = async (req, res) => {
+  try {
+    const organisations = await organisationModel.getAllOrganisations();
+    res.json(organisations);
+  } catch (error) {
+    console.error('Error fetching organisations:', error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
 module.exports = {
-  getAllOrganisations,
+  getAllOrganisationsPaginated,
   getOrganisationById,
   createOrganisation,
   updateOrganisation,
-  deleteOrganisation
+  deleteOrganisation,
+  getAllOrganisations,
 }; 

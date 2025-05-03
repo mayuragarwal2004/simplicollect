@@ -62,10 +62,15 @@ const deleteOrganisation = async (organisationId) => {
     .del();
 };
 
+const getAllOrganisations = async () => {
+  return db("organisations").select("*");
+};
+
 module.exports = {
   getAllOrganisationsWithChapterCount,
   getOrganisationById,
   createOrganisation,
   updateOrganisation,
-  deleteOrganisation
+  deleteOrganisation,
+  getAllOrganisations,
 }; 
