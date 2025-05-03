@@ -17,13 +17,26 @@ const addHistory = async (req, res) => {
     switch (type) {
         case "call":
             if (!to) {
-                return res.status(400).json({ error: "'to' is required for call" });
+                to=visitor.mobileNumber;
+                // return res.status(400).json({ error: "'to' is required for call" });
             }
             break;
         case "email":
+            if (!to) {
+                to=visitor.email;
+                // return res.status(400).json({ error: "'to' is required for " + type });
+            }
+            if ( !title) {
+                return res.status(400).json({ error: " 'title' is required for " + type });
+            }
+            break;
         case "whatsapp":
-            if (!to || !title) {
-                return res.status(400).json({ error: "'to' and 'title' are required for " + type });
+            if (!to) {
+                to=visitor.mobileNumber;
+                // return res.status(400).json({ error: "'to' is required for " + type });
+            }
+            if ( !title) {
+                return res.status(400).json({ error: " 'title' is required for " + type });
             }
             break;
         case "note":
@@ -36,7 +49,8 @@ const addHistory = async (req, res) => {
             type,
             to: to || null,
             title: title || null,
-            content
+            content,
+            memberId:req.user.memberId,
         };
 
         await visitorHistoryModel.addHistory(historyData);
@@ -48,6 +62,13 @@ const addHistory = async (req, res) => {
 
 const getHistoryByVisitorId = async (req, res) => {
     const { visitorId } = req.params;
+    if(!visitorId){
+        return res.status(400).json({ error: "Visitor ID is required" });
+    }
+    const visitor = await db("visitors").where("visitorId", visitorId).first();
+    if (!visitor) {
+        return res.status(404).json({ error: "Visitor not found" });
+    }
     try {
         const history = await visitorHistoryModel.getHistoryByVisitorId(visitorId);
         res.json(history);
@@ -58,6 +79,21 @@ const getHistoryByVisitorId = async (req, res) => {
 const updateHistory = async (req, res) => {
     const { visitorId, historyId } = req.params;
     const updateData = req.body;
+    const visitor = await db("visitors").where("visitorId", visitorId).first();
+    if (!visitor) {
+        return res.status(404).json({ error: "Visitor not found" });
+    }
+    if(!historyId){
+        return res.status(400).json({ error: "History ID is required" });
+    }
+    updateData.memberId=req.user.memberId;
+    const history = await db("visitorHistory").where("historyId", historyId).first();
+    if (!history) {
+        return res.status(404).json({ error: "History not found" });
+    }
+    // if (history.visitorId !== visitorId) {
+    //     return res.status(403).json({ error: "You are not authorized to update this history" });
+    // }
     try {
         await visitorHistoryModel.updateHistory(visitorId, historyId, updateData);
         res.json({ message: "History updated successfully" });
@@ -67,6 +103,20 @@ const updateHistory = async (req, res) => {
 }
 const deleteHistory = async (req, res) => {
     const { visitorId, historyId } = req.params;
+    const visitor = await db("visitors").where("visitorId", visitorId).first();
+    if (!visitor) {
+        return res.status(404).json({ error: "Visitor not found" });
+    }
+    if(!historyId){
+        return res.status(400).json({ error: "History ID is required" });
+    }
+    const history = await db("visitorHistory").where("historyId", historyId).first();
+    if (!history) {
+        return res.status(404).json({ error: "History not found" });
+    }
+    // if (history.visitorId !== visitorId) {
+    //     return res.status(403).json({ error: "You are not authorized to delete this history" });
+    // }
     try {
         await visitorHistoryModel.deleteHistory(visitorId, historyId);
         res.json({ message: "History deleted successfully" });
@@ -76,6 +126,9 @@ const deleteHistory = async (req, res) => {
 }
 const getHistoryById = async (req, res) => {
     const { historyId } = req.params;
+    if(!historyId){
+        return res.status(400).json({ error: "History ID is required" });
+    }
     try {
         const history = await visitorHistoryModel.getHistoryById(historyId);
         res.json(history);
