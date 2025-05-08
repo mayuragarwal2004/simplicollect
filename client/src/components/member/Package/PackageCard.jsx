@@ -19,7 +19,13 @@ const PackageCard = ({
   paymentSuccessHandler,
 }) => {
   const {
-    paymentData: { receivers, chapterMeetings, packageParents,selectedPackage, packageData },
+    paymentData: {
+      receivers,
+      chapterMeetings,
+      packageParents,
+      selectedPackage,
+      packageData,
+    },
     resetPaymentData,
     setPaymentData,
   } = usePaymentData();
@@ -302,11 +308,15 @@ const PackageCard = ({
                 <>
                   <div>
                     You have paid ₹{pkg.paidAmount} for this package on{' '}
-                    {new Date(pkg.paymentDate).toLocaleDateString()}
+                    {new Date(pkg.paymentDate).toLocaleDateString()} to{' '}
+                    <b>{pkg.paymentReceivedByName}</b> by{' '}
+                    <b>{pkg.paymentType}</b>
                   </div>
                 </>
               ) : (
-                <p className="text-gray-700 mb-1">Payment Not Allowed</p>
+                <p className="text-gray-700 mb-1">
+                  {pkg.message || 'Payment Not Allowed'}
+                </p>
               )}
             </div>
           );

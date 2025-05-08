@@ -11,7 +11,7 @@ const PaymentDataContext = createContext();
 // Create a provider component
 export const PaymentDataProvider = ({ children }) => {
   const { chapterData } = useData();
-  const calculationDate = new Date();
+  const [calculationDate, setCalculationDate] = useState(new Date());
 
   const [paymentData, setPaymentData] = useState({
     selectedReceiver: null, // maybe reset on exiting package
@@ -199,7 +199,7 @@ export const PaymentDataProvider = ({ children }) => {
     if (chapterData?.chapterId) {
       fetchAllData();
     }
-  }, [chapterData?.chapterId]);
+  }, [chapterData?.chapterId, calculationDate]);
 
   // update selectedReceiverObject when selectedReceiver changes
   useEffect(() => {
@@ -255,6 +255,8 @@ export const PaymentDataProvider = ({ children }) => {
   return (
     <PaymentDataContext.Provider
       value={{
+        calculationDate,
+        setCalculationDate,
         paymentData,
         setPaymentData,
         resetPaymentData,
@@ -271,7 +273,7 @@ export const PaymentDataProvider = ({ children }) => {
 export const usePaymentData = () => {
   const context = useContext(PaymentDataContext);
   if (!context) {
-    throw new Error("usePaymentData must be used within a PaymentDataProvider");
+    throw new Error('usePaymentData must be used within a PaymentDataProvider');
   }
   return context;
 };

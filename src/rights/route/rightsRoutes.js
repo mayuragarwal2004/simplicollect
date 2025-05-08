@@ -9,4 +9,6 @@ router.get("/anyMemberApprovePayment/:chapterId", rightsController.getApprovePay
 
 router.get("/anyMemberMaketransaction/:chapterId", rightsController.getMakeTransactionRightsController);
 
+router.get("/changeDate/:chapterId", rightsController.getChangeDateRightsController);
+
 module.exports = router;
