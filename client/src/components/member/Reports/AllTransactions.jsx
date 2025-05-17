@@ -67,7 +67,7 @@ const AllTransactions = () => {
 
     axiosInstance
       .get(
-        `/api/report/${chapterData.chapterId}/member-transactions?rows=${rows}&page=${page}  `,
+        `/api/report/${chapterData.chapterId}/member-transactions-json-report?rows=${rows}&page=${page}  `,
         {
           params: {
             chapterId: chapterData.chapterId,
@@ -95,81 +95,51 @@ const AllTransactions = () => {
     );
   };
 
-  // const exportCSV = () => {
-  //   const csvData = reports.map((report) => {
-  //     let row = {};
-  //     columnLabels.forEach(({ label, key }) => {
-  //       if (selectedColumns.includes(label)) {
-  //         row[label] =
-  //           key === 'name'
-  //             ? `${report.firstName} ${report.lastName}`
-  //             : report[key];
-  //       }
-  //     });
-  //     return row;
-  //   });
-
-  //   const csv = Papa.unparse(csvData);
-  //   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-  //   const url = URL.createObjectURL(blob);
-  //   const link = document.createElement('a');
-  //   link.href = url;
-  //   link.setAttribute('download', 'report.csv');
-  //   document.body.appendChild(link);
-  //   link.click();
-  //   document.body.removeChild(link);
-  // };
-
   const exportExcel = async () => {
+    const selectedKeys = columnLabels
+      .filter(({ label }) => selectedColumns.includes(label))
+      .map(({ key }) => key);
+
     try {
-      const excelData = reports.map((report) => {
-        let row = {};
-        columnLabels.forEach(({ label, key }) => {
-          if (selectedColumns.includes(label)) {
-            row[label] =
-              key === 'name'
-                ? `${report.firstName} ${report.lastName}`
-                : report[key];
-          }
-        });
-        return row;
-      });
+      const response = await axiosInstance.post(
+        `/api/report/${chapterData.chapterId}/member-transactions-report`,
+        {
+          startDate: fromDate,
+          endDate: toDate,
+          type: 'excel',
+          selectedColumns: selectedKeys,
+          chapterId: chapterData.chapterId,
+        },
+        {
+          responseType: 'blob', // Important for file download
+        },
+      );
 
-      await axiosInstance.post('/api/export/excel', {
-        data: excelData,
-        columns: selectedColumns,
+      // Create a blob and download link
+      const blob = new Blob([response.data], {
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
       });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
 
-      toast.success('Excel data sent to backend successfully.');
+      // You can customize the filename
+      link.setAttribute('download', 'member-transactions-report.xlsx');
+      document.body.appendChild(link);
+      link.click();
+
+      // Cleanup
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      toast.success('Excel file downloaded successfully.');
     } catch (error) {
       console.error('Error exporting Excel:', error);
       toast.error('Failed to export Excel. Please try again later.');
     }
   };
 
-  // const exportPDF = () => {
-  //   const doc = new jsPDF();
-  //   doc.text('Member Transactions Report', 20, 10);
-  //   const tableColumn = columnLabels
-  //     .filter(({ label }) => selectedColumns.includes(label))
-  //     .map(({ label }) => label);
-  //   const tableRows = reports.map((report) =>
-  //     tableColumn.map((col) =>
-  //       col === 'Member Name'
-  //         ? `${report.firstName} ${report.lastName}`
-  //         : report[col.toLowerCase().replace(/ /g, '')],
-  //     ),
-  //   );
-
-  //   doc.autoTable({
-  //     head: [tableColumn],
-  //     body: tableRows,
-  //   });
-
-  //   doc.save('report.pdf');
-  // };
-
-  const handlePDFExport = () => {
+  const handlePDFExport = async () => {
     setOpenDialog(false);
 
     const selectedKeys = columnLabels
@@ -177,21 +147,42 @@ const AllTransactions = () => {
       .map(({ key }) => key);
 
     const payload = {
-      fromDate,
-      toDate,
+      startDate: fromDate,
+      endDate: toDate,
+      type: 'pdf',
       selectedColumns: selectedKeys,
       chapterId: chapterData.chapterId,
     };
 
-    axiosInstance
-      .post(`/api/report/export-pdf`, payload)
-      .then((res) => {
-        console.log('Export request sent successfully:', res.data);
-        toast.success('PDF export request sent successfully!');
-      })
-      .catch((err) => {
-        toast.error(err.response?.data?.error || 'Failed to export PDF');
-      });
+    try {
+      const response = await axiosInstance.post(
+        `/api/report/${chapterData.chapterId}/member-transactions-report`,
+        payload,
+        {
+          responseType: 'blob', // Receive binary data
+        },
+      );
+
+      // Create a blob and download link
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+
+      // Customize the filename if needed
+      link.setAttribute('download', 'member-transactions-report.pdf');
+      document.body.appendChild(link);
+      link.click();
+
+      // Cleanup
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      toast.success('PDF file downloaded successfully.');
+    } catch (err) {
+      console.error('Error exporting PDF:', err);
+      toast.error(err.response?.data?.error || 'Failed to export PDF');
+    }
   };
 
   return (

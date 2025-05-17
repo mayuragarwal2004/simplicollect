@@ -70,9 +70,12 @@ const createChapter = async (req, res) => {
       !chapterData.chapterSlug ||
       !chapterData.meetingPeriodicity ||
       !chapterData.meetingPaymentType ||
-      !chapterData.visitorPerMeetingFee ||
+      // (chapterData.visitorPerMeetingFee !== null &&
+      //   chapterData.visitorPerMeetingFee !== undefined) ||
       !chapterData.organisationId
     ) {
+      console.log("Missing required fields:", chapterData);
+      
       return res.status(400).json({ error: "Required fields are missing" });
     }
     const validPeriodicities = [

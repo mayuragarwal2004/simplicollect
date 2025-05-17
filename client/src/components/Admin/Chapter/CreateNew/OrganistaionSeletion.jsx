@@ -61,7 +61,7 @@ const OrganisationSelection = ({ onCancel }) => {
   const handleAddChapter = (data) => {
     console.log('Chapter Data:', data);
     axiosInstance
-      .post('/api/admin/add-chapter', {
+      .post('/api/admin/chapters', {
         organisationId: selectedOrg.organisationId,
         ...data,
       })

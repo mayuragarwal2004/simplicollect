@@ -25,7 +25,7 @@ const getPackageSummaryController = async (req, res) => {
       rows
     );
     console.log({ chapterMembers });
-    
+
     for (let i = 0; i < chapterMembers.length; i++) {
       console.log(`Processing member ${i + 1}/${chapterMembers.length}`);
 
@@ -59,36 +59,36 @@ const getPackageSummaryController = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
-// to generate excel or pdf report 
-const PdfPrinter = require('pdfmake');
-const moment = require('moment');
+// to generate excel or pdf report
+const PdfPrinter = require("pdfmake");
+const moment = require("moment");
 
 const printer = new PdfPrinter({
   Roboto: {
-    normal: 'Helvetica',
-    bold: 'Helvetica-Bold',
-    italics: 'Helvetica-Oblique',
-    bolditalics: 'Helvetica-BoldOblique'
-  }
+    normal: "Helvetica",
+    bold: "Helvetica-Bold",
+    italics: "Helvetica-Oblique",
+    bolditalics: "Helvetica-BoldOblique",
+  },
 });
 
 const columnMap = {
   "Sr. No.": (t, i) => i + 1,
   "Member Name": (t) => `${t.firstName} ${t.lastName}`,
   "Amount Paid": (t) => t.paidAmount,
-  "Balance": (t) => t.balanceAmount,
+  Balance: (t) => t.balanceAmount,
   "Package Name": (t) => t.packageName,
   "Payment Type": (t) => t.paymentType,
   "Collected By": (t) => t.paymentReceivedByName,
   "Approved By": (t) => t.approvedByName,
-  "Date": (t) => moment(t.transactionDate).format("DD/MM/YYYY"),
-  "Approval Status": (t) => t.approvalStatus
+  Date: (t) => moment(t.transactionDate).format("DD/MM/YYYY"),
+  "Approval Status": (t) => t.approvalStatus,
 };
 
-const getAllMemberReports = async (req, res) => {
+const getAllMemberTransactionsReportController = async (req, res) => {
   const { chapterId } = req.params;
-  const { rows = 10, page = 0, type = 'pdf' } = req.query;
-  const { startDate, endDate, selectedColumns } = req.body;
+  const { rows = 10, page = 0 } = req.query;
+  const { startDate, endDate, selectedColumns, type = "pdf" } = req.body;
 
   try {
     const { transactions } = await paymentModel.getTransactions(
@@ -106,43 +106,45 @@ const getAllMemberReports = async (req, res) => {
     const headers = selectedColumns;
 
     const dataRows = transactions.map((t, index) =>
-      headers.map(header => columnMap[header] ? columnMap[header](t, index) : '')
+      headers.map((header) =>
+        columnMap[header] ? columnMap[header](t, index) : ""
+      )
     );
 
-    if (type === 'excel') {
+    if (type === "excel") {
       const workbook = new ExcelJS.Workbook();
-      const worksheet = workbook.addWorksheet('Transactions');
+      const worksheet = workbook.addWorksheet("Transactions");
 
       const headerRow = worksheet.addRow(headers);
       headerRow.eachCell((cell) => {
         cell.font = { bold: true };
         cell.fill = {
-          type: 'pattern',
-          pattern: 'solid',
-          fgColor: { argb: 'ADD8E6' }
+          type: "pattern",
+          pattern: "solid",
+          fgColor: { argb: "ADD8E6" },
         };
         cell.border = {
-          top: { style: 'thin' },
-          left: { style: 'thin' },
-          bottom: { style: 'thin' },
-          right: { style: 'thin' }
+          top: { style: "thin" },
+          left: { style: "thin" },
+          bottom: { style: "thin" },
+          right: { style: "thin" },
         };
       });
 
       dataRows.forEach((rowData, index) => {
         const row = worksheet.addRow(rowData);
-        const fillColor = index % 2 === 0 ? 'FFFFFF' : 'F2F2F2';
+        const fillColor = index % 2 === 0 ? "FFFFFF" : "F2F2F2";
         row.eachCell((cell) => {
           cell.fill = {
-            type: 'pattern',
-            pattern: 'solid',
-            fgColor: { argb: fillColor }
+            type: "pattern",
+            pattern: "solid",
+            fgColor: { argb: fillColor },
           };
           cell.border = {
-            top: { style: 'thin' },
-            left: { style: 'thin' },
-            bottom: { style: 'thin' },
-            right: { style: 'thin' }
+            top: { style: "thin" },
+            left: { style: "thin" },
+            bottom: { style: "thin" },
+            right: { style: "thin" },
           };
         });
       });
@@ -150,7 +152,7 @@ const getAllMemberReports = async (req, res) => {
       worksheet.columns.forEach((column) => {
         let maxLength = 10;
         column.eachCell({ includeEmpty: true }, (cell) => {
-          const cellLength = (cell.value || '').toString().length;
+          const cellLength = (cell.value || "").toString().length;
           if (cellLength > maxLength) {
             maxLength = cellLength;
           }
@@ -158,8 +160,14 @@ const getAllMemberReports = async (req, res) => {
         column.width = maxLength + 2;
       });
 
-      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-      res.setHeader('Content-Disposition', 'attachment; filename=member-transactions.xlsx');
+      res.setHeader(
+        "Content-Type",
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      );
+      res.setHeader(
+        "Content-Disposition",
+        "attachment; filename=member-transactions.xlsx"
+      );
 
       await workbook.xlsx.write(res);
       res.end();
@@ -167,40 +175,76 @@ const getAllMemberReports = async (req, res) => {
       const tableBody = [headers, ...dataRows];
 
       const docDefinition = {
-        pageOrientation: 'landscape',
+        pageOrientation: "landscape",
         pageMargins: [20, 40, 20, 40],
         content: [
           {
             table: {
               headerRows: 1,
-              widths: new Array(headers.length).fill('*'),
-              body: tableBody
+              widths: new Array(headers.length).fill("*"),
+              body: tableBody,
             },
             layout: {
               fillColor: (rowIndex) =>
-                rowIndex === 0 ? '#ADD8E6' : rowIndex % 2 === 0 ? '#f2f2f2' : null,
+                rowIndex === 0
+                  ? "#ADD8E6"
+                  : rowIndex % 2 === 0
+                  ? "#f2f2f2"
+                  : null,
               hLineWidth: () => 0.5,
               vLineWidth: () => 0.5,
-              hLineColor: () => '#ccc',
-              vLineColor: () => '#ccc'
-            }
+              hLineColor: () => "#ccc",
+              vLineColor: () => "#ccc",
+            },
           },
           {
-            text: '\nPowered by SimpliCollect',
-            alignment: 'right',
+            text: "\nPowered by SimpliCollect",
+            alignment: "right",
             margin: [0, 20, 20, 0],
             fontSize: 10,
-            color: '#888'
-          }
-        ]
+            color: "#888",
+          },
+        ],
       };
 
       const pdfDoc = printer.createPdfKitDocument(docDefinition);
-      res.setHeader('Content-Type', 'application/pdf');
-      res.setHeader('Content-Disposition', 'attachment; filename="member-transactions.pdf"');
+      res.setHeader("Content-Type", "application/pdf");
+      res.setHeader(
+        "Content-Disposition",
+        'attachment; filename="member-transactions.pdf"'
+      );
       pdfDoc.pipe(res);
       pdfDoc.end();
     }
+  } catch (error) {
+    console.error("Export error:", error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+const getAllMemberTransactionsJSONReportController = async (req, res) => {
+  const { chapterId } = req.params;
+  const { rows = 10, page = 0, type = "pdf" } = req.query;
+  const { startDate, endDate, selectedColumns } = req.body;
+
+  try {
+    const { transactions, totalRecords } = await paymentModel.getTransactions(
+      chapterId,
+      rows,
+      page,
+      startDate,
+      endDate
+    );
+
+    if (!transactions || transactions.length === 0) {
+      return res.status(404).json({ message: "No transactions found" });
+    }
+
+    return res.json({
+      success: true,
+      data: transactions,
+      totalRecords,
+    });
   } catch (error) {
     console.error("Export error:", error);
     res.status(500).json({ error: error.message });
@@ -335,11 +379,11 @@ const getMemberLedgerJSONController = async (req, res) => {
 
 module.exports = {
   getPackageSummaryController,
-  getAllMemberReports,
+  getAllMemberTransactionsJSONReportController,
+  getAllMemberTransactionsReportController,
   getMemberTotalAmountAndDues,
   getReceiverDaywiseReportController,
   getReceiverDaywiseJsonReportController,
   getMemberLedgerController,
   getMemberLedgerJSONController,
-  getAllMemberReports
 };
