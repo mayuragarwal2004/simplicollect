@@ -85,6 +85,19 @@ const columnMap = {
   "Approval Status": (t) => t.approvalStatus,
 };
 
+const fieldKeyToHeader = {
+  name: "Sr. No.",
+  memberName: "Member Name",
+  paidAmount: "Amount Paid",
+  balanceAmount: "Balance",
+  packageName: "Package Name",
+  paymentType: "Payment Type",
+  paymentReceivedByName: "Collected By",
+  approvedByName: "Approved By",
+  transactionDate: "Date",
+  approvalStatus: "Approval Status",
+};
+
 const getAllMemberTransactionsReportController = async (req, res) => {
   const { chapterId } = req.params;
   const { rows = 10, page = 0 } = req.query;
@@ -103,12 +116,12 @@ const getAllMemberTransactionsReportController = async (req, res) => {
       return res.status(404).json({ message: "No transactions found" });
     }
 
-    const headers = selectedColumns;
+    const headers = selectedColumns
+      .map((key) => fieldKeyToHeader[key])
+      .filter((header) => header && columnMap[header]);
 
     const dataRows = transactions.map((t, index) =>
-      headers.map((header) =>
-        columnMap[header] ? columnMap[header](t, index) : ""
-      )
+      headers.map((header) => columnMap[header](t, index))
     );
 
     if (type === "excel") {
