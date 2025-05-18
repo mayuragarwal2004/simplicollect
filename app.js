@@ -11,7 +11,7 @@ const paymentRoutes = require("./src/payment/route/paymentRoutes");
 const feeRecieverRoutes = require("./src/feeReceiver/route/feeReceiverRoutes");
 const meetingRoutes = require("./src/meeting/route/meetingRoutes");
 
-const { authenticateToken } = require("./src/middlewares/authMiddleware");
+const { authenticateToken, AuthenticateAdmin } = require("./src/middlewares/authMiddleware");
 const { sendWhatsAppOtp } = require("./src/config/whatsapp");
 const PORT = process.env.PORT || 5000;
 
@@ -45,10 +45,10 @@ app.get("/api/testWA", async (req, res) => {
 
 // admin routes
 // app.use("/api/organisations", authenticateToken, require("./src/organisation/route/adminOrganisationRoutes"));
-app.use("/api/admin/organisations", authenticateToken, require("./src/organisation/route/adminOrganisationRoutes"));
-app.use("/api/admin/chapters", authenticateToken, require("./src/chapter/route/adminChapterRoutes"));
-app.use("/api/admin/chapter-member-list", authenticateToken, require("./src/chapter/route/adminChapterMemberListRoutes"));
-app.use("/api/admin/members", authenticateToken, require("./src/member/route/adminMemberRoutes"));
+app.use("/api/admin/organisations", authenticateToken, AuthenticateAdmin, require("./src/organisation/route/adminOrganisationRoutes"));
+app.use("/api/admin/chapters", authenticateToken, AuthenticateAdmin, require("./src/chapter/route/adminChapterRoutes"));
+app.use("/api/admin/chapter-member-list", authenticateToken, AuthenticateAdmin, require("./src/chapter/route/adminChapterMemberListRoutes"));
+app.use("/api/admin/members", authenticateToken, AuthenticateAdmin, require("./src/member/route/adminMemberRoutes"));
 
 app.use("/api/*", (req, res) => {
   res.status(404).send("Not Found - Please check the URL and try again");
