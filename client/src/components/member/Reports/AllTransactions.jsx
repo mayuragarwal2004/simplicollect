@@ -124,7 +124,10 @@ const AllTransactions = () => {
       link.href = url;
 
       // You can customize the filename
-      link.setAttribute('download', 'member-transactions-report.xlsx');
+      link.setAttribute(
+        'download',
+        `Member Transactions Report ${format(new Date(fromDate), 'dd/MM/yyyy')} - ${format(new Date(toDate), 'dd/MM/yyyy')}.xlsx`,
+      );
       document.body.appendChild(link);
       link.click();
 
@@ -170,7 +173,10 @@ const AllTransactions = () => {
       link.href = url;
 
       // Customize the filename if needed
-      link.setAttribute('download', 'member-transactions-report.pdf');
+      link.setAttribute(
+        'download',
+        `Member Transactions Report ${format(new Date(fromDate), 'dd/MM/yyyy')} - ${format(new Date(toDate), 'dd/MM/yyyy')}.pdf`,
+      );
       document.body.appendChild(link);
       link.click();
 
