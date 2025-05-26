@@ -1,5 +1,5 @@
 const axios = require("axios");
-
+const twilio=require("twilio");
 const sendWhatsAppOtpByMeta = async (phoneNumber, otp) => {
   try {
     const response = await axios.post(
@@ -72,11 +72,12 @@ const sendWhatsAppOtpByWasm = async (phoneNumber, otp) => {
   }
 };
 
-const sendWhatsAppMessage = async (phoneNumber, data) => {
+const WhatsAppMessage = async (phoneNumber, data) => {
   const accountSid = process.env.TWILIO_ACCOUNT_SID;
   const authToken = process.env.TWILIO_AUTH_TOKEN;
   const whatsappNumber = process.env.TWILIO_PHONE_NUMBER;
-  const fromWhatsAppNumber = 'whatsapp:' + whatsappNumber;
+  const fromWhatsAppNumber = `whatsapp:${whatsappNumber}`;
+
   if (!accountSid || !authToken || !whatsappNumber) {
     throw new Error('Twilio credentials are not set in environment variables.');
   }
@@ -86,11 +87,14 @@ const sendWhatsAppMessage = async (phoneNumber, data) => {
   if (!data || !data.appName || !data.message) {
     throw new Error('Data object with appName and message is required.');
   }
-  const contentSid = process.env.TWILIO_copy_whatsapp_template_CONTENT_SID;
+
+  const contentSid = process.env.TWILIO_MULTI_VAR_WHATSAPP_TEMPLATE_CONTENT_SID;
   if (!contentSid) {
     throw new Error('Content SID is not set in environment variables.');
   }
+
   const client = twilio(accountSid, authToken);
+
   try {
     const contentVariables = JSON.stringify({
       "1": data.appName,
@@ -107,9 +111,9 @@ const sendWhatsAppMessage = async (phoneNumber, data) => {
     console.log('WhatsApp message sent. SID:', message.sid);
     return message.sid;
   } catch (err) {
-    console.error('Failed to send WhatsApp message:', err.message);
+    console.error('Failed to send WhatsApp message:', err);
     throw err;
   }
 };
 
-module.exports = { sendWhatsAppMessage };
+module.exports = { WhatsAppMessage };
