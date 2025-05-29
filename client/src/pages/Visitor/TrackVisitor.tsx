@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import { axiosInstance } from '../../utils/config';
 import { Mail, PhoneCall, MessageSquareText, StickyNote } from 'lucide-react';
 
 const TrackVisitor = () => {
@@ -20,78 +21,93 @@ const TrackVisitor = () => {
   const [emailContent, setEmailContent] = useState('');
   const [whatsappTitle, setWhatsappTitle] = useState('');
   const [whatsappContent, setWhatsappContent] = useState('');
+  const [editingHistoryId, setEditingHistoryId] = useState(null);
+const [editingContent, setEditingContent] = useState('');
 
-  useEffect(() => {
-    const fetchVisitor = async () => {
-      try {
-        const response = await fetch(`/api/visitor/${visitorId}`, {
-          method: 'GET',
-          headers: { 'Content-Type': 'application/json' },
-        });
-        if (!response.ok) throw new Error('Failed to fetch visitor data');
-        const data = await response.json();
-        setVisitor(data);
-      } catch (error) {
-        toast.error('Error fetching visitor');
-      }
-    };
-
-    const fetchHistory = async () => {
-      try {
-        const res = await fetch(`/api/visitor-history/getHistory/${visitorId}`);
-        const data = await res.json();
-        console.log('History Data:', data);
-        setHistory(data);
-      } catch (error) {
-        toast.error('Error fetching history');
-      }
-    };
-
-    if (visitorId) {
-      fetchVisitor();
-      fetchHistory();
+ useEffect(() => {
+  const fetchVisitor = async () => {
+    try {
+      const response = await axiosInstance.get(`/api/visitor/${visitorId}`);
+      if (!response.data) throw new Error('Failed to fetch visitor data');
+      setVisitor(response.data);
+    } catch (error) {
+      toast.error('Error fetching visitor');
     }
-  }, [visitorId]);
+  };
+
+  const fetchHistory = async () => {
+    try {
+      const response = await axiosInstance.get(`/api/visitor-history/getHistory/${visitorId}`);
+      setHistory(response.data);
+    } catch (error) {
+      toast.error('Error fetching history');
+    }
+  };
+
+  if (visitorId) {
+    fetchVisitor();
+    fetchHistory();
+  }
+}, [visitorId]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setVisitor({ ...visitor, [e.target.name]: e.target.value });
   };
-  const saveHistory = async (type, data) => {
-    try {
-      const res = await fetch(`/api/visitor-history/addHistory/${visitorId}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type, ...data }),
-      });
-      console.log('Response:', res);
-      if (!res.ok) throw new Error('Failed to save history');
-      toast.success(`${type} history saved`);
+ const saveHistory = async (type, data) => {
+  try {
+    const response = await axiosInstance.post(`/api/visitor-history/addHistory/${visitorId}`, {
+      type,
+      ...data,
+    });
+    if (!response.data) throw new Error('Failed to save history');
+    toast.success(`${type} history saved`);
 
-      // Refetch updated history
-      const updated = await fetch(
-        `/api/visitor-history/getHistory/${visitorId}`,
-      );
-      const updatedData = await updated.json();
-      setHistory(updatedData);
-    } catch (error) {
-      toast.error(`Error saving ${type}: ${error.message}`);
-    }
-  };
+    // Refetch updated history
+    const updated = await axiosInstance.get(`/api/visitor-history/getHistory/${visitorId}`);
+    setHistory(updated.data);
+  } catch (error) {
+    toast.error(`Error saving ${type}: ${error.message}`);
+  }
+};
+const deleteHistory = async (historyId) => {
+  try {
+    await axiosInstance.delete(`/api/visitor-history/deleteHistory/${visitorId}/${historyId}`);
+    toast.success('History deleted');
 
-  const handleSave = async () => {
-    try {
-      const response = await fetch(`/api/visitor/updateVisitor/${visitorId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(visitor),
-      });
-      if (!response.ok) throw new Error('Failed to save visitor data');
-      setEditMode(false);
-      toast.success('Visitor updated');
-    } catch (error) {
-      toast.error('Error saving visitor');
-    }
-  };
+    // Refetch updated history
+    const updated = await axiosInstance.get(`/api/visitor-history/getHistory/${visitorId}`);
+    setHistory(updated.data);
+  } catch (error) {
+    toast.error(`Error deleting history: ${error.message}`);
+  }
+};
+
+const updateHistory = async (historyId, updatedData) => {
+  try {
+    await axiosInstance.put(`/api/visitor-history/updateHistory/${visitorId}/${historyId}`, updatedData);
+    toast.success('History updated');
+
+    // Refetch updated history
+    const updated = await axiosInstance.get(`/api/visitor-history/getHistory/${visitorId}`);
+    setHistory(updated.data);
+  } catch (error) {
+    toast.error(`Error updating history: ${error.message}`);
+  }
+};
+
+
+
+ const handleSave = async () => {
+  try {
+    const response = await axiosInstance.put(`/api/visitor/updateVisitor/${visitorId}`, visitor);
+    if (!response.data) throw new Error('Failed to save visitor data');
+    setEditMode(false);
+    toast.success('Visitor updated');
+  } catch (error) {
+    toast.error('Error saving visitor');
+  }
+};
+
 
   const getIcon = (type: string) => {
     switch (type) {
@@ -345,26 +361,75 @@ const TrackVisitor = () => {
 
             <TabsContent value="history">
               <div className="flex gap-4 justify-center mb-6">
-                {history.map((item, index) => (
+                {history && history.map((item, index) => (
                   <div key={index}>{getIcon(item.type)}</div>
                 ))}
               </div>
 
               <div className="space-y-6">
-                {history.map((item, index) => (
-                  <div key={index} className="flex items-start gap-4">
-                    <div className="pt-1">{getIcon(item.type)}</div>
-                    <div>
-                      <p className="text-sm font-medium capitalize">
-                        {item.type}
-                      </p>
-                      <p className="text-muted-foreground text-xs">
-                        {item.createdAt}
-                      </p>
-                      <p className="mt-1">{item.content || item.title}</p>
-                    </div>
-                  </div>
-                ))}
+               {history && history.map((item, index) => (
+  <div key={index} className="flex flex-col gap-2 border p-2 rounded">
+    <div className="flex items-start gap-4">
+      <div className="pt-1">{getIcon(item.type)}</div>
+      <div className="flex-1">
+        <p className="text-sm font-medium capitalize">{item.type}</p>
+        <p className="text-muted-foreground text-xs">{item.createdAt}</p>
+        {editingHistoryId === item.historyId ? (
+          <Textarea
+            className="mt-1"
+            value={editingContent}
+            onChange={(e) => setEditingContent(e.target.value)}
+          />
+        ) : (
+          <p className="mt-1">{item.content || item.title}</p>
+        )}
+      </div>
+    </div>
+
+    <div className="flex gap-2 mt-2 ml-8">
+      {editingHistoryId === item.historyId ? (
+        <>
+          <Button
+            size="sm"
+            onClick={() => {
+              updateHistory(item.historyId, { content: editingContent });
+              setEditingHistoryId(null);
+            }}
+          >
+            Save
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => setEditingHistoryId(null)}
+          >
+            Cancel
+          </Button>
+        </>
+      ) : (
+        <>
+          <Button
+            size="sm"
+            onClick={() => {
+              setEditingHistoryId(item.historyId);
+              setEditingContent(item.content || item.title);
+            }}
+          >
+            Update
+          </Button>
+          <Button
+            size="sm"
+            variant="destructive"
+            onClick={() => deleteHistory(item.historyId)}
+          >
+            Delete
+          </Button>
+        </>
+      )}
+    </div>
+  </div>
+))}
+
               </div>
             </TabsContent>
           </Tabs>
