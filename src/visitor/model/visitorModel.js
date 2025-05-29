@@ -33,7 +33,9 @@ const findVisitorByPhoneAndTime = async (phone) => {
       builder.whereNull("feedbackScore").orWhereNull("feedbackComments");
     });
 };
-
+const getVisitorById = async (visitorId) => {
+  return db("visitors").where("visitorId", visitorId).first();
+}
 // Function to insert a new visitor entry
 const addVisitor = async (visitorData) => {
   return db("visitors").insert(visitorData).insert({
@@ -74,7 +76,9 @@ const markAsPaid = async (visitorId, data) => {
 const deleteVisitor = async (visitorId) => {
   return db("visitors").where("visitorId", visitorId).del();
 }
-
+const updateVisitor = async (visitorId, data) => {
+  return db("visitors").where("visitorId", visitorId).update(data);
+}
 module.exports = {
   findVisitorByPhoneAndTime,
   addVisitor,
@@ -85,5 +89,7 @@ module.exports = {
   deleteVisitor,
   getUpcomingMeetings,
   getRecentMeetings,
-  getMeetingById
+  getMeetingById,
+  getVisitorById,
+  updateVisitor
 };

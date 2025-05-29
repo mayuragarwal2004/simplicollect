@@ -14,11 +14,20 @@ const TrackVisitor = () => {
   const [editMode, setEditMode] = useState(false);
   const [history, setHistory] = useState<any[]>([]);
   const visitorId = useParams().visitorId;
+  const [callRemark, setCallRemark] = useState('');
+  const [noteContent, setNoteContent] = useState('');
+  const [emailTitle, setEmailTitle] = useState('');
+  const [emailContent, setEmailContent] = useState('');
+  const [whatsappTitle, setWhatsappTitle] = useState('');
+  const [whatsappContent, setWhatsappContent] = useState('');
 
   useEffect(() => {
     const fetchVisitor = async () => {
       try {
-        const response = await fetch(`/api/visitor/${visitorId}`);
+        const response = await fetch(`/api/visitor/${visitorId}`, {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
+        });
         if (!response.ok) throw new Error('Failed to fetch visitor data');
         const data = await response.json();
         setVisitor(data);
@@ -29,8 +38,9 @@ const TrackVisitor = () => {
 
     const fetchHistory = async () => {
       try {
-        const res = await fetch(`/api/visitor/${visitorId}/history`);
+        const res = await fetch(`/api/visitor-history/getHistory/${visitorId}`);
         const data = await res.json();
+        console.log('History Data:', data);
         setHistory(data);
       } catch (error) {
         toast.error('Error fetching history');
@@ -46,15 +56,35 @@ const TrackVisitor = () => {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setVisitor({ ...visitor, [e.target.name]: e.target.value });
   };
+  const saveHistory = async (type, data) => {
+    try {
+      const res = await fetch(`/api/visitor-history/addHistory/${visitorId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type, ...data }),
+      });
+      console.log('Response:', res);
+      if (!res.ok) throw new Error('Failed to save history');
+      toast.success(`${type} history saved`);
+
+      // Refetch updated history
+      const updated = await fetch(
+        `/api/visitor-history/getHistory/${visitorId}`,
+      );
+      const updatedData = await updated.json();
+      setHistory(updatedData);
+    } catch (error) {
+      toast.error(`Error saving ${type}: ${error.message}`);
+    }
+  };
 
   const handleSave = async () => {
     try {
-      const response = await fetch(`/api/visitor/${visitorId}`, {
+      const response = await fetch(`/api/visitor/updateVisitor/${visitorId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(visitor),
       });
-
       if (!response.ok) throw new Error('Failed to save visitor data');
       setEditMode(false);
       toast.success('Visitor updated');
@@ -178,10 +208,9 @@ const TrackVisitor = () => {
             </div>
           </div>
         </CardContent>
-        
+
         <CardContent>
           <div className="space-y-4">
-
             {!editMode && (
               <Button
                 className="mt-4"
@@ -219,34 +248,99 @@ const TrackVisitor = () => {
               <Label>Phone Number</Label>
               <Input value={visitor.mobileNumber || ''} disabled />
               <Label className="mt-2">Remark</Label>
-              <Textarea placeholder="Enter call remarks..." />
-              <Button className="mt-2">Save Call Log</Button>
+              <Textarea
+                placeholder="Enter call remarks..."
+                value={callRemark}
+                onChange={(e) => setCallRemark(e.target.value)}
+              />
+              <Button
+                className="mt-2"
+                onClick={() =>
+                  saveHistory('call', {
+                    to: visitor.mobileNumber,
+                    content: callRemark,
+                  })
+                }
+              >
+                Save Call Log
+              </Button>
             </TabsContent>
 
             <TabsContent value="note">
               <Label>Note</Label>
-              <Textarea placeholder="Enter note..." />
-              <Button className="mt-2">Save</Button>
+              <Textarea
+                placeholder="Enter note..."
+                value={noteContent}
+                onChange={(e) => setNoteContent(e.target.value)}
+              />
+              <Button
+                className="mt-2"
+                onClick={() =>
+                  saveHistory('note', {
+                    content: noteContent,
+                  })
+                }
+              >
+                Save
+              </Button>
             </TabsContent>
 
             <TabsContent value="email">
               <Label>Email</Label>
               <Input value={visitor.email || ''} disabled />
               <Label className="mt-2">Title</Label>
-              <Input placeholder="Enter email title" />
+              <Input
+                placeholder="Enter email title"
+                value={emailTitle}
+                onChange={(e) => setEmailTitle(e.target.value)}
+              />
               <Label className="mt-2">Subject</Label>
-              <Textarea placeholder="Enter email subject or message..." />
-              <Button className="mt-2">Send Email</Button>
+              <Textarea
+                placeholder="Enter email subject or message..."
+                value={emailContent}
+                onChange={(e) => setEmailContent(e.target.value)}
+              />
+              <Button
+                className="mt-2"
+                onClick={() =>
+                  saveHistory('email', {
+                    to: visitor.email,
+                    title: emailTitle,
+                    content: emailContent,
+                  })
+                }
+              >
+                Send Email
+              </Button>
             </TabsContent>
 
             <TabsContent value="whatsapp">
               <Label>WhatsApp Number</Label>
               <Input value={visitor.mobileNumber || ''} disabled />
               <Label className="mt-2">Title</Label>
-              <Input placeholder="Enter WhatsApp title" />
+              <Input
+                placeholder="Enter WhatsApp title"
+                value={whatsappTitle}
+                onChange={(e) => setWhatsappTitle(e.target.value)}
+              />
               <Label className="mt-2">Content</Label>
-              <Textarea placeholder="Enter WhatsApp message content..." />
-              <Button className="mt-2">Send WhatsApp</Button>
+              <Textarea
+                placeholder="Enter WhatsApp message content..."
+                value={whatsappContent}
+                onChange={(e) => setWhatsappContent(e.target.value)}
+              />
+              <Button
+                className="mt-2"
+                onClick={() =>
+                  saveHistory('whatsapp', {
+                    to: visitor.mobileNumber,
+                    title: whatsappTitle,
+                    content: whatsappContent,
+                  })
+                }
+              >
+                Send WhatsApp
+              </Button>
             </TabsContent>
 
             <TabsContent value="history">
@@ -265,9 +359,9 @@ const TrackVisitor = () => {
                         {item.type}
                       </p>
                       <p className="text-muted-foreground text-xs">
-                        {item.timestamp}
+                        {item.createdAt}
                       </p>
-                      <p className="mt-1">{item.message || item.title}</p>
+                      <p className="mt-1">{item.content || item.title}</p>
                     </div>
                   </div>
                 ))}

@@ -42,7 +42,6 @@ const addHistory = async (req, res) => {
         case "note":
             break;
     }
-
     try {
         const historyData = {
             visitorId,
