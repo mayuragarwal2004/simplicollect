@@ -13,6 +13,7 @@ const meetingRoutes = require("./src/meeting/route/meetingRoutes");
 
 const { authenticateToken, AuthenticateAdmin } = require("./src/middlewares/authMiddleware");
 const { sendWhatsAppOtp } = require("./src/config/whatsapp");
+require('./src/feeReceiver/cron/pendingRequestNotifier');
 const PORT = process.env.PORT || 5000;
 
 const app = express();
