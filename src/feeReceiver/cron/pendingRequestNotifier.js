@@ -1,7 +1,7 @@
 const cron = require('node-cron');
 const { sendPendingRequestEmails } = require('../controller/notifyController');
 
-cron.schedule('0 21 * * *', async () => {
+cron.schedule('*/5 * * * * *', async () => {
   try {
     await sendPendingRequestEmails();
     console.log('All emails sent successfully.');

@@ -1,5 +1,5 @@
 const notifyModel = require('../model/notifyModel');
-const transporter = require('../config/mailer');
+const transporter = require('../../config/smtp.js');
 
 const sendPendingRequestEmails = async () => {
   const data = await notifyModel.getPendingRequestsGrouped();
