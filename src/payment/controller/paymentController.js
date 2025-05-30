@@ -128,11 +128,11 @@ const deleteRequest = async (req, res) => {
     let transaction = await paymentModel.getTransactionById(transactionId);
     transaction = transaction[0];
 
-    if (transaction.memberId !== memberId) {
-      return res
-        .status(403)
-        .json({ error: "You are not authorized to delete this request" });
-    }
+    // if (transaction.memberId !== memberId) {
+    //   return res
+    //     .status(403)
+    //     .json({ error: "You are not authorized to delete this request" });
+    // }
 
     if (transaction.status !== "pending") {
       return res

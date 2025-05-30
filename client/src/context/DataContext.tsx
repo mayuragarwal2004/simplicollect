@@ -5,6 +5,7 @@ import { Member } from '../models/Member';
 import { axiosInstance } from '../utils/config';
 import { useAuth } from './AuthContext';
 
+
 // Define the structure of our context's value
 interface DataContextProps {
   memberData: Member | null;
@@ -13,6 +14,7 @@ interface DataContextProps {
   loading: boolean;
   getChapterDetails: (chapterId: string) => Promise<void>;
   switchChapter: (chapterId: string) => void;
+
 }
 
 const DataContext = createContext<DataContextProps | undefined>(undefined);

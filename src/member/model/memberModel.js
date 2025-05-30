@@ -93,7 +93,8 @@ const getAllMembers = async (chapterId) => {
       db.raw("CONCAT(m.firstName, ' ', m.lastName) as label"),
       db.raw("GROUP_CONCAT(DISTINCT r.roleName ORDER BY r.roleName ASC SEPARATOR ', ') as roleNames")
     )
-    .groupBy("m.memberId");
+    .groupBy("m.memberId")
+    .orderBy("label", "asc");
 };
 
 module.exports = {

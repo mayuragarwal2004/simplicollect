@@ -36,7 +36,7 @@ const OrganisationTableData = () => {
 
   const fetchOrganisations = () => {
     axiosInstance
-      .get(`/api/organisations?rows=${rows}&page=${page}`)
+      .get(`/api/admin/organisations?rows=${rows}&page=${page}`)
       .then((res) => {
         console.log('Fetched organisations:', res.data);
         setOrganisations(res.data.data || res.data);
@@ -107,7 +107,7 @@ const OrganisationTableData = () => {
       let response;
       if (editingOrg) {
         response = await axiosInstance.put(
-          `/api/organisations/${editingOrg.organisationId}`,
+          `/api/admin/organisations/${editingOrg.organisationId}`,
           payload,
         );
         if (response.data) {
@@ -121,7 +121,7 @@ const OrganisationTableData = () => {
           toast.success('Organisation updated successfully');
         }
       } else {
-        response = await axiosInstance.post('/api/organisations', payload);
+        response = await axiosInstance.post('/api/admin/organisations', payload);
         if (response.data && response.data.organisationId) {
           const newOrg = {
             ...response.data,
@@ -149,7 +149,7 @@ const OrganisationTableData = () => {
     if (!deleteOrgId) return;
 
     try {
-      await axiosInstance.delete(`/api/organisations/${deleteOrgId}`);
+      await axiosInstance.delete(`/api/admin/organisations/${deleteOrgId}`);
       setOrganisations((prevOrgs) =>
         prevOrgs.filter((org) => org.organisationId !== deleteOrgId)
       );

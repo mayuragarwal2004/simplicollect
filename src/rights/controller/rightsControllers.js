@@ -112,8 +112,39 @@ const getMakeTransactionRightsController = async (req, res) => {
   }
 };
 
+const getChangeDateRightsController = async (req, res) => {
+  const { memberId } = req.user;
+  const { chapterId } = req.params;
+
+  if (!memberId || !chapterId) {
+    return res.status(400).json({ error: "Invalid input" });
+  }
+
+  try {
+    const all_rights = await rightsModel.getAllRightsByMemberIdAndChapterId(
+      memberId,
+      chapterId
+    );
+
+    const value_to_find = "change-package-selection-date";
+
+    const rights_raw = all_rights.filter((right) => {
+      return right.featureId === value_to_find;
+    });
+
+    if (rights_raw.length === 0) {
+      return res.json({ allowed: false });
+    }
+    res.json({ allowed: true });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
 module.exports = {
   getSidebarRightsController,
   getApprovePaymentRightsController,
   getMakeTransactionRightsController,
+  getChangeDateRightsController,
 };
