@@ -114,9 +114,36 @@ const updatePhone = async (req, res) => {
         });
     }
 };
+const updatePassword= async (req, res) => {
+    try {
+      const { memberId } = req.params;
+      const { currentPassword, newPassword } = req.body;
+  
+      // Validate password length
+      if (newPassword.length < 8) {
+        return res.status(400).json({
+          success: false,
+          message: 'Password must be at least 8 characters'
+        });
+      }
+  
+      await Member.updatePassword(memberId, currentPassword, newPassword);
+      
+      res.status(200).json({
+        success: true,
+        message: 'Password updated successfully'
+      });
+    } catch (error) {
+      res.status(400).json({
+        success: false,
+        message: error.message
+      });
+    }
+  };
 
 module.exports= {
     updateName,
     updateEmail,
-    updatePhone
+    updatePhone,
+    updatePassword
 };

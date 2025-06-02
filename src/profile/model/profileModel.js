@@ -14,25 +14,34 @@ const updateName = async (memberId, firstName, lastName) => {
     .where('memberId', memberId)
     .update({ firstName, lastName });
   
-  return getById(memberId); // Removed 'this.'
+  return getById(memberId); 
 };
 
 // Update member email
 const updateEmail = async (memberId, email) => {
+  const currentEmail=await getById(memberId);
+  if (currentEmail.email === email) {
+    throw new Error('New email cannot be the same as current email');
+  }
   await db('members')
     .where('memberId', memberId)
-    .update({ email });
+    .update({ email: email });
   
-  return getById(memberId); // Removed 'this.'
+  return getById(memberId);  
 };
 
 // Update member phone number
 const updatePhone = async (memberId, phoneNumber) => {
+  const currentEmail=getById(memberId);
+
+  if (currentEmail.phoneNumber === phoneNumber) {
+    throw new Error('New phone number cannot be the same as current phone number');
+  }
   await db('members')
     .where('memberId', memberId)
-    .update({ phoneNumber });
+    .update({ phoneNumber: phoneNumber });
   
-  return getById(memberId); // Removed 'this.'
+  return getById(memberId);  
 };
 
 // Verify if email already exists (excluding current member)
@@ -57,10 +66,38 @@ const phoneExists = async (phoneNumber, excludeMemberId) => {
 
 // Verify password (compare with hashed password in DB)
 const verifyPassword = async (memberId, password) => {
-  const member = await getById(memberId); // Removed 'this.'
+  const member = await getById(memberId);  
   if (!member) return false;
   
   return bcrypt.compare(password, member.password);
+};
+const updatePassword = async (memberId, currentPassword, newPassword) => {
+  // Get current password hash
+  const member = await db('members')
+    .where('memberId', memberId)
+    .select('password')
+    .first();
+
+  if (!member) {
+    throw new Error('Member not found');
+  }
+
+  // Verify current password
+  const isMatch = await bcrypt.compare(currentPassword, member.password);
+  if (!isMatch) {
+    throw new Error('Current password is incorrect');
+  }
+
+  // Hash new password
+  const salt = await bcrypt.genSalt(10);
+  const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+  // Update password
+  await db('members')
+    .where('memberId', memberId)
+    .update({ password: hashedPassword });
+
+  return true;
 };
 
 module.exports = {
@@ -70,5 +107,6 @@ module.exports = {
   updatePhone,
   emailExists,
   phoneExists,
-  verifyPassword
+  verifyPassword,
+  updatePassword
 };

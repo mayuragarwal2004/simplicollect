@@ -42,6 +42,8 @@ import AcceptChapterPaymentPage from './pages/Member/FeeReceiver/AcceptChapterPa
 import ChapterRoles from './components/Admin/Chapter/CreateNew/ChapterRoles/ChapterRoles';
 import MyLedger from './pages/Member/MyLedger';
 import DashboardPage from './pages/Admin/Dashboard/DashboardPage';
+
+import AdminPackage from './pages/Admin/Package/AdminPackage'
 import { useData } from './context/DataContext';
 
 const routes = [
@@ -69,6 +71,10 @@ const routes = [
       {
         path: 'dashboard',
         element: <DashboardPage />,
+      },
+      {
+        path: 'package',
+        element: <AdminPackage/>,
       },
       {
         path: '',
