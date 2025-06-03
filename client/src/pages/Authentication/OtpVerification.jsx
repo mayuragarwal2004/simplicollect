@@ -73,7 +73,7 @@ const OtpVerification = () => {
         });
         const data = await response.json();
         if (response.ok) {
-            toast.success('password has been set login now');
+            toast.success('OTP verified successfully & password set successfully! Please login with your new password.');
             setError("");
             navigate("/auth/signin");
         } else {
