@@ -23,6 +23,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
+import { SearchBar } from '@/components/ui/search-bar';
 
 const AdminMembersTableData = () => {
   const [members, setMembers] = useState([
@@ -341,12 +342,11 @@ const AdminMembersTableData = () => {
         </Dialog>
       </div>
       <div className="mb-4">
-        <Input
-          type="text"
-          placeholder="Search members..."
+        <SearchBar
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full p-2 border rounded"
+          className="mb-3 w-full"
+          placeholder="Search members using name, email, or phone number..."
         />
       </div>
 

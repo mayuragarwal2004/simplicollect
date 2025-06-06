@@ -111,7 +111,7 @@ const deleteMember = async (req, res) => {
   try {
     const { memberId } = req.params;
 
-    const member = await adminMembersModel.getMemberById(memberId);
+    const member = await adminMembersModel.findMemberById(memberId);
     if (!member) {
       return res.status(404).json({ message: "Member not found" });
     }
