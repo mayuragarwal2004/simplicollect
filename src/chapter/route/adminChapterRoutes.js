@@ -23,8 +23,8 @@ const multer = require("multer");
 // Multer configuration
 const storage = multer.memoryStorage(); // Store files in memory
 const upload = multer({ storage });
-router.post("/add-bulk-members", upload.single("excelFile"),verifyBulkMiddleware, adminChapterControllers.checkAndSaveMembers);
-router.post("/bulk-members-add-check-format",upload.single("excelFile"),verifyBulkMiddleware, adminChapterControllers.checkFormatAndReturnExcel);
+router.post("/:chapterSlug/add-bulk-members", upload.single("excelFile"),verifyBulkMiddleware, adminChapterControllers.checkAndSaveMembers);
+router.post("/:chapterSlug/bulk-members-add-check-format",upload.single("excelFile"),verifyBulkMiddleware, adminChapterControllers.checkFormatAndReturnExcel);
 router.get("/:chapterSlug/bulk-members-add-get-template",adminChapterControllers.getExcelTemplate);
 
 module.exports = router;
