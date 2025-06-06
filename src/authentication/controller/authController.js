@@ -2,7 +2,7 @@ const db = require("../../config/db");
 const { sendOTP, verifyOTP, memberExistOrNot } = require("../model/authModel");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
-const { WhatsAppMessage } = require("../../config/whatsapp");
+const { WhatsAppMessage, sendWhatsAppOtpByTwilio } = require("../../config/whatsapp");
 
 const JWT_SECRET = process.env.JWT_SECRET;
 const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET;
@@ -258,16 +258,16 @@ const meberexists = async (req, res) => {
 // Export the functions
 const sendWhatsappMessage=async (req,res)=>{
   try {
-    const { phoneNumber, appName, message } = req.body;
+    const { phoneNumber, otp } = req.body;
 
-    if (!phoneNumber || !appName || !message) {
+    if (!phoneNumber || !otp) {
       return res.status(400).json({
         success: false,
-        message: 'Missing required fields: phoneNumber, appName, or message.'
+        message: 'Missing required fields: phoneNumber or otp.'
       });
     }
 
-    const messageSid = await WhatsAppMessage(phoneNumber, { appName, message });
+    const messageSid = await sendWhatsAppOtpByTwilio(phoneNumber, otp);
 
     res.status(200).json({
       success: true,
