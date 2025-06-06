@@ -49,12 +49,14 @@ const AdminMembersTableData = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingMember, setEditingMember] = useState(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [isChangePasswordDialogOpen, setIsChangePasswordDialogOpen] = useState(false);
-  const [selectedMemberForPasswordChange, setSelectedMemberForPasswordChange] = useState(null);
+  const [isChangePasswordDialogOpen, setIsChangePasswordDialogOpen] =
+    useState(false);
+  const [selectedMemberForPasswordChange, setSelectedMemberForPasswordChange] =
+    useState(null);
   const [changePasswordForm, setChangePasswordForm] = useState({
     newPassword: '',
-  confirmPassword: '',
-});
+    confirmPassword: '',
+  });
 
   const [formData, setFormData] = useState({
     firstName: '',
@@ -65,11 +67,17 @@ const AdminMembersTableData = () => {
 
   useEffect(() => {
     fetchMembers();
-  }, [rows, page]);
+  }, [rows, page, searchQuery]);
 
   const fetchMembers = () => {
     axiosInstance
-      .get(`/api/admin/members/getandsearchmembers?rows=${rows}&page=${page+1}`)
+      .get(`/api/admin/members/getandsearchmembers`, {
+        params: {
+          searchQuery: searchQuery.trim(),
+          rows: rows,
+          page: page + 1, // Adjusting for 1-based pagination
+        },
+      })
       .then((res) => {
         setMembers(res.data.data || res.data);
         setTotalRecord(res.data.totalRecords || res.data.length);
@@ -117,18 +125,18 @@ const AdminMembersTableData = () => {
       toast.error('First name is required');
       return false;
     }
-    
+
     if (!formData.email?.trim() && !formData.phoneNumber?.trim()) {
       toast.error('Email is required or Phone number is required ');
       return false;
     }
-   
+
     return true;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
@@ -136,7 +144,7 @@ const AdminMembersTableData = () => {
       const payload = {
         firstName: formData.firstName,
         lastName: formData.lastName || null,
-        email: formData.email || null ,
+        email: formData.email || null,
         phoneNumber: formData.phoneNumber || null,
       };
 
@@ -239,7 +247,7 @@ const AdminMembersTableData = () => {
     });
     setIsChangePasswordDialogOpen(true);
   };
-  
+
   const handleChangePasswordInput = (e) => {
     const { name, value } = e.target;
     setChangePasswordForm((prev) => ({
@@ -247,21 +255,24 @@ const AdminMembersTableData = () => {
       [name]: value,
     }));
   };
-  
+
   const handleChangePasswordSubmit = async (e) => {
     e.preventDefault();
     const { newPassword, confirmPassword } = changePasswordForm;
-  
+
     if (newPassword !== confirmPassword) {
       toast.error('Passwords do not match');
       return;
     }
-  
+
     try {
-      await axiosInstance.put(`/api/admin/members/updatepassword/${selectedMemberForPasswordChange}`, {
-        password: newPassword,
-        confirmPassword:confirmPassword
-      });
+      await axiosInstance.put(
+        `/api/admin/members/updatepassword/${selectedMemberForPasswordChange}`,
+        {
+          password: newPassword,
+          confirmPassword: confirmPassword,
+        },
+      );
       toast.success('Password changed successfully');
       setIsChangePasswordDialogOpen(false);
     } catch (error) {
@@ -269,8 +280,8 @@ const AdminMembersTableData = () => {
       toast.error('Failed to change password');
     }
   };
-  
-console.log({members})
+
+  console.log({ members });
 
   return (
     <div className="rounded-2xl border border-stroke bg-white p-5 shadow-md dark:border-strokedark dark:bg-boxdark">
@@ -348,7 +359,8 @@ console.log({members})
             membersName: `${member.firstName} ${member.lastName}`, // Combine for display
             onEdit: handleOpenDialog,
             onDelete: () => handleDeleteClick(member.memberId),
-            onChangePassword: () => handleOpenChangePasswordDialog(member.memberId),
+            onChangePassword: () =>
+              handleOpenChangePasswordDialog(member.memberId),
           }))}
           columns={MembersColumns}
           searchInputField="membersName"
@@ -399,7 +411,6 @@ console.log({members})
               placeholder="Last Name"
               value={formData.lastName}
               onChange={handleInputChange}
-              
             />
             <Input
               type="email"
@@ -407,7 +418,6 @@ console.log({members})
               placeholder="Email"
               value={formData.email}
               onChange={handleInputChange}
-              
             />
             <Input
               type="number"
@@ -415,7 +425,6 @@ console.log({members})
               placeholder="Phone Number"
               value={formData.phoneNumber}
               onChange={handleInputChange}
-              
             />
             <DialogFooter>
               <Button
@@ -428,18 +437,19 @@ console.log({members})
               >
                 Cancel
               </Button>
-              <Button  type="submit">{editingMember ? 'Update' : 'Add'}</Button>
+              <Button type="submit">{editingMember ? 'Update' : 'Add'}</Button>
             </DialogFooter>
           </form>
         </DialogContent>
       </Dialog>
 
-      <Dialog open={isChangePasswordDialogOpen} onOpenChange={setIsChangePasswordDialogOpen}>
-      <DialogContent>
+      <Dialog
+        open={isChangePasswordDialogOpen}
+        onOpenChange={setIsChangePasswordDialogOpen}
+      >
+        <DialogContent>
           <DialogHeader>
-            <DialogTitle>
-              Change Password
-            </DialogTitle>
+            <DialogTitle>Change Password</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleChangePasswordSubmit} className="space-y-4">
             <Input
@@ -458,7 +468,7 @@ console.log({members})
               onChange={handleChangePasswordInput}
               required
             />
-            
+
             <DialogFooter>
               <Button
                 type="button"
@@ -469,7 +479,12 @@ console.log({members})
               >
                 Cancel
               </Button>
-              <Button onClick={()=>isChangePasswordDialogOpen(false)} type="submit">Change Password </Button>
+              <Button
+                onClick={() => isChangePasswordDialogOpen(false)}
+                type="submit"
+              >
+                Change Password{' '}
+              </Button>
             </DialogFooter>
           </form>
         </DialogContent>
