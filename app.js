@@ -47,7 +47,7 @@ app.get("/api/testWA", async (req, res) => {
 // admin routes
 // app.use("/api/organisations", authenticateToken, require("./src/organisation/route/adminOrganisationRoutes"));
 app.use("/api/admin/organisations", authenticateToken, AuthenticateAdmin, require("./src/organisation/route/adminOrganisationRoutes"));
-app.use("/api/admin/chapters", authenticateToken, AuthenticateAdmin, require("./src/chapter/route/adminChapterRoutes"));
+app.use("/api/admin/chapters", require("./src/chapter/route/adminChapterRoutes"));
 app.use("/api/admin/chapter-member-list", authenticateToken, AuthenticateAdmin, require("./src/chapter/route/adminChapterMemberListRoutes"));
 app.use("/api/admin/members", authenticateToken, AuthenticateAdmin, require("./src/member/route/adminMemberRoutes"));
 
