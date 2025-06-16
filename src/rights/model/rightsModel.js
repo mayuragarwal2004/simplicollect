@@ -60,8 +60,19 @@ const getAllRightsByMemberIdAndChapterId = async (memberId, chapterId) => {
     .groupBy("mcm.memberId", "mcm.chapterId", "fm.featureId");
 };
 
+const isFeeReceiverToday = async (memberId, chapterId) => {
+  return db("fee_receivers as fr")
+    .join("member_chapter_mapping as mcm", "fr.memberId", "mcm.memberId")
+    .where("fr.chapterId", chapterId)
+    .andWhere("fr.memberId", memberId)
+    .andWhereRaw("CURDATE() BETWEEN DATE(fr.enableDate) AND DATE(fr.disableDate)")
+    .select("fr.*")
+    .first();
+};
+
 
 module.exports = {
   getRightsByMemberIdAndChapterIdAndMenu,
   getAllRightsByMemberIdAndChapterId,
+  isFeeReceiverToday,
 };
