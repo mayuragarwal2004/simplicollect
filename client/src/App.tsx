@@ -42,14 +42,14 @@ import AcceptChapterPaymentPage from './pages/Member/FeeReceiver/AcceptChapterPa
 import ChapterRoles from './components/Admin/Chapter/CreateNew/ChapterRoles/ChapterRoles';
 import MyLedger from './pages/Member/MyLedger';
 import DashboardPage from './pages/Admin/Dashboard/DashboardPage';
-
-import AdminPackage from './pages/Admin/Package/AdminPackage'
+import AdminPackage from './pages/Admin/Package/AdminPackage';
 import { useData } from './context/DataContext';
+import Home from './pages/Home';
 
 const routes = [
   {
     index: true,
-    element: <Navigate to="/auth/signin" />,
+    element: <Home />,
   },
   {
     path: '/admin',
@@ -62,7 +62,7 @@ const routes = [
       {
         path: '',
         index: true,
-        element: <Navigate to="/admin/organisations" />, // replace with dashboard
+        element: <Navigate to="/admin/organisations" />,
       },
       {
         path: 'organisations',
@@ -74,12 +74,7 @@ const routes = [
       },
       {
         path: 'package',
-        element: <AdminPackage/>,
-      },
-      {
-        path: '',
-        index: true,
-        element: <Navigate to="/admin/chapters" />, // replace with dashboard
+        element: <AdminPackage />,
       },
       {
         path: 'chapters',
@@ -90,7 +85,7 @@ const routes = [
           },
           {
             path: ':chapterSlug',
-            element: <AdminChapterLayout />, //////
+            element: <AdminChapterLayout />,
             children: [
               {
                 path: 'member',
@@ -104,7 +99,6 @@ const routes = [
           },
         ],
       },
-
       {
         path: 'members',
         element: <AdminMembersTablePage />,
@@ -201,7 +195,6 @@ const routes = [
       },
       {
         path: '*',
-        index: true,
         element: <>404</>,
       },
     ],
@@ -213,15 +206,11 @@ const router = createBrowserRouter(routes);
 function App() {
   const [loadingLocal, setLoadingLocal] = useState<boolean>(true);
   const { loading } = useData();
-  // const { pathname } = useLocation();
-
-  // useEffect(() => {
-  //   window.scrollTo(0, 0);
-  // }, [pathname]);
 
   useEffect(() => {
     setTimeout(() => setLoadingLocal(false), 1000);
   }, []);
+
   return loadingLocal ? (
     <Loader />
   ) : (
