@@ -28,8 +28,14 @@ const getAllChapters = async (memberId) => {
     .orderBy("chapters.chapterName", "asc");
 };
 
+
+const findChapterBySlug = async (chapterSlug) => {
+  return db("chapters").where("chapterSlug", chapterSlug).select("*").first();
+};
+
 module.exports = {
   findChapterById,
   updateChapter,
   getAllChapters,
+  findChapterBySlug,
 };

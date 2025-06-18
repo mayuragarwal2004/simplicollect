@@ -26,9 +26,23 @@ import {
   CommandItem,
   CommandList,
 } from '@/components/ui/command';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { Button } from '@/components/ui/button';
 import { ChevronsUpDown, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Input } from '@/components/ui/input';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion';
 
 const PackageViewer = () => {
   const {
@@ -39,14 +53,18 @@ const PackageViewer = () => {
       packageParents,
       packageData,
       pendingPayments,
+      terms,
+      selectedTermId,
     },
+    calculationDate,
+    setCalculationDate,
     setPaymentData,
     fetchAllData,
     handleDeletePendingRequest,
+    setSelectedTermId,
   } = usePaymentData();
   const { chapterData, memberData } = useData();
   const [tabValue, setTabValue] = React.useState(0);
-  const [calculationDate, setCalculationDate] = useState(new Date());
   const [selectedMember, setSelectedMember] = useState({
     value: memberData?.memberId,
     label: `${memberData?.firstName} ${memberData?.lastName}`,
@@ -55,7 +73,8 @@ const PackageViewer = () => {
   const [members, setMembers] = useState([]);
   const [open, setOpen] = useState(false);
 
-  const [changeMemberRights, setChangeMemberRights] = useState(true);
+  const [changeMemberRights, setChangeMemberRights] = useState(false);
+  const [changeDateRights, setChangeDateRights] = useState(false);
 
   useEffect(() => {
     if (memberData?.memberId && !selectedMember.value) {
@@ -109,11 +128,22 @@ const PackageViewer = () => {
         .get(`/api/rights/anyMemberMaketransaction/${chapterData.chapterId}`)
         .then((response) => {
           setChangeMemberRights(response.data.allowed);
+        })
+        .catch((error) => {
+          console.error('Error fetching member transaction rights:', error);
+        });
+      axiosInstance
+        .get(`/api/rights/changeDate/${chapterData.chapterId}`)
+        .then((response) => {
+          setChangeDateRights(response.data.allowed);
+        })
+        .catch((error) => {
+          console.error('Error fetching change date rights:', error);
         });
     }
   }, [chapterData]);
 
-  console.log({ changeMemberRights });
+  console.log({ calculationDate });
 
   return (
     <div className="rounded-sm border border-stroke bg-white px-5 pt-6 pb-2.5 shadow-default dark:border-strokedark dark:bg-boxdark sm:px-7.5 xl:pb-1">
@@ -169,30 +199,8 @@ const PackageViewer = () => {
           </div>
         </div>
       )}
-      <div className="flex justify-between">
-        {/* Left Side: DatePicker */}
-        {Boolean(chapterData?.testMode) ? (
-          <div className="flex items-center space-x-4">
-            {/* <LocalizationProvider dateAdapter={AdapterDateFns}>
-              <DatePicker
-                label="Calculation Date"
-                value={calculationDate}
-                onChange={(newDate) => setCalculationDate(newDate)}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    value={
-                      calculationDate
-                        ? new Date(calculationDate).toLocaleDateString('en-GB')
-                        : ''
-                    }
-                  />
-                )}
-              />
-            </LocalizationProvider> */}
-          </div>
-        ) : (
-          // display live current date time in the format of "DD/MM/YYYY HH:MM:SS"
+      <div className="flex justify-between items-start">
+        <div>
           <div className="flex items-center space-x-4">
             <p className="text-lg font-semibold text-gray-700 dark:text-gray-300">
               Current Date:
@@ -201,10 +209,81 @@ const PackageViewer = () => {
               <CurrentDateTime />
             </p>
           </div>
-        )}
+          {(changeDateRights || changeMemberRights) && (
+            <Accordion type="single" collapsible>
+              <AccordionItem value="item-1">
+                <AccordionTrigger>Additional Settings</AccordionTrigger>
+                {/* add border */}
+                <AccordionContent>
+                  {/* Left Side: DatePicker */}
+                  {changeDateRights && (
+                    <div className="flex items-center space-x-4">
+                      <Input
+                        type="date"
+                        value={calculationDate.toISOString().split('T')[0]}
+                        onChange={(e) => {
+                          const date = new Date(e.target.value);
+                          setCalculationDate(date);
+                          packageAmountCalculations(
+                            date,
+                            packageData,
+                            chapterMeetings,
+                            setPaymentData,
+                            receivers,
+                          );
+                        }}
+                        // className="w-1/2"
+                        placeholder="Calculation Date"
+                      />
+                    </div>
+                  )}
+                  {changeMemberRights && (
+                    <div className="flex items-center space-x-4 mt-4">
+                      <ChooseMember
+                        members={members}
+                        selectedMember={selectedMember}
+                        setSelectedMember={setSelectedMember}
+                      />
+                    </div>
+                  )}
+                  
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+          )}
+          {terms &&
+            terms.filter((term) => term.status === 'active').length > 1 && (
+              <div className="flex items-center space-x-4 mt-4">
+                <label className="text-md font-semibold">
+                  Select Active Term:
+                </label>
+                <Select
+                  value={selectedTermId || ''}
+                  onValueChange={(value) => {
+                    setSelectedTermId(value);
+                    fetchAllData(selectedMember?.value);
+                  }}
+                >
+                  <SelectTrigger className="w-[200px]">
+                    <SelectValue placeholder="Select term" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {terms
+                      .filter((term) => term.status === 'active')
+                      .map((term) => (
+                        <SelectItem key={term.termId} value={term.termId}>
+                          {term.termName}
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+        </div>
+
         {/* Right Side: Due Amount, show red for positive value, green for negative value */}
         {Boolean(balance) && (
-          <div className="flex items-center justify-end mt-4">
+          <div className="flex items-center justify-end">
             <div className="flex items-center space-x-2">
               <p className="text-lg font-semibold text-gray-700 dark:text-gray-300">
                 {balance > 0 ? 'Advance Amount' : 'Due Amount'}:
@@ -220,59 +299,6 @@ const PackageViewer = () => {
           </div>
         )}
       </div>
-      {changeMemberRights && (
-        <div className="flex items-center mt-4">
-          {/* Options to switch to another member's data */}
-
-          <Popover open={open} onOpenChange={setOpen}>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                role="combobox"
-                aria-expanded={open}
-                className="w-[250px] justify-between"
-              >
-                {selectedMember ? selectedMember.label : 'Select member...'}
-                <ChevronsUpDown className="opacity-50" />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-[250px] p-0">
-              <Command>
-                <CommandInput placeholder="Search member..." className="h-9" />
-
-                <CommandList>
-                  <CommandEmpty>No member found.</CommandEmpty>
-                  <CommandGroup>
-                    {filteredMembers.map((member) => (
-                      <CommandItem
-                        key={member.memberId}
-                        value={member.label}
-                        onSelect={() => {
-                          setSelectedMember({
-                            value: member.memberId,
-                            label: member.label,
-                          });
-                          setOpen(false);
-                        }}
-                      >
-                        {member.label}
-                        <Check
-                          className={cn(
-                            'ml-auto',
-                            selectedMember?.value === member.memberId
-                              ? 'opacity-100'
-                              : 'opacity-0',
-                          )}
-                        />
-                      </CommandItem>
-                    ))}
-                  </CommandGroup>
-                </CommandList>
-              </Command>
-            </PopoverContent>
-          </Popover>
-        </div>
-      )}
 
       <Box sx={{ width: '100%' }}>
         <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
@@ -289,18 +315,19 @@ const PackageViewer = () => {
         </Box>
         {
           // Render the tab content based on the selected tab
-          packageParents?.map((parentType, index) => (
-            <CustomTabPanel key={index} value={tabValue} index={index}>
-              <PackageCard
-                pendingPayments={pendingPayments}
-                packageData={packageData}
-                // setPackageData={setPackageData}
-                paymentSuccessHandler={paymentSuccessHandler}
-                parentType={parentType}
-                receivers={receivers}
-              />
-            </CustomTabPanel>
-          ))
+          receivers &&
+            packageParents?.map((parentType, index) => (
+              <CustomTabPanel key={index} value={tabValue} index={index}>
+                <PackageCard
+                  pendingPayments={pendingPayments}
+                  packageData={packageData}
+                  // setPackageData={setPackageData}
+                  paymentSuccessHandler={paymentSuccessHandler}
+                  parentType={parentType}
+                  receivers={receivers}
+                />
+              </CustomTabPanel>
+            ))
         }
       </Box>
     </div>
@@ -342,6 +369,60 @@ const CurrentDateTime = () => {
       {currentTime.getMinutes().toString().padStart(2, '0')}:
       {currentTime.getSeconds().toString().padStart(2, '0')}
     </p>
+  );
+};
+
+const ChooseMember = ({ members, selectedMember, setSelectedMember }) => {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          variant="outline"
+          role="combobox"
+          aria-expanded={open}
+          className="w-[250px] justify-between"
+        >
+          {selectedMember ? selectedMember.label : 'Select member...'}
+          <ChevronsUpDown className="opacity-50" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-[250px] p-0">
+        <Command>
+          <CommandInput placeholder="Search member..." className="h-9" />
+
+          <CommandList>
+            <CommandEmpty>No member found.</CommandEmpty>
+            <CommandGroup>
+              {members.map((member) => (
+                <CommandItem
+                  key={member.memberId}
+                  value={member.label}
+                  onSelect={() => {
+                    setSelectedMember({
+                      value: member.memberId,
+                      label: member.label,
+                    });
+                    setOpen(false);
+                  }}
+                >
+                  {member.label}
+                  <Check
+                    className={cn(
+                      'ml-auto',
+                      selectedMember?.value === member.memberId
+                        ? 'opacity-100'
+                        : 'opacity-0',
+                    )}
+                  />
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
   );
 };
 

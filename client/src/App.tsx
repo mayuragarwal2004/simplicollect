@@ -43,6 +43,8 @@ import ChapterRoles from './components/Admin/Chapter/CreateNew/ChapterRoles/Chap
 import MyLedger from './pages/Member/MyLedger';
 import DashboardPage from './pages/Admin/Dashboard/DashboardPage'
 import TrackVisitor from './pages/Visitor/TrackVisitor';
+
+import AdminPackage from './pages/Admin/Package/AdminPackage'
 import { useData } from './context/DataContext';
 
 const routes = [
@@ -70,6 +72,10 @@ const routes = [
       {
         path: 'dashboard',
         element: <DashboardPage />,
+      },
+      {
+        path: 'package',
+        element: <AdminPackage/>,
       },
       {
         path: '',

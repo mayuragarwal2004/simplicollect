@@ -1,10 +1,10 @@
-const nodemailer = require("nodemailer");
+const nodemailer = require('nodemailer');
+require('dotenv').config();
 
-// SMTP configuration
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST,
-  port: process.env.SMTP_PORT,
-  secure: true, // Use SSL
+  port: parseInt(process.env.SMTP_PORT),
+  secure: true,
   auth: {
     user: process.env.SMTP_USER,
     pass: process.env.SMTP_PASS,
@@ -33,4 +33,4 @@ const sendEMail = async (mailOptions) => {
   });
 };
 
-module.exports = { sendEMail };
+module.exports = {transporter, sendEMail};

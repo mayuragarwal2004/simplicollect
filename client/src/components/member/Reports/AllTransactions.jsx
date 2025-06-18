@@ -9,6 +9,27 @@ import Papa from 'papaparse';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { useData } from '../../../context/DataContext';
+import {
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { toast } from 'react-toastify';
+import * as XLSX from 'xlsx';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
+import { CalendarIcon } from 'lucide-react';
+import { Calendar } from '@/components/ui/calendar';
 
 const AllTransactions = () => {
   const location = useLocation();
@@ -19,7 +40,9 @@ const AllTransactions = () => {
   const [totalRecord, setTotalRecord] = useState(null);
   const rows = searchParams.get('rows') || 5;
   const page = searchParams.get('page') || 1;
-
+  const [openDialog, setOpenDialog] = useState(false);
+  const [fromDate, setFromDate] = useState(null);
+  const [toDate, setToDate] = useState(null);
   const columnLabels = AllTransactionsColumns.map(
     ({ accessorKey, header }) => ({
       label: header().props.children,
@@ -44,7 +67,7 @@ const AllTransactions = () => {
 
     axiosInstance
       .get(
-        `/api/report/${chapterData.chapterId}/member-transactions?rows=${rows}&page=${page}  `,
+        `/api/report/${chapterData.chapterId}/member-transactions-json-report?rows=${rows}&page=${page}  `,
         {
           params: {
             chapterId: chapterData.chapterId,
@@ -72,51 +95,100 @@ const AllTransactions = () => {
     );
   };
 
-  const exportCSV = () => {
-    const csvData = reports.map((report) => {
-      let row = {};
-      columnLabels.forEach(({ label, key }) => {
-        if (selectedColumns.includes(label)) {
-          row[label] =
-            key === 'name'
-              ? `${report.firstName} ${report.lastName}`
-              : report[key];
-        }
-      });
-      return row;
-    });
+  const exportExcel = async () => {
+    const selectedKeys = columnLabels
+      .filter(({ label }) => selectedColumns.includes(label))
+      .map(({ key }) => key);
 
-    const csv = Papa.unparse(csvData);
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', 'report.csv');
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    try {
+      const response = await axiosInstance.post(
+        `/api/report/${chapterData.chapterId}/member-transactions-report`,
+        {
+          startDate: fromDate,
+          endDate: toDate,
+          type: 'excel',
+          selectedColumns: selectedKeys,
+          chapterId: chapterData.chapterId,
+        },
+        {
+          responseType: 'blob', // Important for file download
+        },
+      );
+
+      // Create a blob and download link
+      const blob = new Blob([response.data], {
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+
+      // You can customize the filename
+      link.setAttribute(
+        'download',
+        `Member Transactions Report ${format(new Date(fromDate), 'dd/MM/yyyy')} - ${format(new Date(toDate), 'dd/MM/yyyy')}.xlsx`,
+      );
+      document.body.appendChild(link);
+      link.click();
+
+      // Cleanup
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      toast.success('Excel file downloaded successfully.');
+    } catch (error) {
+      console.error('Error exporting Excel:', error);
+      toast.error('Failed to export Excel. Please try again later.');
+    }
   };
 
-  const exportPDF = () => {
-    const doc = new jsPDF();
-    doc.text('Member Transactions Report', 20, 10);
-    const tableColumn = columnLabels
+  const handlePDFExport = async () => {
+    setOpenDialog(false);
+
+    const selectedKeys = columnLabels
       .filter(({ label }) => selectedColumns.includes(label))
-      .map(({ label }) => label);
-    const tableRows = reports.map((report) =>
-      tableColumn.map((col) =>
-        col === 'Member Name'
-          ? `${report.firstName} ${report.lastName}`
-          : report[col.toLowerCase().replace(/ /g, '')],
-      ),
-    );
+      .map(({ key }) => key);
 
-    doc.autoTable({
-      head: [tableColumn],
-      body: tableRows,
-    });
+    const payload = {
+      startDate: fromDate,
+      endDate: toDate,
+      type: 'pdf',
+      selectedColumns: selectedKeys,
+      chapterId: chapterData.chapterId,
+    };
 
-    doc.save('report.pdf');
+    try {
+      const response = await axiosInstance.post(
+        `/api/report/${chapterData.chapterId}/member-transactions-report`,
+        payload,
+        {
+          responseType: 'blob', // Receive binary data
+        },
+      );
+
+      // Create a blob and download link
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+
+      // Customize the filename if needed
+      link.setAttribute(
+        'download',
+        `Member Transactions Report ${format(new Date(fromDate), 'dd/MM/yyyy')} - ${format(new Date(toDate), 'dd/MM/yyyy')}.pdf`,
+      );
+      document.body.appendChild(link);
+      link.click();
+
+      // Cleanup
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      toast.success('PDF file downloaded successfully.');
+    } catch (err) {
+      console.error('Error exporting PDF:', err);
+      toast.error(err.response?.data?.error || 'Failed to export PDF');
+    }
   };
 
   return (
@@ -141,12 +213,93 @@ const AllTransactions = () => {
       </div>
 
       <div className="flex gap-4 mb-4">
-        <Button onClick={exportCSV} className="bg-blue-500 text-white">
-          Export as CSV
-        </Button>
-        <Button onClick={exportPDF} className="bg-red-500 text-white">
-          Export as PDF
-        </Button>
+        <Dialog open={openDialog} onOpenChange={setOpenDialog}>
+          <DialogTrigger asChild>
+            <Button className="bg-blue-600 text-white">Export</Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Export Options</DialogTitle>
+            </DialogHeader>
+            <div className="flex flex-col gap-4 py-4">
+              <div>
+                <Label htmlFor="fromDate">From Date</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        'w-full justify-start text-left font-normal',
+                        !fromDate && 'text-muted-foreground',
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {fromDate
+                        ? format(new Date(fromDate), 'PPP')
+                        : 'Pick a date'}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                    <Calendar
+                      mode="single"
+                      selected={fromDate}
+                      onSelect={setFromDate}
+                      initialFocus
+                      disabled={(date) => date > new Date()}
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+              <div>
+                <Label htmlFor="toDate">To Date</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        'w-full justify-start text-left font-normal',
+                        !toDate && 'text-muted-foreground',
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {toDate ? format(new Date(toDate), 'PPP') : 'Pick a date'}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                    <Calendar
+                      mode="single"
+                      selected={toDate}
+                      onSelect={setToDate}
+                      initialFocus
+                      disabled={(date) => date > new Date()}
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+            </div>
+
+            <DialogFooter className="flex justify-between gap-2">
+              <Button
+                onClick={handlePDFExport}
+                className="bg-red-500 text-white"
+                disabled={!fromDate || !toDate}
+              >
+                Export PDF
+              </Button>
+
+              <Button
+                onClick={() => {
+                  setOpenDialog(false);
+                  exportExcel();
+                }}
+                className="bg-green-700 text-white"
+                disabled={!fromDate || !toDate}
+              >
+                Export Excel
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
 
       {loading ? (

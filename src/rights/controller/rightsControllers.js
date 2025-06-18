@@ -10,8 +10,18 @@ const getSidebarRightsController = async (req, res) => {
       chapterId
     );
 
+    // get details if the user is a fee receiver today
+    const isFeeReceiver = await rightsModel
+      .isFeeReceiverToday(memberId, chapterId)
+      .catch((err) => {
+        console.log(err);
+        return false;
+      });
+
+    console.log({ isFeeReceiver });
+
     const rights = rights_raw[0];
-    console.log({ rights });
+    // console.log({ rights });
 
     const finalRightsData = [];
     const completedFeatures = [];
@@ -27,7 +37,10 @@ const getSidebarRightsController = async (req, res) => {
       const links = [];
       let icon = "";
       for (j = 0; j < rights.length; j++) {
-        if (rights[j].featureParent === feature.featureParent) {
+        if (
+          rights[j].featureParent === feature.featureParent ||
+          (isFeeReceiver && rights[j].featureId === "fee-receiver") // if the feature is fee-receiver, then add it to the links array
+        ) {
           icon = rights[j].featureIcon;
           links.push({
             title: rights[j].featureName,
@@ -112,8 +125,39 @@ const getMakeTransactionRightsController = async (req, res) => {
   }
 };
 
+const getChangeDateRightsController = async (req, res) => {
+  const { memberId } = req.user;
+  const { chapterId } = req.params;
+
+  if (!memberId || !chapterId) {
+    return res.status(400).json({ error: "Invalid input" });
+  }
+
+  try {
+    const all_rights = await rightsModel.getAllRightsByMemberIdAndChapterId(
+      memberId,
+      chapterId
+    );
+
+    const value_to_find = "change-package-selection-date";
+
+    const rights_raw = all_rights.filter((right) => {
+      return right.featureId === value_to_find;
+    });
+
+    if (rights_raw.length === 0) {
+      return res.json({ allowed: false });
+    }
+    res.json({ allowed: true });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
 module.exports = {
   getSidebarRightsController,
   getApprovePaymentRightsController,
   getMakeTransactionRightsController,
+  getChangeDateRightsController,
 };

@@ -285,7 +285,7 @@ module.exports = {
   			'65': '.65'
   		},
   		backgroundImage: {
-  			video: 'url("../images/video/video.png")',
+  			video: 'url("../images/video/video.png")'
   		},
   		content: {
   			'icon-copy': 'url("../images/icon/icon-copy-alt.svg")'
@@ -324,6 +324,22 @@ module.exports = {
   				'50%': {
   					transform: 'rotate(0deg)'
   				}
+  			},
+  			'accordion-down': {
+  				from: {
+  					height: '0'
+  				},
+  				to: {
+  					height: 'var(--radix-accordion-content-height)'
+  				}
+  			},
+  			'accordion-up': {
+  				from: {
+  					height: 'var(--radix-accordion-content-height)'
+  				},
+  				to: {
+  					height: '0'
+  				}
   			}
   		},
   		animation: {
@@ -331,7 +347,9 @@ module.exports = {
   			rotating: 'rotating 30s linear infinite',
   			'spin-1.5': 'spin 1.5s linear infinite',
   			'spin-2': 'spin 2s linear infinite',
-  			'spin-3': 'spin 3s linear infinite'
+  			'spin-3': 'spin 3s linear infinite',
+  			'accordion-down': 'accordion-down 0.2s ease-out',
+  			'accordion-up': 'accordion-up 0.2s ease-out'
   		},
   		borderRadius: {
   			lg: 'var(--radius)',

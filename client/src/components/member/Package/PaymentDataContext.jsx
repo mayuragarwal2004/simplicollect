@@ -11,7 +11,7 @@ const PaymentDataContext = createContext();
 // Create a provider component
 export const PaymentDataProvider = ({ children }) => {
   const { chapterData } = useData();
-  const calculationDate = new Date();
+  const [calculationDate, setCalculationDate] = useState(new Date());
 
   const [paymentData, setPaymentData] = useState({
     selectedReceiver: null, // maybe reset on exiting package
@@ -23,6 +23,9 @@ export const PaymentDataProvider = ({ children }) => {
     pendingPayments: [],
     packageData: null,
     parentType: null,
+
+    terms: [],
+    selectedTermId: null, // Add selectedTermId to state
   });
 
   const resetPaymentData = () => {
@@ -60,12 +63,64 @@ export const PaymentDataProvider = ({ children }) => {
     }
   };
 
-  const fetchMeetings = async (memberId) => {
-    // Fetch all meetings
+  const fetchTerms = async () => {
+    if (!chapterData?.chapterId) {
+      console.warn('Chapter ID is not available. Skipping terms fetch.');
+      return;
+    }
     axiosInstance
-      .get(`/api/meetings/meetings/${chapterData?.chapterId}`, {
-        params: { memberId: memberId || '' },
+      .get(`/api/term/chapter/${chapterData?.chapterId}`)
+      .then((data) => {
+        console.log('Fetched Terms:', data.data);
+        const activeTerms = data.data.filter(
+          (term) => term.status === 'active',
+        );
+        if (!paymentData.selectedTermId) {
+          let selectedTermId = null;
+          const today = new Date();
+          // Try to find a term where today is between startDate and endDate
+          const todayTerm = activeTerms.find((term) => {
+            const start = new Date(term.startDate);
+            const end = new Date(term.endDate);
+            return today >= start && today <= end;
+          });
+          if (todayTerm) {
+            selectedTermId = todayTerm.termId;
+          } else if (activeTerms.length > 0) {
+            // Find the upcoming term (nearest startDate after today)
+            const upcomingTerms = activeTerms.filter(
+              (term) => new Date(term.startDate) > today,
+            );
+            if (upcomingTerms.length > 0) {
+              const nearest = upcomingTerms.reduce((a, b) =>
+                new Date(a.startDate) < new Date(b.startDate) ? a : b,
+              );
+              selectedTermId = nearest.termId;
+            } else {
+              // Fallback: pick the first active term
+              selectedTermId = activeTerms[0].termId;
+            }
+          }
+          setPaymentData((prev) => ({
+            ...prev,
+            terms: data.data,
+            selectedTermId,
+          }));
+        }
       })
+      .catch((error) => console.error('Error fetching terms:', error));
+  };
+
+  const fetchMeetings = async (memberId) => {
+    // Fetch all meetings for selected term
+    if (!paymentData.selectedTermId) return;
+    axiosInstance
+      .get(
+        `/api/meetings/meetings/${chapterData?.chapterId}/term/${paymentData.selectedTermId}`,
+        {
+          params: { memberId: memberId || '' },
+        },
+      )
       .then((data) => {
         console.log('Fetched Chapter Meetings:', data.data);
         setPaymentData((prev) => ({
@@ -99,13 +154,17 @@ export const PaymentDataProvider = ({ children }) => {
   };
 
   const fetchPackages = async (memberId) => {
+    if (!paymentData.selectedTermId) return;
     axiosInstance
-      .get(`/api/packages/all/${chapterData?.chapterId}`, {
-        params: {
-          memberId: memberId || '',
-          date: formatDateDDMMYYYY(calculationDate),
+      .get(
+        `/api/packages/all/${chapterData?.chapterId}/term/${paymentData.selectedTermId}`,
+        {
+          params: {
+            memberId: memberId || '',
+            date: formatDateDDMMYYYY(calculationDate),
+          },
         },
-      })
+      )
       .then((data) => {
         // find the unique parent types
         const parentTypes = [
@@ -175,9 +234,14 @@ export const PaymentDataProvider = ({ children }) => {
   const fetchAllData = async (memberId) => {
     selectedMemberId = memberId;
     await fetchCurrentReceivers();
+    await fetchTerms();
     await fetchPendingPayments(memberId);
-    await fetchMeetings(memberId);
-    await fetchDueAmount(memberId);
+    // Only fetch meetings and packages if a term is selected
+    if (paymentData.selectedTermId) {
+      await fetchMeetings(memberId);
+      await fetchDueAmount(memberId);
+      await fetchPackages(memberId);
+    }
   };
 
   useEffect(() => {
@@ -199,7 +263,7 @@ export const PaymentDataProvider = ({ children }) => {
     if (chapterData?.chapterId) {
       fetchAllData();
     }
-  }, [chapterData?.chapterId]);
+  }, [chapterData?.chapterId, calculationDate, paymentData.selectedTermId]);
 
   // update selectedReceiverObject when selectedReceiver changes
   useEffect(() => {
@@ -255,11 +319,16 @@ export const PaymentDataProvider = ({ children }) => {
   return (
     <PaymentDataContext.Provider
       value={{
+        calculationDate,
+        setCalculationDate,
         paymentData,
         setPaymentData,
         resetPaymentData,
         fetchAllData,
         handleDeletePendingRequest,
+        // Add setter for selectedTermId
+        setSelectedTermId: (termId) =>
+          setPaymentData((prev) => ({ ...prev, selectedTermId: termId })),
       }}
     >
       {children}
@@ -269,7 +338,11 @@ export const PaymentDataProvider = ({ children }) => {
 
 // Create a custom hook to use the PaymentDataContext
 export const usePaymentData = () => {
-  return useContext(PaymentDataContext);
+  const context = useContext(PaymentDataContext);
+  if (!context) {
+    throw new Error('usePaymentData must be used within a PaymentDataProvider');
+  }
+  return context;
 };
 
 export default PaymentDataContext;

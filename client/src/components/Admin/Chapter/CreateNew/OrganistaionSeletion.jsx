@@ -20,17 +20,16 @@ import { cn } from '@/lib/utils'; // Ensure you have this utility for conditiona
 import { axiosInstance } from '../../../../utils/config';
 import { toast } from 'react-toastify';
 
-// Simulated API call to fetch organizations
+// API call to fetch organizations
 const fetchOrganisations = async () => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve([
-        { id: 'org1', name: 'Organisation One' },
-        { id: 'org2', name: 'Organisation Two' },
-        { id: 'org3', name: 'Organisation Three' },
-      ]);
-    }, 500);
-  });
+  try {
+    const response = await axiosInstance.get('/api/admin/organisations/all');
+    return response.data; // Assuming the API returns an array of organizations
+  } catch (error) {
+    console.error('Error fetching organisations:', error);
+    toast.error('Failed to fetch organisations');
+    return []; // Return an empty array on error
+  }
 };
 
 const OrganisationSelection = ({ onCancel }) => {
@@ -44,7 +43,6 @@ const OrganisationSelection = ({ onCancel }) => {
       onCancel();
     }
   };
-  
 
   useEffect(() => {
     const loadOrganisations = async () => {
@@ -62,8 +60,8 @@ const OrganisationSelection = ({ onCancel }) => {
   const handleAddChapter = (data) => {
     console.log('Chapter Data:', data);
     axiosInstance
-      .post('/api/admin/add-chapter', {
-        organisationId: selectedOrg.id,
+      .post('/api/admin/chapters', {
+        organisationId: selectedOrg.organisationId,
         ...data,
       })
       .then((response) => {
@@ -72,11 +70,20 @@ const OrganisationSelection = ({ onCancel }) => {
           toast.success('Chapter added successfully');
           if (onCancel) onCancel();
         } else {
-          toast.error('Failed to add chapter');
+          if (response.data.error) {
+            toast.error(response.data.error);
+          } else {
+            toast.error('Failed to add chapter');
+          }
         }
       })
       .catch((err) => {
-        toast.error('Failed to add chapter');
+        console.error('Error adding chapter:', err);
+        if (err.response && err.response.data && err.response.data.error) {
+          toast.error(err.response.data.error);
+        } else {
+          toast.error('An unexpected error occurred');
+        }
       });
   };
 
@@ -105,7 +112,9 @@ const OrganisationSelection = ({ onCancel }) => {
               variant="outline"
               className="w-full justify-between text-left border"
             >
-              {selectedOrg ? selectedOrg.name : 'Select an Organisation'}
+              {selectedOrg
+                ? selectedOrg.organisationName
+                : 'Select an Organisation'}
             </Button>
           </PopoverTrigger>
           <PopoverContent
@@ -118,8 +127,11 @@ const OrganisationSelection = ({ onCancel }) => {
               <CommandList>
                 <CommandEmpty>No organisations found.</CommandEmpty>
                 {organisations.map((org) => (
-                  <CommandItem key={org.id} onSelect={() => handleSelect(org)}>
-                    {org.name}
+                  <CommandItem
+                    key={org.organisationId}
+                    onSelect={() => handleSelect(org)}
+                  >
+                    {org.organisationName}
                   </CommandItem>
                 ))}
               </CommandList>

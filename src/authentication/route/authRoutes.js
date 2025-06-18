@@ -4,7 +4,7 @@ const authController = require('../controller/authController');
 router.use(express.json());
 
 // Login users using JWT
-
+router.post("/send-whatsapp-message",authController.sendWhatsappMessage);
 router.post('/login', authController.login);
 
 // Register users using JWT

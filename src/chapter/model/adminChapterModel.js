@@ -47,8 +47,7 @@ const getAllChapters = async (rows, page) => {
 // Function to create a new chapter
 const createChapter = async (chapterData) => {
   return db("chapters")
-    .insert(chapterData)
-    .returning("*");
+    .insert(chapterData);
 };
 
 // Function to delete a chapter by its ID

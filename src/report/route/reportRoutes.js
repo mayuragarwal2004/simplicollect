@@ -5,8 +5,10 @@ const reportController = require("../controller/reportControllers");
 
 // 
 router.get("/:chapterId/package-summary", reportController.getPackageSummaryController);
-router.get("/:chapterId/member-transactions", reportController.getAllMemberReports);
 router.get("/:chapterId/member-Total", reportController.getMemberTotalAmountAndDues);
+
+router.post("/:chapterId/member-transactions-report", reportController.getAllMemberTransactionsReportController);
+router.get("/:chapterId/member-transactions-json-report", reportController.getAllMemberTransactionsJSONReportController);
 
 router.get("/:chapterId/receiver-daywise-report", reportController.getReceiverDaywiseReportController);
 router.get("/:chapterId/receiver-daywise-json-report", reportController.getReceiverDaywiseJsonReportController);

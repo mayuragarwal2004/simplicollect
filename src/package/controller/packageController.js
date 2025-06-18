@@ -83,10 +83,27 @@ const getPackagesByChapterController = async (req, res) => {
   }
 };
 
+// Fetch packages by chapterId and termId (optionally memberId)
+const getPackagesByChapterAndTermController = async (req, res) => {
+  const { chapterId, termId } = req.params;
+  let { memberId } = req.query;
+  if (!memberId) {
+    memberId = req.user.memberId; // Use the memberId from the request context
+  }
+  try {
+    const packages = await Package.getPackagesByChapterAndTerm(chapterId, termId, memberId);
+    res.json(packages);
+  } catch (error) {
+    console.error("Error fetching packages by chapter and term:", error);
+    res.status(500).json({ error: "Failed to fetch packages" });
+  }
+};
+
 module.exports = {
   getAllPackages,
   getPackagesByParentType,
   getPackageById,
   fetchPendingMeetings,
   getPackagesByChapterController,
+  getPackagesByChapterAndTermController,
 };

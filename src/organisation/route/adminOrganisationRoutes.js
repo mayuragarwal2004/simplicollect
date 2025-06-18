@@ -1,9 +1,12 @@
 const express = require("express");
 const router = express.Router();
-const organisationController = require("../controller/organisationController");
+const organisationController = require("../controller/adminOrganisationController");
+
+// Get all organisations paginated
+router.get("/", organisationController.getAllOrganisationsPaginated);
 
 // Get all organisations
-router.get("/", organisationController.getAllOrganisations);
+router.get("/all", organisationController.getAllOrganisations);
 
 // Get organisation by ID
 router.get("/:organisationId", organisationController.getOrganisationById);
@@ -16,5 +19,6 @@ router.put("/:organisationId", organisationController.updateOrganisation);
 
 // Delete organisation
 router.delete("/:organisationId", organisationController.deleteOrganisation);
+
 
 module.exports = router; 

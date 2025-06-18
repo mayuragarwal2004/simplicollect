@@ -109,9 +109,24 @@ const getTransactionById = async (transactionId) => {
 // data is an array of objects containing transactionId, approvedById and status
 const approvePendingPayment = async (data, trx) => {
   try {
+    // Only approve if status is 'approved', otherwise just update fields
     const updatePromises = data.map((transaction) => {
-      const { transactionId, ...updateData } = transaction;
-      return trx("transactions").where({ transactionId }).update(updateData);
+      const { transactionId, status, ...updateData } = transaction;
+      if (status === 'approved') {
+        // Approve: set approvedById, approvedByName, status
+        return trx("transactions").where({ transactionId }).update({
+          ...updateData,
+          status: 'approved',
+          approvedById: transaction.approvedById,
+          approvedByName: transaction.approvedByName,
+        });
+      } else {
+        // Save only: update allowed fields, do not set status to 'approved' or update approvedById/approvedByName
+        return trx("transactions").where({ transactionId }).update({
+          ...updateData,
+          status: 'pending',
+        });
+      }
     });
     await Promise.all(updatePromises);
   } catch (error) {
@@ -156,37 +171,54 @@ const getMemberChapterDue = async (memberId, chapterId) => {
     .select("balance")
     .first();
 };
-const getTransactions = async (chapterId, rows, page) => {
-  const offset = parseInt(page, 10) * parseInt(rows, 10);
+const getTransactions = async (chapterId, rows, page, startDate, endDate) => {
+  const parsedRows = parseInt(rows, 10) || 10;
+  const parsedPage = parseInt(page, 10) || 0;
+  const offset = parsedPage * parsedRows;
 
-  const transactions = await db("transactions as t")
+  let query = db("transactions as t")
     .join("members as m", "t.memberId", "m.memberId")
     .join("packages as p", "t.packageId", "p.packageId")
-    .where("p.chapterId", chapterId) // Ensure chapter filtering
+    .where("p.chapterId", chapterId);
+
+  // Add date filter if both are provided
+  if (startDate && endDate) {
+    query = query.whereBetween("t.transactionDate", [startDate, endDate]);
+  }
+
+  // Select only the required fields
+  const transactions = await query
     .select(
-      "t.transactionId",
-      "m.firstName",
-      "m.lastName",
-      "t.payableAmount",
-      "t.paidAmount",
-      "t.balanceAmount",
-      "p.packageName",
-      "t.paymentType",
-      "t.paymentReceivedByName",
-      "t.approvedByName",
-      "t.transactionDate",
-      "t.status as approvalStatus"
+      "m.firstName",  // Member Name (First Name)
+      "m.lastName",   // Member Name (Last Name)
+      "t.paidAmount", // Amount Paid
+      "t.balanceAmount", // Balance
+      "p.packageName",  // Package Name
+      "t.paymentType",  // Payment Type
+      "t.paymentReceivedByName",  // Collected By
+      "t.approvedByName",  // Approved By
+      "t.transactionDate",  // Date
+      "t.status as approvalStatus" // Approval Status
     )
-    .limit(parseInt(rows, 10))
+    .limit(parsedRows)
     .offset(offset);
 
-  const [{ count }] = await db("transactions as t")
+  // Count query with the same date filter
+  let countQuery = db("transactions as t")
     .count("t.transactionId as count")
     .join("packages as p", "t.packageId", "p.packageId")
     .where("p.chapterId", chapterId);
 
+  if (startDate && endDate) {
+    countQuery = countQuery.whereBetween("t.transactionDate", [startDate, endDate]);
+  }
+
+  const [{ count }] = await countQuery;
+
   return { transactions, totalRecords: parseInt(count, 10) };
 };
+
+
 
 const getMemberFinancialSummary = async (chapterId, row, page) => {
   const offset = parseInt(page, 10) * parseInt(row, 10);
@@ -251,6 +283,63 @@ const getMetaData = async (memberId, chapterId) => {
   }
 };
 
+// Move approved fee to pending
+const moveApprovedToPending = async (data, trx) => {
+  try {
+    const updatePromises = data.map((transaction) => {
+      const { transactionId, termId, ...updateData } = transaction;
+      return trx("transactions").where({ transactionId }).update({ status: "pending" });
+    });
+    await Promise.all(updatePromises);
+  } catch (error) {
+    throw error;
+  }
+};
+
+// Save edited fee details without changing status
+const saveEditedFeeDetails = async (data, editorInfo = {}) => {
+  try {
+    const updatePromises = data.map(async (transaction) => {
+      const { transactionId, paidAmount, paymentReceivedById, paymentType, paymentReceivedByName, platformFee = 0, receiverFee = 0, payableAmount = 0 } = transaction;
+      // Fetch current transaction for systemRemarks and old values
+      const [current] = await db("transactions").where({ transactionId }).select();
+      let changes = [];
+      if (typeof paidAmount === 'number' && paidAmount !== current.paidAmount) changes.push(`paidAmount: ${current.paidAmount} → ${paidAmount}`);
+      if (paymentReceivedById && paymentReceivedById !== current.paymentReceivedById) changes.push(`paymentReceivedById: ${current.paymentReceivedById} → ${paymentReceivedById}`);
+      if (paymentType && paymentType !== current.paymentType) changes.push(`paymentType: ${current.paymentType} → ${paymentType}`);
+      if (paymentReceivedByName && paymentReceivedByName !== current.paymentReceivedByName) changes.push(`paymentReceivedByName: ${current.paymentReceivedByName} → ${paymentReceivedByName}`);
+      // Calculate new balanceAmount and amountPaidToChapter
+      const newBalanceAmount = typeof paidAmount === 'number' && typeof payableAmount === 'number'
+        ? paidAmount - payableAmount
+        : current.balanceAmount;
+      const newAmountPaidToChapter = typeof paidAmount === 'number'
+        ? (paidAmount - (parseFloat(platformFee) || 0) - (parseFloat(receiverFee) || 0))
+        : current.amountPaidToChapter;
+      // Prepare systemRemarks
+      let newSystemRemarks = current.systemRemarks || '';
+      if (changes.length > 0 && editorInfo.userName && editorInfo.userId) {
+        const now = new Date();
+        const timestamp = now.toISOString().replace('T', ' ').substring(0, 19);
+        newSystemRemarks += `\n[${timestamp}] Edited by ${editorInfo.userName} (${editorInfo.userId}): ${changes.join(', ')}`;
+      }
+      return db("transactions")
+        .where({ transactionId })
+        .update({
+          paidAmount,
+          paymentReceivedById,
+          paymentType,
+          paymentReceivedByName,
+          balanceAmount: newBalanceAmount,
+          amountPaidToChapter: newAmountPaidToChapter,
+          systemRemarks: newSystemRemarks,
+        });
+    });
+    await Promise.all(updatePromises);
+  } catch (error) {
+    throw error;
+  }
+};
+
 module.exports = {
   addTransaction,
   addPayment,
@@ -269,4 +358,6 @@ module.exports = {
   getMemberFinancialSummary,
   getTransactionsByMemberId,
   getMetaData,
+  moveApprovedToPending,
+  saveEditedFeeDetails, // <-- add export
 };

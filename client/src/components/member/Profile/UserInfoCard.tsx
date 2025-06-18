@@ -1,21 +1,129 @@
 import { useState } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { useData } from '@/context/DataContext';
-// import Button from "../ui/button/Button";
-// import Input from "../form/input/InputField";
-// import Label from "../form/Label";
+import { axiosInstance } from '../../../utils/config';
 
 export default function UserInfoCard() {
-  const { chapterData, memberData } = useData();
 
-  const [isOpen, setIsOpen] = useState(false);
-  const openModal = () => setIsOpen(true);
-  const closeModal = () => setIsOpen(false);
-  const handleSave = () => {
-    // Handle save logic here
-    console.log('Saving changes...');
-    closeModal();
+  const { chapterData, memberData } = useData();
+  const [currentMemberData, setCurrentMemberData] = useState(memberData);
+  const [editMode, setEditMode] = useState({
+    names: false,
+    email: false,
+    phone: false,
+    password: false
+  });
+
+  const [formData, setFormData] = useState({
+    firstName: memberData?.firstName || '',
+    lastName: memberData?.lastName || '',
+    email: memberData?.email || '',
+    phoneNumber: memberData?.phoneNumber || '',
+    password: ''
+  });
+  const [passwordForm, setPasswordForm] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  });
+  const [showPasswordDialog, setShowPasswordDialog] = useState(false);
+
+
+
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
+
+  const handlePasswordChange = (e) => {
+    const { name, value } = e.target;
+    setPasswordForm(prev => ({ ...prev, [name]: value }));
+  };
+
+  const updateLocalMemberData = (updatedFields) => {
+    setCurrentMemberData(prev => ({
+      ...prev,
+      ...updatedFields
+    }));
+  };
+
+  const handleSave = async (field) => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      let payload = {};
+      let endpoint = '';
+
+      if (field === 'names') {
+        payload = {
+          firstName: formData.firstName,
+          lastName: formData.lastName
+        };
+        endpoint = `/api/profile/${memberData.memberId}/name`;
+      } else if (field === 'phone') {
+        payload = {
+          phoneNumber: formData.phoneNumber,
+          password: formData.password
+        };
+        endpoint = `/api/profile/${memberData.memberId}/phone`;
+      } else if (field === 'email') {
+        payload = {
+          email: formData.email,
+          password: formData.password
+        };
+        endpoint = `/api/profile/${memberData.memberId}/email`;
+      }
+
+      const response = await axiosInstance.put(endpoint, payload);
+      updateLocalMemberData(response.data.data);
+      setEditMode(prev => ({ ...prev, [field]: false, password: false }));
+      setFormData(prev => ({ ...prev, password: '' }));
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to update member');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handlePasswordUpdate = async () => {
+    setIsLoading(true);
+    setError(null);
+  
+    try {
+      // Validate passwords match
+      if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+        throw new Error('New passwords do not match');
+      }
+    
+     
+  
+      const response = await axiosInstance.put(
+        `/api/profile/${memberData.memberId}/password`,
+        {
+          currentPassword: passwordForm.currentPassword,
+          newPassword: passwordForm.newPassword
+        }
+      );
+  
+      if (response.data.success) {
+        setShowPasswordDialog(false);
+        setPasswordForm({
+          currentPassword: '',
+          newPassword: '',
+          confirmPassword: ''
+        });
+      }
+    } catch (error) {
+      setError(error.response?.data?.message || error.message || 'Failed to update password');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="p-5 border border-gray-200 rounded-2xl dark:border-gray-800 lg:p-6">
       <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
@@ -25,167 +133,389 @@ export default function UserInfoCard() {
           </h4>
 
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-7 2xl:gap-x-32">
+            {/* First Name */}
             <div>
-              <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
-                First Name
-              </p>
-              <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                {memberData?.firstName}
-              </p>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
+                    First Name
+                  </p>
+                  <p className="text-sm font-medium text-gray-800 dark:text-white/90">
+                    {currentMemberData?.firstName}
+                  </p>
+                </div>
+              </div>
             </div>
 
+            {/* Last Name */}
             <div>
-              <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
-                Last Name
-              </p>
-              <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                {memberData?.lastName}
-              </p>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
+                    Last Name
+                  </p>
+                  <p className="text-sm font-medium text-gray-800 dark:text-white/90">
+                    {currentMemberData?.lastName}
+                  </p>
+                </div>
+                <button
+                  onClick={() => setEditMode(prev => ({ ...prev, names: true }))}
+                  className="text-blue-500 hover:text-blue-700 mt-6"
+                >
+                  Edit
+                </button>
+              </div>
             </div>
 
-            <div>
-              <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
-                Email address
-              </p>
-              <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                {memberData?.email}
-              </p>
+            {/* Email */}
+            <div className="flex items-center justify-between lg:col-span-2">
+              <div>
+                <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
+                  Email address
+                </p>
+                <p className="text-sm font-medium text-gray-800 dark:text-white/90">
+                  {currentMemberData?.email}
+                </p>
+              </div>
+              <button
+                onClick={() => {
+                  setFormData(prev => ({ ...prev, email: currentMemberData.email }));
+                  setEditMode(prev => ({ ...prev, email: true }));
+                }}
+                className="text-blue-500 hover:text-blue-700 mt-6"
+              >
+                Edit
+              </button>
             </div>
 
-            <div>
-              <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
-                Phone
-              </p>
-              <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                {memberData?.phoneNumber}
-              </p>
+            {/* Phone */}
+            <div className="flex items-center justify-between lg:col-span-2">
+              <div>
+                <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
+                  Phone
+                </p>
+                <p className="text-sm font-medium text-gray-800 dark:text-white/90">
+                  {memberData?.phoneNumber}
+                </p>
+              </div>
+              <button
+                onClick={() => setEditMode(prev => ({ ...prev, phone: true }))}
+                className="text-blue-500 hover:text-blue-700 mt-6"
+              >
+                Edit
+              </button>
+            </div>
+            <div className="flex items-center justify-between lg:col-span-2 mt-4">
+              <div>
+                <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
+                  Password
+                </p>
+                <p className="text-sm font-medium text-gray-800 dark:text-white/90">
+                  ********
+                </p>
+              </div>
+              <button
+                onClick={() => setShowPasswordDialog(true)}
+                className="text-blue-500 hover:text-blue-700 mt-6"
+              >
+                Change
+              </button>
             </div>
 
-            {/* <div>
-              <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
-                Bio
-              </p>
-              <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                Team Manager
-              </p>
-            </div> */}
           </div>
         </div>
 
-        {/* <button
-          onClick={openModal}
-          className="flex w-full items-center justify-center gap-2 rounded-full border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] dark:hover:text-gray-200 lg:inline-flex lg:w-auto"
-        >
-          <svg
-            className="fill-current"
-            width="18"
-            height="18"
-            viewBox="0 0 18 18"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
+        {/* Edit Name Modal */}
+        {editMode.names && (
+          <Dialog open={editMode.names} onOpenChange={() => setEditMode(prev => ({ ...prev, names: false }))}>
+            <DialogContent>
+              <h3 className="text-lg font-medium mb-4">Edit Name</h3>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    First Name
+                  </label>
+                  <input
+                    type="text"
+                    name="firstName"
+                    value={formData.firstName}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Last Name
+                  </label>
+                  <input
+                    type="text"
+                    name="lastName"
+                    value={formData.lastName}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                  />
+                </div>
+              </div>
+              <div className="mt-6 flex justify-end space-x-3">
+                <button
+                  onClick={() => setEditMode(prev => ({ ...prev, names: false }))}
+                  className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => handleSave('names')}
+                  disabled={isLoading}
+                  className="px-4 py-2 bg-blue-600 rounded-md text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+                >
+                  {isLoading ? 'Saving...' : 'Save'}
+                </button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        )}
+
+        {/* Edit Email Modal */}
+        {editMode.email && (
+          <Dialog open={editMode.email} onOpenChange={() => {
+            setEditMode(prev => ({ ...prev, email: false, password: false }));
+            setError(null); // Clear error when closing dialog
+          }}>
+            <DialogContent>
+              {!editMode.password ? (
+                <>
+                  <h3 className="text-lg font-medium mb-4">Update Email</h3>
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      New Email Address
+                    </label>
+                    <input
+                      type="email"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleInputChange}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                    />
+                  </div>
+                  <div className="mt-6 flex justify-end space-x-3">
+                    <button
+                      onClick={() => {
+                        setEditMode(prev => ({ ...prev, email: false }));
+                        setError(null); // Clear error when cancelling
+                      }}
+                      className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={() => setEditMode(prev => ({ ...prev, password: true }))}
+                      disabled={isLoading || !formData.email}
+                      className="px-4 py-2 bg-blue-600 rounded-md text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+                    >
+                      Continue
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <h3 className="text-lg font-medium mb-4">Verify Password</h3>
+                  <div className="mb-4">
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                      Please enter your password to confirm the email change
+                    </p>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      Password
+                    </label>
+                    <input
+                      type="password"
+                      name="password"
+                      value={formData.password}
+                      onChange={handleInputChange}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                    />
+                  </div>
+                  {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
+                  <div className="mt-6 flex justify-end space-x-3">
+                    <button
+                      onClick={() => {
+                        setEditMode(prev => ({ ...prev, password: false }));
+                        setError(null); // Clear error when going back
+                      }}
+                      className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+                    >
+                      Back
+                    </button>
+                    <button
+                      onClick={() => handleSave('email')}
+                      disabled={isLoading || !formData.password}
+                      className="px-4 py-2 bg-blue-600 rounded-md text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+                    >
+                      {isLoading ? 'Updating...' : 'Update Email'}
+                    </button>
+                  </div>
+                </>
+              )}
+            </DialogContent>
+          </Dialog>
+        )}
+
+        {/* Edit Phone Modal */}
+        {editMode.phone && (
+          <Dialog
+            open={editMode.phone}
+            onOpenChange={() => {
+              setEditMode(prev => ({ ...prev, phone: false, password: false }));
+              setError(null); // Clear error when closing dialog
+            }}
           >
-            <path
-              fillRule="evenodd"
-              clipRule="evenodd"
-              d="M15.0911 2.78206C14.2125 1.90338 12.7878 1.90338 11.9092 2.78206L4.57524 10.116C4.26682 10.4244 4.0547 10.8158 3.96468 11.2426L3.31231 14.3352C3.25997 14.5833 3.33653 14.841 3.51583 15.0203C3.69512 15.1996 3.95286 15.2761 4.20096 15.2238L7.29355 14.5714C7.72031 14.4814 8.11172 14.2693 8.42013 13.9609L15.7541 6.62695C16.6327 5.74827 16.6327 4.32365 15.7541 3.44497L15.0911 2.78206ZM12.9698 3.84272C13.2627 3.54982 13.7376 3.54982 14.0305 3.84272L14.6934 4.50563C14.9863 4.79852 14.9863 5.2734 14.6934 5.56629L14.044 6.21573L12.3204 4.49215L12.9698 3.84272ZM11.2597 5.55281L5.6359 11.1766C5.53309 11.2794 5.46238 11.4099 5.43238 11.5522L5.01758 13.5185L6.98394 13.1037C7.1262 13.0737 7.25666 13.003 7.35947 12.9002L12.9833 7.27639L11.2597 5.55281Z"
-              fill=""
-            />
-          </svg>
-          Edit
-        </button> */}
-      </div>
+            <DialogContent>
+              {!editMode.password ? (
+                <>
+                  <h3 className="text-lg font-medium mb-4">Edit Phone Number</h3>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      Phone Number
+                    </label>
+                    <input
+                      type="tel"
+                      name="phoneNumber"
+                      value={formData.phoneNumber}
+                      onChange={handleInputChange}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                    />
+                  </div>
+                  {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
+                  <div className="mt-6 flex justify-end space-x-3">
+                    <button
+                      onClick={() => {
+                        setEditMode(prev => ({ ...prev, phone: false }));
+                        setError(null); // Clear error when cancelling
+                      }}
+                      className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={() => setEditMode(prev => ({ ...prev, password: true }))}
+                      disabled={isLoading || !formData.phoneNumber}
+                      className="px-4 py-2 bg-blue-600 rounded-md text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+                    >
+                      Continue
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <h3 className="text-lg font-medium mb-4">Verify Password</h3>
+                  <div className="mb-4">
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                      Please enter your password to confirm the phone number change
+                    </p>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      Password
+                    </label>
+                    <input
+                      type="password"
+                      name="password"
+                      value={formData.password}
+                      onChange={handleInputChange}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                    />
+                  </div>
+                  {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
+                  <div className="mt-6 flex justify-end space-x-3">
+                    <button
+                      onClick={() => {
+                        setEditMode(prev => ({ ...prev, password: false }));
+                        setError(null); // Clear error when going back
+                      }}
+                      className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+                    >
+                      Back
+                    </button>
+                    <button
+                      onClick={() => handleSave('phone')}
+                      disabled={isLoading || !formData.password}
+                      className="px-4 py-2 bg-blue-600 rounded-md text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+                    >
+                      {isLoading ? 'Updating...' : 'Update Phone'}
+                    </button>
+                  </div>
+                </>
+              )}
+            </DialogContent>
+          </Dialog>
+        )}
 
-      <Dialog open={isOpen} onOpenChange={closeModal}>
-        <DialogContent className="max-w-[700px] m-4">
-          <div className="no-scrollbar relative w-full max-w-[700px] overflow-y-auto rounded-3xl bg-white p-4 dark:bg-gray-900 lg:p-11">
-            <div className="px-2 pr-14">
-              <h4 className="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90">
-                Edit Personal Information
-              </h4>
-              <p className="mb-6 text-sm text-gray-500 dark:text-gray-400 lg:mb-7">
-                Update your details to keep your profile up-to-date.
-              </p>
-            </div>
-            {/* <form className="flex flex-col">
-            <div className="custom-scrollbar h-[450px] overflow-y-auto px-2 pb-3">
+
+        <Dialog open={showPasswordDialog} onOpenChange={() => {
+          setShowPasswordDialog(false);
+          setError(null);
+          setPasswordForm({
+            currentPassword: '',
+            newPassword: '',
+            confirmPassword: ''
+          });
+        }}>
+          <DialogContent>
+            <h3 className="text-lg font-medium mb-4">Change Password</h3>
+            <div className="space-y-4">
               <div>
-                <h5 className="mb-5 text-lg font-medium text-gray-800 dark:text-white/90 lg:mb-6">
-                  Social Links
-                </h5>
-
-                <div className="grid grid-cols-1 gap-x-6 gap-y-5 lg:grid-cols-2">
-                  <div>
-                    <Label>Facebook</Label>
-                    <Input
-                      type="text"
-                      value="https://www.facebook.com/PimjoHQ"
-                    />
-                  </div>
-
-                  <div>
-                    <Label>X.com</Label>
-                    <Input type="text" value="https://x.com/PimjoHQ" />
-                  </div>
-
-                  <div>
-                    <Label>Linkedin</Label>
-                    <Input
-                      type="text"
-                      value="https://www.linkedin.com/company/pimjo"
-                    />
-                  </div>
-
-                  <div>
-                    <Label>Instagram</Label>
-                    <Input type="text" value="https://instagram.com/PimjoHQ" />
-                  </div>
-                </div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Current Password
+                </label>
+                <input
+                  type="password"
+                  name="currentPassword"
+                  value={passwordForm.currentPassword}
+                  onChange={handlePasswordChange}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                />
               </div>
-              <div className="mt-7">
-                <h5 className="mb-5 text-lg font-medium text-gray-800 dark:text-white/90 lg:mb-6">
-                  Personal Information
-                </h5>
-
-                <div className="grid grid-cols-1 gap-x-6 gap-y-5 lg:grid-cols-2">
-                  <div className="col-span-2 lg:col-span-1">
-                    <Label>First Name</Label>
-                    <Input type="text" value="Musharof" />
-                  </div>
-
-                  <div className="col-span-2 lg:col-span-1">
-                    <Label>Last Name</Label>
-                    <Input type="text" value="Chowdhury" />
-                  </div>
-
-                  <div className="col-span-2 lg:col-span-1">
-                    <Label>Email Address</Label>
-                    <Input type="text" value="randomuser@pimjo.com" />
-                  </div>
-
-                  <div className="col-span-2 lg:col-span-1">
-                    <Label>Phone</Label>
-                    <Input type="text" value="+09 363 398 46" />
-                  </div>
-
-                  <div className="col-span-2">
-                    <Label>Bio</Label>
-                    <Input type="text" value="Team Manager" />
-                  </div>
-                </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  New Password
+                </label>
+                <input
+                  type="password"
+                  name="newPassword"
+                  value={passwordForm.newPassword}
+                  onChange={handlePasswordChange}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Confirm New Password
+                </label>
+                <input
+                  type="password"
+                  name="confirmPassword"
+                  value={passwordForm.confirmPassword}
+                  onChange={handlePasswordChange}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                />
               </div>
             </div>
-            <div className="flex items-center gap-3 px-2 mt-6 lg:justify-end">
-              <Button size="sm" variant="outline" onClick={closeModal}>
-                Close
-              </Button>
-              <Button size="sm" onClick={handleSave}>
-                Save Changes
-              </Button>
+            {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
+            <div className="mt-6 flex justify-end space-x-3">
+              <button
+                onClick={() => setShowPasswordDialog(false)}
+                className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handlePasswordUpdate}
+                disabled={isLoading}
+                className="px-4 py-2 bg-blue-600 rounded-md text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+              >
+                {isLoading ? 'Updating...' : 'Update Password'}
+              </button>
             </div>
-          </form> */}
-          </div>
-        </DialogContent>
-      </Dialog>
+          </DialogContent>
+        </Dialog>
+      </div>
     </div>
   );
 }

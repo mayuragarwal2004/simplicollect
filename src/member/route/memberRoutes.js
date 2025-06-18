@@ -14,4 +14,5 @@ router.post("/memberList", memberController.memberList);
 // get all members
 router.get("/all", memberController.getAllMembersListController);
 
+
 module.exports = router;

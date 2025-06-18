@@ -75,10 +75,24 @@ const getPackagesByChapterId = async (chapterId, memberId) => {
     .select("t.*", "p.*");
 }
 
+// Fetch packages by chapterId, termId, and optionally memberId
+const getPackagesByChapterAndTerm = async (chapterId, termId, memberId) => {
+  let query = db("packages as p")
+    .leftJoin("transactions as t", function () {
+      this.on("p.packageId", "t.packageId");
+      if (memberId) this.andOn("t.memberId", db.raw("?", [memberId]));
+    })
+    .join("term as tm", "p.termId", "tm.termId")
+    .where({ "p.chapterId": chapterId, "p.termId": termId })
+    .orderBy("p.packagePayableStartDate", "asc")
+    .select("t.*", "p.*", "tm.termName", { termStatus: "tm.status" });
+  return query;
+};
 
 module.exports = {
   getPackageById,
   getAllPackages,
   getPackagesByParentType,
   getPackagesByChapterId,
+  getPackagesByChapterAndTerm,
 };

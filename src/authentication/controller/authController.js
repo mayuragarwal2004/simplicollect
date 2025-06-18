@@ -2,6 +2,7 @@ const db = require("../../config/db");
 const { sendOTP, verifyOTP, memberExistOrNot } = require("../model/authModel");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
+const { WhatsAppMessage, sendWhatsAppOtpByTwilio } = require("../../config/whatsapp");
 
 const JWT_SECRET = process.env.JWT_SECRET;
 const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET;
@@ -255,6 +256,33 @@ const meberexists = async (req, res) => {
   }
 };
 // Export the functions
+const sendWhatsappMessage=async (req,res)=>{
+  try {
+    const { phoneNumber, otp } = req.body;
+
+    if (!phoneNumber || !otp) {
+      return res.status(400).json({
+        success: false,
+        message: 'Missing required fields: phoneNumber or otp.'
+      });
+    }
+
+    const messageSid = await sendWhatsAppOtpByTwilio(phoneNumber, otp);
+
+    res.status(200).json({
+      success: true,
+      message: 'WhatsApp message sent successfully.',
+      sid: messageSid
+    });
+  } catch (error) {
+    console.error('Error in /sendmessage route:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to send WhatsApp message.',
+      error: error.message
+    });
+  }
+}
 
 module.exports = {
   login,
@@ -265,4 +293,5 @@ module.exports = {
   sendOtpForLogin,
   verifyOtpLogin,
   meberexists,
+  sendWhatsappMessage,
 };

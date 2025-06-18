@@ -7,6 +7,44 @@ import { Checkbox, IconButton } from '@mui/material';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import { toast } from 'react-toastify';
 import TransferAmountToChapter from '../../components/member/FeeReceiver/TransferAmountToChapter';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '../../components/ui/table';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '../../components/ui/dialog';
+import { Button } from '../../components/ui/button';
+import { CheckCircle, AlertCircle } from 'lucide-react';
+import { Input } from '../../components/ui/input';
+import { Label } from '../../components/ui/label';
+import { Select } from '../../components/ui/select';
+import { Dialog as ConfirmDialog } from '../../components/ui/dialog';
+import {
+  Command,
+  CommandInput,
+  CommandList,
+  CommandItem,
+  CommandEmpty,
+} from '../../components/ui/command';
+import EditFeeDetails from '../../components/member/EditFeeDetails';
+import EditIcon from '@mui/icons-material/Edit';
+
+const paymentModes = [
+  { value: 'cash', label: 'Cash' },
+  { value: 'online', label: 'Online/UPI/QR' },
+  { value: 'cheque', label: 'Cheque' },
+  { value: 'other', label: 'Other' },
+];
 
 interface MemberFee {
   transactionId: string;
@@ -40,6 +78,21 @@ const MemberFeeApproval: React.FC = () => {
     totalTransferredToChapter: 0,
     remainingToTransfer: 0,
   });
+  const [selectedFee, setSelectedFee] = useState<any>(null);
+  const [loadingApprovals, setLoadingApprovals] = useState<{
+    [key: string]: boolean;
+  }>({});
+  const [receivedAmount, setReceivedAmount] = useState<string>('');
+  const [receiverList, setReceiverList] = useState<any[]>([]);
+  const [allMembers, setAllMembers] = useState<any[]>([]);
+  const [showAllMembers, setShowAllMembers] = useState(false);
+  const [selectedReceiver, setSelectedReceiver] = useState<string>('');
+  const [selectedPaymentMode, setSelectedPaymentMode] = useState<string>('');
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [confirmAction, setConfirmAction] = useState<'approve' | 'save'>();
+  const [detailsChanged, setDetailsChanged] = useState(false);
+  const [canChangeReceiver, setCanChangeReceiver] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
 
   console.log({ pendingFees });
 
@@ -56,6 +109,44 @@ const MemberFeeApproval: React.FC = () => {
       fetchMetaData();
     }
   }, [config.currentState, currentTab, chapterData]);
+
+  // Helper to format date as DD-MM-YYYY
+  const formatDateDDMMYYYY = (date: Date) => {
+    const d = date.getDate().toString().padStart(2, '0');
+    const m = (date.getMonth() + 1).toString().padStart(2, '0');
+    const y = date.getFullYear();
+    return `${d}-${m}-${y}`;
+  };
+
+  // Fetch current receivers for the dialog
+  const fetchReceivers = async () => {
+    if (!chapterData?.chapterId) return;
+    try {
+      const res = await axiosInstance.get(
+        `/api/feeReciever/currentReceivers/${chapterData.chapterId}`,
+        {
+          params: {
+            date: formatDateDDMMYYYY(new Date()),
+          },
+        },
+      );
+      setReceiverList(res.data || []);
+    } catch (e) {
+      setReceiverList([]);
+    }
+  };
+  // Fetch all members for the dialog
+  const fetchAllMembers = async () => {
+    if (!chapterData?.chapterId) return;
+    try {
+      const res = await axiosInstance.get(
+        `/api/member/all?chapterId=${chapterData.chapterId}`,
+      );
+      setAllMembers(res.data || []);
+    } catch (e) {
+      setAllMembers([]);
+    }
+  };
 
   const fetchIsAllowedAllMembersApproval = async () => {
     try {
@@ -102,14 +193,6 @@ const MemberFeeApproval: React.FC = () => {
     } catch (error) {
       console.error('Fetching metadata failed:', error);
     }
-  }
-
-  const handleApprovalChange = (transactionId: string) => {
-    setSelectedApprovals((prev) =>
-      prev.includes(transactionId)
-        ? prev.filter((id) => id !== transactionId)
-        : [...prev, transactionId],
-    );
   };
 
   console.log({ selectedApprovals });
@@ -133,6 +216,205 @@ const MemberFeeApproval: React.FC = () => {
     } catch (error) {
       toast.error('Could not confirm fees. Please try again later.');
       console.error('Confirming fees failed:', error);
+    }
+  };
+
+  const handleDirectApproval = async (transactionId: string) => {
+    try {
+      setLoadingApprovals((prev) => ({ ...prev, [transactionId]: true }));
+      const fee = pendingFees.find((f) => f.transactionId === transactionId);
+
+      const response = await axiosInstance.put(
+        '/api/payment/approvePendingPayment',
+        {
+          transactionDetails: [fee],
+        },
+      );
+
+      if (response.data.success) {
+        setPendingFees((prev) =>
+          prev.filter((fee) => fee.transactionId !== transactionId),
+        );
+        toast.success('Fee approved successfully');
+      } else {
+        toast.error(response.data.message || 'Could not approve fee');
+      }
+    } catch (error: any) {
+      console.error('Approving fee failed:', error);
+      toast.error(
+        error.response?.data?.message ||
+          'Could not approve fee. Please try again later.',
+      );
+    } finally {
+      setLoadingApprovals((prev) => ({ ...prev, [transactionId]: false }));
+    }
+  };
+
+  const handleDetailedApproval = async (transactionId: string) => {
+    try {
+      setLoadingApprovals((prev) => ({ ...prev, [transactionId]: true }));
+      const fee = pendingFees.find((f) => f.transactionId === transactionId);
+
+      const response = await axiosInstance.put(
+        '/api/payment/approvePendingPayment',
+        {
+          transactionDetails: [
+            {
+              ...fee,
+              receivedAmount: parseFloat(receivedAmount),
+            },
+          ],
+        },
+      );
+
+      if (response.data.success) {
+        setPendingFees((prev) =>
+          prev.filter((fee) => fee.transactionId !== transactionId),
+        );
+        setReceivedAmount('');
+        setSelectedFee(null);
+        toast.success('Fee approved successfully');
+      } else {
+        toast.error(response.data.message || 'Could not approve fee');
+      }
+    } catch (error: any) {
+      console.error('Approving fee failed:', error);
+      toast.error(
+        error.response?.data?.message ||
+          'Could not approve fee. Please try again later.',
+      );
+    } finally {
+      setLoadingApprovals((prev) => ({ ...prev, [transactionId]: false }));
+    }
+  };
+
+  // Move approved fee to pending
+  const handleMoveToPending = async (transactionId: string) => {
+    try {
+      setLoadingApprovals((prev) => ({ ...prev, [transactionId]: true }));
+      const fee = approvedFees.find((f) => f.transactionId === transactionId);
+      const response = await axiosInstance.put(
+        '/api/payment/moveApprovedToPending',
+        {
+          transactionDetails: [fee],
+        },
+      );
+      if (response.data.success) {
+        setApprovedFees((prev) =>
+          prev.filter((fee) => fee.transactionId !== transactionId),
+        );
+        toast.success('Fee moved to pending successfully');
+        fetchFeeRequests('pending'); // Refresh pending list
+      } else {
+        toast.error(response.data.message || 'Could not move fee');
+      }
+    } catch (error: any) {
+      console.error('Moving fee to pending failed:', error);
+      toast.error(
+        error.response?.data?.message ||
+          'Could not move fee. Please try again later.',
+      );
+    } finally {
+      setLoadingApprovals((prev) => ({ ...prev, [transactionId]: false }));
+    }
+  };
+
+  // Open dialog: fetch receivers and reset state
+  const openApproveDialog = (fee: any) => {
+    setSelectedFee(fee);
+    setReceivedAmount(fee.paidAmount.toString());
+    setSelectedReceiver(fee.paymentReceivedById || '');
+    setSelectedPaymentMode(fee.paymentType || '');
+    setDetailsChanged(false);
+    setShowAllMembers(false);
+    setCanChangeReceiver(false);
+    fetchReceivers();
+    setEditDialogOpen(true);
+  };
+
+  // When showAllMembers toggled, fetch all members if needed
+  useEffect(() => {
+    if (showAllMembers) fetchAllMembers();
+  }, [showAllMembers]);
+
+  // Track if details changed
+  useEffect(() => {
+    if (!selectedFee) return;
+    setDetailsChanged(
+      receivedAmount !== selectedFee.paidAmount.toString() ||
+        selectedReceiver !== (selectedFee.paymentReceivedById || '') ||
+        selectedPaymentMode !== (selectedFee.paymentType || ''),
+    );
+  }, [receivedAmount, selectedReceiver, selectedPaymentMode, selectedFee]);
+
+  // Save changes (without approval)
+  const handleSaveChanges = async () => {
+    setShowConfirm(false);
+    if (!selectedFee) return;
+    setLoadingApprovals((prev) => ({
+      ...prev,
+      [selectedFee.transactionId]: true,
+    }));
+    try {
+      await axiosInstance.put('/api/payment/saveEditedFeeDetails', {
+        transactionId: selectedFee.transactionId,
+        updateFields: {
+          paidAmount: parseFloat(receivedAmount),
+          paymentReceivedById: selectedReceiver,
+          paymentType: selectedPaymentMode,
+          paymentReceivedByName:
+            allMembers.find((m) => m.memberId === selectedReceiver)
+              ?.firstName ||
+            receiverList.find((r) => r.memberId === selectedReceiver)
+              ?.receiverName ||
+            '',
+            payableAmount: selectedFee.payableAmount,
+        },
+      });
+      toast.success('Details saved successfully');
+      fetchFeeRequests();
+      setSelectedFee(null);
+      setEditDialogOpen(false);
+    } catch (e: any) {
+      toast.error(e.response?.data?.message || 'Could not save changes');
+    } finally {
+      setLoadingApprovals((prev) => ({
+        ...prev,
+        [selectedFee.transactionId]: false,
+      }));
+    }
+  };
+
+  // Approve with details
+  const handleApproveWithDetails = async () => {
+    setShowConfirm(false);
+    if (!selectedFee) return;
+    setLoadingApprovals((prev) => ({
+      ...prev,
+      [selectedFee.transactionId]: true,
+    }));
+    try {
+      await axiosInstance.put('/api/payment/approvePendingPayment', {
+        transactionDetails: [
+          {
+            ...selectedFee,
+            paidAmount: parseFloat(receivedAmount),
+            paymentReceivedById: selectedReceiver,
+            paymentType: selectedPaymentMode,
+            status: 'approved',
+          },
+        ],
+      });
+      toast.success('Fee approved successfully');
+      fetchFeeRequests();
+      setSelectedFee(null);
+    } catch (e: any) {
+      toast.error(e.response?.data?.message || 'Could not approve fee');
+    } finally {
+      setLoadingApprovals((prev) => ({
+        ...prev,
+        [selectedFee.transactionId]: false,
+      }));
     }
   };
 
@@ -243,77 +525,81 @@ const MemberFeeApproval: React.FC = () => {
         {currentTab === 'pending' ? (
           <>
             {width > 700 ? (
-              <div className="overflow-x-auto">
-                <table className="w-full table-auto">
-                  <thead>
-                    <tr className="bg-gray-200 text-left dark:bg-meta-4">
-                      <th className="py-3 px-4 text-black dark:text-white">
-                        Member Name
-                      </th>
-                      <th className="py-3 px-4 text-black dark:text-white">
-                        Package Name
-                      </th>
-                      <th className="py-3 px-4 text-black dark:text-white">
-                        Date
-                      </th>
-                      <th className="py-3 px-4 text-black dark:text-white">
-                        Amount Paid
-                      </th>
-                      <th className="py-3 px-4 text-black dark:text-white">
-                        Dues
-                      </th>
-                      <th className="py-3 px-4 text-black dark:text-white">
-                        Approve
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
+              <div className="overflow-x-auto rounded-lg">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Member Name</TableHead>
+                      <TableHead>Package Name</TableHead>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Amount Paid</TableHead>
+                      <TableHead>Dues</TableHead>
+                      {config.currentState === 'all_members_approval' && (
+                        <TableHead>Received By</TableHead>
+                      )}
+                      <TableHead>Approve</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
                     {pendingFees?.length === 0 ? (
-                      <tr>
-                        <td
-                          colSpan={7}
-                          className="text-center py-4 text-black dark:text-white"
-                        >
+                      <TableRow>
+                        <TableCell colSpan={6} className="text-center">
                           No pending fees to approve.
-                        </td>
-                      </tr>
+                        </TableCell>
+                      </TableRow>
                     ) : (
                       pendingFees?.map((fee) => (
-                        <tr
-                          key={fee.transactionId}
-                          className="border-b border-gray-300 dark:border-strokedark"
-                        >
-                          <td className="py-3 px-4 text-black dark:text-white">
+                        <TableRow key={fee.transactionId}>
+                          <TableCell>
                             {fee.firstName} {fee.lastName}
-                          </td>
-                          <td className="py-3 px-4 text-black dark:text-white">
-                            {fee.packageName}
-                          </td>
-                          <td className="py-3 px-4 text-black dark:text-white">
+                          </TableCell>
+                          <TableCell>{fee.packageName}</TableCell>
+                          <TableCell>
                             {new Date(fee.transactionDate).toLocaleDateString()}
-                          </td>
-                          <td className="py-3 px-4 text-black dark:text-white">
-                            ₹{fee.paidAmount}
-                          </td>
-                          <td className="py-3 px-4 text-black dark:text-white">
-                            ₹{fee.balanceAmount}
-                          </td>
-                          <td className="py-3 px-4">
-                            <Checkbox
-                              checked={selectedApprovals.includes(
-                                fee.transactionId,
-                              )}
-                              onChange={() =>
-                                handleApprovalChange(fee.transactionId)
-                              }
-                              color="primary"
-                            />
-                          </td>
-                        </tr>
+                          </TableCell>
+                          <TableCell>₹{fee.paidAmount}</TableCell>
+                          <TableCell>₹{fee.balanceAmount}</TableCell>
+                          {config.currentState === 'all_members_approval' && (
+                            <TableCell>
+                              {fee.paymentReceivedByName || '-'}
+                            </TableCell>
+                          )}
+                          <TableCell>
+                            <div className="flex gap-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() =>
+                                  handleDirectApproval(fee.transactionId)
+                                }
+                                className="h-8 px-2"
+                                disabled={loadingApprovals[fee.transactionId]}
+                              >
+                                {loadingApprovals[fee.transactionId] ? (
+                                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                                ) : (
+                                  <span className="text-xs">Quick Approve</span>
+                                )}
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-8 px-2"
+                                onClick={() => openApproveDialog(fee)}
+                                disabled={loadingApprovals[fee.transactionId]}
+                              >
+                                <span className="text-xs flex items-center">
+                                  <EditIcon fontSize="small" className="mr-1" />
+                                  Edit
+                                </span>
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
                       ))
                     )}
-                  </tbody>
-                </table>
+                  </TableBody>
+                </Table>
               </div>
             ) : (
               <div className="flex flex-col space-y-4">
@@ -325,37 +611,79 @@ const MemberFeeApproval: React.FC = () => {
                   pendingFees?.map((fee) => (
                     <div
                       key={fee.transactionId}
-                      className="border rounded-lg p-4 shadow-md dark:border-strokedark"
+                      className="border rounded-lg p-4 shadow-md dark:border-strokedark bg-white dark:bg-boxdark flex flex-col gap-2"
                     >
-                      <p className="text-black dark:text-white font-medium">
-                        {fee.firstName} {fee.lastName}
-                      </p>
-                      <p className="text-sm text-gray-600 dark:text-gray-300">
-                        Package: {fee.packageName}
-                      </p>
-                      <p className="text-sm text-gray-600 dark:text-gray-300">
-                        Date:{' '}
-                        {new Date(fee.transactionDate).toLocaleDateString()}
-                      </p>
-                      <p className="text-sm text-gray-600 dark:text-gray-300">
-                        Amount Paid: ₹{fee.paidAmount}
-                      </p>
-                      <p className="text-sm text-gray-600 dark:text-gray-300">
-                        Dues: ₹{fee.balanceAmount}
-                      </p>
-                      <div className="mt-2">
-                        <Checkbox
-                          checked={selectedApprovals.includes(
-                            fee.transactionId,
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-black dark:text-white font-medium text-base">
+                            {fee.firstName} {fee.lastName}
+                          </p>
+                          <p className="text-sm text-gray-600 dark:text-gray-300">
+                            Package:{' '}
+                            <span className="font-semibold">
+                              {fee.packageName}
+                            </span>
+                          </p>
+                          {/* show receiver details if viewing all requests */}
+                          {config.currentState === 'all_members_approval' && (
+                            <p className="text-sm text-gray-600 dark:text-gray-300">
+                              Received By:{' '}
+                              <span className="font-semibold">
+                                {fee.paymentReceivedByName || '-'}
+                              </span>
+                            </p>
                           )}
-                          onChange={() =>
-                            handleApprovalChange(fee.transactionId)
-                          }
-                          color="primary"
-                        />
-                        <span className="text-black dark:text-white">
-                          Approve
+                        </div>
+                        <span className="text-xs text-gray-500 dark:text-gray-400">
+                          {new Date(fee.transactionDate).toLocaleDateString()}
                         </span>
+                      </div>
+                      <div className="flex flex-wrap gap-4 mt-2">
+                        <div className="flex-1 min-w-[120px]">
+                          <span className="block text-xs text-gray-500 dark:text-gray-400">
+                            Amount Paid
+                          </span>
+                          <span className="block text-base font-semibold text-green-700 dark:text-green-300">
+                            ₹{fee.paidAmount}
+                          </span>
+                        </div>
+                        <div className="flex-1 min-w-[120px]">
+                          <span className="block text-xs text-gray-500 dark:text-gray-400">
+                            Dues
+                          </span>
+                          <span className="block text-base font-semibold text-red-700 dark:text-red-300">
+                            ₹{fee.balanceAmount}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex gap-2 mt-4">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() =>
+                            handleDirectApproval(fee.transactionId)
+                          }
+                          className="h-8 px-2"
+                          disabled={loadingApprovals[fee.transactionId]}
+                        >
+                          {loadingApprovals[fee.transactionId] ? (
+                            <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                          ) : (
+                            <span className="text-xs">Quick Approve</span>
+                          )}
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-8 px-2"
+                          onClick={() => openApproveDialog(fee)}
+                          disabled={loadingApprovals[fee.transactionId]}
+                        >
+                          <span className="text-xs flex items-center">
+                            <EditIcon fontSize="small" className="mr-1" />
+                            Edit
+                          </span>
+                        </Button>
                       </div>
                     </div>
                   ))
@@ -370,68 +698,65 @@ const MemberFeeApproval: React.FC = () => {
               >
                 Confirm Selected Approvals
               </button>
-            )}
+            )
+            }
           </>
         ) : (
           <>
             {width > 700 ? (
               <div className="overflow-x-auto">
-                <table className="w-full table-auto">
-                  <thead>
-                    <tr className="bg-gray-200 text-left dark:bg-meta-4">
-                      <th className="py-3 px-4 text-black dark:text-white">
-                        Member Name
-                      </th>
-                      <th className="py-3 px-4 text-black dark:text-white">
-                        Package Name
-                      </th>
-                      <th className="py-3 px-4 text-black dark:text-white">
-                        Date
-                      </th>
-                      <th className="py-3 px-4 text-black dark:text-white">
-                        Amount Paid
-                      </th>
-                      <th className="py-3 px-4 text-black dark:text-white">
-                        Dues
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Member Name</TableHead>
+                      <TableHead>Package Name</TableHead>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Amount Paid</TableHead>
+                      <TableHead>Dues</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
                     {approvedFees?.length === 0 ? (
-                      <tr>
-                        <td
-                          colSpan={5}
-                          className="text-center py-4 text-black dark:text-white"
-                        >
+                      <TableRow>
+                        <TableCell colSpan={5} className="text-center">
                           No approved fees.
-                        </td>
-                      </tr>
+                        </TableCell>
+                      </TableRow>
                     ) : (
                       approvedFees?.map((fee) => (
-                        <tr
-                          key={fee.transactionId}
-                          className="border-b border-gray-300 dark:border-strokedark"
-                        >
-                          <td className="py-3 px-4 text-black dark:text-white">
+                        <TableRow key={fee.transactionId}>
+                          <TableCell>
                             {fee.firstName} {fee.lastName}
-                          </td>
-                          <td className="py-3 px-4 text-black dark:text-white">
-                            {fee.packageName}
-                          </td>
-                          <td className="py-3 px-4 text-black dark:text-white">
+                          </TableCell>
+                          <TableCell>{fee.packageName}</TableCell>
+                          <TableCell>
                             {new Date(fee.transactionDate).toLocaleDateString()}
-                          </td>
-                          <td className="py-3 px-4 text-black dark:text-white">
-                            ₹{fee.paidAmount}
-                          </td>
-                          <td className="py-3 px-4 text-black dark:text-white">
-                            ₹{fee.balanceAmount}
-                          </td>
-                        </tr>
+                          </TableCell>
+                          <TableCell>₹{fee.paidAmount}</TableCell>
+                          <TableCell>₹{fee.balanceAmount}</TableCell>
+                          <TableCell>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-8 px-2"
+                              onClick={() =>
+                                handleMoveToPending(fee.transactionId)
+                              }
+                              disabled={loadingApprovals[fee.transactionId]}
+                            >
+                              {loadingApprovals[fee.transactionId] ? (
+                                <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                              ) : (
+                                <span className="text-xs">Move to Pending</span>
+                              )}
+                            </Button>
+                          </TableCell>
+                        </TableRow>
                       ))
                     )}
-                  </tbody>
-                </table>
+                  </TableBody>
+                </Table>
               </div>
             ) : (
               <div className="flex flex-col space-y-4">
@@ -443,24 +768,57 @@ const MemberFeeApproval: React.FC = () => {
                   approvedFees?.map((fee) => (
                     <div
                       key={fee.transactionId}
-                      className="border rounded-lg p-4 shadow-md dark:border-strokedark"
+                      className="border rounded-lg p-4 shadow-md dark:border-strokedark bg-white dark:bg-boxdark flex flex-col gap-2"
                     >
-                      <p className="text-black dark:text-white font-medium">
-                        {fee.firstName} {fee.lastName}
-                      </p>
-                      <p className="text-sm text-gray-600 dark:text-gray-300">
-                        Package: {fee.packageName}
-                      </p>
-                      <p className="text-sm text-gray-600 dark:text-gray-300">
-                        Date:{' '}
-                        {new Date(fee.transactionDate).toLocaleDateString()}
-                      </p>
-                      <p className="text-sm text-gray-600 dark:text-gray-300">
-                        Amount Paid: ₹{fee.paidAmount}
-                      </p>
-                      <p className="text-sm text-gray-600 dark:text-gray-300">
-                        Dues: ₹{fee.balanceAmount}
-                      </p>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-black dark:text-white font-medium text-base">
+                            {fee.firstName} {fee.lastName}
+                          </p>
+                          <p className="text-sm text-gray-600 dark:text-gray-300">
+                            Package:{' '}
+                            <span className="font-semibold">
+                              {fee.packageName}
+                            </span>
+                          </p>
+                        </div>
+                        <span className="text-xs text-gray-500 dark:text-gray-400">
+                          {new Date(fee.transactionDate).toLocaleDateString()}
+                        </span>
+                      </div>
+                      <div className="flex flex-wrap gap-4 mt-2">
+                        <div className="flex-1 min-w-[120px]">
+                          <span className="block text-xs text-gray-500 dark:text-gray-400">
+                            Amount Paid
+                          </span>
+                          <span className="block text-base font-semibold text-green-700 dark:text-green-300">
+                            ₹{fee.paidAmount}
+                          </span>
+                        </div>
+                        <div className="flex-1 min-w-[120px]">
+                          <span className="block text-xs text-gray-500 dark:text-gray-400">
+                            Dues
+                          </span>
+                          <span className="block text-base font-semibold text-red-700 dark:text-red-300">
+                            ₹{fee.balanceAmount}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex gap-2 mt-4">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-8 px-2"
+                          onClick={() => handleMoveToPending(fee.transactionId)}
+                          disabled={loadingApprovals[fee.transactionId]}
+                        >
+                          {loadingApprovals[fee.transactionId] ? (
+                            <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                          ) : (
+                            <span className="text-xs">Move to Pending</span>
+                          )}
+                        </Button>
+                      </div>
                     </div>
                   ))
                 )}
@@ -468,6 +826,58 @@ const MemberFeeApproval: React.FC = () => {
             )}
           </>
         )}
+      </div>
+
+      {/* Edit Fee Dialog - Moved outside the table */}
+      <div className="flex justify-center items-center">
+        <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+          <DialogContent
+            className="!p-0"
+            style={{
+              width: '100%',
+              maxHeight: 'calc(100vh - 20px)',
+              overflowY: 'auto',
+              borderRadius: 12,
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}
+          >
+            <div className="p-4 sm:p-6">
+              <DialogHeader>
+                <DialogTitle>Edit Fee Payment</DialogTitle>
+                <DialogDescription>
+                  Edit details, change receiver, payment mode, or approve/save
+                  changes
+                </DialogDescription>
+              </DialogHeader>
+              <EditFeeDetails
+                receivedAmount={receivedAmount}
+                setReceivedAmount={setReceivedAmount}
+                selectedReceiver={selectedReceiver}
+                setSelectedReceiver={setSelectedReceiver}
+                selectedPaymentMode={selectedPaymentMode}
+                setSelectedPaymentMode={setSelectedPaymentMode}
+                receiverList={receiverList}
+                allMembers={allMembers}
+                showAllMembers={showAllMembers}
+                setShowAllMembers={setShowAllMembers}
+                paymentModes={paymentModes}
+                selectedFee={selectedFee}
+                canChangeReceiver={canChangeReceiver}
+                setCanChangeReceiver={setCanChangeReceiver}
+                onCancel={() => {
+                  setEditDialogOpen(false);
+                  setSelectedFee(null);
+                  setReceivedAmount('');
+                }}
+                onSave={handleSaveChanges}
+                onApprove={handleApproveWithDetails}
+              />
+              {/* Confirmation dialog and action buttons can be placed here if needed */}
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </>
   );
