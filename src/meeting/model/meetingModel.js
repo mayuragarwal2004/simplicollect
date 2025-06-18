@@ -57,6 +57,27 @@ const getAllMeetingsUsingMemberIdAndChapterId = async (memberId, chapterId) => {
     .orderBy("m.meetingDate", "asc");
 };
 
+// Fetch meetings by chapterId and termId
+const getAllMeetingsByChapterAndTerm = async (chapterId, termId) => {
+  return db("meetings as m")
+    .join("term as tm", "m.termId", "tm.termId")
+    .where({ "m.chapterId": chapterId, "m.termId": termId })
+    .select(
+      "m.meetingId",
+      "m.chapterId",
+      "m.termId",
+      "m.meetingName",
+      "m.meetingDate",
+      "m.meetingTime",
+      "m.meetingFeeMembers",
+      "m.meetingFeeVisitors",
+      "m.disabled as meetingDisabled",
+      "tm.termName",
+      "tm.status"
+    )
+    .orderBy("m.meetingDate", "asc");
+};
+
 const updatePaymentStatus = async (meetingId, paymentStatus) => {
   return db("meetings")
     .where("meetingId", meetingId)
@@ -68,5 +89,6 @@ module.exports = {
   getAllMeetings,
   getAllMeetingsUsingMemberIdAndChapterId,
   updatePaymentStatus,
-  getAllMeetingsByChapterId
+  getAllMeetingsByChapterId,
+  getAllMeetingsByChapterAndTerm,
 };

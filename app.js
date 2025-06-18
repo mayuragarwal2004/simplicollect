@@ -34,6 +34,7 @@ app.use("/api/feeReciever", authenticateToken, feeRecieverRoutes);
 app.use("/api/meetings", authenticateToken, meetingRoutes);
 app.use("/api/profile", authenticateToken, require("./src/profile/route/profileRoutes"));
 app.use("/api/report",authenticateToken, require("./src/report/route/reportRoutes"));
+app.use("/api/term", authenticateToken, require("./src/term/route/termRoutes"));
 app.use("/api/chapter-payment", authenticateToken, require("./src/chapterPayment/route/chapterPaymentRoutes"));
 app.get("/api/testWA", async (req, res) => {
   const result = await sendWhatsAppOtp("919921318237", "1234");

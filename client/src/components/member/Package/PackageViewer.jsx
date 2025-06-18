@@ -26,6 +26,13 @@ import {
   CommandItem,
   CommandList,
 } from '@/components/ui/command';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { Button } from '@/components/ui/button';
 import { ChevronsUpDown, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -46,12 +53,15 @@ const PackageViewer = () => {
       packageParents,
       packageData,
       pendingPayments,
+      terms,
+      selectedTermId,
     },
     calculationDate,
     setCalculationDate,
     setPaymentData,
     fetchAllData,
     handleDeletePendingRequest,
+    setSelectedTermId,
   } = usePaymentData();
   const { chapterData, memberData } = useData();
   const [tabValue, setTabValue] = React.useState(0);
@@ -236,10 +246,39 @@ const PackageViewer = () => {
                       />
                     </div>
                   )}
+                  
                 </AccordionContent>
               </AccordionItem>
             </Accordion>
           )}
+          {terms &&
+            terms.filter((term) => term.status === 'active').length > 1 && (
+              <div className="flex items-center space-x-4 mt-4">
+                <label className="text-md font-semibold">
+                  Select Active Term:
+                </label>
+                <Select
+                  value={selectedTermId || ''}
+                  onValueChange={(value) => {
+                    setSelectedTermId(value);
+                    fetchAllData(selectedMember?.value);
+                  }}
+                >
+                  <SelectTrigger className="w-[200px]">
+                    <SelectValue placeholder="Select term" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {terms
+                      .filter((term) => term.status === 'active')
+                      .map((term) => (
+                        <SelectItem key={term.termId} value={term.termId}>
+                          {term.termName}
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
         </div>
 
         {/* Right Side: Due Amount, show red for positive value, green for negative value */}

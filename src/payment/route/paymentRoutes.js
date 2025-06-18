@@ -20,6 +20,9 @@ router.get("/pendingPayments/:chapterId", paymentController.chapterPendingPaymen
 // Approve Payment
 router.put("/approvePendingPayment", paymentController.approvePendingPaymentController);
 
+// Move approved payment back to pending
+router.put("/moveApprovedToPending", paymentController.moveApprovedToPendingController);
+
 // Route to get all payment requests of a member
 router.post("/paymentRequests/:chapterId", paymentController.getPaymentRequestsController);
 
@@ -28,5 +31,8 @@ router.get("/balance/:chapterId", paymentController.getMemberChapterBalancesCont
 
 // Route to get meta data
 router.get("/metaData/:chapterId", paymentController.getMetaDataController);
+
+// Save edited fee details without changing status
+router.put("/saveEditedFeeDetails", paymentController.saveEditedFeeDetailsController);
 
 module.exports = router;
