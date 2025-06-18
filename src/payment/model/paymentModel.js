@@ -109,9 +109,24 @@ const getTransactionById = async (transactionId) => {
 // data is an array of objects containing transactionId, approvedById and status
 const approvePendingPayment = async (data, trx) => {
   try {
+    // Only approve if status is 'approved', otherwise just update fields
     const updatePromises = data.map((transaction) => {
-      const { transactionId, ...updateData } = transaction;
-      return trx("transactions").where({ transactionId }).update(updateData);
+      const { transactionId, status, ...updateData } = transaction;
+      if (status === 'approved') {
+        // Approve: set approvedById, approvedByName, status
+        return trx("transactions").where({ transactionId }).update({
+          ...updateData,
+          status: 'approved',
+          approvedById: transaction.approvedById,
+          approvedByName: transaction.approvedByName,
+        });
+      } else {
+        // Save only: update allowed fields, do not set status to 'approved' or update approvedById/approvedByName
+        return trx("transactions").where({ transactionId }).update({
+          ...updateData,
+          status: 'pending',
+        });
+      }
     });
     await Promise.all(updatePromises);
   } catch (error) {
@@ -268,6 +283,63 @@ const getMetaData = async (memberId, chapterId) => {
   }
 };
 
+// Move approved fee to pending
+const moveApprovedToPending = async (data, trx) => {
+  try {
+    const updatePromises = data.map((transaction) => {
+      const { transactionId, termId, ...updateData } = transaction;
+      return trx("transactions").where({ transactionId }).update({ status: "pending" });
+    });
+    await Promise.all(updatePromises);
+  } catch (error) {
+    throw error;
+  }
+};
+
+// Save edited fee details without changing status
+const saveEditedFeeDetails = async (data, editorInfo = {}) => {
+  try {
+    const updatePromises = data.map(async (transaction) => {
+      const { transactionId, paidAmount, paymentReceivedById, paymentType, paymentReceivedByName, platformFee = 0, receiverFee = 0, payableAmount = 0 } = transaction;
+      // Fetch current transaction for systemRemarks and old values
+      const [current] = await db("transactions").where({ transactionId }).select();
+      let changes = [];
+      if (typeof paidAmount === 'number' && paidAmount !== current.paidAmount) changes.push(`paidAmount: ${current.paidAmount} → ${paidAmount}`);
+      if (paymentReceivedById && paymentReceivedById !== current.paymentReceivedById) changes.push(`paymentReceivedById: ${current.paymentReceivedById} → ${paymentReceivedById}`);
+      if (paymentType && paymentType !== current.paymentType) changes.push(`paymentType: ${current.paymentType} → ${paymentType}`);
+      if (paymentReceivedByName && paymentReceivedByName !== current.paymentReceivedByName) changes.push(`paymentReceivedByName: ${current.paymentReceivedByName} → ${paymentReceivedByName}`);
+      // Calculate new balanceAmount and amountPaidToChapter
+      const newBalanceAmount = typeof paidAmount === 'number' && typeof payableAmount === 'number'
+        ? paidAmount - payableAmount
+        : current.balanceAmount;
+      const newAmountPaidToChapter = typeof paidAmount === 'number'
+        ? (paidAmount - (parseFloat(platformFee) || 0) - (parseFloat(receiverFee) || 0))
+        : current.amountPaidToChapter;
+      // Prepare systemRemarks
+      let newSystemRemarks = current.systemRemarks || '';
+      if (changes.length > 0 && editorInfo.userName && editorInfo.userId) {
+        const now = new Date();
+        const timestamp = now.toISOString().replace('T', ' ').substring(0, 19);
+        newSystemRemarks += `\n[${timestamp}] Edited by ${editorInfo.userName} (${editorInfo.userId}): ${changes.join(', ')}`;
+      }
+      return db("transactions")
+        .where({ transactionId })
+        .update({
+          paidAmount,
+          paymentReceivedById,
+          paymentType,
+          paymentReceivedByName,
+          balanceAmount: newBalanceAmount,
+          amountPaidToChapter: newAmountPaidToChapter,
+          systemRemarks: newSystemRemarks,
+        });
+    });
+    await Promise.all(updatePromises);
+  } catch (error) {
+    throw error;
+  }
+};
+
 module.exports = {
   addTransaction,
   addPayment,
@@ -286,4 +358,6 @@ module.exports = {
   getMemberFinancialSummary,
   getTransactionsByMemberId,
   getMetaData,
+  moveApprovedToPending,
+  saveEditedFeeDetails, // <-- add export
 };
