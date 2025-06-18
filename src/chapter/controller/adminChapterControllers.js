@@ -227,6 +227,7 @@ const checkAndSaveMembers = async (req, res) => {
   if (!chapter) {
     return res.status(404).json({ message: "Chapter not found" });
   }
+
   if (req.hasErrors) {
     return res.status(400).json({
       success: false,
@@ -235,13 +236,11 @@ const checkAndSaveMembers = async (req, res) => {
       errorDetails: req.errorDetails,
     });
   }
+
   const data = req.parsedExcel;
   const chapterId = chapter.chapterId;
   const errorRows = [];
   const validMembersToAdd = [];
-
-  console.log("Data to be processed:", data);
-  
 
   for (let i = 1; i < data.length; i++) {
     const row = data[i];
@@ -267,9 +266,6 @@ const checkAndSaveMembers = async (req, res) => {
 
     let emailInChapter = false;
     if (emailMemberId) {
-      console.log("emailMemberId", emailMemberId);
-      console.log("chapterId", chapterId);
-
       const emailCheck = await checkDataModel.isMemberInChapter(
         emailMemberId,
         chapterId
@@ -293,6 +289,7 @@ const checkAndSaveMembers = async (req, res) => {
       });
       rowHasError = true;
     }
+
     if (emailMemberId && phoneMemberId && emailMemberId !== phoneMemberId) {
       rowErrors.errors.push({
         field: "email/phone",
@@ -300,6 +297,7 @@ const checkAndSaveMembers = async (req, res) => {
       });
       rowHasError = true;
     }
+
     if (
       (emailInChapter && emailMemberId) ||
       (phoneInChapter && phoneMemberId)
@@ -310,6 +308,7 @@ const checkAndSaveMembers = async (req, res) => {
       });
       rowHasError = true;
     }
+
     if (!emailMemberId && !phoneMemberId && !firstName) {
       rowErrors.errors.push({
         field: "firstName",
@@ -317,6 +316,7 @@ const checkAndSaveMembers = async (req, res) => {
       });
       rowHasError = true;
     }
+
     if (rowHasError) {
       errorRows.push(rowErrors);
     } else {
@@ -328,7 +328,7 @@ const checkAndSaveMembers = async (req, res) => {
         phoneNumber,
         roleId,
         joinDate,
-        ...(memberId && { memberId }),
+        memberId,
       });
     }
   }
@@ -340,11 +340,70 @@ const checkAndSaveMembers = async (req, res) => {
     });
   }
 
+  //save code for database
+  for (const member of validMembersToAdd) {
+    const {
+      firstName,
+      lastName,
+      email,
+      phoneNumber,
+      roleId,
+      joinDate,
+      memberId,
+    } = member;
+     console.log("roleId value and type: ", roleId, typeof roleId);
+    let finalMemberId = memberId;
+
+    //case1: complete new member
+    if (!finalMemberId) {
+      finalMemberId = await checkDataModel.insertMember({
+        firstName,
+        lastName,
+        email,
+        phoneNumber,
+        password: "",
+        roleId
+      });
+
+      await checkDataModel.mapMemberToChapter({
+        memberId: finalMemberId,
+        chapterId,
+        roleId,
+        joinDate,
+      });
+
+    } else {
+      const mapping = await checkDataModel.getMemberChapterMapping(
+        finalMemberId,
+        chapterId
+      );
+
+      //case2: member exists, not in any chapter
+      if (!mapping) {
+        await checkDataModel.mapMemberToChapter({
+          memberId: finalMemberId,
+          chapterId,
+          roleId,
+          joinDate,
+        });
+
+      //case3: exist in chapter but status left ( was removed)
+      } else if (mapping.status === "left") {
+        await checkDataModel.rejoinMemberToChapter({
+          memberId: finalMemberId,
+          chapterId,
+          roleId,
+          joinDate,
+        });
+      }
+    }
+  }
+
   return res.status(200).json({
-    message: "Validation successful. All members are ready to be added.",
-    previewData: validMembersToAdd,
+    message: "All members saved/updated successfully.",
   });
 };
+
 
 const checkFormatAndReturnExcel = async (req, res) => {
   const workbook = xlsx.read(req.file.buffer, { type: "buffer" });
