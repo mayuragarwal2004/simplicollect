@@ -15,7 +15,19 @@ const checkVisitor = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
-
+const getVisitorById = async (req, res) => {
+  const { visitorId } = req.params;
+  try {
+    const visitor = await visitorModel.getVisitorById(visitorId);
+    if (visitor) {
+      res.json(visitor);
+    } else {
+      res.status(404).json({ message: "Visitor not found" });
+    }
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
 // Add a new visitor entry
 const addVisitor = async (req, res) => {
   let visitorData = req.body;
@@ -128,6 +140,44 @@ const getChapterMeetings = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+const updateVisitor = async (req, res) => {
+  const { visitorId } = req.params;
+  const data = req.body;
+  console.log("Update Visitor Data:", data);
+  const chapterVisitDate=req.body.chapterVisitDate;
+  const paymentRecordedDate=req.body.paymentRecordedDate;
+  const createdAt = req.body.createdAt;
+if (paymentRecordedDate) {
+  const date = new Date(paymentRecordedDate);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0'); // months are 0-indexed
+  const day = String(date.getDate()).padStart(2, '0');
+
+  data.paymentRecordedDate = `${year}-${month}-${day}`;
+}
+ if (chapterVisitDate) {
+  const date = new Date(chapterVisitDate);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0'); // months are 0-indexed
+  const day = String(date.getDate()).padStart(2, '0');
+
+  data.chapterVisitDate = `${year}-${month}-${day}`;
+}
+if(createdAt){
+  const date = new Date(createdAt);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0'); // months are 0-indexed
+  const day = String(date.getDate()).padStart(2, '0');
+  data.createdAt = `${year}-${month}-${day}`;
+}
+  try {
+    await visitorModel.updateVisitor(visitorId, data);
+    res.json({ message: "Visitor updated successfully" });
+  } catch (error) {
+    console.log(error.message)
+    res.status(500).json({ error: error.message });
+  }
+};
 module.exports = {
   checkVisitor,
   addVisitor,
@@ -137,5 +187,7 @@ module.exports = {
   markAsPaid,
   deleteVisitor,
   getChapterMeetings,
-  verifyVisitorLink: verifyVisitorLink
+  verifyVisitorLink: verifyVisitorLink,
+  getVisitorById,
+  updateVisitor
 };
