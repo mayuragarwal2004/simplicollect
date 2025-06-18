@@ -27,7 +27,7 @@ app.use("/api/visitor", visitorRoutes);
 app.use("/api/chapter", authenticateToken, chapterRoutes);
 app.use("/api/member", authenticateToken, memberRoutes);
 app.use("/api/rights", authenticateToken, rightsRoutes);
-app.use("/api/image-upload", authenticateToken, imageUploadRoutes);
+app.use("/api/image-upload",  imageUploadRoutes);
 app.use("/api/packages", authenticateToken, packageRoutes);
 app.use("/api/payment", authenticateToken, paymentRoutes);
 app.use("/api/feeReciever", authenticateToken, feeRecieverRoutes);
@@ -48,7 +48,7 @@ app.get("/api/testWA", async (req, res) => {
 // admin routes
 // app.use("/api/organisations", authenticateToken, require("./src/organisation/route/adminOrganisationRoutes"));
 app.use("/api/admin/organisations", authenticateToken, AuthenticateAdmin, require("./src/organisation/route/adminOrganisationRoutes"));
-app.use("/api/admin/chapters", authenticateToken, AuthenticateAdmin, require("./src/chapter/route/adminChapterRoutes"));
+app.use("/api/admin/chapters", require("./src/chapter/route/adminChapterRoutes"));
 app.use("/api/admin/chapter-member-list", authenticateToken, AuthenticateAdmin, require("./src/chapter/route/adminChapterMemberListRoutes"));
 app.use("/api/admin/members", authenticateToken, AuthenticateAdmin, require("./src/member/route/adminMemberRoutes"));
 

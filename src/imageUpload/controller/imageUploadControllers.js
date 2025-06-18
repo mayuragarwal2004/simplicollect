@@ -1,8 +1,8 @@
 // controllers/imageUploadController
+console.log("controller file loaded");
 const Jimp = require("jimp");
 const { v4: uuidv4 } = require("uuid");
 const { uploadToS3 } = require("../../config/aws");
-
 
 const uploadImage = async (req, res) => {
   if (req.file) {
@@ -79,6 +79,7 @@ const uploadImage = async (req, res) => {
     return res.status(400).json({ error: "No file uploaded" });
   }
 };
+
 
 module.exports = {
   uploadImage,

@@ -23,12 +23,14 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
+import { SearchBar } from '@/components/ui/search-bar';
 
 const AdminMembersTableData = () => {
   const [members, setMembers] = useState([
     {
-      membersId: 1,
-      membersName: 'John Doe',
+      memberId: '1',
+      firstName: 'John',
+      lastName: 'Doe',
       email: 'john.doe@example.com',
       phoneNumber: '123-456-7890',
     },
@@ -48,20 +50,35 @@ const AdminMembersTableData = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingMember, setEditingMember] = useState(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isChangePasswordDialogOpen, setIsChangePasswordDialogOpen] =
+    useState(false);
+  const [selectedMemberForPasswordChange, setSelectedMemberForPasswordChange] =
+    useState(null);
+  const [changePasswordForm, setChangePasswordForm] = useState({
+    newPassword: '',
+    confirmPassword: '',
+  });
+
   const [formData, setFormData] = useState({
-    membersName: '',
+    firstName: '',
+    lastName: '',
     email: '',
     phoneNumber: '',
-    numberOfMembers: '',
   });
 
   useEffect(() => {
     fetchMembers();
-  }, [rows, page]);
+  }, [rows, page, searchQuery]);
 
   const fetchMembers = () => {
     axiosInstance
-      .get(`/api/admin/members/getandsearchmembers?rows=${rows}&page=${page+1}`)
+      .get(`/api/admin/members/getandsearchmembers`, {
+        params: {
+          searchQuery: searchQuery.trim(),
+          rows: rows,
+          page: page + 1, // Adjusting for 1-based pagination
+        },
+      })
       .then((res) => {
         setMembers(res.data.data || res.data);
         setTotalRecord(res.data.totalRecords || res.data.length);
@@ -77,31 +94,23 @@ const AdminMembersTableData = () => {
   const handleOpenModal = (member = null) => {
     if (member) {
       setFormData({
-        membersName: member.membersName,
+        firstName: member.firstName,
+        lastName: member.lastName,
         email: member.email,
         phoneNumber: member.phoneNumber,
-        numberOfMembers: member.numberOfMembers,
       });
       setEditingChap(member);
     } else {
       setFormData({
-        membersName: '',
+        firstName: '',
+        lastName: '',
         email: '',
         phoneNumber: '',
-        numberOfMembers: '',
       });
       setEditingChap(null);
     }
     setIsModalOpen(true);
   };
-
-  // useEffect(() => {
-  //   setFilteredMembers(
-  //     members.filter((member) =>
-  //       member.membersName.toLowerCase().includes(searchQuery.toLowerCase()),
-  //     ),
-  //   );
-  // }, [searchQuery, members]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -113,45 +122,40 @@ const AdminMembersTableData = () => {
   };
 
   const validateForm = () => {
-    if (!formData.membersName.trim()) {
-      toast.error('Members name is required');
+    if (!formData.firstName?.trim()) {
+      toast.error('First name is required');
       return false;
     }
-    if (!formData.email.trim()) {
-      toast.error('Email is required');
+
+    if (!formData.email?.trim() && !formData.phoneNumber?.trim()) {
+      toast.error('Email is required or Phone number is required ');
       return false;
     }
-    if (!formData.phoneNumber.trim()) {
-      toast.error('Phone number is required');
-      return false;
-    }
-    if (!formData.numberOfMembers.trim()) {
-      toast.error('Number of members is required');
-      return false;
-    }
+
     return true;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
     try {
       const payload = {
-        membersName: formData.membersName,
-        email: formData.email,
-        phoneNumber: formData.phoneNumber,
-        numberOfMembers: parseInt(formData.numberOfMembers),
+        firstName: formData.firstName,
+        lastName: formData.lastName || null,
+        email: formData.email || null,
+        phoneNumber: formData.phoneNumber || null,
       };
 
       if (editingMember) {
         await axiosInstance.put(
-          `/api/admin/members/${editingMember.membersId}`,
+          `/api/admin/members/${editingMember.memberId}`,
           payload,
         );
         toast.success('Member updated successfully');
+        setIsDialogOpen(false);
       } else {
         await axiosInstance.post('/api/admin/members', payload);
         toast.success('Member added successfully');
@@ -183,10 +187,10 @@ const AdminMembersTableData = () => {
 
   const handleOpenAddDialog = () => {
     setFormData({
-      membersName: '',
+      firstName: '',
+      lastName: '',
       email: '',
       phoneNumber: '',
-      numberOfMembers: '',
     });
     setIsAddDialogOpen(true);
   };
@@ -206,18 +210,18 @@ const AdminMembersTableData = () => {
   const handleOpenDialog = (member = null) => {
     if (member) {
       setFormData({
-        membersName: member.membersName,
+        firstName: member.firstName,
+        lastName: member.lastName,
         email: member.email,
         phoneNumber: member.phoneNumber,
-        numberOfMembers: member.numberOfMembers,
       });
       setEditingMember(member);
     } else {
       setFormData({
-        membersName: '',
+        firstName: '',
+        lastName: '',
         email: '',
         phoneNumber: '',
-        numberOfMembers: '',
       });
       setEditingMember(null);
     }
@@ -229,12 +233,56 @@ const AdminMembersTableData = () => {
     setIsEditDialogOpen(false);
     setEditingMember(null);
     setFormData({
-      membersName: '',
+      firstName: '',
+      lastName: '',
       email: '',
       phoneNumber: '',
-      numberOfMembers: '',
     });
   };
+
+  const handleOpenChangePasswordDialog = (memberId) => {
+    setSelectedMemberForPasswordChange(memberId);
+    setChangePasswordForm({
+      newPassword: '',
+      confirmPassword: '',
+    });
+    setIsChangePasswordDialogOpen(true);
+  };
+
+  const handleChangePasswordInput = (e) => {
+    const { name, value } = e.target;
+    setChangePasswordForm((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleChangePasswordSubmit = async (e) => {
+    e.preventDefault();
+    const { newPassword, confirmPassword } = changePasswordForm;
+
+    if (newPassword !== confirmPassword) {
+      toast.error('Passwords do not match');
+      return;
+    }
+
+    try {
+      await axiosInstance.put(
+        `/api/admin/members/updatepassword/${selectedMemberForPasswordChange}`,
+        {
+          password: newPassword,
+          confirmPassword: confirmPassword,
+        },
+      );
+      toast.success('Password changed successfully');
+      setIsChangePasswordDialogOpen(false);
+    } catch (error) {
+      console.error(error);
+      toast.error('Failed to change password');
+    }
+  };
+
+  console.log({ members });
 
   return (
     <div className="rounded-2xl border border-stroke bg-white p-5 shadow-md dark:border-strokedark dark:bg-boxdark">
@@ -250,9 +298,17 @@ const AdminMembersTableData = () => {
             </DialogHeader>
             <form onSubmit={handleAddMember}>
               <Input
-                name="membersName"
-                placeholder="Member Name"
-                value={formData.membersName}
+                name="firstName"
+                placeholder="First Name"
+                value={formData.firstName}
+                onChange={handleInputChange}
+                className="mb-4"
+                required
+              />
+              <Input
+                name="lastName"
+                placeholder="Last Name"
+                value={formData.lastName}
                 onChange={handleInputChange}
                 className="mb-4"
                 required
@@ -275,15 +331,6 @@ const AdminMembersTableData = () => {
                 className="mb-4"
                 required
               />
-              <Input
-                name="numberOfMembers"
-                type="number"
-                placeholder="Number of Members"
-                value={formData.numberOfMembers}
-                onChange={handleInputChange}
-                className="mb-4"
-                required
-              />
               <DialogFooter>
                 <Button variant="secondary" onClick={handleCloseDialog}>
                   Cancel
@@ -295,12 +342,11 @@ const AdminMembersTableData = () => {
         </Dialog>
       </div>
       <div className="mb-4">
-        <Input
-          type="text"
-          placeholder="Search members..."
+        <SearchBar
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full p-2 border rounded"
+          className="mb-3 w-full"
+          placeholder="Search members using name, email, or phone number..."
         />
       </div>
 
@@ -310,8 +356,11 @@ const AdminMembersTableData = () => {
         <MembersTable
           data={members.map((member) => ({
             ...member,
+            membersName: `${member.firstName} ${member.lastName}`, // Combine for display
             onEdit: handleOpenDialog,
-            onDelete: () => handleDeleteClick(member.membersId),
+            onDelete: () => handleDeleteClick(member.memberId),
+            onChangePassword: () =>
+              handleOpenChangePasswordDialog(member.memberId),
           }))}
           columns={MembersColumns}
           searchInputField="membersName"
@@ -350,11 +399,18 @@ const AdminMembersTableData = () => {
           <form onSubmit={handleSubmit} className="space-y-4">
             <Input
               type="text"
-              name="membersName"
-              placeholder="Member Name"
-              value={formData.membersName}
+              name="firstName"
+              placeholder="First Name"
+              value={formData.firstName}
               onChange={handleInputChange}
               required
+            />
+            <Input
+              type="text"
+              name="lastName"
+              placeholder="Last Name"
+              value={formData.lastName}
+              onChange={handleInputChange}
             />
             <Input
               type="email"
@@ -362,7 +418,6 @@ const AdminMembersTableData = () => {
               placeholder="Email"
               value={formData.email}
               onChange={handleInputChange}
-              required
             />
             <Input
               type="number"
@@ -370,15 +425,6 @@ const AdminMembersTableData = () => {
               placeholder="Phone Number"
               value={formData.phoneNumber}
               onChange={handleInputChange}
-              required
-            />
-            <Input
-              type="number"
-              name="numberOfMembers"
-              placeholder="Number of Members"
-              value={formData.numberOfMembers}
-              onChange={handleInputChange}
-              required
             />
             <DialogFooter>
               <Button
@@ -392,6 +438,53 @@ const AdminMembersTableData = () => {
                 Cancel
               </Button>
               <Button type="submit">{editingMember ? 'Update' : 'Add'}</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={isChangePasswordDialogOpen}
+        onOpenChange={setIsChangePasswordDialogOpen}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Change Password</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleChangePasswordSubmit} className="space-y-4">
+            <Input
+              type="password"
+              name="newPassword"
+              placeholder="New Password"
+              value={changePasswordForm.newPassword}
+              onChange={handleChangePasswordInput}
+              required
+            />
+            <Input
+              type="password"
+              name="confirmPassword"
+              placeholder="Confirm Password"
+              value={changePasswordForm.confirmPassword}
+              onChange={handleChangePasswordInput}
+              required
+            />
+
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => {
+                  setIsChangePasswordDialogOpen(false);
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={() => isChangePasswordDialogOpen(false)}
+                type="submit"
+              >
+                Change Password{' '}
+              </Button>
             </DialogFooter>
           </form>
         </DialogContent>
