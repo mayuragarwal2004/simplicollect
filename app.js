@@ -12,7 +12,6 @@ const feeRecieverRoutes = require("./src/feeReceiver/route/feeReceiverRoutes");
 const meetingRoutes = require("./src/meeting/route/meetingRoutes");
 
 const { authenticateToken, AuthenticateAdmin } = require("./src/middlewares/authMiddleware");
-const { sendWhatsAppOtp } = require("./src/config/whatsapp");
 require('./src/feeReceiver/cron/pendingRequestNotifier');
 const PORT = process.env.PORT || 5000;
 
@@ -37,14 +36,6 @@ app.use("/api/report",authenticateToken, require("./src/report/route/reportRoute
 app.use("/api/term", authenticateToken, require("./src/term/route/termRoutes"));
 app.use("/api/chapter-payment", authenticateToken, require("./src/chapterPayment/route/chapterPaymentRoutes"));
 app.use("/api/visitor-history",authenticateToken, require("./src/visitorHistory/route/visitorHistoryRoutes"));
-app.get("/api/testWA", async (req, res) => {
-  const result = await sendWhatsAppOtp("919921318237", "1234");
-  if (result.ok) {
-    res.send("Success");
-  } else {
-    res.status(500).send("Failed");
-  }
-});
 
 // admin routes
 // app.use("/api/organisations", authenticateToken, require("./src/organisation/route/adminOrganisationRoutes"));

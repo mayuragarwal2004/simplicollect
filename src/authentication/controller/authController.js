@@ -2,7 +2,7 @@ const db = require("../../config/db");
 const { sendOTP, verifyOTP, memberExistOrNot } = require("../model/authModel");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
-const { WhatsAppMessage, sendWhatsAppOtpByTwilio } = require("../../config/whatsapp");
+const { sendWhatsAppMessage } = require("../../config/whatsapp");
 
 const JWT_SECRET = process.env.JWT_SECRET;
 const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET;
@@ -267,12 +267,12 @@ const sendWhatsappMessage=async (req,res)=>{
       });
     }
 
-    const messageSid = await sendWhatsAppOtpByTwilio(phoneNumber, otp);
+    const result = await sendWhatsAppMessage('otp', phoneNumber, { otp });
 
-    res.status(200).json({
-      success: true,
-      message: 'WhatsApp message sent successfully.',
-      sid: messageSid
+    res.status(result.ok ? 200 : 500).json({
+      success: result.ok,
+      message: result.ok ? 'WhatsApp message sent successfully.' : 'Failed to send WhatsApp message.',
+      ...result
     });
   } catch (error) {
     console.error('Error in /sendmessage route:', error);

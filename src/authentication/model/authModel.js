@@ -1,6 +1,6 @@
 const db = require("../../config/db");
 const { sendEMail } = require("../../config/smtp");
-const { sendWhatsAppOtp } = require("../../config/whatsapp.js");
+const { sendWhatsAppMessage } = require("../../config/whatsapp");
 
 // Generate a random 6-digit OTP
 const generateOTP = () => {
@@ -43,7 +43,7 @@ const sendOTP = async (identifier) => {
     }
 
     if (user.phoneNumber) {
-      await sendWhatsAppOtp("91" + user.phoneNumber, `${otp}`);
+      await sendWhatsAppMessage('otp', "91" + user.phoneNumber, { otp });
       messages.push("WhatsApp sent");
     }
 
