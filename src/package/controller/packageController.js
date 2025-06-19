@@ -99,6 +99,33 @@ const getPackagesByChapterAndTermController = async (req, res) => {
   }
 };
 
+// Get all unique package parents for a chapter (optionally filtered by termId)
+const getPackageParentsByChapter = async (req, res) => {
+  const { chapterId } = req.params;
+  const { termId } = req.query;
+  try {
+    const parents = await require("../model/packageModel").getPackageParentsByChapter(chapterId, termId);
+    res.json(parents);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch package parents" });
+  }
+};
+
+// Get all unique package parents for a chapter and term (both required)
+const getPackageParentsByChapterAndTerm = async (req, res) => {
+  const { chapterId } = req.params;
+  const { termId } = req.query;
+  if (!chapterId || !termId) {
+    return res.status(400).json({ error: 'chapterId and termId are required' });
+  }
+  try {
+    const parents = await require("../model/packageModel").getPackageParentsByChapterAndTerm(chapterId, termId);
+    res.json(parents);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch package parents" });
+  }
+};
+
 module.exports = {
   getAllPackages,
   getPackagesByParentType,
@@ -106,4 +133,6 @@ module.exports = {
   fetchPendingMeetings,
   getPackagesByChapterController,
   getPackagesByChapterAndTermController,
+  getPackageParentsByChapter,
+  getPackageParentsByChapterAndTerm,
 };

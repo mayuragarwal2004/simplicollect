@@ -16,4 +16,7 @@ router.get("/:chapterId/receiver-daywise-json-report", reportController.getRecei
 router.get("/:chapterId/member-ledger", reportController.getMemberLedgerController);
 router.get("/:chapterId/member-ledger-json", reportController.getMemberLedgerJSONController);
 
+// Export all members report to Excel (all package parents, each as a sheet)
+router.get('/:chapterId/all-members-excel', require('../controller/reportControllers').exportAllMembersReportsExcelController);
+
 module.exports = router;

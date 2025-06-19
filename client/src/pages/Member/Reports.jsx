@@ -9,7 +9,7 @@ import {
   SelectGroup,
   SelectLabel,
 } from '@/components/ui/select';
-import AllMembersReports from '../../components/member/Reports/AllMembersReports';
+import MemberDueSummary from '../../components/member/Reports/MemberDueSummary';
 import MemberLedger from '../../components/member/Reports/MemberLedger';
 import AllTransactions from '../../components/member/Reports/AllTransactions';
 import ReceiverDaywiseReport  from '../../components/member/Reports/ReceiverDaywiseReport';
@@ -17,7 +17,7 @@ import ReportC from '../../components/member/Reports/ReportC';
 import MemberLedgerReport from '../../components/member/Reports/MemberLedgerReport';
 
 const reportComponents = {
-    all_members: () => <AllMembersReports />,
+    member_due_summary: () => <MemberDueSummary />,
     member_ledger: () => <MemberLedger />,
     all_transactions: () => <AllTransactions />,
     receiver_daywise_report: () => <ReceiverDaywiseReport />,
@@ -53,7 +53,7 @@ const Reports = () => {
             <SelectContent>
               <SelectGroup>
                 <SelectLabel>Member Wise Report</SelectLabel>
-                <SelectItem value="all_members">All Members</SelectItem>
+                <SelectItem value="member_due_summary">Member Due Summary Report</SelectItem>
                 <SelectItem value="member_ledger">Member Ledger</SelectItem>
               </SelectGroup>
               <SelectGroup>

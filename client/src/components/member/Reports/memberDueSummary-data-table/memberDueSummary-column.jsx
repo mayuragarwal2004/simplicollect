@@ -1,4 +1,4 @@
-export const AllMembersReportsColumns = [
+export const MemberDueSummaryColumns = [
   {
     id: 'srno',
     header: () => <p className="font-semibold">Sr. No.</p>,
