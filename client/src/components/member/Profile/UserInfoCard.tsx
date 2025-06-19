@@ -6,6 +6,9 @@ import { axiosInstance } from '../../../utils/config';
 export default function UserInfoCard() {
 
   const { chapterData, memberData } = useData();
+  if (!chapterData || !memberData) {
+    return <div className="p-5">Loading...</div>;
+  }
   const [currentMemberData, setCurrentMemberData] = useState(memberData);
   const [editMode, setEditMode] = useState({
     names: false,

@@ -43,6 +43,7 @@ import ChapterRoles from './components/Admin/Chapter/CreateNew/ChapterRoles/Chap
 import MyLedger from './pages/Member/MyLedger';
 import DashboardPage from './pages/Admin/Dashboard/DashboardPage'
 import TrackVisitor from './pages/Visitor/TrackVisitor';
+import SwitchChapter from './pages/Member/SwitchChapter';
 
 import AdminPackage from './pages/Admin/Package/AdminPackage'
 import { useData } from './context/DataContext';
@@ -188,6 +189,10 @@ const routes = [
           {
             path: 'accept-chapter-transaction',
             element: <AcceptChapterPaymentPage />,
+          },
+          {
+            path: 'switch-chapter',
+            element: <SwitchChapter />,
           },
         ],
       },

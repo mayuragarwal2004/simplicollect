@@ -23,9 +23,11 @@ const SignIn: React.FC = () => {
   // Check if the user is already authenticated
   useEffect(() => {
     if (isAuthenticated) {
-      navigate('/member/fee');
+      // If redirected from a protected route, go back there
+      const from = location.state?.from?.pathname || '/member/fee';
+      navigate(from, { replace: true });
     }
-  }, []);
+  }, [isAuthenticated, location, navigate]);
 
   // Handle Continue button click
   const handleContinue = async (e: React.FormEvent) => {
@@ -38,20 +40,15 @@ const SignIn: React.FC = () => {
         identifier,
       });
 
-      console.log('Backend response:', response.data);
-
       if (!response.data.exists) {
         setError('User does not exist!');
       } else if (response.data.defaultOTP) {
-        // Send OTP automatically and navigate to OTP verification
-        // await axios.post('/api/auth/send-otp', { identifier });
         setLoadingMsg('Sending OTP...');
-        navigate('/auth/otp-verification', { state: { identifier } }); // No password → OTP verification
+        navigate('/auth/otp-verification', { state: { identifier, from: location.state?.from } });
       } else if (response.data.exists && !response.data.defaultOTP) {
-        setShowPasswordField(true); // Show password field for login
+        setShowPasswordField(true);
       }
     } catch (err) {
-      console.error('Error:', err);
       setError('Error checking user.');
     } finally {
       setLoading(false);
@@ -63,11 +60,9 @@ const SignIn: React.FC = () => {
     try {
       setLoading(true);
       setLoadingMsg('Sending OTP...');
-      // await axios.post('/api/auth/send-otp', { identifier });
-      navigate('/auth/otp-verification', { state: { identifier } }); // No password → OTP verification
+      navigate('/auth/otp-verification', { state: { identifier, from: location.state?.from } });
     } catch (error) {
-      console.error('Error sending OTP:', error);
-      setError('Error sending OTP.'); // Handle error appropriately
+      setError('Error sending OTP.');
     } finally {
       setLoading(false);
     }
@@ -78,9 +73,9 @@ const SignIn: React.FC = () => {
     e.preventDefault();
     try {
       await login(identifier, password, () => {
-        navigate('/member/fee');
+        const from = location.state?.from?.pathname || '/member/fee';
+        navigate(from, { replace: true });
       });
-      // navigate('/'); // Redirect to home page after successful login
     } catch (error) {
       setError('Invalid email/phone or password.');
     }

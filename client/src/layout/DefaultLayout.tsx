@@ -60,7 +60,11 @@ const DefaultLayout: React.FC<DefaultLayoutProps> = ({ admin = false }) => {
       <div className="flex h-screen overflow-hidden">
         {/* <!-- ===== Sidebar Start ===== --> */}
         {isAuthenticated && (
-          <Sidebar sidebarOpen={sidebarOpen} admin={admin} setSidebarOpen={setSidebarOpen} />
+          <Sidebar
+            sidebarOpen={sidebarOpen}
+            admin={admin}
+            setSidebarOpen={setSidebarOpen}
+          />
         )}
         {/* <!-- ===== Sidebar End ===== --> */}
 

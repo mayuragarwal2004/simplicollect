@@ -45,6 +45,11 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const switchChapter = (chapterId: string) => {
     const chapter = allChaptersData?.find((c) => c.chapterId === chapterId);
     setChapterData(chapter || null);
+    if (chapter) {
+      localStorage.setItem('selectedChapterId', chapter.chapterId);
+    } else {
+      // localStorage.removeItem('selectedChapterId');
+    }
   }
 
   const getChapterDetails = async (chapterId: string) => {
@@ -77,12 +82,26 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (isAuthenticated) {
       if (!memberData) fetchMember();
       if (!allChaptersData) fetchAllChapters();
+      // Restore selected chapter from localStorage
+      const storedChapterId = localStorage.getItem('selectedChapterId');
+      if (storedChapterId && allChaptersData) {
+        const chapter = allChaptersData.find((c) => c.chapterId === storedChapterId);
+        if (chapter) setChapterData(chapter);
+        else if (allChaptersData.length === 1) {
+          setChapterData(allChaptersData[0]);
+          localStorage.setItem('selectedChapterId', allChaptersData[0].chapterId);
+        } else {
+          setChapterData(null);
+          localStorage.removeItem('selectedChapterId');
+        }
+      }
     } else {
       setMemberData(null);
       setAllChaptersData(null);
       setChapterData(null);
+      // localStorage.removeItem('selectedChapterId');
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, allChaptersData]);
 
   return (
     <DataContext.Provider
@@ -90,7 +109,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         memberData,
         chapterData,
         allChaptersData,
-        loading, // 👈 EXPOSE IT
+        loading,
         switchChapter,
         getChapterDetails,
       }}
