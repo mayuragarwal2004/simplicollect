@@ -340,6 +340,16 @@ const saveEditedFeeDetails = async (data, editorInfo = {}) => {
   }
 };
 
+// Get all transactions for a chapter in a date range
+const getTransactionsByChapterAndDateRange = async (chapterId, startDate, endDate) => {
+  return db('transactions as t')
+    .join('packages as p', 't.packageId', 'p.packageId')
+    .where('p.chapterId', chapterId)
+    .andWhere('t.transactionDate', '>=', startDate)
+    .andWhere('t.transactionDate', '<=', endDate)
+    .select('t.*', 'p.*');
+};
+
 module.exports = {
   addTransaction,
   addPayment,
@@ -360,4 +370,5 @@ module.exports = {
   getMetaData,
   moveApprovedToPending,
   saveEditedFeeDetails, // <-- add export
+  getTransactionsByChapterAndDateRange,
 };
