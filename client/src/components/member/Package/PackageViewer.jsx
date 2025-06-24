@@ -6,26 +6,7 @@ import PackageCard from '../../../components/member/Package/PackageCard';
 import { axiosInstance } from '../../../utils/config';
 import { useData } from '../../../context/DataContext';
 import packageAmountCalculations from '../../../components/member/Package/packageAmountCalculation';
-// import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-// import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-// import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import { TextField } from '@mui/material';
-import formatDateDDMMYYYY from '../../../utils/dateUtility';
-import PackagePayMain from '../../../components/member/Package/PackagePayMain';
 import { usePaymentData } from './PaymentDataContext';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from '@/components/ui/command';
 import {
   Select,
   SelectContent,
@@ -33,9 +14,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Button } from '@/components/ui/button';
-import { ChevronsUpDown, Check } from 'lucide-react';
-import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import {
   Accordion,
@@ -43,6 +21,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
+import ChooseMember from '../ChooseMemberPopoverCommand';
 
 const PackageViewer = () => {
   const {
@@ -369,60 +348,6 @@ const CurrentDateTime = () => {
       {currentTime.getMinutes().toString().padStart(2, '0')}:
       {currentTime.getSeconds().toString().padStart(2, '0')}
     </p>
-  );
-};
-
-const ChooseMember = ({ members, selectedMember, setSelectedMember }) => {
-  const [open, setOpen] = useState(false);
-
-  return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <Button
-          variant="outline"
-          role="combobox"
-          aria-expanded={open}
-          className="w-[250px] justify-between"
-        >
-          {selectedMember ? selectedMember.label : 'Select member...'}
-          <ChevronsUpDown className="opacity-50" />
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-[250px] p-0">
-        <Command>
-          <CommandInput placeholder="Search member..." className="h-9" />
-
-          <CommandList>
-            <CommandEmpty>No member found.</CommandEmpty>
-            <CommandGroup>
-              {members.map((member) => (
-                <CommandItem
-                  key={member.memberId}
-                  value={member.label}
-                  onSelect={() => {
-                    setSelectedMember({
-                      value: member.memberId,
-                      label: member.label,
-                    });
-                    setOpen(false);
-                  }}
-                >
-                  {member.label}
-                  <Check
-                    className={cn(
-                      'ml-auto',
-                      selectedMember?.value === member.memberId
-                        ? 'opacity-100'
-                        : 'opacity-0',
-                    )}
-                  />
-                </CommandItem>
-              ))}
-            </CommandGroup>
-          </CommandList>
-        </Command>
-      </PopoverContent>
-    </Popover>
   );
 };
 
