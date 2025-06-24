@@ -162,7 +162,7 @@ const deleteChapter = async (req, res) => {
 const getRolesByChapterSlugSuperAdminController = async (req, res) => {
   const { chapterSlug } = req.params;
   try {
-    const roles = await adminChapterModel.getRolesByChapterSlug(chapterSlug);
+    const roles = await chapterModel.getRolesByChapterSlug(chapterSlug);
     if (roles) {
       res.json(roles);
     } else {

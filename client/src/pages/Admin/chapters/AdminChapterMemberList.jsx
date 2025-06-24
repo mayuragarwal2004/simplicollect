@@ -11,14 +11,14 @@ const AdminChapterMemberList = () => {
       <Breadcrumb
         items={[
           { name: 'Dashboard', link: '/admin' },
-          { name: `Chapter `, link: `/admin/chapters` }, 
-          { name: `Chapter Members`, link: `/admin/chapters/${chapterSlug}/member` },   ////// check this breadcrumb
+          { name: `Chapter `, link: `/admin/chapters` },
+          {
+            name: `Chapter Members`,
+            link: `/admin/chapters/${chapterSlug}/member`,
+          },
         ]}
       />
-      <AdminChaptersMemberList />   // check
-
-
-      this is member chapter list
+      <AdminChaptersMemberList />
     </>
   );
 };
