@@ -4,7 +4,7 @@ import ClickOutside from '../ClickOutside';
 import UserOne from '../../images/user/user-01.png';
 import { useAuth } from '../../context/AuthContext';
 import { useData } from '../../context/DataContext';
-import { Repeat } from 'lucide-react';
+import { LayoutDashboard, Repeat } from 'lucide-react';
 
 const backgroundColor = Math.floor(Math.random() * 16777215).toString(16);
 
@@ -12,6 +12,8 @@ const DropdownUser = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const { isAuthenticated, logout } = useAuth();
   const { memberData, allChaptersData } = useData();
+
+  console.log('Mayur here', memberData);
 
   if (!isAuthenticated) {
     return null;
@@ -86,15 +88,40 @@ const DropdownUser = () => {
                 My Profile
               </Link>
             </li>
-            {allChaptersData && allChaptersData.length > 1 && <li>
-              <Link
-                to="/member/switch-chapter"
-                className="flex items-center gap-3.5 text-sm font-medium duration-300 ease-in-out hover:text-primary lg:text-base"
-              >
-                <Repeat />
-                Switch Chapter
-              </Link>
-            </li>}
+            {memberData?.superAdmin === 1 ? (
+              window.location.pathname.startsWith('/admin') ? (
+                <li>
+                  <Link
+                    to="/member/profile"
+                    className="flex items-center gap-3.5 text-sm font-medium duration-300 ease-in-out hover:text-primary lg:text-base"
+                  >
+                    <LayoutDashboard />
+                    Switch to User
+                  </Link>
+                </li>
+              ) : (
+                <li>
+                  <Link
+                    to="/admin/organisations"
+                    className="flex items-center gap-3.5 text-sm font-medium duration-300 ease-in-out hover:text-primary lg:text-base"
+                  >
+                    <LayoutDashboard />
+                    Switch to Admin
+                  </Link>
+                </li>
+              )
+            ) : null}
+            {allChaptersData && allChaptersData.length > 1 && (
+              <li>
+                <Link
+                  to="/member/switch-chapter"
+                  className="flex items-center gap-3.5 text-sm font-medium duration-300 ease-in-out hover:text-primary lg:text-base"
+                >
+                  <Repeat />
+                  Switch Chapter
+                </Link>
+              </li>
+            )}
           </ul>
           <button
             className="flex items-center gap-3.5 px-6 py-4 text-sm font-medium duration-300 ease-in-out hover:text-primary lg:text-base"
