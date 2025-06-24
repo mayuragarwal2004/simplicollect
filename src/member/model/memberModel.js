@@ -121,6 +121,25 @@ const updateMemberBalance = async (member, chapterId, balance, trx = null) => {
   return memberQuery;
 };
 
+const updateMemberRoleModel = async (member, chapter, roleIds, trx = null) => {
+  console.log("Updating member role model:", {
+    memberId: member.memberId,
+    chapterId: chapter.chapterId,
+    roleIds,
+  });
+  
+  let query = db("member_chapter_mapping")
+    .where("memberId", member.memberId)
+    .where("chapterId", chapter.chapterId)
+    .update({ roleIds: roleIds.join(",") });
+  if (trx) query = query.transacting(trx);
+  await query;
+  return db("member_chapter_mapping")
+    .where("memberId", member.memberId)
+    .where("chapterId", chapter.chapterId)
+    .first();
+};
+
 module.exports = {
   findMemberByEmail,
   findMemberById,
@@ -128,4 +147,5 @@ module.exports = {
   getMembers,
   getAllMembers,
   updateMemberBalance,
+  updateMemberRoleModel,
 };

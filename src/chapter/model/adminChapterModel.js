@@ -57,22 +57,6 @@ const deleteChapter = async (chapterId) => {
     .del();
 };
 
-const getRolesByChapterSlug = async (chapterSlug) => {
-  const roles = await db("roles")
-    .join("chapters", "roles.chapterId", "chapters.chapterId")
-    .leftJoin("features_master", function () {
-      this.on(db.raw("FIND_IN_SET(features_master.featureId, roles.rights)"));
-    })
-    .where("chapters.chapterSlug", chapterSlug)
-    .groupBy("roles.roleId")
-    .select(
-      "roles.*",
-      db.raw("GROUP_CONCAT(features_master.featureName SEPARATOR ', ') as featureNames")
-    );
-
-  return roles;
-};
-
 const addRole = async (chapterSlug, roleData) => {
   const chapter = await db("chapters")
     .where("chapterSlug", chapterSlug)
@@ -120,7 +104,6 @@ module.exports = {
   getAllChapters,
   createChapter,
   deleteChapter,
-  getRolesByChapterSlug,
   addRole,
   editRole,
   deleteRole

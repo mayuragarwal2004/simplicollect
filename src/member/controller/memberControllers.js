@@ -1,5 +1,6 @@
 // controllers/memberControllers.js
 const memberModel = require("../model/memberModel");
+const chapterModel = require("../../chapter/model/chapterModel");
 const memberService = require("../service/memberService");
 const { v4: uuidv4 } = require("uuid");
 const bcrypt = require("bcrypt");
@@ -135,10 +136,40 @@ const updateMemberBalanceController = async (req, res) => {
   }
 };
 
+const updateMemberRoleController = async (req, res) => {
+  const { memberId: currentUserMemberId } = req.user;
+  const { memberId: bodyMemberId, roleIds, chapterId } = req.body;
+  const currentUser = await memberModel.findMemberById(currentUserMemberId);
+  if (!currentUser) {
+    return res.status(404).json({ message: "Current user not found" });
+  }
+  const bodyMember = await memberModel.findMemberById(bodyMemberId);
+  if (!bodyMember) {
+    return res.status(404).json({ message: "Member to update not found" });
+  }
+  const chapter = await chapterModel.findChapterById(chapterId);
+  if (!chapter) {
+    return res.status(404).json({ message: "Chapter not found" });
+  }
+
+  try {
+    const updatedMember = await memberService.updateMemberRoleService(
+      bodyMember,
+      chapter,
+      roleIds,
+      currentUser,
+    );
+    res.json(updatedMember);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 module.exports = {
   getMemberById,
   addMember,
   memberList,
   getAllMembersListController,
   updateMemberBalanceController,
+  updateMemberRoleController,
 };

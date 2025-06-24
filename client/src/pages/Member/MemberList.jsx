@@ -18,6 +18,7 @@ import {
   SelectContent,
   SelectItem,
 } from '@/components/ui/select';
+import { MultiSelect } from '@/components/ui/multiSelect';
 import { format } from 'date-fns';
 import { Input } from '@/components/ui/input';
 import { SearchBar } from '@/components/ui/search-bar';
@@ -137,7 +138,7 @@ function AddMemberDialog({ open, onOpenChange, chapterId, refresh }) {
 }
 
 // Change Role Dialog
-function ChangeRoleDialog({ open, onOpenChange, member, roles, refresh }) {
+function ChangeRoleDialog({ open, onOpenChange, member, allRoles, refresh, chapterId }) {
   const [newRole, setNewRole] = useState(member?.roleNames || '');
   const [loading, setLoading] = useState(false);
   useEffect(() => {
@@ -147,9 +148,10 @@ function ChangeRoleDialog({ open, onOpenChange, member, roles, refresh }) {
   const handleConfirm = async () => {
     setLoading(true);
     try {
-      const res = await axiosInstance.post('/api/member/changeRole', {
+      const res = await axiosInstance.post('/api/member/role_update', {
         memberId: member.memberId,
-        newRole,
+        roleIds: newRole,
+        chapterId,
       });
       if (res.status === 200) {
         onOpenChange(false);
@@ -165,6 +167,12 @@ function ChangeRoleDialog({ open, onOpenChange, member, roles, refresh }) {
     }
   };
 
+  const currentUserRoles = member?.roleIds.split(',') || [];
+
+  const handleRolesChange = (selectedRoles) => {
+    setNewRole(selectedRoles);
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
@@ -177,18 +185,16 @@ function ChangeRoleDialog({ open, onOpenChange, member, roles, refresh }) {
             </b>
           </DialogDescription>
         </DialogHeader>
-        <Select value={newRole} onValueChange={setNewRole}>
-          <SelectTrigger>
-            <SelectValue placeholder="Select Role" />
-          </SelectTrigger>
-          <SelectContent>
-            {roles.map((role) => (
-              <SelectItem key={role} value={role}>
-                {role}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <MultiSelect
+          options={allRoles.map((role) => ({
+            label: role.roleName,
+            value: role.roleId.toString(),
+          }))}
+          onValueChange={handleRolesChange}
+          defaultValue={currentUserRoles.map(String)}
+          placeholder="Select Rights"
+          maxCount={5}
+        />
         <DialogFooter>
           <Button onClick={handleConfirm} disabled={loading}>
             {loading ? 'Saving...' : 'Confirm'}
@@ -375,6 +381,7 @@ const MemberList = () => {
   const [roleModal, setRoleModal] = useState({ open: false, member: null });
   const [dueModal, setDueModal] = useState({ open: false, member: null });
   const [removeModal, setRemoveModal] = useState({ open: false, member: null });
+  const [allRoles, setAllRoles] = useState([]);
 
   // Extracting query parameters
   const rows = searchParams.get('rows') || 10;
@@ -396,9 +403,21 @@ const MemberList = () => {
     }
   };
 
+  const fetchRoles = async () => {
+    try {
+      const response = await axiosInstance.get(
+        `/api/chapter/${chapterData.chapterSlug}/roles`,
+      );
+      setAllRoles(response.data);
+    } catch (error) {
+      console.error('Error fetching roles:', error);
+    }
+  };
+
   useEffect(() => {
     if (!chapterData || !chapterData?.chapterId) return; // Ensure chapterData is available before fetching
     fetchMembers();
+    fetchRoles();
   }, [chapterData, rows, page, location.search, search]);
 
   useEffect(() => {
@@ -462,7 +481,7 @@ const MemberList = () => {
         open={roleModal.open}
         onOpenChange={(open) => setRoleModal((m) => ({ ...m, open }))}
         member={roleModal.member}
-        roles={ROLES}
+        allRoles={allRoles}
         refresh={fetchMembers}
         chapterId={chapterData.chapterId}
       />

@@ -1,5 +1,6 @@
 // controllers/adminChapterControllers.js
 const adminChapterModel = require("../model/adminChapterModel");
+const chapterModel = require("../model/chapterModel");
 const { findChapterBySlug } = require("../model/chapterModel");
 const { v4: uuidv4 } = require("uuid");
 const xlsx = require("xlsx");
@@ -158,7 +159,7 @@ const deleteChapter = async (req, res) => {
   }
 };
 
-const getRolesByChapterSlug = async (req, res) => {
+const getRolesByChapterSlugSuperAdminController = async (req, res) => {
   const { chapterSlug } = req.params;
   try {
     const roles = await adminChapterModel.getRolesByChapterSlug(chapterSlug);
@@ -473,7 +474,7 @@ const getExcelTemplate = async (req, res) => {
     // Create a new workbook
     const { chapterSlug } = req.params;
     const workbook = new ExcelJS.Workbook();
-    const rolesinfo = await adminChapterModel.getRolesByChapterSlug(
+    const rolesinfo = await chapterModel.getRolesByChapterSlug(
       chapterSlug
     );
     // Set workbook properties
@@ -525,7 +526,7 @@ module.exports = {
   getAllChaptersController,
   deleteChapter,
   createChapter,
-  getRolesByChapterSlug,
+  getRolesByChapterSlugSuperAdminController,
   addRole,
   editRole,
   deleteRole,

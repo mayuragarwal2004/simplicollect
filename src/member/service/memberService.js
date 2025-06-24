@@ -1,5 +1,6 @@
 const memberModel = require("../model/memberModel");
 const paymentModel = require("../../payment/model/paymentModel");
+const chapterModel = require("../../chapter/model/chapterModel");
 const db = require("../../config/db");
 
 const updateMemberBalanceService = async (
@@ -46,6 +47,42 @@ const updateMemberBalanceService = async (
   }
 };
 
+const updateMemberRoleService = async (
+  member,
+  chapter,
+  roleIds,
+  currentUser,
+  trx
+) => {
+  try {
+    // check if the roleIds is an array, and have valid roleIds by fetching all roles from
+    const allRoles = await chapterModel.getRolesByChapterSlug(
+      chapter.chapterSlug
+    );
+    if (!Array.isArray(roleIds) || roleIds.length === 0) {
+      throw new Error("Role IDs must be a non-empty array");
+    }
+    const validRoleIds = allRoles.map((role) => role.roleId);
+    for (const roleId of roleIds) {
+      if (!validRoleIds.includes(roleId)) {
+        throw new Error(`Invalid role ID: ${roleId}`);
+      }
+    }
+
+    const updatedMember = await memberModel.updateMemberRoleModel(
+      member,
+      chapter,
+      roleIds,
+      trx
+    );
+    return updatedMember;
+  } catch (error) {
+    console.error("Error updating member role:", error);
+    throw new Error("Error updating member role");
+  }
+};
+
 module.exports = {
   updateMemberBalanceService,
+  updateMemberRoleService,
 };

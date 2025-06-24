@@ -9,4 +9,6 @@ router.get("/", chapterController.getAllChaptersController);
 router.get("/:chapterId", chapterController.getChapterById);
 router.put("/:chapterId", chapterController.updateChapterDetails);
 
+router.get("/:chapterSlug/roles", chapterController.getRolesByChapterSlugController);
+
 module.exports = router;
