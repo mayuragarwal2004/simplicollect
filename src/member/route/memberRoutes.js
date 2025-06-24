@@ -15,4 +15,8 @@ router.post("/memberList", memberController.memberList);
 router.get("/all", memberController.getAllMembersListController);
 
 
+// member list actions
+router.post("/balance_update", memberController.updateMemberBalanceController);
+
+
 module.exports = router;

@@ -1,7 +1,8 @@
 // controllers/memberControllers.js
 const memberModel = require("../model/memberModel");
+const memberService = require("../service/memberService");
 const { v4: uuidv4 } = require("uuid");
-const bcrypt = require('bcrypt');
+const bcrypt = require("bcrypt");
 
 // Get member details by memberId
 const getMemberById = async (req, res) => {
@@ -26,7 +27,9 @@ const addMember = async (req, res) => {
 
   // Ensure membersData is an array
   if (!Array.isArray(membersData)) {
-    return res.status(400).json({ message: "Invalid input. Expected an array." });
+    return res
+      .status(400)
+      .json({ message: "Invalid input. Expected an array." });
   }
 
   console.log(membersData);
@@ -78,7 +81,12 @@ const memberList = async (req, res) => {
   }
 
   try {
-    const members = await memberModel.getMembers(chapterId, searchQuery, page, rows);
+    const members = await memberModel.getMembers(
+      chapterId,
+      searchQuery,
+      page,
+      rows
+    );
     res.json(members);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -93,11 +101,44 @@ const getAllMembersListController = async (req, res) => {
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
-}
+};
+
+const updateMemberBalanceController = async (req, res) => {
+  const { memberId: currentUserMemberId } = req.user;
+  const { memberId: bodyMemberId, newBalance, reason, chapterId } = req.body;
+
+  const currentUser = await memberModel.findMemberById(currentUserMemberId);
+  if (!currentUser) {
+    return res.status(404).json({ message: "Current user not found" });
+  }
+
+  const bodyMember = await memberModel.findMemberById(bodyMemberId);
+  if (!bodyMember) {
+    return res.status(404).json({ message: "Member to update not found" });
+  }
+
+  if (!chapterId) {
+    return res.status(400).json({ message: "Chapter ID is required" });
+  }
+
+  try {
+    const updatedMember = await memberService.updateMemberBalanceService(
+      bodyMember,
+      chapterId,
+      newBalance,
+      reason,
+      currentUser,
+    );
+    res.json(updatedMember);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
 
 module.exports = {
   getMemberById,
   addMember,
   memberList,
   getAllMembersListController,
+  updateMemberBalanceController,
 };

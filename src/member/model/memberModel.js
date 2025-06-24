@@ -32,7 +32,11 @@ const getMembers = async (chapterId, searchQuery = "", page = 0, rows = 10) => {
     baseQuery = baseQuery.where((qb) => {
       qb.where("m.firstName", "like", `%${searchQuery}%`)
         .orWhere("m.lastName", "like", `%${searchQuery}%`)
-        .orWhere(db.raw("CONCAT(m.firstName, ' ', m.lastName)"), "like", `%${searchQuery}%`)
+        .orWhere(
+          db.raw("CONCAT(m.firstName, ' ', m.lastName)"),
+          "like",
+          `%${searchQuery}%`
+        )
         .orWhere("m.email", "like", `%${searchQuery}%`)
         .orWhere("m.phoneNumber", "like", `%${searchQuery}%`)
         .orWhere("r.roleName", "like", `%${searchQuery}%`);
@@ -47,7 +51,9 @@ const getMembers = async (chapterId, searchQuery = "", page = 0, rows = 10) => {
       "m.phoneNumber",
       "m.email",
       "mmm.*",
-      db.raw("GROUP_CONCAT(DISTINCT r.roleName ORDER BY r.roleName ASC SEPARATOR ', ') as roleNames"),
+      db.raw(
+        "GROUP_CONCAT(DISTINCT r.roleName ORDER BY r.roleName ASC SEPARATOR ', ') as roleNames"
+      ),
       db.raw("CONCAT(m.firstName, ' ', m.lastName) as fullName")
     )
     .groupBy("m.memberId") // Ensure one row per member
@@ -64,7 +70,11 @@ const getMembers = async (chapterId, searchQuery = "", page = 0, rows = 10) => {
     totalRecordsQuery.where((qb) => {
       qb.where("m.firstName", "like", `%${searchQuery}%`)
         .orWhere("m.lastName", "like", `%${searchQuery}%`)
-        .orWhere(db.raw("CONCAT(m.firstName, ' ', m.lastName)"), "like", `%${searchQuery}%`)
+        .orWhere(
+          db.raw("CONCAT(m.firstName, ' ', m.lastName)"),
+          "like",
+          `%${searchQuery}%`
+        )
         .orWhere("m.email", "like", `%${searchQuery}%`)
         .orWhere("m.phoneNumber", "like", `%${searchQuery}%`)
         .orWhere("r.roleName", "like", `%${searchQuery}%`);
@@ -91,10 +101,24 @@ const getAllMembers = async (chapterId) => {
       "m.email",
       "mmm.*",
       db.raw("CONCAT(m.firstName, ' ', m.lastName) as label"),
-      db.raw("GROUP_CONCAT(DISTINCT r.roleName ORDER BY r.roleName ASC SEPARATOR ', ') as roleNames")
+      db.raw(
+        "GROUP_CONCAT(DISTINCT r.roleName ORDER BY r.roleName ASC SEPARATOR ', ') as roleNames"
+      )
     )
     .groupBy("m.memberId")
     .orderBy("label", "asc");
+};
+
+const updateMemberBalance = async (member, chapterId, balance, trx = null) => {
+  let query = db("member_chapter_mapping")
+    .where("memberId", member.memberId)
+    .where("chapterId", chapterId)
+    .update({ balance });
+  if (trx) query = query.transacting(trx);
+  await query;
+  let memberQuery = db("members").where("memberId", member.memberId).first();
+  if (trx) memberQuery = memberQuery.transacting(trx);
+  return memberQuery;
 };
 
 module.exports = {
@@ -103,4 +127,5 @@ module.exports = {
   addMember,
   getMembers,
   getAllMembers,
+  updateMemberBalance,
 };
