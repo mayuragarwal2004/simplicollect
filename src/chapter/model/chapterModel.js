@@ -49,10 +49,19 @@ const getRolesByChapterSlug = async (chapterSlug) => {
   return roles;
 };
 
+// Get default roles for a chapter (returns array of roleIds as strings)
+const getDefaultRoleIdsForChapter = async (chapterId) => {
+  const roles = await db("roles")
+    .where({ chapterId, default: true })
+    .select("roleId");
+  return roles.map(r => r.roleId.toString());
+};
+
 module.exports = {
   findChapterById,
   updateChapter,
   getAllChapters,
   findChapterBySlug,
   getRolesByChapterSlug,
+  getDefaultRoleIdsForChapter,
 };

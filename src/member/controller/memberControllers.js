@@ -28,46 +28,79 @@ const addMember = async (req, res) => {
 
   // Ensure membersData is an array
   if (!Array.isArray(membersData)) {
-    return res
-      .status(400)
-      .json({ message: "Invalid input. Expected an array." });
+    return res.status(400).json({ message: "Invalid input. Expected an array." });
   }
 
-  console.log(membersData);
-
   try {
-    membersData = await Promise.all(
-      membersData.map(async (member) => {
-        // Validate required fields
-        if (!member.email || !member.firstName || !member.lastName) {
-          throw new Error("Email, first name, and last name are required.");
+    const results = [];
+    for (const member of membersData) {
+      // Must have chapterId and joinDate
+      if (!member.chapterId || !member.joinDate) {
+        results.push({ error: "chapterId and joinDate are required", member });
+        continue;
+      }
+      // Fetch default roles for the chapter
+      const defaultRoleIds = await chapterModel.getDefaultRoleIdsForChapter(member.chapterId);
+      const roleIdsStr = defaultRoleIds.join(",");
+      // Check for existing by email or phone
+      let existing = null;
+      if (member.email) existing = await memberModel.findMemberByEmail(member.email);
+      if (!existing && member.phoneNumber) existing = await memberModel.findMemberByPhone(member.phoneNumber);
+      console.log("Existing member found:", existing);
+      
+      if (existing) {
+        // Check mapping
+        const mapping = await memberModel.getMemberChapterMapping(existing.memberId, member.chapterId);
+        if (mapping && mapping.status === "joined") {
+          results.push({ error: "Member already in chapter", memberId: existing.memberId });
+          continue;
+        } else if (mapping && mapping.status === "left") {
+          await memberModel.addOrUpdateMemberChapterMappingWithRoles(existing.memberId, member.chapterId, member.joinDate, defaultRoleIds);
+          results.push({ message: "Member re-joined chapter", memberId: existing.memberId });
+          continue;
+        } else {
+          await memberModel.addOrUpdateMemberChapterMappingWithRoles(existing.memberId, member.chapterId, member.joinDate, defaultRoleIds);
+          results.push({ message: "Member added to chapter", memberId: existing.memberId });
+          continue;
         }
-
-        // Set default role if not provided
-        if (!member.role) {
-          member.role = "Member";
+      } else {
+        // New member: check for required fields
+        if (!member.firstName || (!member.email && !member.phoneNumber)) {
+          results.push({ error: "First name and either email or phone number required", member });
+          continue;
         }
-
-        // Generate unique member ID
-        member.memberId = member.memberId || uuidv4();
-
-        // Hash password if provided
-        if (member.password) {
-          const hashedPassword = await bcrypt.hash(member.password, 10);
-          member.password = hashedPassword;
+        // Check for duplicate email/phone
+        if (member.email) {
+          const emailExists = await memberModel.findMemberByEmail(member.email);
+          if (emailExists) {
+            results.push({ error: "Email already exists", email: member.email });
+            continue;
+          }
         }
-
-        return member;
-      })
-    );
-
-    // Add members to the database
-    const result = await memberModel.addMember(membersData);
-
-    res.json({
-      message: "Members added successfully",
-      memberIds: result.map((r) => r.memberId),
-    });
+        if (member.phoneNumber) {
+          const phoneExists = await memberModel.findMemberByPhone(member.phoneNumber);
+          if (phoneExists) {
+            results.push({ error: "Phone number already exists", phoneNumber: member.phoneNumber });
+            continue;
+          }
+        }
+        // Create new member
+        const newMemberId = uuidv4();
+        let password = member.password;
+        if (password) password = await bcrypt.hash(password, 10);
+        await memberModel.addMember({
+          memberId: newMemberId,
+          firstName: member.firstName,
+          lastName: member.lastName || null,
+          email: member.email || null,
+          phoneNumber: member.phoneNumber || null,
+          password,
+        });
+        await memberModel.addOrUpdateMemberChapterMappingWithRoles(newMemberId, member.chapterId, member.joinDate, defaultRoleIds);
+        results.push({ message: "New member created and added to chapter", memberId: newMemberId });
+      }
+    }
+    res.json({ results });
   } catch (error) {
     console.error("Error adding members:", error);
     res.status(500).json({ error: error.message });
@@ -181,6 +214,20 @@ const removeMemberController = async (req, res) => {
   }
 };
 
+// Search members by email, phone, or name
+const searchMembersController = async (req, res) => {
+  const { query } = req.query;
+  if (!query || query.trim() === "") {
+    return res.status(400).json({ message: "Query is required" });
+  }
+  try {
+    const members = await memberModel.searchMembers(query);
+    res.json(members);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 module.exports = {
   getMemberById,
   addMember,
@@ -189,4 +236,5 @@ module.exports = {
   updateMemberBalanceController,
   updateMemberRoleController,
   removeMemberController,
+  searchMembersController,
 };

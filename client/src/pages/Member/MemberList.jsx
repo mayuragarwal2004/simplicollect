@@ -26,6 +26,7 @@ import { MemberListTable } from '../../components/member/MemberList/memberlist-t
 import { MemberListColumns } from '../../components/member/MemberList/memberlist-column';
 import { useLocation } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import AddMemberDialog from '../../components/member/MemberList/AddMemberDialog';
 
 const DUE_REASONS = [
   'Correction',
@@ -35,107 +36,6 @@ const DUE_REASONS = [
 ];
 
 const ROLES = ['Member', 'Admin', 'Treasurer', 'President']; // Replace with your actual roles
-
-// Add Member Dialog
-function AddMemberDialog({ open, onOpenChange, chapterId, refresh }) {
-  const [newMember, setNewMember] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    phoneNumber: '',
-    role: '',
-    chapterId: chapterId,
-    password: '',
-  });
-  const [loading, setLoading] = useState(false);
-
-  const handleAdd = async () => {
-    setLoading(true);
-    try {
-      const res = await axiosInstance.post('/api/member/add', [newMember]);
-      if (res.status === 200) {
-        setNewMember({
-          firstName: '',
-          lastName: '',
-          email: '',
-          phoneNumber: '',
-          role: '',
-          chapterId,
-          password: '',
-        });
-        onOpenChange(false);
-        refresh();
-        toast.success('Member added successfully');
-      } else {
-        toast.error('Failed to add member');
-      }
-    } catch (error) {
-      toast.error(error?.response?.data?.error || 'Error adding member');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Add New Member</DialogTitle>
-        </DialogHeader>
-        <div className="space-y-2">
-          <Input
-            placeholder="First Name"
-            value={newMember.firstName}
-            onChange={(e) =>
-              setNewMember({ ...newMember, firstName: e.target.value })
-            }
-          />
-          <Input
-            placeholder="Last Name"
-            value={newMember.lastName}
-            onChange={(e) =>
-              setNewMember({ ...newMember, lastName: e.target.value })
-            }
-          />
-          <Input
-            placeholder="Email"
-            value={newMember.email}
-            onChange={(e) =>
-              setNewMember({ ...newMember, email: e.target.value })
-            }
-          />
-          <Input
-            placeholder="Password"
-            type="password"
-            value={newMember.password}
-            onChange={(e) =>
-              setNewMember({ ...newMember, password: e.target.value })
-            }
-          />
-          <Input
-            placeholder="Phone Number"
-            value={newMember.phoneNumber}
-            onChange={(e) =>
-              setNewMember({ ...newMember, phoneNumber: e.target.value })
-            }
-          />
-          <Input
-            placeholder="Role"
-            value={newMember.role}
-            onChange={(e) =>
-              setNewMember({ ...newMember, role: e.target.value })
-            }
-          />
-        </div>
-        <DialogFooter>
-          <Button onClick={handleAdd} className="w-full" disabled={loading}>
-            {loading ? 'Adding...' : 'Add Member'}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-}
 
 // Change Role Dialog
 function ChangeRoleDialog({
@@ -458,12 +358,13 @@ const MemberList = () => {
   return (
     <div className="container mx-auto p-4 dark:bg-gray-800 dark:text-white">
       <Breadcrumb pageName="Member List" />
-      <div>
+      <div className="flex justify-between items-center mb-4 gap-4">
         <SearchBar
           onChange={handleSearchChange}
           value={search}
-          className="mb-3 w-full"
+          className="mb-0 w-full"
         />
+        <Button onClick={() => setOpenModal(true)}>Add Member</Button>
       </div>
       <div className="overflow-x-auto">
         <MemberListTable

@@ -29,7 +29,9 @@ const getMembers = async (chapterId, searchQuery = "", page = 0, rows = 10) => {
       .where("mmm.chapterId", chapterId)
       .join("members as m", "mmm.memberId", "m.memberId")
       .where("mmm.status", "joined")
-      .joinRaw("JOIN roles as r ON FIND_IN_SET(r.roleId, mmm.roleIds) > 0");
+      .leftJoin("roles as r", function () {
+        this.on(db.raw("FIND_IN_SET(r.roleId, mmm.roleIds) > 0"));
+      });
 
     if (searchQuery) {
       query = query.where((qb) => {
@@ -58,7 +60,11 @@ const getMembers = async (chapterId, searchQuery = "", page = 0, rows = 10) => {
       "m.email",
       "mmm.*",
       db.raw(
-        "GROUP_CONCAT(DISTINCT r.roleName ORDER BY r.roleName ASC SEPARATOR ', ') as roleNames"
+        `CASE 
+          WHEN mmm.roleIds IS NULL OR mmm.roleIds = '' 
+          THEN NULL 
+          ELSE GROUP_CONCAT(DISTINCT r.roleName ORDER BY r.roleName ASC SEPARATOR ', ') 
+        END as roleNames`
       ),
       db.raw("CONCAT(m.firstName, ' ', m.lastName) as fullName")
     )
@@ -133,6 +139,89 @@ const removeMemberFromChapter = async (memberId, chapterId, leaveDate) => {
     .update({ status: "left", leaveDate });
 };
 
+// Search members by email, phone, or name (across all chapters)
+const searchMembers = async (query) => {
+  return db("members")
+    .where(function () {
+      this.where("email", "like", `%${query}%`)
+        .orWhere("phoneNumber", "like", `%${query}%`)
+        .orWhere("firstName", "like", `%${query}%`)
+        .orWhere("lastName", "like", `%${query}%`)
+        .orWhere(db.raw("CONCAT(firstName, ' ', lastName) like ?", [`%${query}%`]));
+    })
+    .select(
+      "memberId",
+      "firstName",
+      "lastName",
+      "email",
+      "phoneNumber"
+    );
+};
+
+// Find member by phone number
+const findMemberByPhone = async (phoneNumber) => {
+  return db("members").where("phoneNumber", phoneNumber).first();
+};
+
+// Get member-chapter mapping
+const getMemberChapterMapping = async (memberId, chapterId) => {
+  return db("member_chapter_mapping")
+    .where({ memberId, chapterId })
+    .first();
+};
+
+// Add or update member-chapter mapping
+const addOrUpdateMemberChapterMapping = async (memberId, chapterId, joinedDate) => {
+  const existing = await db("member_chapter_mapping")
+    .where({ memberId, chapterId })
+    .first();
+  if (existing) {
+    // If status is left, update to joined
+    if (existing.status === "left") {
+      await db("member_chapter_mapping")
+        .where({ memberId, chapterId })
+        .update({ status: "joined", joinedDate });
+      return "rejoined";
+    }
+    return existing.status === "joined" ? "already_joined" : "exists";
+  } else {
+    await db("member_chapter_mapping").insert({
+      memberId,
+      chapterId,
+      status: "joined",
+      joinedDate,
+    });
+    return "added";
+  }
+};
+
+// Add or update member-chapter mapping with roleIds
+const addOrUpdateMemberChapterMappingWithRoles = async (memberId, chapterId, joinedDate, roleIds) => {
+  const existing = await db("member_chapter_mapping")
+    .where({ memberId, chapterId })
+    .first();
+  const roleIdsStr = Array.isArray(roleIds) ? roleIds.join(",") : roleIds;
+  if (existing) {
+    // If status is left, update to joined and set roleIds
+    if (existing.status === "left") {
+      await db("member_chapter_mapping")
+        .where({ memberId, chapterId })
+        .update({ status: "joined", joinedDate, roleIds: roleIdsStr });
+      return "rejoined";
+    }
+    return existing.status === "joined" ? "already_joined" : "exists";
+  } else {
+    await db("member_chapter_mapping").insert({
+      memberId,
+      chapterId,
+      status: "joined",
+      joinedDate,
+      roleIds: roleIdsStr,
+    });
+    return "added";
+  }
+};
+
 module.exports = {
   findMemberByEmail,
   findMemberById,
@@ -142,4 +231,9 @@ module.exports = {
   updateMemberBalance,
   updateMemberRoleModel,
   removeMemberFromChapter,
+  searchMembers,
+  findMemberByPhone,
+  getMemberChapterMapping,
+  addOrUpdateMemberChapterMapping,
+  addOrUpdateMemberChapterMappingWithRoles,
 };
