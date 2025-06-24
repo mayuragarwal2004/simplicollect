@@ -165,6 +165,22 @@ const updateMemberRoleController = async (req, res) => {
   }
 };
 
+const removeMemberController = async (req, res) => {
+  const { memberId: currentUserMemberId } = req.user;
+  const { memberId: bodyMemberId, chapterId, leaveDate } = req.body;
+
+  try {
+    const result = await memberService.removeMemberService(
+      bodyMemberId,
+      chapterId,
+      leaveDate
+    );
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 module.exports = {
   getMemberById,
   addMember,
@@ -172,4 +188,5 @@ module.exports = {
   getAllMembersListController,
   updateMemberBalanceController,
   updateMemberRoleController,
+  removeMemberController,
 };

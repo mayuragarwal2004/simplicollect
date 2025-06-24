@@ -23,27 +23,33 @@ const addMember = async (memberData) => {
 const getMembers = async (chapterId, searchQuery = "", page = 0, rows = 10) => {
   const offset = parseInt(page, 10) * parseInt(rows, 10);
 
-  let baseQuery = db("member_chapter_mapping as mmm")
-    .where("mmm.chapterId", chapterId)
-    .join("members as m", "mmm.memberId", "m.memberId")
-    .joinRaw("JOIN roles as r ON FIND_IN_SET(r.roleId, mmm.roleIds) > 0");
+  // Helper to build the base query with optional search
+  const buildBaseQuery = () => {
+    let query = db("member_chapter_mapping as mmm")
+      .where("mmm.chapterId", chapterId)
+      .join("members as m", "mmm.memberId", "m.memberId")
+      .where("mmm.status", "joined")
+      .joinRaw("JOIN roles as r ON FIND_IN_SET(r.roleId, mmm.roleIds) > 0");
 
-  if (searchQuery) {
-    baseQuery = baseQuery.where((qb) => {
-      qb.where("m.firstName", "like", `%${searchQuery}%`)
-        .orWhere("m.lastName", "like", `%${searchQuery}%`)
-        .orWhere(
-          db.raw("CONCAT(m.firstName, ' ', m.lastName)"),
-          "like",
-          `%${searchQuery}%`
-        )
-        .orWhere("m.email", "like", `%${searchQuery}%`)
-        .orWhere("m.phoneNumber", "like", `%${searchQuery}%`)
-        .orWhere("r.roleName", "like", `%${searchQuery}%`);
-    });
-  }
+    if (searchQuery) {
+      query = query.where((qb) => {
+        qb.where("m.firstName", "like", `%${searchQuery}%`)
+          .orWhere("m.lastName", "like", `%${searchQuery}%`)
+          .orWhere(
+            db.raw("CONCAT(m.firstName, ' ', m.lastName)"),
+            "like",
+            `%${searchQuery}%`
+          )
+          .orWhere("m.email", "like", `%${searchQuery}%`)
+          .orWhere("m.phoneNumber", "like", `%${searchQuery}%`)
+          .orWhere("r.roleName", "like", `%${searchQuery}%`);
+      });
+    }
+    return query;
+  };
 
-  const data = await baseQuery
+  // Data query
+  const data = await buildBaseQuery()
     .select(
       "m.memberId",
       "m.firstName",
@@ -56,36 +62,16 @@ const getMembers = async (chapterId, searchQuery = "", page = 0, rows = 10) => {
       ),
       db.raw("CONCAT(m.firstName, ' ', m.lastName) as fullName")
     )
-    .groupBy("m.memberId") // Ensure one row per member
+    .groupBy("m.memberId")
     .limit(rows)
     .offset(offset);
 
-  // Fetch total count (without pagination)
-  const totalRecordsQuery = db("member_chapter_mapping as mmm")
-    .where("mmm.chapterId", chapterId)
-    .join("members as m", "mmm.memberId", "m.memberId")
-    .joinRaw("JOIN roles as r ON FIND_IN_SET(r.roleId, mmm.roleIds) > 0");
-
-  if (searchQuery) {
-    totalRecordsQuery.where((qb) => {
-      qb.where("m.firstName", "like", `%${searchQuery}%`)
-        .orWhere("m.lastName", "like", `%${searchQuery}%`)
-        .orWhere(
-          db.raw("CONCAT(m.firstName, ' ', m.lastName)"),
-          "like",
-          `%${searchQuery}%`
-        )
-        .orWhere("m.email", "like", `%${searchQuery}%`)
-        .orWhere("m.phoneNumber", "like", `%${searchQuery}%`)
-        .orWhere("r.roleName", "like", `%${searchQuery}%`);
-    });
-  }
-
-  const totalRecords = await totalRecordsQuery
+  // Total count query
+  const totalRecordsResult = await buildBaseQuery()
     .countDistinct("m.memberId as totalRecords")
     .first();
 
-  return { data, totalRecords: totalRecords.totalRecords };
+  return { data, totalRecords: totalRecordsResult.totalRecords };
 };
 
 const getAllMembers = async (chapterId) => {
@@ -105,6 +91,7 @@ const getAllMembers = async (chapterId) => {
         "GROUP_CONCAT(DISTINCT r.roleName ORDER BY r.roleName ASC SEPARATOR ', ') as roleNames"
       )
     )
+    .where("mmm.status", "joined")
     .groupBy("m.memberId")
     .orderBy("label", "asc");
 };
@@ -127,7 +114,7 @@ const updateMemberRoleModel = async (member, chapter, roleIds, trx = null) => {
     chapterId: chapter.chapterId,
     roleIds,
   });
-  
+
   let query = db("member_chapter_mapping")
     .where("memberId", member.memberId)
     .where("chapterId", chapter.chapterId)
@@ -140,6 +127,12 @@ const updateMemberRoleModel = async (member, chapter, roleIds, trx = null) => {
     .first();
 };
 
+const removeMemberFromChapter = async (memberId, chapterId, leaveDate) => {
+  return db("member_chapter_mapping")
+    .where({ memberId, chapterId })
+    .update({ status: "left", leaveDate });
+};
+
 module.exports = {
   findMemberByEmail,
   findMemberById,
@@ -148,4 +141,5 @@ module.exports = {
   getAllMembers,
   updateMemberBalance,
   updateMemberRoleModel,
+  removeMemberFromChapter,
 };

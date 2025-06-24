@@ -138,7 +138,14 @@ function AddMemberDialog({ open, onOpenChange, chapterId, refresh }) {
 }
 
 // Change Role Dialog
-function ChangeRoleDialog({ open, onOpenChange, member, allRoles, refresh, chapterId }) {
+function ChangeRoleDialog({
+  open,
+  onOpenChange,
+  member,
+  allRoles,
+  refresh,
+  chapterId,
+}) {
   const [newRole, setNewRole] = useState(member?.roleNames || '');
   const [loading, setLoading] = useState(false);
   useEffect(() => {
@@ -306,7 +313,13 @@ function DueWaiveOffDialog({
 }
 
 // Remove Member Dialog
-function RemoveMemberDialog({ open, onOpenChange, member, refresh }) {
+function RemoveMemberDialog({
+  open,
+  onOpenChange,
+  member,
+  refresh,
+  chapterId,
+}) {
   const [leaveDate, setLeaveDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [loading, setLoading] = useState(false);
   useEffect(() => {
@@ -318,6 +331,7 @@ function RemoveMemberDialog({ open, onOpenChange, member, refresh }) {
     try {
       const res = await axiosInstance.post('/api/member/remove', {
         memberId: member.memberId,
+        chapterId: chapterId,
         leaveDate,
       });
       if (res.status === 200) {

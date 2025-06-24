@@ -82,7 +82,19 @@ const updateMemberRoleService = async (
   }
 };
 
+const removeMemberService = async (member, chapterId, leaveDate) => {
+  try {
+    // Remove member from chapter
+    await memberModel.removeMemberFromChapter(member, chapterId, leaveDate);
+    return { success: true, message: "Member removed successfully" };
+  } catch (error) {
+    console.error("Error removing member:", error);
+    throw new Error("Error removing member");
+  }
+};
+
 module.exports = {
   updateMemberBalanceService,
   updateMemberRoleService,
+  removeMemberService,
 };
