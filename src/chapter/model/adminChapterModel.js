@@ -7,6 +7,12 @@ const findChapterById = async (chapterId) => {
     .first();
 };
 
+const findChapterBySlug = async (chapterSlug) => {
+  return db("chapters")
+    .where("chapterSlug", chapterSlug)
+    .first();
+};
+
 // Function to update chapter details
 const updateChapter = async (chapterId, chapterData) => {
   return db("chapters")
@@ -100,6 +106,7 @@ const deleteRole = async (chapterSlug, roleId) => {
 
 module.exports = {
   findChapterById,
+  findChapterBySlug,
   updateChapter,
   getAllChapters,
   createChapter,

@@ -6,6 +6,7 @@ const { v4: uuidv4 } = require("uuid");
 const xlsx = require("xlsx");
 const ExcelJS = require("exceljs");
 const checkDataModel = require("../model/checkDataModel");
+const flushChapterModel = require("../model/flushChapterModel");
 const {
   configureInstructionsSheet,
   configureRolesSheet,
@@ -17,6 +18,21 @@ const getChapterById = async (req, res) => {
   const { chapterId } = req.params;
   try {
     const chapter = await adminChapterModel.findChapterById(chapterId);
+    if (chapter) {
+      res.json(chapter);
+    } else {
+      res.status(404).json({ message: "Chapter not found" });
+    }
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+const getChapterBySlug = async (req, res) => {
+  const { chapterSlug } = req.params;
+  try {
+    const chapter = await adminChapterModel.findChapterBySlug(chapterSlug);
     if (chapter) {
       res.json(chapter);
     } else {
@@ -520,13 +536,26 @@ const getExcelTemplate = async (req, res) => {
   }
 };
 
+// Controller to flush all transactions for a chapter
+const flushChapterTransactionsController = async (req, res) => {
+  const { chapterId } = req.params;
+  try {
+    await flushChapterModel.flushChapterTransactions(chapterId);
+    res.json({ success: true, message: "All transactions flushed for this chapter." });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 module.exports = {
   getChapterById,
+  getChapterBySlug,
   updateChapterDetails,
   getAllChaptersController,
   deleteChapter,
   createChapter,
   getRolesByChapterSlugSuperAdminController,
+  flushChapterTransactionsController,
   addRole,
   editRole,
   deleteRole,

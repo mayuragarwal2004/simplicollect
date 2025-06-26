@@ -8,9 +8,11 @@ router.get("/", adminChapterControllers.getAllChaptersController);
 
 // Chapter routes
 router.get("/:chapterId", adminChapterControllers.getChapterById);
+router.get("/slug/:chapterSlug", adminChapterControllers.getChapterBySlug);
 router.put("/:chapterId", adminChapterControllers.updateChapterDetails);
 router.post("/", adminChapterControllers.createChapter);
 router.delete("/:chapterId", adminChapterControllers.deleteChapter);
+router.delete("/:chapterId/flush-transactions", adminChapterControllers.flushChapterTransactionsController);
 
 router.get("/:chapterSlug/roles", adminChapterControllers.getRolesByChapterSlugSuperAdminController);
 router.post("/:chapterSlug/addRole", adminChapterControllers.addRole);

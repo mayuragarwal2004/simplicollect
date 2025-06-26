@@ -25,6 +25,10 @@ const AdminChapterLayout = () => {
       name: 'Roles',
       href: 'roles',
     },
+    {
+      name: 'Settings',
+      href: 'settings',
+    },
   ];
 
   useEffect(() => {

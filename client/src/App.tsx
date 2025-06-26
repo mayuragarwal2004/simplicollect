@@ -37,6 +37,7 @@ import AdminOrganisationsPage from './pages/Admin/organisation/AdminOrganisation
 import AdminChaptersTablePage from './pages/Admin/chapters/AdminChaptersTablePage';
 import AdminChapterLayout from './pages/Admin/chapters/AdminChapterLayout';
 import AdminChapterMemberList from './pages/Admin/chapters/AdminChapterMemberList';
+import AdminChapterSettings from './pages/Admin/chapters/AdminChapterSettings';
 import AdminMembersTablePage from './pages/Admin/members/AdminMembersTablePage';
 import AcceptChapterPaymentPage from './pages/Member/FeeReceiver/AcceptChapterPaymentPage';
 import ChapterRoles from './components/Admin/Chapter/CreateNew/ChapterRoles/ChapterRoles';
@@ -101,6 +102,10 @@ const routes = [
               {
                 path: 'roles',
                 element: <ChapterRoles />,
+              },
+              {
+                path: 'settings',
+                element: <AdminChapterSettings />,
               },
             ],
           },
