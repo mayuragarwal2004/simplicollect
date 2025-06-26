@@ -17,7 +17,7 @@ interface SidebarProps {
 const adminSidebarData = [
   {
     title: 'Organisations',
-    icon: 'Users',
+    icon: 'Users', // Good for organisations
     links: [
       {
         title: 'Organisations',
@@ -27,7 +27,7 @@ const adminSidebarData = [
   },
   {
     title: 'Chapters',
-    icon: 'Users',
+    icon: 'Layers', // More suitable for chapters
     links: [
       {
         title: 'Chapters',
@@ -37,7 +37,7 @@ const adminSidebarData = [
   },
   {
     title: 'Members',
-    icon: 'Users',
+    icon: 'User', // Single user for members
     links: [
       {
         title: 'Members',
@@ -47,7 +47,7 @@ const adminSidebarData = [
   },
   {
     title: 'Dashboard',
-    icon: 'Users',
+    icon: 'LayoutDashboard', // Dashboard icon
     links: [
       {
         title: 'Dashboard',
