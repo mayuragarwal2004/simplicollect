@@ -38,11 +38,41 @@ import { HeroVideoDialogDemo } from '../components/magicui/hero-video-dialog';
 // Add font import
 import '../styles/fonts.css';
 
+// Add Logo component
+const Logo = ({ className = "" }: { className?: string }) => (
+  <svg 
+    className={cn("h-8 w-auto", className)}
+    viewBox="0 0 172.8 32" 
+    fill="none" 
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <defs>
+      <linearGradient id="linear-gradient" x1="16" x2="16" y2="32" gradientUnits="userSpaceOnUse">
+        <stop offset="0" stopColor="#3fa9f5"/>
+        <stop offset="0.13" stopColor="#3da4f5"/>
+        <stop offset="0.29" stopColor="#3896f6"/>
+        <stop offset="0.45" stopColor="#2f7ff7"/>
+        <stop offset="0.63" stopColor="#235ff9"/>
+        <stop offset="0.80" stopColor="#1435fc"/>
+        <stop offset="0.98" stopColor="#0103ff"/>
+        <stop offset="0.99" stopColor="blue"/>
+      </linearGradient>
+    </defs>
+    <rect fill="url(#linear-gradient)" width="32" height="32" rx="9.39"/>
+    <path fill="white" d="M12.59,26,6.15,21.38a2.08,2.08,0,0,1-.46-2.93h0a2.16,2.16,0,0,1,3-.44L12,20.42a2.16,2.16,0,0,0,2.84-.29l10.19-11a2.15,2.15,0,0,1,3-.15h0a2.07,2.07,0,0,1,.15,3L15.44,25.75A2.16,2.16,0,0,1,12.59,26Z"/>
+    <path fill="white" d="M12.32,20.23l-5.63-4A1.61,1.61,0,0,1,6.31,14h0a1.69,1.69,0,0,1,2.33-.38l5.63,4a1.61,1.61,0,0,1,.38,2.28h0A1.68,1.68,0,0,1,12.32,20.23Z"/>
+    <text x="40" y="22" className="text-gray-900 dark:text-white" fill="currentColor" fontFamily="'Roboto Condensed', sans-serif" fontSize="24" fontWeight="bold">
+      Simplicollect
+    </text>
+  </svg>
+);
+
 const navItems = [
+  { name: 'Demo', link: '#demo' },
   { name: 'Features', link: '#features' },
   { name: 'Testimonials', link: '#testimonials' },
-  { name: 'Pricing', link: '#pricing' },
-  { name: 'Contact', link: '#contact' },
+  { name: 'Stats', link: '#stats' },
+  { name: 'About', link: '#about' }
 ];
 
 const features = [
@@ -102,7 +132,7 @@ const testimonials = [
     name: 'Sarah Chen',
     role: 'Community Manager',
     company: 'TechHub Collective',
-    quote: 'SimpliCollect transformed how we manage our 500+ member community. Fee collection went from chaos to completely automated.',
+    quote: 'Simplicollect transformed how we manage our 500+ member community. Fee collection went from chaos to completely automated.',
     avatar: '👩‍💼',
     date: '2024-01-15',
     category: 'Community Management'
@@ -199,11 +229,10 @@ const footerLinks = {
 };
 
 const socialLinks = [
-  { name: 'Twitter', icon: Twitter, href: '#' },
-  { name: 'GitHub', icon: Github, href: '#' },
-  { name: 'LinkedIn', icon: Linkedin, href: '#' },
-  { name: 'Instagram', icon: Instagram, href: '#' },
-
+  { name: 'Twitter', icon: Twitter, href: 'https://twitter.com/simplicollect', color: 'from-sky-400 to-blue-500' },
+  { name: 'GitHub', icon: Github, href: 'https://github.com/simplicollect', color: 'from-gray-600 to-gray-800' },
+  { name: 'LinkedIn', icon: Linkedin, href: 'https://linkedin.com/company/simplicollect', color: 'from-blue-600 to-blue-800' },
+  { name: 'Instagram', icon: Instagram, href: 'https://instagram.com/simplicollect', color: 'from-pink-500 to-purple-600' }
 ];
 
 const bentoFeatures = [
@@ -429,9 +458,11 @@ export default function Home() {
         {/* Navigation */}
         <Navbar>
           <NavBody>
-            <NavbarLogo />
+            <div className="flex items-center">
+              <Logo className="h-8 w-auto" />
+            </div>
             <NavItems items={navItems} />
-            <div className="flex items-center gap-4 ml-4">
+            <div className="hidden md:flex items-center gap-4 ml-4">
               <Button
                 variant="ghost"
                 className="text-neutral-600 hover:text-neutral-900 dark:text-neutral-300 dark:hover:text-neutral-100"
@@ -443,7 +474,7 @@ export default function Home() {
                 onClick={handleGetStarted}
                 className="text-white"
               >
-                Get Started
+                Get Started Free
               </SparkleButton>
             </div>
           </NavBody>
@@ -462,25 +493,31 @@ export default function Home() {
                 <a
                   key={idx}
                   href={item.link}
-                  className="w-full px-4 py-2 text-neutral-600 hover:text-neutral-900 dark:text-neutral-300 dark:hover:text-neutral-100 transition-colors"
+                  className="w-full px-4 py-3 text-neutral-600 hover:text-neutral-900 dark:text-neutral-300 dark:hover:text-neutral-100 transition-colors"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   {item.name}
                 </a>
               ))}
-              <div className="flex flex-col gap-2 w-full px-4 pt-4 border-t border-neutral-100 dark:border-neutral-800">
+              <div className="flex flex-col gap-3 w-full px-4 pt-4 mt-2 border-t border-neutral-100 dark:border-neutral-800">
                 <Button
                   variant="ghost"
-                  className="w-full justify-start text-neutral-600 hover:text-neutral-900 dark:text-neutral-300 dark:hover:text-neutral-100"
-                  onClick={() => navigate('/auth/signin')}
+                  className="w-full justify-center text-neutral-600 hover:text-neutral-900 dark:text-neutral-300 dark:hover:text-neutral-100"
+                  onClick={() => {
+                    setIsMobileMenuOpen(false);
+                    navigate('/auth/signin');
+                  }}
                 >
                   Sign In
                 </Button>
                 <SparkleButton
-                  onClick={handleGetStarted}
-                  className="w-full justify-start text-white"
+                  onClick={() => {
+                    setIsMobileMenuOpen(false);
+                    handleGetStarted();
+                  }}
+                  className="w-full justify-center text-white"
                 >
-                  Get Started
+                  Get Started Free
                 </SparkleButton>
               </div>
             </MobileNavMenu>
@@ -578,7 +615,7 @@ export default function Home() {
         </WavyBackground>
 
         {/* Video Demo Section */}
-        <section className="min-h-screen flex items-center justify-center relative overflow-hidden">
+        <section id="demo" className="min-h-screen flex items-center justify-center relative overflow-hidden">
           {/* Background with gradient and blur */}
           <div className="absolute inset-0 bg-gradient-to-b from-sky-50/50 via-white to-white pointer-events-none -z-10" />
           <div className="opacity-[0.015]">
@@ -596,13 +633,13 @@ export default function Home() {
                 Watch Demo
               </span>
               <h2 className="text-4xl md:text-5xl font-bold font-['Roboto_Condensed'] text-gray-900 tracking-tight">
-                See SimpliCollect in
+                See Simplicollect in
                 <span className="bg-gradient-to-r from-sky-500 to-blue-600 text-transparent bg-clip-text">
                   {' '}Action
                 </span>
               </h2>
               <p className="text-xl text-gray-600 font-['Roboto_Condensed'] max-w-2xl mx-auto">
-                Watch how organizations use SimpliCollect to streamline their operations and boost efficiency
+                Watch how organizations use Simplicollect to streamline their operations and boost efficiency
               </p>
             </motion.div>
 
@@ -677,7 +714,7 @@ export default function Home() {
         </section>
 
         {/* Features Section */}
-        <section className="min-h-screen flex items-center justify-center relative overflow-hidden z-10">
+        <section id="features" className="min-h-screen flex items-center justify-center relative overflow-hidden z-10">
           {/* Background Effects */}
           <div className="absolute inset-0 bg-gradient-to-b from-sky-50/50 via-white to-sky-50/30" />
           <div className="opacity-[0.015]">
@@ -876,7 +913,7 @@ export default function Home() {
         </section>
 
         {/* Testimonial Section */}
-        <section className="min-h-screen flex items-center justify-center relative overflow-hidden bg-gradient-to-b from-sky-50/50 to-white z-10">
+        <section id="testimonials" className="min-h-screen flex items-center justify-center relative overflow-hidden bg-gradient-to-b from-sky-50/50 to-white z-10">
           <div className="absolute inset-0 h-full w-full bg-white opacity-30 [mask-image:radial-gradient(circle_at_center,transparent_10%,white_90%)]" />
           
           <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
@@ -890,7 +927,7 @@ export default function Home() {
                 Loved by Organizations Worldwide
               </h2>
               <p className="text-xl text-gray-600 font-['Roboto_Condensed'] max-w-2xl mx-auto">
-                See what our users have to say about their experience with SimpliCollect
+                See what our users have to say about their experience with Simplicollect
               </p>
             </motion.div>
 
@@ -952,8 +989,59 @@ export default function Home() {
           </div>
         </section>
 
+
+        {/* Scrolling Stats Section */}
+        <section id="stats" className="relative min-h-screen flex flex-col justify-center overflow-hidden z-10">
+          {/* Gradient background with noise texture */}
+          <div className="absolute inset-0 bg-[linear-gradient(to_right,#4f46e5,#06b6d4)] opacity-10" />
+          <div className="absolute inset-0 bg-[url('/noise.png')] mix-blend-overlay" />
+          
+          <div className="relative max-w-7xl mx-auto px-4 py-12">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8 }}
+              className="text-center mb-12"
+            >
+              <span className="inline-block px-4 py-1 rounded-full bg-blue-100 text-blue-700 text-sm font-semibold mb-4">
+                Growing Fast
+              </span>
+              <h2 className="text-4xl font-bold font-['Roboto_Condensed'] text-gray-900 tracking-tight mb-4">
+                Transforming Organization Management
+              </h2>
+              <p className="text-xl text-gray-600 font-['Roboto_Condensed']">
+                See how organizations are revolutionizing their operations
+              </p>
+            </motion.div>
+          </div>
+
+          <div className="flex-1 flex flex-col justify-center space-y-6">
+            <VelocityScroll
+              defaultVelocity={2}
+              className="py-8 bg-gradient-to-r from-indigo-600/90 to-cyan-600/90 backdrop-blur-sm text-white/90"
+            >
+              Streamline Operations • Boost Efficiency • Enhance Member Experience • Drive Growth • Maximize Revenue
+            </VelocityScroll>
+
+            <VelocityScroll
+              defaultVelocity={-2}
+              className="py-8 bg-gradient-to-r from-violet-600/90 to-indigo-600/90 backdrop-blur-sm text-white/90"
+            >
+              Smart Automation • Real-time Insights • Seamless Integration • Secure Platform • 24/7 Support
+            </VelocityScroll>
+
+            <VelocityScroll
+              defaultVelocity={2}
+              className="py-8 bg-gradient-to-r from-cyan-600/90 to-blue-600/90 backdrop-blur-sm text-white/90"
+            >
+              Trusted by Industry Leaders • Global Reach • Enterprise Ready • Scalable Solution • Future Proof
+            </VelocityScroll>
+          </div>
+        </section>
+
+
         {/* Spinning Text Section */}
-        <section className="min-h-screen flex items-center justify-center relative overflow-hidden">
+        <section id="about" className="min-h-screen flex items-center justify-center relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-br from-sky-50/50 via-white to-sky-50/30" />
           
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative py-16">
@@ -991,7 +1079,7 @@ export default function Home() {
                       Empowering Organizations Worldwide
                     </h3>
                     <p className="text-gray-600 mb-6 text-lg">
-                      With SimpliCollect, organizations are experiencing unprecedented growth and efficiency. Our platform has become the backbone of successful operations for over 500 organizations globally, managing millions of members and transactions.
+                      With Simplicollect, organizations are experiencing unprecedented growth and efficiency. Our platform has become the backbone of successful operations for over 500 organizations globally, managing millions of members and transactions.
                     </p>
                   </motion.div>
                 </BoxReveal>
@@ -1022,168 +1110,142 @@ export default function Home() {
         </section>
 
         {/* Footer */}
-        <footer className="min-h-screen relative overflow-hidden">
-          {/* Background layers */}
-          <div className="absolute inset-0 bg-gradient-to-b from-sky-100 via-indigo-50 to-blue-100" />
+        <footer className="relative bg-gradient-to-b from-sky-50 to-white py-24 sm:py-32 overflow-hidden">
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(120,119,198,0.3),rgba(255,255,255,0))]" />
-          <WavyBackground className="absolute inset-0" children={''} />
-          <div className="absolute inset-0 bg-grid-slate-200/20 bg-[linear-gradient(to_right,#4f46e510,#4f46e520,#4f46e510)] backdrop-blur-3xl" />
-          
-          <ParticleTrails 
-            className="absolute inset-0"
-            quantity={30}
-            particleSize={2}
-            particleColor="rgb(14 165 233 / 0.15)"
-            maxSpeed={0.3}
-            trailLength={15}
-          />
-          
-          {/* Decorative blobs */}
-          <div className="absolute top-0 left-0 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl" />
-          <div className="absolute bottom-0 right-0 translate-x-1/2 translate-y-1/2 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl" />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-sky-500/20 rounded-full blur-3xl" />
-
-          <div className="relative min-h-screen flex flex-col items-center justify-center">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full backdrop-blur-sm bg-white/30 rounded-3xl border border-white/20 shadow-2xl">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center mb-16">
-                {/* Left Column */}
-                <div className="space-y-8">
-                  <BoxReveal duration={0.7} boxColor="#4f46e5">
-                    <div className="space-y-4">
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-tr from-sky-500 to-blue-600 text-white shadow-lg">
-                          ⚡
-                        </div>
-                        <h2 className="text-4xl font-bold text-gray-900">SimpliCollect</h2>
-                      </div>
-                      <p className="text-xl text-gray-600 max-w-md">
-                        Join thousands of organizations revolutionizing their management with SimpliCollect.
-                      </p>
+          <div className="absolute inset-0 bg-grid-slate-200/20 backdrop-blur-sm" />
+          <div className="relative mx-auto max-w-7xl px-6 lg:px-8">
+            <div className="mx-auto grid max-w-2xl grid-cols-1 gap-x-8 gap-y-16 lg:max-w-none lg:grid-cols-2">
+              <div className="max-w-xl lg:max-w-lg space-y-8">
+                <BoxReveal duration={0.7} boxColor="#4f46e5">
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-3">
+                      <Logo className="h-12 w-auto" />
                     </div>
-                  </BoxReveal>
-
-                  <BoxReveal duration={0.7} boxColor="#06b6d4">
-                    <div className="flex flex-col gap-4">
-                      <h3 className="text-lg font-semibold text-gray-900">Stay Connected</h3>
-                      <div className="flex items-center gap-4">
-                        {socialLinks.map((social, idx) => (
-                          <motion.a
-                            key={idx}
-                            href={social.href}
-                            whileHover={{ scale: 1.1, y: -2 }}
-                            whileTap={{ scale: 0.95 }}
-                            className="group relative"
-                          >
-                            <div className="absolute inset-0 bg-sky-500/20 rounded-lg blur-lg transition-all duration-300 group-hover:bg-sky-500/30" />
-                            <div className="relative bg-white rounded-lg p-3 border border-sky-100/50 shadow-lg transition-all duration-300 hover:shadow-sky-200/50">
-                              <social.icon className="h-5 w-5 text-gray-600 transition-colors group-hover:text-sky-600" />
-                            </div>
-                          </motion.a>
-                        ))}
-                      </div>
-                    </div>
-                  </BoxReveal>
-
-                  <BoxReveal duration={0.7} boxColor="#3b82f6">
-                    <div className="space-y-4">
-                      <h3 className="text-lg font-semibold text-gray-900">Newsletter</h3>
-                      <div className="flex gap-2">
-                        <input
-                          type="email"
-                          placeholder="Enter your email"
-                          className="flex-1 rounded-xl border border-gray-200 bg-white/50 backdrop-blur-sm px-4 py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
-                        />
-                        <SparkleButton className="text-white">
-                          Subscribe
-                        </SparkleButton>
-                      </div>
-                    </div>
-                  </BoxReveal>
-                </div>
-
-                {/* Right Column */}
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-8">
-                  <BoxReveal duration={0.7} boxColor="#4f46e5">
-                    <div className="space-y-4">
-                      <h3 className="text-lg font-semibold text-gray-900">Product</h3>
-                      <ul className="space-y-3">
-                        {footerLinks.product.map((link, idx) => (
-                          <motion.li
-                            key={idx}
-                            whileHover={{ x: 2 }}
-                            className="relative group"
-                          >
-                            <div className="absolute inset-0 bg-sky-500/0 transition-colors duration-300 group-hover:bg-sky-500/5 rounded-lg" />
-                            <a href={link.href} className="relative text-gray-600 hover:text-sky-600 transition-colors">
-                              {link.name}
-                            </a>
-                          </motion.li>
-                        ))}
-                      </ul>
-                    </div>
-                  </BoxReveal>
-
-                  <BoxReveal duration={0.7} boxColor="#06b6d4">
-                    <div className="space-y-4">
-                      <h3 className="text-lg font-semibold text-gray-900">Company</h3>
-                      <ul className="space-y-3">
-                        {footerLinks.company.map((link, idx) => (
-                          <motion.li
-                            key={idx}
-                            whileHover={{ x: 2 }}
-                            className="relative group"
-                          >
-                            <div className="absolute inset-0 bg-sky-500/0 transition-colors duration-300 group-hover:bg-sky-500/5 rounded-lg" />
-                            <a href={link.href} className="relative text-gray-600 hover:text-sky-600 transition-colors">
-                              {link.name}
-                            </a>
-                          </motion.li>
-                        ))}
-                      </ul>
-                    </div>
-                  </BoxReveal>
-
-                  <BoxReveal duration={0.7} boxColor="#3b82f6">
-                    <div className="space-y-4">
-                      <h3 className="text-lg font-semibold text-gray-900">Legal</h3>
-                      <ul className="space-y-3">
-                        {footerLinks.legal.map((link, idx) => (
-                          <motion.li
-                            key={idx}
-                            whileHover={{ x: 2 }}
-                            className="relative group"
-                          >
-                            <div className="absolute inset-0 bg-sky-500/0 transition-colors duration-300 group-hover:bg-sky-500/5 rounded-lg" />
-                            <a href={link.href} className="relative text-gray-600 hover:text-sky-600 transition-colors">
-                              {link.name}
-                            </a>
-                          </motion.li>
-                        ))}
-                      </ul>
-                    </div>
-                  </BoxReveal>
-                </div>
-              </div>
-
-              {/* Bottom Bar */}
-              <BoxReveal duration={0.7} boxColor="#4f46e5">
-                <div className="border-t border-gray-200/50 pt-8">
-                  <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-                    <p className="text-sm text-gray-600">
-                      © {new Date().getFullYear()} SimpliCollect. All rights reserved.
+                    <p className="text-xl text-gray-600 max-w-md">
+                      Join thousands of organizations revolutionizing their management with Simplicollect.
                     </p>
-                    <div className="flex items-center gap-6">
-                      {footerLinks.legal.map((link, idx) => (
+                  </div>
+                </BoxReveal>
+
+                <BoxReveal duration={0.7} boxColor="#06b6d4">
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-semibold text-gray-900">Subscribe to our newsletter</h3>
+                    <div className="flex gap-2">
+                      <input
+                        type="email"
+                        placeholder="Enter your email"
+                        className="flex-1 rounded-xl border border-gray-200 bg-white/80 backdrop-blur-sm px-4 py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
+                      />
+                      <SparkleButton className="text-white">
+                        Subscribe
+                      </SparkleButton>
+                    </div>
+                  </div>
+                </BoxReveal>
+
+                <BoxReveal duration={0.7} boxColor="#3b82f6">
+                  <div className="flex flex-col gap-4">
+                    <h3 className="text-lg font-semibold text-gray-900">Follow us</h3>
+                    <div className="flex flex-wrap items-center gap-3">
+                      {socialLinks.map((social, idx) => (
                         <motion.a
                           key={idx}
-                          href={link.href}
-                          className="text-sm text-gray-600 transition-colors hover:text-sky-600"
-                          whileHover={{ y: -1 }}
+                          href={social.href}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          className={`flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-br ${social.color} group relative overflow-hidden`}
                         >
-                          {link.name}
+                          <div className="absolute inset-0 bg-white/10 transition-opacity duration-300 opacity-0 group-hover:opacity-100" />
+                          <social.icon className="h-5 w-5 text-white relative z-10" />
+                          <span className="text-sm font-medium text-white relative z-10">
+                            {social.name}
+                          </span>
                         </motion.a>
                       ))}
                     </div>
+                  </div>
+                </BoxReveal>
+              </div>
+
+              <div className="grid grid-cols-2 gap-8 sm:grid-cols-3">
+                <BoxReveal duration={0.7} boxColor="#4f46e5">
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-semibold text-gray-900">Product</h3>
+                    <ul className="space-y-3">
+                      {footerLinks.product.map((link, idx) => (
+                        <motion.li
+                          key={idx}
+                          whileHover={{ x: 2 }}
+                          className="relative group"
+                        >
+                          <a href={link.href} className="relative text-gray-600 hover:text-sky-600 transition-colors">
+                            {link.name}
+                          </a>
+                        </motion.li>
+                      ))}
+                    </ul>
+                  </div>
+                </BoxReveal>
+
+                <BoxReveal duration={0.7} boxColor="#06b6d4">
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-semibold text-gray-900">Company</h3>
+                    <ul className="space-y-3">
+                      {footerLinks.company.map((link, idx) => (
+                        <motion.li
+                          key={idx}
+                          whileHover={{ x: 2 }}
+                          className="relative group"
+                        >
+                          <a href={link.href} className="relative text-gray-600 hover:text-sky-600 transition-colors">
+                            {link.name}
+                          </a>
+                        </motion.li>
+                      ))}
+                    </ul>
+                  </div>
+                </BoxReveal>
+
+                <BoxReveal duration={0.7} boxColor="#3b82f6">
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-semibold text-gray-900">Legal</h3>
+                    <ul className="space-y-3">
+                      {footerLinks.legal.map((link, idx) => (
+                        <motion.li
+                          key={idx}
+                          whileHover={{ x: 2 }}
+                          className="relative group"
+                        >
+                          <a href={link.href} className="relative text-gray-600 hover:text-sky-600 transition-colors">
+                            {link.name}
+                          </a>
+                        </motion.li>
+                      ))}
+                    </ul>
+                  </div>
+                </BoxReveal>
+              </div>
+            </div>
+
+            <div className="mt-16 border-t border-gray-900/10 pt-8">
+              <BoxReveal duration={0.7} boxColor="#4f46e5">
+                <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
+                  <p className="text-sm leading-5 text-gray-500">
+                    © {new Date().getFullYear()} Simplicollect. All rights reserved.
+                  </p>
+                  <div className="flex gap-6">
+                    {footerLinks.legal.map((link, idx) => (
+                      <motion.a
+                        key={idx}
+                        href={link.href}
+                        className="text-sm leading-5 text-gray-600 hover:text-sky-600"
+                        whileHover={{ y: -1 }}
+                      >
+                        {link.name}
+                      </motion.a>
+                    ))}
                   </div>
                 </div>
               </BoxReveal>
