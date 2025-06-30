@@ -4,6 +4,7 @@ import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Play, XIcon } from "lucide-react";
 import { cn } from "../../lib/utils";
+import ThumbNail from "../../images/SimpliCollect - Mock Up.jpg"; 
 
 type AnimationStyle =
   | "from-bottom"
@@ -149,15 +150,15 @@ export function HeroVideoDialogDemo() {
       <HeroVideoDialog
         className="block dark:hidden"
         animationStyle="from-center"
-        videoSrc="https://www.youtube.com/embed/rdjmCvcmHdc?si=7NxkQbebGHgoHe3v"
-        thumbnailSrc="https://startup-template-sage.vercel.app/hero-light.png"
+        videoSrc="https://www.youtube.com/embed/ar6VM2u68Po?si=xQQoYBG_vY1v3CoF"
+        thumbnailSrc={ThumbNail}
         thumbnailAlt="Hero Video"
       />
       <HeroVideoDialog
         className="hidden dark:block"
         animationStyle="from-center"
-        videoSrc="https://www.youtube.com/embed/rdjmCvcmHdc?si=7NxkQbebGHgoHe3v"
-        thumbnailSrc="https://startup-template-sage.vercel.app/hero-dark.png"
+        videoSrc="https://www.youtube.com/embed/ar6VM2u68Po?si=xQQoYBG_vY1v3CoF"
+        thumbnailSrc={ThumbNail}
         thumbnailAlt="Hero Video"
       />
     </div>

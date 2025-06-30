@@ -30,6 +30,7 @@ import FeeReciever from './pages/Member/FeeReciever';
 import RequireAuth from './utils/RequireAut';
 import PrivacyPolicy from './pages/simpliCollectPrivacyPolicy';
 import TermsAndConditions from './pages/TermsAndConditions';
+import CookiePolicy from './pages/CookiePolicy';
 import NoChapterPage from './pages/NoChapterPage';
 import { Bounce, ToastContainer } from 'react-toastify';
 import AdminSignIn from './pages/Authentication/AdminSignIn';
@@ -118,6 +119,10 @@ const routes = [
         element: <TermsAndConditions />,
       },
       {
+        path: 'cookie-policy',
+        element: <CookiePolicy />,
+      },
+      {
         path: 'auth',
         children: [
           {
@@ -195,7 +200,7 @@ const routes = [
       },
       {
         path: '*',
-        element: <>404</>,
+        element: <Navigate to="/" />,
       },
     ],
   },
