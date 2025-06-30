@@ -10,15 +10,20 @@ const packageRoutes = require("./src/package/route/packageRoutes");
 const paymentRoutes = require("./src/payment/route/paymentRoutes");
 const feeRecieverRoutes = require("./src/feeReceiver/route/feeReceiverRoutes");
 const meetingRoutes = require("./src/meeting/route/meetingRoutes");
+const homepageRoutes = require("./src/homepage/route/homepageRoutes");
 
 const { authenticateToken, AuthenticateAdmin } = require("./src/middlewares/authMiddleware");
 require('./src/feeReceiver/cron/pendingRequestNotifier');
+require('./src/homepage/cron/statisticsCache');
 const PORT = process.env.PORT || 5000;
 
 const app = express();
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "client/dist")));
+
+// Homepage routes (public - no authentication required)
+app.use("/api/homepage", homepageRoutes);
 
 // Visitor routes
 app.use("/api/auth", authRoutes);

@@ -30,6 +30,7 @@ import FeeReciever from './pages/Member/FeeReciever';
 import RequireAuth from './utils/RequireAut';
 import PrivacyPolicy from './pages/simpliCollectPrivacyPolicy';
 import TermsAndConditions from './pages/TermsAndConditions';
+import CookiePolicy from './pages/CookiePolicy';
 import NoChapterPage from './pages/NoChapterPage';
 import { Bounce, ToastContainer } from 'react-toastify';
 import AdminSignIn from './pages/Authentication/AdminSignIn';
@@ -46,14 +47,14 @@ import MyLedger from './pages/Member/MyLedger';
 import DashboardPage from './pages/Admin/Dashboard/DashboardPage'
 import TrackVisitor from './pages/Visitor/TrackVisitor';
 import SwitchChapter from './pages/Member/SwitchChapter';
-
-import AdminPackage from './pages/Admin/Package/AdminPackage'
+import AdminPackage from './pages/Admin/Package/AdminPackage';
 import { useData } from './context/DataContext';
+import Home from './pages/Home';
 
 const routes = [
   {
     index: true,
-    element: <Navigate to="/auth/signin" />,
+    element: <Home />,
   },
   {
     path: '/admin',
@@ -66,7 +67,7 @@ const routes = [
       {
         path: '',
         index: true,
-        element: <Navigate to="/admin/organisations" />, // replace with dashboard
+        element: <Navigate to="/admin/organisations" />,
       },
       {
         path: 'organisations',
@@ -78,12 +79,7 @@ const routes = [
       },
       {
         path: 'package',
-        element: <AdminPackage/>,
-      },
-      {
-        path: '',
-        index: true,
-        element: <Navigate to="/admin/chapters" />, // replace with dashboard
+        element: <AdminPackage />,
       },
       {
         path: 'chapters',
@@ -94,7 +90,7 @@ const routes = [
           },
           {
             path: ':chapterSlug',
-            element: <AdminChapterLayout />, //////
+            element: <AdminChapterLayout />,
             children: [
               {
                 path: "dashboard",
@@ -116,7 +112,6 @@ const routes = [
           },
         ],
       },
-
       {
         path: 'members',
         element: <AdminMembersTablePage />,
@@ -134,6 +129,10 @@ const routes = [
       {
         path: 'terms-and-conditions',
         element: <TermsAndConditions />,
+      },
+      {
+        path: 'cookie-policy',
+        element: <CookiePolicy />,
       },
       {
         path: 'auth',
@@ -221,8 +220,7 @@ const routes = [
       },
       {
         path: '*',
-        index: true,
-        element: <>404</>,
+        element: <Navigate to="/" />,
       },
     ],
   },
@@ -233,15 +231,11 @@ const router = createBrowserRouter(routes);
 function App() {
   const [loadingLocal, setLoadingLocal] = useState<boolean>(true);
   const { loading } = useData();
-  // const { pathname } = useLocation();
-
-  // useEffect(() => {
-  //   window.scrollTo(0, 0);
-  // }, [pathname]);
 
   useEffect(() => {
     setTimeout(() => setLoadingLocal(false), 1000);
   }, []);
+
   return loadingLocal ? (
     <Loader />
   ) : (
