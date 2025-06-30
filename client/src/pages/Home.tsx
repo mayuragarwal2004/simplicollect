@@ -116,9 +116,9 @@ const footerLinks = {
     { name: 'Case Studies', href: '#' },
   ],
   other_products: [
-    { name: 'Digital Cards', href: '#' },
-    { name: 'Community', href: '#' },
-    { name: 'My Dukandar', href: '#' },
+    { name: 'Digital Cards', href: 'https://www.mydigicardmanager.com' },
+    { name: 'Community', href: 'https://myorgnnet.com' },
+    { name: 'My Dukandar', href: 'https://mydukandar.in' },
   ],
   legal: [
     { name: 'Privacy', href: '/privacy-policy' },
