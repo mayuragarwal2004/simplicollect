@@ -9,8 +9,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { AllMembersReportsTable } from './allMembersReports-data-table/allMembersReports-table';
-import { AllMembersReportsColumns } from './allMembersReports-data-table/allMembersReports-column';
+import { MemberDueSummaryTable } from './memberDueSummary-data-table/memberDueSummary-table';
+import { MemberDueSummaryColumns } from './memberDueSummary-data-table/memberDueSummary-column';
 import { useLocation } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -21,8 +21,17 @@ import {
 } from '@/components/ui/tooltip';
 import { Info } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  SelectGroup,
+  SelectLabel,
+} from '@/components/ui/select';
 
-const AllMembersReports = () => {
+const MemberDueSummary = () => {
   const location = useLocation();
   const [memberPackageSummary, setMemberPackageSummary] = useState([]);
   const { chapterData } = useData();
@@ -30,12 +39,16 @@ const AllMembersReports = () => {
   const searchParams = new URLSearchParams(location.search);
 
   const [columns, setColumns] = useState([]);
+  const [termOptions, setTermOptions] = useState([]);
+  const [packageParentOptions, setPackageParentOptions] = useState([]);
+  const [selectedTerm, setSelectedTerm] = useState('');
+  const [selectedPackageParent, setSelectedPackageParent] = useState('');
 
   // Extracting query parameters
   const rows = searchParams.get('rows') || 10;
   const page = searchParams.get('page') || 0;
 
-  const columnLabels = AllMembersReportsColumns.map(
+  const columnLabels = MemberDueSummaryColumns.map(
     ({ accessorKey, header }) => ({
       label: header().props.children,
       key: accessorKey,
@@ -62,6 +75,8 @@ const AllMembersReports = () => {
   };
 
   const getMemeberPackageSummary = () => {
+    if (!chapterData?.chapterId) return;
+    if (!selectedTerm || !selectedPackageParent) return;
     axiosInstance
       .get(
         `/api/report/${chapterData.chapterId}/package-summary?rows=${rows}&page=${page}`,
@@ -70,14 +85,21 @@ const AllMembersReports = () => {
             chapterId: chapterData.chapterId,
             rows,
             page,
+            ...(selectedTerm && { termId: selectedTerm }),
           },
         },
       )
       .then((res) => {
-        setMemberPackageSummary(res.data.data);
+        // Filter out packageData whose packageParent doesn't match selectedPackageParent
+        const filteredData = (res.data.data || []).map((member) => ({
+          ...member,
+          packageData: (member.packageData || []).filter(
+            (pkg) => pkg.packageParent === selectedPackageParent,
+          ),
+        }));
+        setMemberPackageSummary(filteredData);
+        const packageData = filteredData[0]?.packageData || [];
         const newColumns = [];
-        const packageData = res.data.data[0]?.packageData || [];
-
         for (let i = 0; i < packageData.length; i++) {
           newColumns.push({
             accessorKey: `packageData_${i}`,
@@ -107,8 +129,13 @@ const AllMembersReports = () => {
                     <span className="font-medium">
                       ₹{pkgData.calculatedResult.totalAmount}
                     </span>
+                  ) : pkgData?.calculatedResult?.message ===
+                    'Package has overlapping payments' ? (
+                    <span className="text-green-500">✔️</span>
                   ) : (
-                    <span className="text-muted-foreground">N/A</span>
+                    <span className="text-muted-foreground">
+                      {pkgData?.calculatedResult?.message || 'N/A'}
+                    </span>
                   )}
                 </div>
               );
@@ -117,7 +144,7 @@ const AllMembersReports = () => {
             enableHiding: false,
           });
         }
-        setColumns([...AllMembersReportsColumns, ...newColumns]);
+        setColumns([...MemberDueSummaryColumns, ...newColumns]);
         setTotalRecord(res.data.totalRecords);
       })
       .catch((err) => {
@@ -133,14 +160,46 @@ const AllMembersReports = () => {
     );
   };
 
+  // Fetch term and package parent options
+  useEffect(() => {
+    if (!chapterData?.chapterId) return;
+    // Fetch terms
+    axiosInstance
+      .get(`/api/term/chapter/${chapterData.chapterId}`)
+      .then((res) => setTermOptions(res.data))
+      .catch(() => setTermOptions([]));
+  }, [chapterData]);
+
+  // Fetch package parents when chapter or selectedTerm changes
+  useEffect(() => {
+    if (!chapterData?.chapterId || !selectedTerm) {
+      setPackageParentOptions([]);
+      setSelectedPackageParent('');
+      return;
+    }
+    axiosInstance
+      .get(
+        `/api/packages/parents/${chapterData.chapterId}?termId=${selectedTerm}`,
+      )
+      .then((res) => setPackageParentOptions(res.data))
+      .catch(() => setPackageParentOptions([]));
+  }, [chapterData, selectedTerm]);
+
   useEffect(() => {
     getMemeberPackageSummary();
-  }, [chapterData, rows, page, location.search]);
+  }, [
+    chapterData,
+    rows,
+    page,
+    location.search,
+    selectedTerm,
+    selectedPackageParent,
+  ]);
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Member Package Summary Report</h1>
+      <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+        <h1 className="text-2xl font-bold">Member Due Summary Report</h1>
       </div>
 
       <Alert variant="info" className="mb-6">
@@ -167,10 +226,73 @@ const AllMembersReports = () => {
           </ul>
         </AlertDescription>
       </Alert>
+      <div className="flex gap-4">
+        <Select value={selectedTerm} onValueChange={setSelectedTerm}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Select Term" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectGroup>
+              <SelectLabel>Term</SelectLabel>
+              {termOptions.map((term) => (
+                <SelectItem
+                  key={term.termId || term.id}
+                  value={term.termId || term.id}
+                >
+                  {term.termName || term.name || term.termId}
+                </SelectItem>
+              ))}
+            </SelectGroup>
+          </SelectContent>
+        </Select>
+        <Select
+          value={selectedPackageParent}
+          onValueChange={setSelectedPackageParent}
+        >
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Select Package Parent" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectGroup>
+              <SelectLabel>Package Parent</SelectLabel>
+              {packageParentOptions.map((parent) => (
+                <SelectItem key={parent} value={parent}>
+                  {parent}
+                </SelectItem>
+              ))}
+            </SelectGroup>
+          </SelectContent>
+        </Select>
+        <button
+          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+          onClick={async () => {
+            if (!chapterData?.chapterId || !selectedTerm) return;
+            try {
+              const response = await axiosInstance.get(
+                `/api/report/${chapterData.chapterId}/all-members-excel?termId=${selectedTerm}`,
+                { responseType: 'blob' },
+              );
+              const url = window.URL.createObjectURL(new Blob([response.data]));
+              const link = document.createElement('a');
+              link.href = url;
+              link.setAttribute('download', 'all-members-report.xlsx');
+              document.body.appendChild(link);
+              link.click();
+              link.parentNode.removeChild(link);
+              window.URL.revokeObjectURL(url);
+            } catch (error) {
+              console.error('Failed to download Excel file:', error);
+            }
+          }}
+          disabled={!selectedTerm}
+        >
+          Export to Excel
+        </button>
+      </div>
 
       {columns && (
         <div className="rounded-md border">
-          <AllMembersReportsTable
+          <MemberDueSummaryTable
             data={memberPackageSummary}
             columns={columns}
             searchInputField="firstName"
@@ -187,4 +309,4 @@ const AllMembersReports = () => {
   );
 };
 
-export default AllMembersReports;
+export default MemberDueSummary;

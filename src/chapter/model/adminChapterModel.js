@@ -7,6 +7,12 @@ const findChapterById = async (chapterId) => {
     .first();
 };
 
+const findChapterBySlug = async (chapterSlug) => {
+  return db("chapters")
+    .where("chapterSlug", chapterSlug)
+    .first();
+};
+
 // Function to update chapter details
 const updateChapter = async (chapterId, chapterData) => {
   return db("chapters")
@@ -47,8 +53,7 @@ const getAllChapters = async (rows, page) => {
 // Function to create a new chapter
 const createChapter = async (chapterData) => {
   return db("chapters")
-    .insert(chapterData)
-    .returning("*");
+    .insert(chapterData);
 };
 
 // Function to delete a chapter by its ID
@@ -56,22 +61,6 @@ const deleteChapter = async (chapterId) => {
   return db("chapters")
     .where("chapterId", chapterId)
     .del();
-};
-
-const getRolesByChapterSlug = async (chapterSlug) => {
-  const roles = await db("roles")
-    .join("chapters", "roles.chapterId", "chapters.chapterId")
-    .leftJoin("features_master", function () {
-      this.on(db.raw("FIND_IN_SET(features_master.featureId, roles.rights)"));
-    })
-    .where("chapters.chapterSlug", chapterSlug)
-    .groupBy("roles.roleId")
-    .select(
-      "roles.*",
-      db.raw("GROUP_CONCAT(features_master.featureName SEPARATOR ', ') as featureNames")
-    );
-
-  return roles;
 };
 
 const addRole = async (chapterSlug, roleData) => {
@@ -117,11 +106,11 @@ const deleteRole = async (chapterSlug, roleId) => {
 
 module.exports = {
   findChapterById,
+  findChapterBySlug,
   updateChapter,
   getAllChapters,
   createChapter,
   deleteChapter,
-  getRolesByChapterSlug,
   addRole,
   editRole,
   deleteRole

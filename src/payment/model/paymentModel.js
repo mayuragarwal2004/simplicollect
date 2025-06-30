@@ -1,4 +1,5 @@
 const db = require("../../config/db");
+const { v4: uuidv4 } = require("uuid");
 
 const addTransaction = async (data) => {
   return db("transactions").insert(data);
@@ -109,9 +110,28 @@ const getTransactionById = async (transactionId) => {
 // data is an array of objects containing transactionId, approvedById and status
 const approvePendingPayment = async (data, trx) => {
   try {
+    // Only approve if status is 'approved', otherwise just update fields
     const updatePromises = data.map((transaction) => {
-      const { transactionId, ...updateData } = transaction;
-      return trx("transactions").where({ transactionId }).update(updateData);
+      const { transactionId, status, ...updateData } = transaction;
+      if (status === "approved") {
+        // Approve: set approvedById, approvedByName, status
+        return trx("transactions")
+          .where({ transactionId })
+          .update({
+            ...updateData,
+            status: "approved",
+            approvedById: transaction.approvedById,
+            approvedByName: transaction.approvedByName,
+          });
+      } else {
+        // Save only: update allowed fields, do not set status to 'approved' or update approvedById/approvedByName
+        return trx("transactions")
+          .where({ transactionId })
+          .update({
+            ...updateData,
+            status: "pending",
+          });
+      }
     });
     await Promise.all(updatePromises);
   } catch (error) {
@@ -174,15 +194,15 @@ const getTransactions = async (chapterId, rows, page, startDate, endDate) => {
   // Select only the required fields
   const transactions = await query
     .select(
-      "m.firstName",  // Member Name (First Name)
-      "m.lastName",   // Member Name (Last Name)
+      "m.firstName", // Member Name (First Name)
+      "m.lastName", // Member Name (Last Name)
       "t.paidAmount", // Amount Paid
       "t.balanceAmount", // Balance
-      "p.packageName",  // Package Name
-      "t.paymentType",  // Payment Type
-      "t.paymentReceivedByName",  // Collected By
-      "t.approvedByName",  // Approved By
-      "t.transactionDate",  // Date
+      "p.packageName", // Package Name
+      "t.paymentType", // Payment Type
+      "t.paymentReceivedByName", // Collected By
+      "t.approvedByName", // Approved By
+      "t.transactionDate", // Date
       "t.status as approvalStatus" // Approval Status
     )
     .limit(parsedRows)
@@ -195,15 +215,16 @@ const getTransactions = async (chapterId, rows, page, startDate, endDate) => {
     .where("p.chapterId", chapterId);
 
   if (startDate && endDate) {
-    countQuery = countQuery.whereBetween("t.transactionDate", [startDate, endDate]);
+    countQuery = countQuery.whereBetween("t.transactionDate", [
+      startDate,
+      endDate,
+    ]);
   }
 
   const [{ count }] = await countQuery;
 
   return { transactions, totalRecords: parseInt(count, 10) };
 };
-
-
 
 const getMemberFinancialSummary = async (chapterId, row, page) => {
   const offset = parseInt(page, 10) * parseInt(row, 10);
@@ -229,9 +250,12 @@ const getMemberFinancialSummary = async (chapterId, row, page) => {
 
 const getTransactionsByMemberId = async (memberId, chapterId) => {
   return db("transactions as t")
-    .join("packages as p", "t.packageId", "p.packageId")
-    .where({ "t.memberId": memberId, "p.chapterId": chapterId })
-    .orderBy("t.transactionDate", "desc")
+    .leftJoin("packages as p", "t.packageId", "p.packageId")
+    .where("t.memberId", memberId)
+    .andWhere(function () {
+      this.whereNull("t.packageId").orWhere("p.chapterId", chapterId);
+    })
+    .orderBy("t.transactionDate", "asec")
     .select("t.*");
 };
 
@@ -268,6 +292,129 @@ const getMetaData = async (memberId, chapterId) => {
   }
 };
 
+// Move approved fee to pending
+const moveApprovedToPending = async (data, trx) => {
+  try {
+    const updatePromises = data.map((transaction) => {
+      const { transactionId, termId, ...updateData } = transaction;
+      return trx("transactions")
+        .where({ transactionId })
+        .update({ status: "pending" });
+    });
+    await Promise.all(updatePromises);
+  } catch (error) {
+    throw error;
+  }
+};
+
+// Save edited fee details without changing status
+const saveEditedFeeDetails = async (data, editorInfo = {}) => {
+  try {
+    const updatePromises = data.map(async (transaction) => {
+      const {
+        transactionId,
+        paidAmount,
+        paymentReceivedById,
+        paymentType,
+        paymentReceivedByName,
+        platformFee = 0,
+        receiverFee = 0,
+        payableAmount = 0,
+      } = transaction;
+      // Fetch current transaction for systemRemarks and old values
+      const [current] = await db("transactions")
+        .where({ transactionId })
+        .select();
+      let changes = [];
+      if (typeof paidAmount === "number" && paidAmount !== current.paidAmount)
+        changes.push(`paidAmount: ${current.paidAmount} → ${paidAmount}`);
+      if (
+        paymentReceivedById &&
+        paymentReceivedById !== current.paymentReceivedById
+      )
+        changes.push(
+          `paymentReceivedById: ${current.paymentReceivedById} → ${paymentReceivedById}`
+        );
+      if (paymentType && paymentType !== current.paymentType)
+        changes.push(`paymentType: ${current.paymentType} → ${paymentType}`);
+      if (
+        paymentReceivedByName &&
+        paymentReceivedByName !== current.paymentReceivedByName
+      )
+        changes.push(
+          `paymentReceivedByName: ${current.paymentReceivedByName} → ${paymentReceivedByName}`
+        );
+      // Calculate new balanceAmount and amountPaidToChapter
+      const newBalanceAmount =
+        typeof paidAmount === "number" && typeof payableAmount === "number"
+          ? paidAmount - payableAmount
+          : current.balanceAmount;
+      const newAmountPaidToChapter =
+        typeof paidAmount === "number"
+          ? paidAmount -
+            (parseFloat(platformFee) || 0) -
+            (parseFloat(receiverFee) || 0)
+          : current.amountPaidToChapter;
+      // Prepare systemRemarks
+      let newSystemRemarks = current.systemRemarks || "";
+      if (changes.length > 0 && editorInfo.userName && editorInfo.memberId) {
+        const now = new Date();
+        const timestamp = now.toISOString().replace("T", " ").substring(0, 19);
+        newSystemRemarks += `\n[${timestamp}] Edited by ${
+          editorInfo.userName
+        } (${editorInfo.memberId}): ${changes.join(", ")}`;
+      }
+      return db("transactions").where({ transactionId }).update({
+        paidAmount,
+        paymentReceivedById,
+        paymentType,
+        paymentReceivedByName,
+        balanceAmount: newBalanceAmount,
+        amountPaidToChapter: newAmountPaidToChapter,
+        systemRemarks: newSystemRemarks,
+      });
+    });
+    await Promise.all(updatePromises);
+  } catch (error) {
+    throw error;
+  }
+};
+
+// Get all transactions for a chapter in a date range
+const getTransactionsByChapterAndDateRange = async (
+  chapterId,
+  startDate,
+  endDate
+) => {
+  return db("transactions as t")
+    .join("packages as p", "t.packageId", "p.packageId")
+    .where("p.chapterId", chapterId)
+    .andWhere("t.transactionDate", ">=", startDate)
+    .andWhere("t.transactionDate", "<=", endDate)
+    .select("t.*", "p.*");
+};
+
+const addMemberBalanceTransaction = async (
+  trx,
+  { member, chapterId, amount, reason, currentUser }
+) => {
+  // You can adjust the table/fields as per your schema
+  return trx("transactions").insert({
+    transactionId: uuidv4(),
+    memberId: member.memberId,
+    chapterId,
+    transactionType: "Balance Update",
+    transactionDate: new Date(),
+    status: "approved",
+    statusUpdateDate: new Date(),
+    balanceAmount: amount,
+    userRemarks: reason,
+    systemRemarks: `Balance updated by ${currentUser.firstName} ${currentUser.lastName} (${currentUser.memberId})`,
+    approvedById: currentUser.memberId,
+    approvedByName: `${currentUser.firstName} ${currentUser.lastName}`,
+  });
+};
+
 module.exports = {
   addTransaction,
   addPayment,
@@ -286,4 +433,8 @@ module.exports = {
   getMemberFinancialSummary,
   getTransactionsByMemberId,
   getMetaData,
+  moveApprovedToPending,
+  saveEditedFeeDetails, // <-- add export
+  getTransactionsByChapterAndDateRange,
+  addMemberBalanceTransaction,
 };

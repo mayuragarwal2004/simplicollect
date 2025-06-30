@@ -22,7 +22,7 @@ const OtpVerification = () => {
 
   useEffect(() => {
     if (!location.state?.identifier) {
-      navigate('/auth/signin');
+      navigate('/auth/signin', { state: { from: location.state?.from } });
     }
   }, [location.state, navigate]);
 
@@ -69,18 +69,18 @@ const OtpVerification = () => {
         const response = await fetch("/api/auth/verify-otp", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ identifier, otp,password: newPassword }), // Send password as "password"
+            body: JSON.stringify({ identifier, otp,password: newPassword }),
         });
         const data = await response.json();
         if (response.ok) {
             toast.success('OTP verified successfully & password set successfully! Please login with your new password.');
             setError("");
-            navigate("/auth/signin");
+            // After successful OTP, go to sign in and preserve 'from'
+            navigate("/auth/signin", { state: { from: location.state?.from } });
         } else {
             setError(data.message);
         }
     } catch (error) {
-        console.log(error);
         setError("Failed to verify OTP.");
     }
   };

@@ -248,6 +248,47 @@ const getMetaDataController = async (req, res) => {
   }
 };
 
+const moveApprovedToPendingController = async (req, res) => {
+  const { memberId } = req.user;
+  const { transactionDetails } = req.body;
+  try {
+    await db.transaction(async (trx) => {
+      // Step 1: Move to Pending
+      await paymentModel.moveApprovedToPending(transactionDetails, trx);
+      // Step 2: Set isPaid to false
+      const transactionIdsArray = transactionDetails.map((t) => t.transactionId);
+      await Promise.all(transactionIdsArray.map((transactionId) =>
+        trx("members_meeting_mapping").where({ transactionId }).update({ isPaid: false })
+      ));
+      // Step 3: Optionally update balances if needed (not implemented here)
+      res.json({ success: true });
+    });
+  } catch (error) {
+    console.error("Transaction Failed:", error);
+    res.status(500).json({ error: "Transaction Failed", details: error.message });
+  }
+};
+
+// Save edited fee details without changing status
+const saveEditedFeeDetailsController = async (req, res) => {
+  const { transactionId, updateFields } = req.body;
+  const { user } = req;
+  if (!transactionId || !updateFields || typeof updateFields !== 'object') {
+    return res.status(400).json({ message: 'transactionId and updateFields are required.' });
+  }
+  // Remove status if present in updateFields to prevent status change
+  if ('status' in updateFields) delete updateFields.status;
+  // Pass editor info for systemRemarks
+  const editorInfo = {
+    userName: user?.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : (user?.name || 'Unknown'),
+    userId: user?.memberId || user?.id || 'Unknown',
+  };
+  await paymentModel.saveEditedFeeDetails([
+    { transactionId, ...updateFields }
+  ], editorInfo);
+  res.status(200).json({ message: 'Fee details updated successfully.' });
+};
+
 module.exports = {
   addPayment,
   checkPendingPayments,
@@ -257,4 +298,6 @@ module.exports = {
   getPaymentRequestsController,
   getMemberChapterBalancesController,
   getMetaDataController,
+  moveApprovedToPendingController,
+  saveEditedFeeDetailsController, // <-- export new controller
 };

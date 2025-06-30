@@ -35,5 +35,10 @@ router.delete(
   authenticateToken,
   visitorController.deleteVisitor
 );
-
+router.get("/:visitorId", visitorController.getVisitorById);
+router.put(
+  "/updateVisitor/:visitorId",
+  authenticateToken,
+  visitorController.updateVisitor
+);
 module.exports = router;

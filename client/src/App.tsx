@@ -38,11 +38,15 @@ import AdminOrganisationsPage from './pages/Admin/organisation/AdminOrganisation
 import AdminChaptersTablePage from './pages/Admin/chapters/AdminChaptersTablePage';
 import AdminChapterLayout from './pages/Admin/chapters/AdminChapterLayout';
 import AdminChapterMemberList from './pages/Admin/chapters/AdminChapterMemberList';
+import AdminChapterDashboardPage from './pages/Admin/chapters/AdminChapterDashboardPage';
+import AdminChapterSettings from './pages/Admin/chapters/AdminChapterSettings';
 import AdminMembersTablePage from './pages/Admin/members/AdminMembersTablePage';
 import AcceptChapterPaymentPage from './pages/Member/FeeReceiver/AcceptChapterPaymentPage';
 import ChapterRoles from './components/Admin/Chapter/CreateNew/ChapterRoles/ChapterRoles';
 import MyLedger from './pages/Member/MyLedger';
-import DashboardPage from './pages/Admin/Dashboard/DashboardPage';
+import DashboardPage from './pages/Admin/Dashboard/DashboardPage'
+import TrackVisitor from './pages/Visitor/TrackVisitor';
+import SwitchChapter from './pages/Member/SwitchChapter';
 import AdminPackage from './pages/Admin/Package/AdminPackage';
 import { useData } from './context/DataContext';
 import Home from './pages/Home';
@@ -89,12 +93,20 @@ const routes = [
             element: <AdminChapterLayout />,
             children: [
               {
+                path: "dashboard",
+                element: <AdminChapterDashboardPage />,
+              },
+              {
                 path: 'member',
                 element: <AdminChapterMemberList />,
               },
               {
                 path: 'roles',
                 element: <ChapterRoles />,
+              },
+              {
+                path: 'settings',
+                element: <AdminChapterSettings />,
               },
             ],
           },
@@ -187,6 +199,10 @@ const routes = [
             path: 'accept-chapter-transaction',
             element: <AcceptChapterPaymentPage />,
           },
+          {
+            path: 'switch-chapter',
+            element: <SwitchChapter />,
+          },
         ],
       },
       {
@@ -197,6 +213,10 @@ const routes = [
             element: <VisitorList />,
           },
         ],
+      },
+      {
+        path: 'track-visitor/:visitorId',
+        element: <TrackVisitor/>,
       },
       {
         path: '*',

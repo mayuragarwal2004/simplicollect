@@ -3,24 +3,10 @@ import { Button } from '@/components/ui/button';
 import { axiosInstance } from '../../../utils/config';
 import { useData } from '../../../context/DataContext';
 import { toast } from 'react-toastify';
-import { ChevronsUpDown, Check } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from '@/components/ui/command';
 import { Skeleton } from '@/components/ui/skeleton';
 import { MemberLedgerReportTable } from './memberLedgerDataTable/MemberLedgerReportTable';
 import { MemberLedgerReportcolumn } from './memberLedgerDataTable/MemberLedgerReportcolumn';
+import ChooseMember from '../ChooseMemberPopoverCommand';
 
 const ReceiverDaywiseReport = () => {
   const { chapterData } = useData();
@@ -142,54 +128,11 @@ const ReceiverDaywiseReport = () => {
   return (
     <div className="flex flex-col gap-4 mt-5">
       <div className="flex items-center gap-4">
-        <Popover open={open} onOpenChange={setOpen}>
-          <PopoverTrigger asChild>
-            <Button
-              variant="outline"
-              role="combobox"
-              aria-expanded={open}
-              className="w-[250px] justify-between"
-            >
-              {selectedMember ? selectedMember.label : 'Select member...'}
-              <ChevronsUpDown className="opacity-50" />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-[250px] p-0">
-            <Command>
-              <CommandInput placeholder="Search member..." className="h-9" />
-
-              <CommandList>
-                <CommandEmpty>No member found.</CommandEmpty>
-                <CommandGroup>
-                  {filteredMembers.map((member) => (
-                    <CommandItem
-                      key={member.memberId}
-                      label={`${member.firstName} ${member.lastName}`}
-                      value={member.memberId.toString()}
-                      onSelect={() => {
-                        setSelectedMember({
-                          value: member.memberId,
-                          label: `${member.firstName} ${member.lastName}`,
-                        });
-                        setOpen(false);
-                      }}
-                    >
-                      {member.label}
-                      <Check
-                        className={cn(
-                          'ml-auto',
-                          selectedMember?.value === member.memberId
-                            ? 'opacity-100'
-                            : 'opacity-0',
-                        )}
-                      />
-                    </CommandItem>
-                  ))}
-                </CommandGroup>
-              </CommandList>
-            </Command>
-          </PopoverContent>
-        </Popover>
+        <ChooseMember
+          members={members}
+          selectedMember={selectedMember}
+          setSelectedMember={setSelectedMember}
+        />
         <Button onClick={handleExportData}>Export Data</Button>
       </div>
       {loading ? (

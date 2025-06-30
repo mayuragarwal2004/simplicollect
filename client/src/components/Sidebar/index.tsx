@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import SidebarLinkGroup from './SidebarLinkGroup';
 import Logo from '../../images/logo/logo.svg';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, Repeat } from 'lucide-react';
 import iconMap from './IconMap';
 import { useData } from '../../context/DataContext';
 import { axiosInstance } from '../../utils/config';
@@ -17,16 +17,17 @@ interface SidebarProps {
 const adminSidebarData = [
   {
     title: 'Organisations',
-    icon: 'Users',
+    icon: 'Users', // Good for organisations
     links: [
       {
         title: 'Organisations',
         to: '/admin/organisations',
       },
     ],
-  },{
+  },
+  {
     title: 'Chapters',
-    icon: 'Users',
+    icon: 'Layers', // More suitable for chapters
     links: [
       {
         title: 'Chapters',
@@ -36,7 +37,7 @@ const adminSidebarData = [
   },
   {
     title: 'Members',
-    icon: 'Users',
+    icon: 'User', // Single user for members
     links: [
       {
         title: 'Members',
@@ -46,7 +47,7 @@ const adminSidebarData = [
   },
   {
     title: 'Dashboard',
-    icon: 'Users',
+    icon: 'LayoutDashboard', // Dashboard icon
     links: [
       {
         title: 'Dashboard',
@@ -57,9 +58,7 @@ const adminSidebarData = [
 ];
 
 const Sidebar = ({ sidebarOpen, setSidebarOpen, admin }: SidebarProps) => {
-  const { chapterData } = useData();
-  console.log({admin});
-  const { isAuthenticated } = useAuth();
+  const { chapterData, allChaptersData } = useData();  
   const [rightsData, setRightsData] = useState<any>([]);
   const location = useLocation();
   const { pathname } = location;
@@ -256,6 +255,21 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen, admin }: SidebarProps) => {
                   );
                 }
               })}
+              {allChaptersData && allChaptersData.length > 1 && (
+                <>
+                  <hr />
+                  {/* Add Switch Chapter link */}
+                  <li>
+                    <NavLink
+                      to="/member/switch-chapter"
+                      className="group relative flex items-center gap-2.5 rounded-sm py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4"
+                    >
+                      <Repeat />
+                      Switch Chapter
+                    </NavLink>
+                  </li>
+                </>
+              )}
             </ul>
           </div>
         </nav>

@@ -1,4 +1,5 @@
 import formatDateDDMMYYYY from '@/utils/dateUtility';
+import { Button } from '@/components/ui/button';
 
 export const MembersColumns = [
   {
@@ -57,24 +58,39 @@ export const MembersColumns = [
     header: () => <div className>Actions</div>,
     cell: ({ row }) => (
       <div className="flex space-x-3">
-        <button
+        <Button
+          variant="secondary"
+                size="sm"
+               
           onClick={() => row.original.onView(row.original)}
-          className="text-primary hover:underline"
+          
         >
           View
-        </button>
-        <button
+        </Button>
+        <Button
+        variant="secondary"
+                size="sm"
           onClick={() => row.original.onEdit(row.original)}
-          className="text-primary hover:underline"
+           className="text-yellow-600 border-yellow-600 "
         >
           Edit
-        </button>
-        <button
-          onClick={() => row.original.onDelete(row.original.organisationId)}
-          className="text-danger hover:underline"
+        </Button>
+        <Button
+        variant="destructive"
+                size="sm"
+          onClick={() => row.original.onDelete(row.original.memberId)}
+         
         >
           Delete
-        </button>
+        </Button>
+        <Button
+          onClick={() => row.original.onChangePassword(row.original.memberId)}
+          variant="secondary"
+                size="sm"
+                className="text-green-600 border-yellow-600 "           
+        >
+          Change Password
+        </Button>
       </div>
     ),
     enableSorting: false,

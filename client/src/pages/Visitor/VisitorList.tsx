@@ -10,7 +10,7 @@ import FilterTags from '../../components/FilterTags';
 import ExportVisitorData from './VisitorListComponents/ExportVisitorData';
 import VisitorDelete from './VisitorListComponents/VisitorDelete';
 import useWindowDimensions from '../../utils/useWindowDimensions';
-
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import {
@@ -21,8 +21,20 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Calendar } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarIcon, RefreshCw, Download, Search, Eye, Trash2, IndianRupee } from 'lucide-react';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import {
+  CalendarIcon,
+  RefreshCw,
+  Download,
+  Search,
+  Eye,
+  Trash2,
+  IndianRupee,
+} from 'lucide-react';
 import { format } from 'date-fns';
 import {
   Table,
@@ -41,6 +53,7 @@ type ViewMode = 'meeting' | 'date' | 'dateRange';
 type DateRange = { from?: Date; to?: Date };
 
 const VisitorList: React.FC = () => {
+  const navigate = useNavigate();
   const [visitors, setVisitors] = useState<Visitor[]>([]);
   const [filteredVisitors, setFilteredVisitors] = useState<Visitor[]>([]);
   const { chapterData } = useData();
@@ -71,10 +84,12 @@ const VisitorList: React.FC = () => {
 
   const fetchMeetings = async () => {
     try {
-      const response = await axiosInstance(`/api/meetings/${chapterData?.chapterId}`);
+      const response = await axiosInstance(
+        `/api/meetings/${chapterData?.chapterId}`,
+      );
       setMeetings(response.data);
-      console.log("meetings",response.data)
-      } catch (error) {
+      console.log('meetings', response.data);
+    } catch (error) {
       console.error('Error fetching meetings:', error);
     }
   };
@@ -84,7 +99,11 @@ const VisitorList: React.FC = () => {
       let url = `/api/visitor/visitorList/${chapterData?.chapterId}`;
       const params = new URLSearchParams();
 
-      if (viewMode === 'meeting' && selectedMeeting && selectedMeeting !== 'All') {
+      if (
+        viewMode === 'meeting' &&
+        selectedMeeting &&
+        selectedMeeting !== 'All'
+      ) {
         params.append('meetingId', selectedMeeting);
       } else if (viewMode === 'date' && selectedDate) {
         params.append('date', selectedDate.toISOString().split('T')[0]);
@@ -96,7 +115,9 @@ const VisitorList: React.FC = () => {
       params.append('sortBy', 'chapterVisitDate');
       params.append('sortOrder', 'desc');
 
-      const response = await axiosInstance(url + (params.toString() ? `?${params.toString()}` : ''));
+      const response = await axiosInstance(
+        url + (params.toString() ? `?${params.toString()}` : ''),
+      );
       setVisitors(response.data);
     } catch (error) {
       console.error('Fetching visitors failed:', error);
@@ -115,7 +136,7 @@ const VisitorList: React.FC = () => {
   useEffect(() => {
     const filterVisitors = () => {
       let results = [...visitors];
-      
+
       // Sort by date (newest first)
       results.sort((a, b) => {
         const dateA = new Date(a.chapterVisitDate as string | number).getTime();
@@ -125,8 +146,10 @@ const VisitorList: React.FC = () => {
 
       // Apply view mode filters
       if (viewMode === 'date' && selectedDate) {
-        results = results.filter(visitor => {
-          const visitDate = new Date(visitor.chapterVisitDate as string | number);
+        results = results.filter((visitor) => {
+          const visitDate = new Date(
+            visitor.chapterVisitDate as string | number,
+          );
           return (
             visitDate.getFullYear() === selectedDate.getFullYear() &&
             visitDate.getMonth() === selectedDate.getMonth() &&
@@ -134,21 +157,32 @@ const VisitorList: React.FC = () => {
           );
         });
       } else if (viewMode === 'dateRange' && dateRange.from && dateRange.to) {
-        results = results.filter(visitor => {
-          const visitDate = new Date(visitor.chapterVisitDate as string | number);
+        results = results.filter((visitor) => {
+          const visitDate = new Date(
+            visitor.chapterVisitDate as string | number,
+          );
           return visitDate >= dateRange.from! && visitDate <= dateRange.to!;
         });
-      } else if (viewMode === 'meeting' && selectedMeeting && selectedMeeting !== 'All') {
-        results = results.filter(visitor => visitor.meetingId === selectedMeeting);
+      } else if (
+        viewMode === 'meeting' &&
+        selectedMeeting &&
+        selectedMeeting !== 'All'
+      ) {
+        results = results.filter(
+          (visitor) => visitor.meetingId === selectedMeeting,
+        );
       }
 
       // Apply search filter
       if (searchTerm) {
         const term = searchTerm.toLowerCase();
-        results = results.filter(visitor =>
-          `${visitor.firstName} ${visitor.lastName}`.toLowerCase().includes(term) ||
-          (visitor.email + '').toLowerCase().includes(term) ||
-          visitor.mobileNumber.toString().includes(searchTerm)
+        results = results.filter(
+          (visitor) =>
+            `${visitor.firstName} ${visitor.lastName}`
+              .toLowerCase()
+              .includes(term) ||
+            (visitor.email + '').toLowerCase().includes(term) ||
+            visitor.mobileNumber.toString().includes(searchTerm),
         );
       }
 
@@ -156,33 +190,42 @@ const VisitorList: React.FC = () => {
       if (activeFilters.length > 0) {
         if (activeFilters.includes('Today')) {
           const today = new Date();
-          results = results.filter(visitor =>
-            new Date(visitor.chapterVisitDate as string | number).toDateString() === today.toDateString()
+          results = results.filter(
+            (visitor) =>
+              new Date(
+                visitor.chapterVisitDate as string | number,
+              ).toDateString() === today.toDateString(),
           );
         }
 
         if (activeFilters.includes('Paid')) {
-          results = results.filter(visitor => visitor.paymentAcceptedMemberId);
+          results = results.filter(
+            (visitor) => visitor.paymentAcceptedMemberId,
+          );
         }
 
         if (activeFilters.includes('Unpaid')) {
-          results = results.filter(visitor => !visitor.paymentAcceptedMemberId);
+          results = results.filter(
+            (visitor) => !visitor.paymentAcceptedMemberId,
+          );
         }
 
         if (activeFilters.includes('6 Months')) {
           const sixMonthsAgo = new Date();
           sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
-          results = results.filter(visitor =>
-            new Date(visitor.chapterVisitDate as string | number) > sixMonthsAgo
+          results = results.filter(
+            (visitor) =>
+              new Date(visitor.chapterVisitDate as string | number) >
+              sixMonthsAgo,
           );
         }
 
         if (activeFilters.includes('Feedback Filled')) {
-          results = results.filter(visitor => visitor.feedbackScore);
+          results = results.filter((visitor) => visitor.feedbackScore);
         }
 
         if (activeFilters.includes('Feedback Not Filled')) {
-          results = results.filter(visitor => !visitor.feedbackScore);
+          results = results.filter((visitor) => !visitor.feedbackScore);
         }
       }
 
@@ -190,12 +233,23 @@ const VisitorList: React.FC = () => {
     };
 
     setFilteredVisitors(filterVisitors());
-  }, [visitors, searchTerm, activeFilters, viewMode, selectedDate, dateRange, selectedMeeting]);
+  }, [
+    visitors,
+    searchTerm,
+    activeFilters,
+    viewMode,
+    selectedDate,
+    dateRange,
+    selectedMeeting,
+  ]);
 
   useEffect(() => {
-    const todayVisitors = visitors.filter(visitor => {
+    const todayVisitors = visitors.filter((visitor) => {
       const today = new Date();
-      return new Date(visitor.chapterVisitDate as string | number).toDateString() === today.toDateString();
+      return (
+        new Date(visitor.chapterVisitDate as string | number).toDateString() ===
+        today.toDateString()
+      );
     });
     setActiveFilters(todayVisitors.length > 0 ? ['Today'] : []);
   }, [visitors]);
@@ -280,8 +334,12 @@ const VisitorList: React.FC = () => {
                 <SelectContent>
                   <SelectItem value="All">All Meetings</SelectItem>
                   {meetings.map((meeting) => (
-                    <SelectItem key={meeting.meetingId} value={meeting.meetingId}>
-                      {meeting.meetingName} - {format(new Date(meeting.meetingDate), "MMM dd, yyyy")}
+                    <SelectItem
+                      key={meeting.meetingId}
+                      value={meeting.meetingId}
+                    >
+                      {meeting.meetingName} -{' '}
+                      {format(new Date(meeting.meetingDate), 'MMM dd, yyyy')}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -301,7 +359,7 @@ const VisitorList: React.FC = () => {
                     >
                       <CalendarIcon className="mr-2 h-4 w-4" />
                       {selectedDate ? (
-                        format(selectedDate, "MMM dd, yyyy")
+                        format(selectedDate, 'MMM dd, yyyy')
                       ) : (
                         <span>Pick a date</span>
                       )}
@@ -343,11 +401,11 @@ const VisitorList: React.FC = () => {
                       {dateRange.from ? (
                         dateRange.to ? (
                           <>
-                            {format(dateRange.from, "MMM dd, yyyy")} -{" "}
-                            {format(dateRange.to, "MMM dd, yyyy")}
+                            {format(dateRange.from, 'MMM dd, yyyy')} -{' '}
+                            {format(dateRange.to, 'MMM dd, yyyy')}
                           </>
                         ) : (
-                          format(dateRange.from, "MMM dd, yyyy")
+                          format(dateRange.from, 'MMM dd, yyyy')
                         )
                       ) : (
                         <span>Pick a date range</span>
@@ -375,7 +433,9 @@ const VisitorList: React.FC = () => {
               </div>
               {dateRange.from && dateRange.to && (
                 <p className="text-sm text-muted-foreground mt-1">
-                  Showing visitors between {format(dateRange.from, "MMM dd, yyyy")} and {format(dateRange.to, "MMM dd, yyyy")}
+                  Showing visitors between{' '}
+                  {format(dateRange.from, 'MMM dd, yyyy')} and{' '}
+                  {format(dateRange.to, 'MMM dd, yyyy')}
                 </p>
               )}
             </div>
@@ -413,15 +473,18 @@ const VisitorList: React.FC = () => {
 
         <div className="mb-4">
           <p className="text-sm font-medium">
-            Total visitors: <span className="font-bold">{filteredVisitors.length}</span>
+            Total visitors:{' '}
+            <span className="font-bold">{filteredVisitors.length}</span>
             {viewMode === 'date' && selectedDate && (
               <span className="text-muted-foreground">
-                {' '}(filtered by {format(selectedDate, "MMM dd, yyyy")})
+                {' '}
+                (filtered by {format(selectedDate, 'MMM dd, yyyy')})
               </span>
             )}
             {viewMode === 'dateRange' && dateRange.from && dateRange.to && (
               <span className="text-muted-foreground">
-                {' '}(filtered by date range)
+                {' '}
+                (filtered by date range)
               </span>
             )}
           </p>
@@ -443,7 +506,10 @@ const VisitorList: React.FC = () => {
                   <TableCell colSpan={4} className="text-center py-5 h-24">
                     <div className="flex flex-col items-center gap-2">
                       <p>No visitors found</p>
-                      <Link to="/visitor/shareform" className="text-primary text-sm">
+                      <Link
+                        to="/visitor/shareform"
+                        className="text-primary text-sm"
+                      >
                         Share the link to invite visitors
                       </Link>
                     </div>
@@ -461,12 +527,19 @@ const VisitorList: React.FC = () => {
                       </div>
                     </TableCell>
                     <TableCell>
-                      {format(new Date(visitor.chapterVisitDate as string | number), "MMM dd, yyyy h:mm a")}
+                      {format(
+                        new Date(visitor.chapterVisitDate as string | number),
+                        'MMM dd, yyyy h:mm a',
+                      )}
                     </TableCell>
                     <TableCell>
                       <div className="flex gap-2">
                         <Badge
-                          variant={visitor.paymentAcceptedMemberId ? "default" : "destructive"}
+                          variant={
+                            visitor.paymentAcceptedMemberId
+                              ? 'default'
+                              : 'destructive'
+                          }
                         >
                           {visitor.paymentAcceptedMemberId ? 'Paid' : 'Unpaid'}
                         </Badge>
@@ -479,6 +552,13 @@ const VisitorList: React.FC = () => {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
+                        <Button
+                          onClick={() =>
+                            navigate(`/track-visitor/${visitor.visitorId}`)
+                          }
+                        >
+                          Track
+                        </Button>
                         <Button
                           variant="ghost"
                           size="icon"
@@ -540,11 +620,18 @@ const VisitorList: React.FC = () => {
                         {visitor.firstName} {visitor.lastName}
                       </h4>
                       <p className="text-sm text-muted-foreground">
-                        {format(new Date(visitor.chapterVisitDate as string | number), "MMM dd, yyyy h:mm a")}
+                        {format(
+                          new Date(visitor.chapterVisitDate as string | number),
+                          'MMM dd, yyyy h:mm a',
+                        )}
                       </p>
                       <div className="flex gap-2 mt-2">
                         <Badge
-                          variant={visitor.paymentAcceptedMemberId ? "default" : "destructive"}
+                          variant={
+                            visitor.paymentAcceptedMemberId
+                              ? 'default'
+                              : 'destructive'
+                          }
                           className="text-xs"
                         >
                           {visitor.paymentAcceptedMemberId ? 'Paid' : 'Unpaid'}

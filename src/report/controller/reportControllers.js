@@ -13,47 +13,24 @@ const {
 const {
   packageAmountCalculations,
 } = require("../../utility/packageAmountCalculation");
+const {
+  extractMemberDueSummaryData,
+  memberDueSummaryToExcel,
+} = require("../service/memberDueSummaryService");
 
 const getPackageSummaryController = async (req, res) => {
-  const { rows = 5, page = 0 } = req.query;
+  const { rows = 5, page = 0, termId } = req.query;
   const { chapterId } = req.params;
+  if (!termId) {
+    return res.status(400).json({ error: "termId is required." });
+  }
   try {
-    const { data: chapterMembers, totalRecords } = await memberModel.getMembers(
+    const { data, totalRecords } = await extractMemberDueSummaryData(
       chapterId,
-      "",
-      page,
-      rows
+      termId,
+      { page, rows }
     );
-    console.log({ chapterMembers });
-
-    for (let i = 0; i < chapterMembers.length; i++) {
-      console.log(`Processing member ${i + 1}/${chapterMembers.length}`);
-
-      const member = chapterMembers[i];
-      const packageData = await packageModel.getPackagesByChapterId(
-        chapterId,
-        member.memberId
-      );
-      const meetingData =
-        await meetingModel.getAllMeetingsUsingMemberIdAndChapterId(
-          member.memberId,
-          chapterId
-        );
-      //   chapterMembers[i].packageData = packageData;
-      for (let j = 0; j < packageData.length; j++) {
-        const package = packageData[j];
-
-        const calculatedResult = packageAmountCalculations(
-          new Date(),
-          package,
-          meetingData,
-          0
-        );
-        packageData[j].calculatedResult = calculatedResult;
-      }
-      chapterMembers[i].packageData = packageData;
-    }
-    res.json({ data: chapterMembers, totalRecords });
+    res.json({ data, totalRecords });
   } catch (error) {
     console.log(error);
     res.status(500).json({ error: error.message });
@@ -390,6 +367,36 @@ const getMemberLedgerJSONController = async (req, res) => {
   }
 };
 
+// Export all members report to Excel (all package parents, each as a sheet)
+const exportAllMembersReportsExcelController = async (req, res) => {
+  const { chapterId } = req.params;
+  const { termId } = req.query;
+  if (!termId) {
+    return res.status(400).json({ error: "termId is required." });
+  }
+  try {
+    const { data } = await extractMemberDueSummaryData(
+      chapterId,
+      termId,
+      { page: 0, rows: 10000 }
+    );
+    const workbook = await memberDueSummaryToExcel(data, new Date());
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    );
+    res.setHeader(
+      "Content-Disposition",
+      "attachment; filename=AllMembersReports.xlsx"
+    );
+    await workbook.xlsx.write(res);
+    res.end();
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
 module.exports = {
   getPackageSummaryController,
   getAllMemberTransactionsJSONReportController,
@@ -399,4 +406,5 @@ module.exports = {
   getReceiverDaywiseJsonReportController,
   getMemberLedgerController,
   getMemberLedgerJSONController,
+  exportAllMembersReportsExcelController,
 };

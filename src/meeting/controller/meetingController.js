@@ -34,6 +34,18 @@ const getAllMeetingsByChapterId = async (req, res) => {
   }
 };
 
+// Fetch meetings by chapterId and termId
+const getAllMeetingsByChapterAndTermController = async (req, res) => {
+  const { chapterId, termId } = req.params;
+  try {
+    const meetings = await Meeting.getAllMeetingsByChapterAndTerm(chapterId, termId);
+    res.json(meetings);
+  } catch (error) {
+    console.error("Error fetching meetings by chapter and term:", error);
+    res.status(500).json({ error: "Failed to fetch meetings" });
+  }
+};
+
 const updatePaymentStatus = async (req, res) => {
   const { meetingId } = req.params;
   try {
@@ -49,4 +61,5 @@ module.exports = {
   getAllMeetings,
   updatePaymentStatus,
   getAllMeetingsByChapterId,
+  getAllMeetingsByChapterAndTermController,
 };

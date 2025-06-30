@@ -36,18 +36,18 @@ const packageAmountCalculations = (
     };
   }
 
-  if (
-    pkg.packagePayableStartDate &&
-    calculationDate < new Date(pkg.packagePayableStartDate)
-  ) {
-    return {
-      message: 'Package is not open to payable yet',
-      totalAmount: null,
-      penaltyAmount: null,
-      discountAmount: null,
-      isDisabled: true,
-    };
-  }
+  // if (
+  //   pkg.packagePayableStartDate &&
+  //   calculationDate < new Date(pkg.packagePayableStartDate)
+  // ) {
+  //   return {
+  //     message: 'Package is not open to payable yet',
+  //     totalAmount: null,
+  //     penaltyAmount: null,
+  //     discountAmount: null,
+  //     isDisabled: true,
+  //   };
+  // }
 
   // Disable package if allowAfterEndDate is false and calculationDate is after payableEndDate
   if (!pkg.allowAfterEndDate && calculationDate > payableEndDate) {

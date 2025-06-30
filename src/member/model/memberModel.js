@@ -23,23 +23,35 @@ const addMember = async (memberData) => {
 const getMembers = async (chapterId, searchQuery = "", page = 0, rows = 10) => {
   const offset = parseInt(page, 10) * parseInt(rows, 10);
 
-  let baseQuery = db("member_chapter_mapping as mmm")
-    .where("mmm.chapterId", chapterId)
-    .join("members as m", "mmm.memberId", "m.memberId")
-    .joinRaw("JOIN roles as r ON FIND_IN_SET(r.roleId, mmm.roleIds) > 0");
+  // Helper to build the base query with optional search
+  const buildBaseQuery = () => {
+    let query = db("member_chapter_mapping as mmm")
+      .where("mmm.chapterId", chapterId)
+      .join("members as m", "mmm.memberId", "m.memberId")
+      .where("mmm.status", "joined")
+      .leftJoin("roles as r", function () {
+        this.on(db.raw("FIND_IN_SET(r.roleId, mmm.roleIds) > 0"));
+      });
 
-  if (searchQuery) {
-    baseQuery = baseQuery.where((qb) => {
-      qb.where("m.firstName", "like", `%${searchQuery}%`)
-        .orWhere("m.lastName", "like", `%${searchQuery}%`)
-        .orWhere(db.raw("CONCAT(m.firstName, ' ', m.lastName)"), "like", `%${searchQuery}%`)
-        .orWhere("m.email", "like", `%${searchQuery}%`)
-        .orWhere("m.phoneNumber", "like", `%${searchQuery}%`)
-        .orWhere("r.roleName", "like", `%${searchQuery}%`);
-    });
-  }
+    if (searchQuery) {
+      query = query.where((qb) => {
+        qb.where("m.firstName", "like", `%${searchQuery}%`)
+          .orWhere("m.lastName", "like", `%${searchQuery}%`)
+          .orWhere(
+            db.raw("CONCAT(m.firstName, ' ', m.lastName)"),
+            "like",
+            `%${searchQuery}%`
+          )
+          .orWhere("m.email", "like", `%${searchQuery}%`)
+          .orWhere("m.phoneNumber", "like", `%${searchQuery}%`)
+          .orWhere("r.roleName", "like", `%${searchQuery}%`);
+      });
+    }
+    return query;
+  };
 
-  const data = await baseQuery
+  // Data query
+  const data = await buildBaseQuery()
     .select(
       "m.memberId",
       "m.firstName",
@@ -47,35 +59,25 @@ const getMembers = async (chapterId, searchQuery = "", page = 0, rows = 10) => {
       "m.phoneNumber",
       "m.email",
       "mmm.*",
-      db.raw("GROUP_CONCAT(DISTINCT r.roleName ORDER BY r.roleName ASC SEPARATOR ', ') as roleNames"),
+      db.raw(
+        `CASE 
+          WHEN mmm.roleIds IS NULL OR mmm.roleIds = '' 
+          THEN NULL 
+          ELSE GROUP_CONCAT(DISTINCT r.roleName ORDER BY r.roleName ASC SEPARATOR ', ') 
+        END as roleNames`
+      ),
       db.raw("CONCAT(m.firstName, ' ', m.lastName) as fullName")
     )
-    .groupBy("m.memberId") // Ensure one row per member
+    .groupBy("m.memberId")
     .limit(rows)
     .offset(offset);
 
-  // Fetch total count (without pagination)
-  const totalRecordsQuery = db("member_chapter_mapping as mmm")
-    .where("mmm.chapterId", chapterId)
-    .join("members as m", "mmm.memberId", "m.memberId")
-    .joinRaw("JOIN roles as r ON FIND_IN_SET(r.roleId, mmm.roleIds) > 0");
-
-  if (searchQuery) {
-    totalRecordsQuery.where((qb) => {
-      qb.where("m.firstName", "like", `%${searchQuery}%`)
-        .orWhere("m.lastName", "like", `%${searchQuery}%`)
-        .orWhere(db.raw("CONCAT(m.firstName, ' ', m.lastName)"), "like", `%${searchQuery}%`)
-        .orWhere("m.email", "like", `%${searchQuery}%`)
-        .orWhere("m.phoneNumber", "like", `%${searchQuery}%`)
-        .orWhere("r.roleName", "like", `%${searchQuery}%`);
-    });
-  }
-
-  const totalRecords = await totalRecordsQuery
+  // Total count query
+  const totalRecordsResult = await buildBaseQuery()
     .countDistinct("m.memberId as totalRecords")
     .first();
 
-  return { data, totalRecords: totalRecords.totalRecords };
+  return { data, totalRecords: totalRecordsResult.totalRecords };
 };
 
 const getAllMembers = async (chapterId) => {
@@ -91,10 +93,133 @@ const getAllMembers = async (chapterId) => {
       "m.email",
       "mmm.*",
       db.raw("CONCAT(m.firstName, ' ', m.lastName) as label"),
-      db.raw("GROUP_CONCAT(DISTINCT r.roleName ORDER BY r.roleName ASC SEPARATOR ', ') as roleNames")
+      db.raw(
+        "GROUP_CONCAT(DISTINCT r.roleName ORDER BY r.roleName ASC SEPARATOR ', ') as roleNames"
+      )
     )
+    .where("mmm.status", "joined")
     .groupBy("m.memberId")
     .orderBy("label", "asc");
+};
+
+const updateMemberBalance = async (member, chapterId, balance, trx = null) => {
+  let query = db("member_chapter_mapping")
+    .where("memberId", member.memberId)
+    .where("chapterId", chapterId)
+    .update({ balance });
+  if (trx) query = query.transacting(trx);
+  await query;
+  let memberQuery = db("members").where("memberId", member.memberId).first();
+  if (trx) memberQuery = memberQuery.transacting(trx);
+  return memberQuery;
+};
+
+const updateMemberRoleModel = async (member, chapter, roleIds, trx = null) => {
+  console.log("Updating member role model:", {
+    memberId: member.memberId,
+    chapterId: chapter.chapterId,
+    roleIds,
+  });
+
+  let query = db("member_chapter_mapping")
+    .where("memberId", member.memberId)
+    .where("chapterId", chapter.chapterId)
+    .update({ roleIds: roleIds.join(",") });
+  if (trx) query = query.transacting(trx);
+  await query;
+  return db("member_chapter_mapping")
+    .where("memberId", member.memberId)
+    .where("chapterId", chapter.chapterId)
+    .first();
+};
+
+const removeMemberFromChapter = async (memberId, chapterId, leaveDate) => {
+  return db("member_chapter_mapping")
+    .where({ memberId, chapterId })
+    .update({ status: "left", leaveDate });
+};
+
+// Search members by email, phone, or name (across all chapters)
+const searchMembers = async (query) => {
+  return db("members")
+    .where(function () {
+      this.where("email", "like", `%${query}%`)
+        .orWhere("phoneNumber", "like", `%${query}%`)
+        .orWhere("firstName", "like", `%${query}%`)
+        .orWhere("lastName", "like", `%${query}%`)
+        .orWhere(db.raw("CONCAT(firstName, ' ', lastName) like ?", [`%${query}%`]));
+    })
+    .select(
+      "memberId",
+      "firstName",
+      "lastName",
+      "email",
+      "phoneNumber"
+    );
+};
+
+// Find member by phone number
+const findMemberByPhone = async (phoneNumber) => {
+  return db("members").where("phoneNumber", phoneNumber).first();
+};
+
+// Get member-chapter mapping
+const getMemberChapterMapping = async (memberId, chapterId) => {
+  return db("member_chapter_mapping")
+    .where({ memberId, chapterId })
+    .first();
+};
+
+// Add or update member-chapter mapping
+const addOrUpdateMemberChapterMapping = async (memberId, chapterId, joinedDate) => {
+  const existing = await db("member_chapter_mapping")
+    .where({ memberId, chapterId })
+    .first();
+  if (existing) {
+    // If status is left, update to joined
+    if (existing.status === "left") {
+      await db("member_chapter_mapping")
+        .where({ memberId, chapterId })
+        .update({ status: "joined", joinedDate });
+      return "rejoined";
+    }
+    return existing.status === "joined" ? "already_joined" : "exists";
+  } else {
+    await db("member_chapter_mapping").insert({
+      memberId,
+      chapterId,
+      status: "joined",
+      joinedDate,
+    });
+    return "added";
+  }
+};
+
+// Add or update member-chapter mapping with roleIds
+const addOrUpdateMemberChapterMappingWithRoles = async (memberId, chapterId, joinedDate, roleIds) => {
+  const existing = await db("member_chapter_mapping")
+    .where({ memberId, chapterId })
+    .first();
+  const roleIdsStr = Array.isArray(roleIds) ? roleIds.join(",") : roleIds;
+  if (existing) {
+    // If status is left, update to joined and set roleIds
+    if (existing.status === "left") {
+      await db("member_chapter_mapping")
+        .where({ memberId, chapterId })
+        .update({ status: "joined", joinedDate, roleIds: roleIdsStr });
+      return "rejoined";
+    }
+    return existing.status === "joined" ? "already_joined" : "exists";
+  } else {
+    await db("member_chapter_mapping").insert({
+      memberId,
+      chapterId,
+      status: "joined",
+      joinedDate,
+      roleIds: roleIdsStr,
+    });
+    return "added";
+  }
 };
 
 module.exports = {
@@ -103,4 +228,12 @@ module.exports = {
   addMember,
   getMembers,
   getAllMembers,
+  updateMemberBalance,
+  updateMemberRoleModel,
+  removeMemberFromChapter,
+  searchMembers,
+  findMemberByPhone,
+  getMemberChapterMapping,
+  addOrUpdateMemberChapterMapping,
+  addOrUpdateMemberChapterMappingWithRoles,
 };

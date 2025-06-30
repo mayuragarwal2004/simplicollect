@@ -46,8 +46,24 @@ const getAllChaptersController = async (req, res) => {
   }
 }
 
+const getRolesByChapterSlugController = async (req, res) => {
+  const { chapterSlug } = req.params;
+  try {
+    const roles = await chapterModel.getRolesByChapterSlug(chapterSlug);
+    if (roles.length > 0) {
+      res.json(roles);
+    } else {
+      res.status(404).json({ message: "No roles found for this chapter" });
+    }
+  } catch (error) {
+    console.error("Error fetching roles:", error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
 module.exports = {
   getChapterById,
   updateChapterDetails,
   getAllChaptersController,
+  getRolesByChapterSlugController,
 };

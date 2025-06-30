@@ -19,6 +19,8 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { createQueryString } from '@/utils/helper'
 import { usePagination } from '../../../hooks/usePagination.jsx'
 import { MemberListPagination } from './memberlist-pagination.jsx'
+import useWindowDimensions from '@/utils/useWindowDimensions'
+import { MemberListCardView } from './MemberListCardView'
 
 export function MemberListTable({
  columns,
@@ -33,6 +35,7 @@ export function MemberListTable({
  const navigate = useNavigate()
  const { rows, onPaginationChange, page, pagination } = usePagination()
  const location = useLocation()
+ const { width } = useWindowDimensions()
 
  const updateUrlQuery = () => {
   const searchParams = new URLSearchParams(location.search)
@@ -72,6 +75,17 @@ export function MemberListTable({
   }
   return child
  })
+
+ // Switch to card view for mobile (width < 768px)
+ if (width < 768) {
+  return (
+   <div className="space-y-4">
+    {childrenWithProps}
+    <MemberListCardView rows={table.getRowModel().rows} columns={columns} />
+    <MemberListPagination table={table} totalRecord={totalRecord} />
+   </div>
+  )
+ }
 
  return (
   <div className="space-y-4">

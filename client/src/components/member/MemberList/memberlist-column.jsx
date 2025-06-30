@@ -1,7 +1,7 @@
-import {Button} from '@/components/ui/button';
+import { Button } from '@/components/ui/button';
 import { ArrowUpDown } from 'lucide-react';
 
-export const MemberListColumns = [
+export const MemberListColumns = ({ onChangeRole, onDueWaiveOff, onRemove }) => [
   {
     id: 'srno',
     header: () => <p className>Sr. No.</p>,
@@ -54,6 +54,37 @@ export const MemberListColumns = [
     header: 'Due',
     cell: ({ row }) => <p>{row.original.balance}</p>,
     enableSorting: true,
+    enableHiding: false,
+  },
+  {
+    id: 'actions',
+    header: 'Actions',
+    cell: ({ row }) => (
+      <div className="flex items-center gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => onChangeRole(row.original)}
+        >
+          Change Role
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => onDueWaiveOff(row.original)}
+        >
+          Due Waive Off
+        </Button>
+        <Button
+          variant="destructive"
+          size="sm"
+          onClick={() => onRemove(row.original)}
+        >
+          Remove
+        </Button>
+      </div>
+    ),
+    enableSorting: false,
     enableHiding: false,
   },
 ];

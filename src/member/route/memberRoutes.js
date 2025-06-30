@@ -14,5 +14,15 @@ router.post("/memberList", memberController.memberList);
 // get all members
 router.get("/all", memberController.getAllMembersListController);
 
+// Search members (all, by email/phone/name)
+router.get("/search", memberController.searchMembersController);
+
+// member list actions
+router.post("/balance_update", memberController.updateMemberBalanceController);
+
+router.post("/role_update", memberController.updateMemberRoleController);
+
+// remove member
+router.post("/remove", memberController.removeMemberController);
 
 module.exports = router;

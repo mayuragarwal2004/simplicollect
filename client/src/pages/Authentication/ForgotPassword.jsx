@@ -1,11 +1,12 @@
 import React, { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import Breadcrumb from "../../components/Breadcrumbs/BreadcrumbOriginal";
 import LogoDark from "../../images/logo/logo-dark.svg";
 import Logo from "../../images/logo/logo.svg";
 
 const ForgotPassword = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -49,7 +50,8 @@ const ForgotPassword = () => {
       });
       const data = await response.json();
       if (response.ok) {
-        navigate("/signin");
+        // After reset, go to sign in and preserve 'from'
+        navigate("/auth/signin", { state: { from: location.state?.from } });
       } else {
         setError(data.message);
       }

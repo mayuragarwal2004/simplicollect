@@ -3,7 +3,10 @@ const memberModel = require("../../member/model/memberModel");
 const packageModel = require("../../package/model/packageModel");
 const meetingModel = require("../../meeting/model/meetingModel");
 const paymentModel = require("../../payment/model/paymentModel");
-const { highlightTableDataRow, highlightTableHeadingRow } = require("../../utility/excelExport");
+const {
+  highlightTableDataRow,
+  highlightTableHeadingRow,
+} = require("../../utility/excelExport");
 
 const getReceiverDaywiseReportService = async (
   worksheet,
@@ -308,7 +311,7 @@ const getReceiverDaywiseReportService = async (
 
 const getReceiverDaywiseJsonReportService = async (chapterId, date) => {
   const transactions = await getDateWiseTransactions(date, chapterId);
-  
+
   // Group transactions by receiver and payment type
   const result = [];
   let currentGroup = null;
@@ -322,71 +325,87 @@ const getReceiverDaywiseJsonReportService = async (chapterId, date) => {
       receiverFee: 0,
       platformFee: 0,
       penaltyAmount: 0,
-      discountAmount: 0
+      discountAmount: 0,
     },
     online: {
       amountPaid: 0,
       receiverFee: 0,
       platformFee: 0,
       penaltyAmount: 0,
-      discountAmount: 0
+      discountAmount: 0,
     },
     grand: {
       amountPaid: 0,
       receiverFee: 0,
       platformFee: 0,
       penaltyAmount: 0,
-      discountAmount: 0
-    }
+      discountAmount: 0,
+    },
   };
 
   transactions.forEach((transaction, index) => {
     // Check if we need a new group
-    if (lastReceiverId !== transaction.paymentReceivedById || 
-        lastPaymentType !== transaction.paymentType) {
-      
+    if (
+      lastReceiverId !== transaction.paymentReceivedById ||
+      lastPaymentType !== transaction.paymentType
+    ) {
       // Push previous group if exists
       if (currentGroup) {
         // Add subtotals to the group
         currentGroup.totals = {
-          amountPaid: currentGroup.data.reduce((sum, t) => sum + t.paidAmount, 0),
-          receiverFee: currentGroup.data.reduce((sum, t) => sum + t.receiverFee, 0),
-          platformFee: currentGroup.data.reduce((sum, t) => sum + t.platformFee, 0),
-          penaltyAmount: currentGroup.data.reduce((sum, t) => sum + t.penaltyAmount, 0),
-          discountAmount: currentGroup.data.reduce((sum, t) => sum + t.discountAmount, 0)
+          amountPaid: currentGroup.data.reduce(
+            (sum, t) => sum + t.paidAmount,
+            0
+          ),
+          receiverFee: currentGroup.data.reduce(
+            (sum, t) => sum + t.receiverFee,
+            0
+          ),
+          platformFee: currentGroup.data.reduce(
+            (sum, t) => sum + t.platformFee,
+            0
+          ),
+          penaltyAmount: currentGroup.data.reduce(
+            (sum, t) => sum + t.penaltyAmount,
+            0
+          ),
+          discountAmount: currentGroup.data.reduce(
+            (sum, t) => sum + t.discountAmount,
+            0
+          ),
         };
         result.push(currentGroup);
       }
-      
+
       // Create new group
       currentGroup = {
         receiverName: transaction.paymentReceivedByName,
         paymentReceivedById: transaction.paymentReceivedById,
         paymentType: transaction.paymentType,
-        data: []
+        data: [],
       };
-      
+
       lastReceiverId = transaction.paymentReceivedById;
       lastPaymentType = transaction.paymentType;
     }
-    
+
     // Add transaction to current group
     const transactionData = {
       membername: `${transaction.firstName} ${transaction.lastName}`,
       memberid: transaction.memberId,
       paymentType: transaction.paymentType,
-      paidAmount: transaction.paidAmount, 
+      paidAmount: transaction.paidAmount,
       receiverFee: transaction.receiverFee,
       platformFee: transaction.platformFee,
       penaltyAmount: transaction.penaltyAmount,
       discountAmount: transaction.discountAmount,
-      status: transaction.status
+      status: transaction.status,
     };
-    
+
     currentGroup.data.push(transactionData);
-    
+
     // Update totals
-    if (transaction.paymentType === 'cash') {
+    if (transaction.paymentType === "cash") {
       totals.cash.amountPaid += transaction.paidAmount;
       totals.cash.receiverFee += transaction.receiverFee;
       totals.cash.platformFee += transaction.platformFee;
@@ -399,26 +418,32 @@ const getReceiverDaywiseJsonReportService = async (chapterId, date) => {
       totals.online.penaltyAmount += transaction.penaltyAmount;
       totals.online.discountAmount += transaction.discountAmount;
     }
-    
+
     totals.grand.amountPaid += transaction.paidAmount;
     totals.grand.receiverFee += transaction.receiverFee;
     totals.grand.platformFee += transaction.platformFee;
     totals.grand.penaltyAmount += transaction.penaltyAmount;
     totals.grand.discountAmount += transaction.discountAmount;
   });
-  
+
   // Push the last group
   if (currentGroup) {
     currentGroup.totals = {
       amountPaid: currentGroup.data.reduce((sum, t) => sum + t.paidAmount, 0),
       receiverFee: currentGroup.data.reduce((sum, t) => sum + t.receiverFee, 0),
       platformFee: currentGroup.data.reduce((sum, t) => sum + t.platformFee, 0),
-      penaltyAmount: currentGroup.data.reduce((sum, t) => sum + t.penaltyAmount, 0),
-      discountAmount: currentGroup.data.reduce((sum, t) => sum + t.discountAmount, 0)
+      penaltyAmount: currentGroup.data.reduce(
+        (sum, t) => sum + t.penaltyAmount,
+        0
+      ),
+      discountAmount: currentGroup.data.reduce(
+        (sum, t) => sum + t.discountAmount,
+        0
+      ),
     };
     result.push(currentGroup);
   }
-  
+
   return {
     date: `${date.getDate()}-${date.getMonth() + 1}-${date.getFullYear()}`,
     transactionCount: transactions.length,
@@ -426,8 +451,8 @@ const getReceiverDaywiseJsonReportService = async (chapterId, date) => {
     totals: {
       cash: totals.cash,
       online: totals.online,
-      grand: totals.grand
-    }
+      grand: totals.grand,
+    },
   };
 };
 
@@ -446,6 +471,8 @@ const getMemberLedgerService = async (memberId, chapterId) => {
     memberId,
     chapterId
   );
+
+  console.log({ memberTransactions });
 
   const memberLedger = {
     member,
@@ -466,7 +493,7 @@ const getMemberLedgerService = async (memberId, chapterId) => {
 
   const columns = ["Date", "Type", "Description", "Debit", "Credit", "Balance"];
   const ledger = [];
-  const ledger_labelled = []
+  const ledger_labelled = [];
 
   let balance = 0;
 
@@ -660,12 +687,10 @@ const convertMemberLedgerToExcel = (worksheet, memberLedger) => {
   return worksheet;
 };
 
-
-
 module.exports = {
   getReceiverDaywiseReportService,
   getMemberLedgerService,
   convertMemberLedgerToExcel,
-  getReceiverDaywiseReportService, 
-  getReceiverDaywiseJsonReportService // new JSON service
+  getReceiverDaywiseReportService,
+  getReceiverDaywiseJsonReportService, // new JSON service
 };

@@ -43,7 +43,6 @@ const OrganisationSelection = ({ onCancel }) => {
       onCancel();
     }
   };
-  
 
   useEffect(() => {
     const loadOrganisations = async () => {
@@ -71,11 +70,20 @@ const OrganisationSelection = ({ onCancel }) => {
           toast.success('Chapter added successfully');
           if (onCancel) onCancel();
         } else {
-          toast.error('Failed to add chapter');
+          if (response.data.error) {
+            toast.error(response.data.error);
+          } else {
+            toast.error('Failed to add chapter');
+          }
         }
       })
       .catch((err) => {
-        toast.error('Failed to add chapter');
+        console.error('Error adding chapter:', err);
+        if (err.response && err.response.data && err.response.data.error) {
+          toast.error(err.response.data.error);
+        } else {
+          toast.error('An unexpected error occurred');
+        }
       });
   };
 
@@ -104,7 +112,9 @@ const OrganisationSelection = ({ onCancel }) => {
               variant="outline"
               className="w-full justify-between text-left border"
             >
-              {selectedOrg ? selectedOrg.organisationName : 'Select an Organisation'}
+              {selectedOrg
+                ? selectedOrg.organisationName
+                : 'Select an Organisation'}
             </Button>
           </PopoverTrigger>
           <PopoverContent
@@ -117,7 +127,10 @@ const OrganisationSelection = ({ onCancel }) => {
               <CommandList>
                 <CommandEmpty>No organisations found.</CommandEmpty>
                 {organisations.map((org) => (
-                  <CommandItem key={org.organisationId} onSelect={() => handleSelect(org)}>
+                  <CommandItem
+                    key={org.organisationId}
+                    onSelect={() => handleSelect(org)}
+                  >
                     {org.organisationName}
                   </CommandItem>
                 ))}

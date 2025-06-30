@@ -16,4 +16,12 @@ router.get("/:chapterId/receiver-daywise-json-report", reportController.getRecei
 router.get("/:chapterId/member-ledger", reportController.getMemberLedgerController);
 router.get("/:chapterId/member-ledger-json", reportController.getMemberLedgerJSONController);
 
+// Export all members report to Excel (all package parents, each as a sheet)
+router.get('/:chapterId/all-members-excel', require('../controller/reportControllers').exportAllMembersReportsExcelController);
+
+// Total Transactions Report (weekly, monthly, 3monthly, by term)
+router.get('/:chapterId/member-payment-summary-report', require('../controller/memberPaymentSummaryReportController').getMemberPaymentSummaryReportController);
+router.get("/:chapterId/member-payment-summary-report/export", require('../controller/memberPaymentSummaryReportController').exportMemberPaymentSummaryExcelController);
+
+
 module.exports = router;

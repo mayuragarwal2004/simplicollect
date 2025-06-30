@@ -75,10 +75,49 @@ const getPackagesByChapterId = async (chapterId, memberId) => {
     .select("t.*", "p.*");
 }
 
+// Fetch packages by chapterId, termId, and optionally memberId
+const getPackagesByChapterAndTerm = async (chapterId, termId, memberId) => {  
+  let query = db("packages as p")
+    .leftJoin("transactions as t", function () {
+      this.on("p.packageId", "t.packageId");
+      if (memberId) this.andOn("t.memberId", db.raw("?", [memberId]));
+    })
+    .join("term as tm", "p.termId", "tm.termId")
+    .where({ "p.chapterId": chapterId, "p.termId": termId })
+    .orderBy("p.packagePayableStartDate", "asc")
+    .select("t.*", "p.*", "tm.termName", { termStatus: "tm.status" });
+  return query;
+};
+
+// Get all unique package parents for a chapter and optional term
+const getPackageParentsByChapter = async (chapterId, termId) => {
+  let query = db("packages")
+    .where({ chapterId })
+    .whereNotNull("packageParent");
+  if (termId) {
+    query = query.andWhere({ termId });
+  }
+  const result = await query.distinct("packageParent");
+  return result.map((row) => row.packageParent);
+};
+
+// Get all unique package parents for a chapter and term (both required)
+const getPackageParentsByChapterAndTerm = async (chapterId, termId) => {
+  if (!chapterId || !termId) throw new Error('chapterId and termId are required');
+  const result = await db("packages")
+    .where("chapterId", chapterId)
+    .andWhere("termId", termId)
+    .whereNotNull("packageParent")
+    .distinct("packageParent");
+  return result.map((row) => row.packageParent);
+};
 
 module.exports = {
   getPackageById,
   getAllPackages,
   getPackagesByParentType,
   getPackagesByChapterId,
+  getPackagesByChapterAndTerm,
+  getPackageParentsByChapter,
+  getPackageParentsByChapterAndTerm,
 };

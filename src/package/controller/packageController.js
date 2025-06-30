@@ -83,10 +83,56 @@ const getPackagesByChapterController = async (req, res) => {
   }
 };
 
+// Fetch packages by chapterId and termId (optionally memberId)
+const getPackagesByChapterAndTermController = async (req, res) => {
+  const { chapterId, termId } = req.params;
+  let { memberId } = req.query;
+  if (!memberId) {
+    memberId = req.user.memberId; // Use the memberId from the request context
+  }
+  try {
+    const packages = await Package.getPackagesByChapterAndTerm(chapterId, termId, memberId);
+    res.json(packages);
+  } catch (error) {
+    console.error("Error fetching packages by chapter and term:", error);
+    res.status(500).json({ error: "Failed to fetch packages" });
+  }
+};
+
+// Get all unique package parents for a chapter (optionally filtered by termId)
+const getPackageParentsByChapter = async (req, res) => {
+  const { chapterId } = req.params;
+  const { termId } = req.query;
+  try {
+    const parents = await require("../model/packageModel").getPackageParentsByChapter(chapterId, termId);
+    res.json(parents);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch package parents" });
+  }
+};
+
+// Get all unique package parents for a chapter and term (both required)
+const getPackageParentsByChapterAndTerm = async (req, res) => {
+  const { chapterId } = req.params;
+  const { termId } = req.query;
+  if (!chapterId || !termId) {
+    return res.status(400).json({ error: 'chapterId and termId are required' });
+  }
+  try {
+    const parents = await require("../model/packageModel").getPackageParentsByChapterAndTerm(chapterId, termId);
+    res.json(parents);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch package parents" });
+  }
+};
+
 module.exports = {
   getAllPackages,
   getPackagesByParentType,
   getPackageById,
   fetchPendingMeetings,
   getPackagesByChapterController,
+  getPackagesByChapterAndTermController,
+  getPackageParentsByChapter,
+  getPackageParentsByChapterAndTerm,
 };

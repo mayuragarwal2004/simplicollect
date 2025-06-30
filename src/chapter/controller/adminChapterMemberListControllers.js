@@ -111,6 +111,8 @@ const searchMemberForChapterToAdd = async (req, res) => {
 };
 const addMemberToChapter=async (req, res) => {
   const { chapterSlug, userId } = req.params;
+  console.log("Adding member to chapter:", chapterSlug, userId);
+  
   const { role="member" } = req.body;
 
   if (!userId || !role) {

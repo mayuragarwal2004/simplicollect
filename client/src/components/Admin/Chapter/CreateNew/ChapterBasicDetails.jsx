@@ -152,7 +152,6 @@ function ChapterBasicDetails({ onNext, onCancel }) {
       onCancel();
     }
   };
-  
 
   const handleCancel = () => {
     onCancel();
@@ -286,12 +285,47 @@ function ChapterBasicDetails({ onNext, onCancel }) {
               <Input type="number" {...register('platformFee')} />
             </div>
             <div>
+              {/* keep a select with options between "lumpsum" or "periodically" */}
               <label>Platform Fee Type</label>
-              <Input {...register('platformFeeType')} />
+              <Select
+                onValueChange={(val) => setValue('platformFeeType', val)}
+                defaultValue=""
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select fee type" />
+                </SelectTrigger>
+
+                <SelectContent>
+                  <SelectItem value="Lumpsum">Lumpsum</SelectItem>
+                  <SelectItem value="Percentage">Percentage</SelectItem>
+                </SelectContent>
+              </Select>
+              {errors.platformFeeType && (
+                <p className="text-red-500 text-sm">
+                  {errors.platformFeeType.message}
+                </p>
+              )}
             </div>
             <div>
               <label>Platform Fee Case</label>
-              <Input {...register('platformFeeCase')} />
+              {/* keep a select with options between "lumpsum" or "periodically" */}
+              <Select
+                onValueChange={(val) => setValue('platformFeeCase', val)}
+                defaultValue=""
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select fee case" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="per-payment">Per Payment</SelectItem>
+                  <SelectItem value="per-member" disabled>Per Member</SelectItem>
+                </SelectContent>
+              </Select>
+              {errors.platformFeeCase && (
+                <p className="text-red-500 text-sm">
+                  {errors.platformFeeCase.message}
+                </p>
+              )}
             </div>
           </div>
 
