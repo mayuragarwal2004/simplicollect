@@ -190,6 +190,7 @@ const dashboardLoadingStates = [
 
 export default function Home() {
   const navigate = useNavigate();
+  const [showCursor, setShowCursor] = useState(false);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [billingPeriod, setBillingPeriod] = useState('monthly');
@@ -257,16 +258,39 @@ export default function Home() {
     return () => window.removeEventListener('mousemove', handleMouseMove);
   }, []);
 
+  useEffect(() => {
+    const checkPointer = () => {
+      // fine pointer = mouse/trackpad, coarse = touch
+      const hasFinePointer = window.matchMedia('(pointer: fine)').matches;
+      setShowCursor(hasFinePointer);
+    };
+
+    checkPointer();
+
+    // Optional: Listen for changes in pointer type (e.g., mouse connected after page load)
+    const mediaQuery = window.matchMedia('(pointer: fine)');
+    const handler = (e: MediaQueryListEvent) => {
+      setShowCursor(e.matches);
+    };
+    mediaQuery.addEventListener('change', handler);
+
+    return () => {
+      mediaQuery.removeEventListener('change', handler);
+    };
+  }, []);
+
   return (
     <>
-      <SmoothCursor
-        springConfig={{
-          damping: 40,
-          stiffness: 450,
-          mass: 0.8,
-          restDelta: 0.001,
-        }}
-      />
+      {showCursor && (
+        <SmoothCursor
+          springConfig={{
+            damping: 40,
+            stiffness: 450,
+            mass: 0.8,
+            restDelta: 0.001,
+          }}
+        />
+      )}
       <MultiStepLoader
         loadingStates={loadingStates}
         loading={isLoading}
@@ -363,7 +387,7 @@ export default function Home() {
 
         {/* Hero Section */}
         <WavyBackground className="min-h-screen flex items-center justify-center">
-          <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative flex flex-col items-center justify-center min-h-screen">
+          <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative flex flex-col items-center justify-center min-h-screen mt-[50px]">
             <div className="w-full text-center space-y-6 relative z-20">
               <div className="space-y-3 flex flex-col items-center">
                 <BoxReveal duration={0.7} boxColor="#4f46e5">
@@ -993,7 +1017,11 @@ export default function Home() {
                       Empowering Organizations Worldwide
                     </h3>
                     <p className="text-gray-600 mb-6 text-lg">
-                      With Simplicollect, organizations will experience unprecedented growth and efficiency. Our platform will become the backbone of successful operations for thousands of organizations globally, managing millions of members and transactions.
+                      With Simplicollect, organizations will experience
+                      unprecedented growth and efficiency. Our platform will
+                      become the backbone of successful operations for thousands
+                      of organizations globally, managing millions of members
+                      and transactions.
                     </p>
                   </motion.div>
                 </BoxReveal>
@@ -1016,7 +1044,7 @@ export default function Home() {
                           // handleGetStarted();
                           window.open(
                             'https://wa.me/919975570005?text=Hello,%20I%20want%20to%20get%20started%20with%20Simplicollect.',
-                            '_blank'
+                            '_blank',
                           );
                         }}
                         className="text-white"
@@ -1051,21 +1079,7 @@ export default function Home() {
                 </BoxReveal>
 
                 <BoxReveal duration={0.7} boxColor="#06b6d4">
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-semibold text-gray-900">
-                      Subscribe to our newsletter
-                    </h3>
-                    <div className="flex gap-2">
-                      <input
-                        type="email"
-                        placeholder="Enter your email"
-                        className="flex-1 rounded-xl border border-gray-200 bg-white/80 backdrop-blur-sm px-4 py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
-                      />
-                      <SparkleButton className="text-white">
-                        Subscribe
-                      </SparkleButton>
-                    </div>
-                  </div>
+                  <SubscribeForm />
                 </BoxReveal>
 
                 <BoxReveal duration={0.7} boxColor="#3b82f6">
@@ -1174,10 +1188,24 @@ export default function Home() {
             <div className="mt-16 border-t border-gray-900/10 pt-8">
               <BoxReveal duration={0.7} boxColor="#4f46e5">
                 <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
-                  <p className="text-sm leading-5 text-gray-500">
-                    © {new Date().getFullYear()} Simplicollect. All rights
-                    reserved. Made with ❤️ by Simplium Technologies
-                  </p>
+                  <div className="flex flex-col md:flex-row items-center justify-center w-full md:w-auto gap-1 md:gap-2 text-sm leading-5 text-gray-500 text-center m-auto">
+                    <span>
+                      © {new Date().getFullYear()} Simplicollect. All rights
+                      reserved.
+                    </span>
+                    <span className="hidden md:inline">|</span>
+                    <span className="flex items-center gap-1">
+                      A Product by
+                      <a
+                        href="https://simpliumtechnologies.com"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-500 hover:underline ml-1"
+                      >
+                        Simplium Technologies
+                      </a>
+                    </span>
+                  </div>
                   <div className="flex gap-6">
                     {footerLinks.legal.map((link, idx) => (
                       <motion.a
@@ -1199,3 +1227,42 @@ export default function Home() {
     </>
   );
 }
+
+const SubscribeForm = () => {
+  const [email, setEmail] = useState('');
+  const handleSubscribe = () => {
+    if (email) {
+      try {
+        axiosInstance
+          .post('/api/homepage/newsletter', { email })
+          .then((response) => {
+            console.log('Subscription successful:', response.data);
+          })
+          .catch((error) => {
+            console.error('Subscription error:', error);
+          });
+      } catch (error) {
+        console.error('Error subscribing:', error);
+      }
+    }
+  };
+  return (
+    <div className="space-y-4">
+      <h3 className="text-lg font-semibold text-gray-900">
+        Subscribe to our newsletter
+      </h3>
+      <div className="flex gap-2">
+        <input
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="Enter your email"
+          className="flex-1 rounded-xl border border-gray-200 bg-white/80 backdrop-blur-sm px-4 py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
+        />
+        <SparkleButton onClick={handleSubscribe} className="text-white">
+          Subscribe
+        </SparkleButton>
+      </div>
+    </div>
+  );
+};

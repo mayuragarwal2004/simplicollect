@@ -44,7 +44,9 @@ const SignIn: React.FC = () => {
         setError('User does not exist!');
       } else if (response.data.defaultOTP) {
         setLoadingMsg('Sending OTP...');
-        navigate('/auth/otp-verification', { state: { identifier, from: location.state?.from } });
+        navigate('/auth/otp-verification', {
+          state: { identifier, from: location.state?.from },
+        });
       } else if (response.data.exists && !response.data.defaultOTP) {
         setShowPasswordField(true);
       }
@@ -60,7 +62,9 @@ const SignIn: React.FC = () => {
     try {
       setLoading(true);
       setLoadingMsg('Sending OTP...');
-      navigate('/auth/otp-verification', { state: { identifier, from: location.state?.from } });
+      navigate('/auth/otp-verification', {
+        state: { identifier, from: location.state?.from },
+      });
     } catch (error) {
       setError('Error sending OTP.');
     } finally {
@@ -84,94 +88,111 @@ const SignIn: React.FC = () => {
   return (
     <>
       <Breadcrumb pageName="Sign In" />
-
-      <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark p-8 max-w-md mx-auto">
-        <div className="flex flex-wrap items-center">
-          <div className="w-full text-center mb-6">
-            <Link to="/">
-              <img
-                className="hidden dark:block mx-auto"
-                src={Logo}
-                alt="Logo"
-              />
-              <img className="dark:hidden mx-auto" src={LogoDark} alt="Logo" />
-            </Link>
-            <p className="mt-3 text-gray-500">
-              Collect and manage meeting fees with ease
-            </p>
-          </div>
-
-          <form
-            className="w-full"
-            onSubmit={showPasswordField ? handleSignIn : handleContinue}
-          >
-            {/* Email or Phone Input */}
-            <div className="mb-4">
-              <label
-                className="block text-gray-700 dark:text-gray-300 mb-2"
-                htmlFor="identifier"
-              >
-                Email or Phone
-              </label>
-              <input
-                type="text"
-                id="identifier"
-                className="w-full p-3 border border-stroke rounded-md dark:border-strokedark dark:bg-boxdark"
-                value={identifier}
-                onChange={(e) => setIdentifier(e.target.value)}
-                required
-                disabled={showPasswordField}
-              />
+      <div className=" flex items-center justify-center flex-col">
+        <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark p-8 max-w-md mx-auto">
+          <div className="flex flex-wrap items-center">
+            <div className="w-full text-center mb-6">
+              <Link to="/">
+                <img
+                  className="hidden dark:block mx-auto"
+                  src={Logo}
+                  alt="Logo"
+                />
+                <img
+                  className="dark:hidden mx-auto"
+                  src={LogoDark}
+                  alt="Logo"
+                />
+              </Link>
+              <p className="mt-3 text-gray-500">
+                Collect and manage meeting fees with ease
+              </p>
             </div>
 
-            {/* Password Input (if password is set) */}
-            {showPasswordField && (
-              <div className="mb-6">
+            <form
+              className="w-full"
+              onSubmit={showPasswordField ? handleSignIn : handleContinue}
+            >
+              {/* Email or Phone Input */}
+              <div className="mb-4">
                 <label
                   className="block text-gray-700 dark:text-gray-300 mb-2"
-                  htmlFor="password"
+                  htmlFor="identifier"
                 >
-                  Password
+                  Email or Phone
                 </label>
                 <input
-                  type="password"
-                  id="password"
+                  type="text"
+                  id="identifier"
                   className="w-full p-3 border border-stroke rounded-md dark:border-strokedark dark:bg-boxdark"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  value={identifier}
+                  onChange={(e) => setIdentifier(e.target.value)}
                   required
+                  disabled={showPasswordField}
                 />
               </div>
-            )}
 
-            {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
+              {/* Password Input (if password is set) */}
+              {showPasswordField && (
+                <div className="mb-6">
+                  <label
+                    className="block text-gray-700 dark:text-gray-300 mb-2"
+                    htmlFor="password"
+                  >
+                    Password
+                  </label>
+                  <input
+                    type="password"
+                    id="password"
+                    className="w-full p-3 border border-stroke rounded-md dark:border-strokedark dark:bg-boxdark"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                  />
+                </div>
+              )}
 
-            <button
-              type="submit"
-              className="w-full py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition"
-              disabled={loading}
-            >
-              {loading
-                ? loadingMsg || 'Checking...'
-                : showPasswordField
-                  ? 'Sign In'
-                  : 'Continue'}
-            </button>
-          </form>
+              {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
 
-          {/* Forgot Password Link (only shown after password field is displayed) */}
-          {showPasswordField && (
-            <div className="mt-4 text-center">
               <button
-                type="button"
-                className="text-blue-500 hover:underline disabled:opacity-50"
+                type="submit"
+                className="w-full py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition"
                 disabled={loading}
-                onClick={handleForgotPassword}
               >
-                Forgot Password?
+                {loading
+                  ? loadingMsg || 'Checking...'
+                  : showPasswordField
+                    ? 'Sign In'
+                    : 'Continue'}
               </button>
-            </div>
-          )}
+            </form>
+
+            {/* Forgot Password Link (only shown after password field is displayed) */}
+            {showPasswordField && (
+              <div className="mt-4 text-center">
+                <button
+                  type="button"
+                  className="text-blue-500 hover:underline disabled:opacity-50"
+                  disabled={loading}
+                  onClick={handleForgotPassword}
+                >
+                  Forgot Password?
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+        <div className="mt-6 text-center flex text-gray-500 dark:text-gray-400">
+          A Product by
+          <div className="text-blue-500 hover:underline ml-1">
+            <a
+              href="https://simpliumtechnologies.com"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Simplium Technologies
+            </a>
+          </div>
         </div>
       </div>
     </>

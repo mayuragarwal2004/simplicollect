@@ -89,7 +89,7 @@ export const NavBody = ({ children, className, visible }: NavBodyProps) => {
         boxShadow: visible
           ? '0 0 24px rgba(34, 42, 53, 0.06), 0 1px 1px rgba(0, 0, 0, 0.05), 0 0 0 1px rgba(34, 42, 53, 0.04), 0 0 4px rgba(34, 42, 53, 0.08), 0 16px 68px rgba(47, 48, 55, 0.05), 0 1px 0 rgba(255, 255, 255, 0.1) inset'
           : 'none',
-        width: visible ? '80%' : '100%',
+        width: visible ? '90%' : '100%',
         scaleX: visible ? 0.9 : 1,
         y: visible ? 12 : 0,
       }}
@@ -151,7 +151,7 @@ export const MobileNav = ({ children, className, visible }: MobileNavProps) => {
         boxShadow: visible
           ? '0 0 24px rgba(34, 42, 53, 0.06), 0 1px 1px rgba(0, 0, 0, 0.05), 0 0 0 1px rgba(34, 42, 53, 0.04), 0 0 4px rgba(34, 42, 53, 0.08), 0 16px 68px rgba(47, 48, 55, 0.05), 0 1px 0 rgba(255, 255, 255, 0.1) inset'
           : 'none',
-        width: visible ? '80%' : '100%',
+        width: visible ? '90%' : '100%',
         scaleX: visible ? 0.9 : 1,
         y: visible ? 12 : 0,
       }}
@@ -161,10 +161,14 @@ export const MobileNav = ({ children, className, visible }: MobileNavProps) => {
         damping: 20,
       }}
       className={cn(
-        'relative z-50 mx-auto flex w-full max-w-[calc(100vw-2rem)] flex-col items-center justify-between bg-transparent px-0 py-2 lg:hidden',
+        'relative z-50 mx-auto flex w-full max-w-[calc(100vw-2rem)] flex-col items-center justify-between bg-transparent px-4 py-2 lg:hidden rounded-full',
         visible && 'bg-white/80 dark:bg-neutral-950/80',
         className,
       )}
+      style={{
+        paddingLeft: '1.3rem',
+        paddingRight: '1.3rem',
+      }}
     >
       {children}
     </motion.div>
