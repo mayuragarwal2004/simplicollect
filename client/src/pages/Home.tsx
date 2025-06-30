@@ -56,6 +56,7 @@ import '../styles/fonts.css';
 
 import { useAuth } from '../context/AuthContext';
 import { axiosInstance } from '@/utils/config';
+import { toast } from 'react-toastify';
 
 const navItems = [
   { name: 'Demo', link: '#demo' },
@@ -1230,38 +1231,120 @@ export default function Home() {
 
 const SubscribeForm = () => {
   const [email, setEmail] = useState('');
-  const handleSubscribe = () => {
-    if (email) {
+  const [isSubscribed, setIsSubscribed] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleSubscribe = async () => {
+    if (email && !isLoading) {
+      setIsLoading(true);
       try {
-        axiosInstance
-          .post('/api/homepage/newsletter', { email })
-          .then((response) => {
-            console.log('Subscription successful:', response.data);
-          })
-          .catch((error) => {
-            console.error('Subscription error:', error);
-          });
+        const response = await axiosInstance.post('/api/homepage/newsletter', {
+          email,
+        });
+        if (response.status === 201) {
+          console.log('Subscription successful:', response.data);
+          setIsSubscribed(true);
+        }
       } catch (error) {
-        console.error('Error subscribing:', error);
+        toast.error(
+          error.response?.data?.message ||
+            'Subscription failed. Please try again later.',
+        );
+        setIsLoading(false);
+      } finally {
+        setIsLoading(false);
       }
     }
   };
+
+  console.log({
+    email,
+    isSubscribed,
+    isLoading,
+  });
+
   return (
     <div className="space-y-4">
       <h3 className="text-lg font-semibold text-gray-900">
         Subscribe to our newsletter
       </h3>
-      <div className="flex gap-2">
-        <input
+      <div className="flex gap-2 relative">
+        <motion.input
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="Enter your email"
           className="flex-1 rounded-xl border border-gray-200 bg-white/80 backdrop-blur-sm px-4 py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
+          animate={{
+            opacity: isSubscribed ? 0 : 1,
+            width: isSubscribed ? 0 : '100%',
+            marginRight: isSubscribed ? 0 : undefined,
+            padding: isSubscribed ? 0 : undefined,
+            border: isSubscribed ? 'none' : undefined,
+          }}
+          transition={{ duration: 0.5, ease: 'easeInOut' }}
+          style={{ overflow: 'hidden' }}
         />
-        <SparkleButton onClick={handleSubscribe} className="text-white">
-          Subscribe
-        </SparkleButton>
+        <motion.div
+          animate={{
+            width: isSubscribed ? '100%' : 'auto',
+          }}
+          transition={{ duration: 0.5, ease: 'easeInOut' }}
+        >
+          <SparkleButton
+            onClick={handleSubscribe}
+            className={`text-white transition-all duration-500 ${
+              isSubscribed ? 'bg-green-500 hover:bg-green-600' : ''
+            } ${isSubscribed ? 'w-full' : ''}`}
+            disabled={isLoading || isSubscribed}
+          >
+            <motion.div
+              className="flex items-center justify-center gap-2"
+              initial={false}
+              animate={{
+                scale: isSubscribed ? [1, 1.1, 1] : 1,
+              }}
+              transition={{ duration: 0.6, ease: 'easeInOut' }}
+            >
+              {isLoading ? (
+                <>
+                  <motion.div
+                    className="w-4 h-4 border-2 border-white border-t-transparent rounded-full"
+                    animate={{ rotate: 360 }}
+                    transition={{
+                      duration: 1,
+                      repeat: Infinity,
+                      ease: 'linear',
+                    }}
+                  />
+                  Subscribing...
+                </>
+              ) : isSubscribed ? (
+                <>
+                  <motion.svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    initial={{ scale: 0, rotate: -180 }}
+                    animate={{ scale: 1, rotate: 0 }}
+                    transition={{ duration: 0.5, ease: 'easeInOut' }}
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M5 13l4 4L19 7"
+                    />
+                  </motion.svg>
+                  Subscribed
+                </>
+              ) : (
+                'Subscribe'
+              )}
+            </motion.div>
+          </SparkleButton>
+        </motion.div>
       </div>
     </div>
   );
