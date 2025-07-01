@@ -1,3 +1,4 @@
+import { useCapacitorNotifications } from './hooks/useCapacitorNotifications';
 import { Children, useEffect, useState } from 'react';
 import {
   createBrowserRouter,
@@ -49,6 +50,7 @@ import TrackVisitor from './pages/Visitor/TrackVisitor';
 import SwitchChapter from './pages/Member/SwitchChapter';
 import AdminPackage from './pages/Admin/Package/AdminPackage';
 import AdminNotificationsPage from './pages/Admin/Notifications/AdminNotificationsPage';
+import CapacitorTestPage from './pages/Test/CapacitorTestPage';
 import { useData } from './context/DataContext';
 import Home from './pages/Home';
 
@@ -224,6 +226,10 @@ const routes = [
         element: <TrackVisitor/>,
       },
       {
+        path: 'test/capacitor',
+        element: <CapacitorTestPage />,
+      },
+      {
         path: '*',
         element: <Navigate to="/" />,
       },
@@ -236,10 +242,24 @@ const router = createBrowserRouter(routes);
 function App() {
   const [loadingLocal, setLoadingLocal] = useState<boolean>(true);
   const { loading } = useData();
+  
+  // Initialize Capacitor push notifications for native platforms
+  const capacitorNotifications = useCapacitorNotifications();
 
   useEffect(() => {
     setTimeout(() => setLoadingLocal(false), 1000);
   }, []);
+
+  // Log Capacitor notification status in development
+  useEffect(() => {
+    if ((import.meta as any).env.DEV) {
+      console.log('Capacitor notifications status:', {
+        isSupported: capacitorNotifications.isSupported,
+        isInitialized: capacitorNotifications.isInitialized,
+        error: capacitorNotifications.error
+      });
+    }
+  }, [capacitorNotifications]);
 
   return loadingLocal ? (
     <Loader />
