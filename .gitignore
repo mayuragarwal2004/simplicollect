@@ -2,5 +2,5 @@
 node_modules
 
 mobile-app
-test
+/test
 *.py
