@@ -48,6 +48,7 @@ import DashboardPage from './pages/Admin/Dashboard/DashboardPage'
 import TrackVisitor from './pages/Visitor/TrackVisitor';
 import SwitchChapter from './pages/Member/SwitchChapter';
 import AdminPackage from './pages/Admin/Package/AdminPackage';
+import AdminNotificationsPage from './pages/Admin/Notifications/AdminNotificationsPage';
 import { useData } from './context/DataContext';
 import Home from './pages/Home';
 
@@ -80,6 +81,10 @@ const routes = [
       {
         path: 'package',
         element: <AdminPackage />,
+      },
+      {
+        path: 'notifications',
+        element: <AdminNotificationsPage />,
       },
       {
         path: 'chapters',

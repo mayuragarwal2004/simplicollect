@@ -368,7 +368,7 @@ const MemberFeeApproval: React.FC = () => {
             receiverList.find((r) => r.memberId === selectedReceiver)
               ?.receiverName ||
             '',
-            payableAmount: selectedFee.payableAmount,
+          payableAmount: selectedFee.payableAmount,
         },
       });
       toast.success('Details saved successfully');
@@ -557,8 +557,22 @@ const MemberFeeApproval: React.FC = () => {
                           <TableCell>
                             {new Date(fee.transactionDate).toLocaleDateString()}
                           </TableCell>
-                          <TableCell>₹{fee.paidAmount}</TableCell>
-                          <TableCell>₹{fee.balanceAmount}</TableCell>
+                          <TableCell>
+                            {new Intl.NumberFormat('en-IN', {
+                              style: 'currency',
+                              currency: 'INR',
+                              minimumFractionDigits: 0,
+                              maximumFractionDigits: 2,
+                            }).format(fee.paidAmount)}
+                          </TableCell>
+                          <TableCell>
+                            {new Intl.NumberFormat('en-IN', {
+                              style: 'currency',
+                              currency: 'INR',
+                              minimumFractionDigits: 0,
+                              maximumFractionDigits: 2,
+                            }).format(fee.balanceAmount)}
+                          </TableCell>
                           {config.currentState === 'all_members_approval' && (
                             <TableCell>
                               {fee.paymentReceivedByName || '-'}
@@ -698,13 +712,12 @@ const MemberFeeApproval: React.FC = () => {
               >
                 Confirm Selected Approvals
               </button>
-            )
-            }
+            )}
           </>
         ) : (
           <>
             {width > 700 ? (
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto rounded-lg">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -733,8 +746,22 @@ const MemberFeeApproval: React.FC = () => {
                           <TableCell>
                             {new Date(fee.transactionDate).toLocaleDateString()}
                           </TableCell>
-                          <TableCell>₹{fee.paidAmount}</TableCell>
-                          <TableCell>₹{fee.balanceAmount}</TableCell>
+                          <TableCell>
+                            {new Intl.NumberFormat('en-IN', {
+                              style: 'currency',
+                              currency: 'INR',
+                              minimumFractionDigits: 0,
+                              maximumFractionDigits: 2,
+                            }).format(fee.paidAmount)}
+                          </TableCell>
+                          <TableCell>
+                            {new Intl.NumberFormat('en-IN', {
+                              style: 'currency',
+                              currency: 'INR',
+                              minimumFractionDigits: 0,
+                              maximumFractionDigits: 2,
+                            }).format(fee.balanceAmount)}
+                          </TableCell>
                           <TableCell>
                             <Button
                               variant="outline"

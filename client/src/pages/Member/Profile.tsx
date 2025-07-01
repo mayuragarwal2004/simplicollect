@@ -5,6 +5,7 @@ import userSix from '../images/user/user-06.png';
 import { Link } from 'react-router-dom';
 import UserMetaCard from '../../components/member/Profile/UserMetaCard';
 import UserInfoCard from '../../components/member/Profile/UserInfoCard';
+import PushNotificationSettings from '../../components/PushNotificationSettings';
 
 const Profile = () => {
   const { chapterData, memberData } = useData();
@@ -20,6 +21,7 @@ const Profile = () => {
         <div className="space-y-6">
           <UserMetaCard />
           <UserInfoCard />
+          <PushNotificationSettings />
         </div>
       </div>
     </>
