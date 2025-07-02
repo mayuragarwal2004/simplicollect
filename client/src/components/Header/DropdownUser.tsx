@@ -4,7 +4,7 @@ import ClickOutside from '../ClickOutside';
 import UserOne from '../../images/user/user-01.png';
 import { useAuth } from '../../context/AuthContext';
 import { useData } from '../../context/DataContext';
-import { LayoutDashboard, Repeat } from 'lucide-react';
+import { FlaskConical, LayoutDashboard, Repeat } from 'lucide-react';
 
 const backgroundColor = Math.floor(Math.random() * 16777215).toString(16);
 
@@ -110,6 +110,17 @@ const DropdownUser = () => {
                   </Link>
                 </li>
               )
+            ) : null}
+            {memberData?.test ? (
+              <li>
+                <Link
+                  to="/test/capacitor"
+                  className="flex items-center gap-3.5 text-sm font-medium duration-300 ease-in-out hover:text-primary lg:text-base"
+                >
+                  <FlaskConical />
+                  Test Capacitor
+                </Link>
+              </li>
             ) : null}
             {allChaptersData && allChaptersData.length > 1 && (
               <li>

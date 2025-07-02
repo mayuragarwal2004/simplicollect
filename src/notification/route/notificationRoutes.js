@@ -3,6 +3,15 @@ const router = express.Router();
 const notificationController = require('../controller/notificationController');
 const { AuthenticateAdmin } = require('../../middlewares/authMiddleware');
 
+// Health check route
+router.get('/health', (req, res) => {
+  res.status(200).json({ 
+    status: 'OK', 
+    service: 'notification-service',
+    timestamp: new Date().toISOString()
+  });
+});
+
 // User notification routes
 router.get('/', notificationController.getNotifications);
 router.get('/unread-count', notificationController.getUnreadCount);

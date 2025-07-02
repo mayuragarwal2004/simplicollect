@@ -1,3 +1,4 @@
+import { axiosInstance } from '@/utils/config';
 import { Capacitor } from '@capacitor/core';
 import { PushNotifications, Token, ActionPerformed, PushNotificationSchema } from '@capacitor/push-notifications';
 
@@ -70,20 +71,10 @@ export class CapacitorPushService {
 
   private async sendTokenToBackend(token: string): Promise<void> {
     try {
-      const response = await fetch('/api/notifications/fcm/subscribe', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          token,
-          platform: Capacitor.getPlatform(),
-        }),
+      const response = await axiosInstance.post('/api/notifications/fcm/subscribe', {
+        token,
+        platform: Capacitor.getPlatform(),
       });
-
-      if (!response.ok) {
-        throw new Error('Failed to send token to backend');
-      }
 
       console.log('Token sent to backend successfully');
     } catch (error) {
