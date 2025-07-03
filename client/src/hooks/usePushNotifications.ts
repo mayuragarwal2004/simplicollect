@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import { getNotificationService } from '../services/notificationService';
+import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-toastify';
 
 const usePushNotifications = () => {
   const [isSupported, setIsSupported] = useState(false);
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [loading, setLoading] = useState(false);
+  const { isAuthenticated } = useAuth();
   
   const notificationService = getNotificationService();
 
@@ -24,6 +26,14 @@ const usePushNotifications = () => {
     });
   }, []);
 
+  // Watch for authentication state changes
+  useEffect(() => {
+    if (isAuthenticated) {
+      console.log('usePushNotifications: User authenticated, checking subscription status');
+      checkSubscriptionStatus();
+    }
+  }, [isAuthenticated]);
+
   const checkSubscriptionStatus = async () => {
     try {
       const token = await notificationService.getToken();
@@ -39,6 +49,10 @@ const usePushNotifications = () => {
       throw new Error('Push notifications not supported on this platform');
     }
 
+    if (!isAuthenticated) {
+      throw new Error('You must be logged in to enable push notifications');
+    }
+
     setLoading(true);
     try {
       await notificationService.subscribeToNotifications();
@@ -46,6 +60,7 @@ const usePushNotifications = () => {
       toast.success('Push notifications enabled successfully!');
     } catch (error) {
       console.error('Error subscribing to push notifications:', error);
+      toast.error('Failed to enable push notifications');
       throw error;
     } finally {
       setLoading(false);

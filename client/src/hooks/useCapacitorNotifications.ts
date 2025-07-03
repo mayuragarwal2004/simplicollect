@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Capacitor } from '@capacitor/core';
 import CapacitorPushService from '../services/capacitorPushService';
+import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-toastify';
 
 interface NotificationEvent {
@@ -13,6 +14,7 @@ export const useCapacitorNotifications = () => {
   const [isSupported, setIsSupported] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { isAuthenticated } = useAuth();
 
   useEffect(() => {
     const isNative = Capacitor.isNativePlatform();
@@ -30,6 +32,22 @@ export const useCapacitorNotifications = () => {
       }
     };
   }, []);
+
+  // Watch for authentication state changes
+  useEffect(() => {
+    if (isSupported) {
+      const service = CapacitorPushService.getInstance();
+      
+      console.log('useCapacitorNotifications: Auth state changed:', isAuthenticated);
+      console.log('useCapacitorNotifications: Service debug info:', service.getDebugInfo());
+      
+      // Notify the service about auth state change
+      service.onAuthStateChange(isAuthenticated);
+      
+      // Also manually check and send token if needed
+      service.checkAuthAndSendToken(isAuthenticated);
+    }
+  }, [isAuthenticated, isSupported]);
 
   const initializeService = async () => {
     try {
@@ -121,6 +139,20 @@ export const useCapacitorNotifications = () => {
     }
   };
 
+  const getDebugInfo = () => {
+    if (!isSupported) {
+      return { error: 'Capacitor not supported' };
+    }
+    return CapacitorPushService.getInstance().getDebugInfo();
+  };
+
+  const forceSendToken = () => {
+    if (!isSupported) {
+      return;
+    }
+    CapacitorPushService.getInstance().forceSendToken();
+  };
+
   return {
     isSupported,
     isInitialized,
@@ -128,6 +160,8 @@ export const useCapacitorNotifications = () => {
     getDeliveredNotifications,
     removeDeliveredNotifications,
     removeAllDeliveredNotifications,
+    getDebugInfo,
+    forceSendToken,
   };
 };
 

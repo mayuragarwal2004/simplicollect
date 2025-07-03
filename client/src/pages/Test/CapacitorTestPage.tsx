@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { useCapacitorNotifications } from '../../hooks/useCapacitorNotifications';
+import useCapacitorPushNotifications from '../../hooks/useCapacitorPushNotifications';
 import usePushNotifications from '../../hooks/usePushNotifications';
 import { axiosInstance, getPlatformInfo } from '../../utils/config';
 
@@ -13,12 +14,26 @@ const CapacitorTestPage: React.FC = () => {
   const [isBackendRunning, setIsBackendRunning] = useState<boolean | null>(null);
   
   const capacitorNotifications = useCapacitorNotifications();
+  const newCapacitorNotifications = useCapacitorPushNotifications();
   const webNotifications = usePushNotifications();
 
   // Add a log entry
   const addLog = (message: string) => {
     const timestamp = new Date().toLocaleTimeString();
     setTestLogs(prev => [...prev, `[${timestamp}] ${message}`]);
+  };
+
+  // Helper function to check if browser notifications are available
+  const isBrowserNotificationAvailable = () => {
+    return !isNative && typeof window !== 'undefined' && 'Notification' in window;
+  };
+
+  // Get browser notification permission safely
+  const getBrowserNotificationPermission = () => {
+    if (isBrowserNotificationAvailable()) {
+      return Notification.permission;
+    }
+    return isNative ? 'n/a-native' : 'unavailable';
   };
 
   // Check if backend is running
@@ -48,6 +63,8 @@ const CapacitorTestPage: React.FC = () => {
       platform: currentPlatform,
       isNative: isNativePlatform,
       isPluginAvailable: Capacitor.isPluginAvailable('PushNotifications'),
+      hasBrowserNotifications: !isNativePlatform && typeof window !== 'undefined' && 'Notification' in window,
+      userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'N/A',
     });
 
     // Check backend status
@@ -55,12 +72,21 @@ const CapacitorTestPage: React.FC = () => {
 
     // Add initial log
     addLog(`Initialized - Platform: ${currentPlatform}, Native: ${isNativePlatform}`);
+    addLog(`Browser Notifications: ${!isNativePlatform && typeof window !== 'undefined' && 'Notification' in window ? 'Available' : 'Not Available'}`);
+    addLog(`Push Plugin: ${Capacitor.isPluginAvailable('PushNotifications') ? 'Available' : 'Not Available'}`);
   }, []);
 
   const testWebNotifications = async () => {
     addLog('Starting web notification test...');
     
     try {
+      // Step 0: Check if we're running on a web platform
+      if (isNative) {
+        addLog('❌ Web notifications test not applicable on native platform');
+        addLog('ℹ️ Use "Test New Push Service" for native notifications');
+        return;
+      }
+
       // Step 1: Check if notifications are supported
       if (!webNotifications.isSupported) {
         addLog('❌ Web notifications not supported');
@@ -69,7 +95,7 @@ const CapacitorTestPage: React.FC = () => {
       addLog('✓ Web notifications supported');
 
       // Step 2: Check current permission status
-      const currentPermission = Notification.permission;
+      const currentPermission = getBrowserNotificationPermission();
       addLog(`Current permission: ${currentPermission}`);
 
       // Step 3: Check if service worker can be registered
@@ -124,6 +150,47 @@ const CapacitorTestPage: React.FC = () => {
 
   const clearLogs = () => {
     setTestLogs([]);
+  };
+
+  const testSimplifiedCapacitorNotifications = async () => {
+    addLog('Starting simplified Capacitor notification test...');
+    
+    try {
+      const debugInfo = newCapacitorNotifications.getDebugInfo();
+      addLog(`Debug Info: ${JSON.stringify(debugInfo, null, 2)}`);
+      
+      if (!debugInfo.isSupported) {
+        addLog('❌ Capacitor push notifications not supported');
+        return;
+      }
+      addLog('✓ Capacitor push notifications supported');
+
+      if (!debugInfo.isAuthenticated) {
+        addLog('⚠️ User not authenticated - please log in first');
+        return;
+      }
+      addLog('✓ User is authenticated');
+
+      if (debugInfo.hasStoredToken) {
+        addLog(`✓ FCM token found: ${debugInfo.storedToken}`);
+        
+        if (debugInfo.tokenSent) {
+          addLog('✓ Token already sent to backend');
+        } else {
+          addLog('⚠️ Token not yet sent to backend');
+          
+          addLog('Attempting to force send token...');
+          await newCapacitorNotifications.forceSendToken();
+        }
+      } else {
+        addLog('⚠️ No FCM token found - try restarting the app');
+      }
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      addLog(`❌ Test failed: ${errorMessage}`);
+      console.error('Simplified Capacitor notification test failed:', error);
+    }
   };
 
   const testCapacitorNotifications = async () => {
@@ -182,6 +249,18 @@ const CapacitorTestPage: React.FC = () => {
             {deviceInfo.isPluginAvailable ? 'Yes' : 'No'}
           </div>
           <div>
+            <strong>Browser Notifications:</strong>{' '}
+            <span className={`px-1 py-0.5 rounded text-xs ${
+              deviceInfo.hasBrowserNotifications ? 'bg-green-200 text-green-800' : 'bg-gray-200 text-gray-800'
+            }`}>
+              {deviceInfo.hasBrowserNotifications ? 'Available' : 'Not Available'}
+            </span>
+          </div>
+          <div>
+            <strong>Browser Notifications:</strong>{' '}
+            {deviceInfo.hasBrowserNotifications ? 'Available' : 'Not Available'}
+          </div>
+          <div>
             <strong>Environment:</strong> {(import.meta as any).env.MODE}
           </div>
           <div>
@@ -199,13 +278,18 @@ const CapacitorTestPage: React.FC = () => {
           <div>
             <strong>Browser Permission:</strong> 
             <span className={`ml-2 px-2 py-1 rounded text-sm ${
-              Notification.permission === 'granted'
+              getBrowserNotificationPermission() === 'granted'
                 ? 'bg-green-200 text-green-800' 
-                : Notification.permission === 'denied'
+                : getBrowserNotificationPermission() === 'denied'
                 ? 'bg-red-200 text-red-800'
                 : 'bg-yellow-200 text-yellow-800'
             }`}>
-              {Notification.permission}
+              {(() => {
+                const permission = getBrowserNotificationPermission();
+                if (permission === 'n/a-native') return 'N/A (Native App)';
+                if (permission === 'unavailable') return 'Unavailable';
+                return permission;
+              })()}
             </span>
           </div>
         </div>
@@ -275,20 +359,120 @@ const CapacitorTestPage: React.FC = () => {
         </div>
       </div>
 
+      {/* New Simplified Service Debug Info */}
+      {isNative && (
+        <div className="mb-8 p-4 bg-purple-50 rounded-lg">
+          <h2 className="text-xl font-semibold text-purple-800 mb-3">
+            Simplified Push Service Debug Info
+          </h2>
+          <div className="space-y-2">
+            {(() => {
+              const debugInfo = newCapacitorNotifications.getDebugInfo();
+              return (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <strong>Supported:</strong>{' '}
+                    <span className={`px-2 py-1 rounded text-sm ${
+                      debugInfo.isSupported ? 'bg-green-200 text-green-800' : 'bg-red-200 text-red-800'
+                    }`}>
+                      {debugInfo.isSupported ? 'Yes' : 'No'}
+                    </span>
+                  </div>
+                  <div>
+                    <strong>Authenticated:</strong>{' '}
+                    <span className={`px-2 py-1 rounded text-sm ${
+                      debugInfo.isAuthenticated ? 'bg-green-200 text-green-800' : 'bg-red-200 text-red-800'
+                    }`}>
+                      {debugInfo.isAuthenticated ? 'Yes' : 'No'}
+                    </span>
+                  </div>
+                  <div>
+                    <strong>Has Token:</strong>{' '}
+                    <span className={`px-2 py-1 rounded text-sm ${
+                      debugInfo.hasStoredToken ? 'bg-green-200 text-green-800' : 'bg-yellow-200 text-yellow-800'
+                    }`}>
+                      {debugInfo.hasStoredToken ? 'Yes' : 'No'}
+                    </span>
+                  </div>
+                  <div>
+                    <strong>Token Sent:</strong>{' '}
+                    <span className={`px-2 py-1 rounded text-sm ${
+                      debugInfo.tokenSent ? 'bg-green-200 text-green-800' : 'bg-yellow-200 text-yellow-800'
+                    }`}>
+                      {debugInfo.tokenSent ? 'Yes' : 'No'}
+                    </span>
+                  </div>
+                  <div>
+                    <strong>Platform:</strong> {debugInfo.platform}
+                  </div>
+                  {debugInfo.storedToken && (
+                    <div>
+                      <strong>Token:</strong> {debugInfo.storedToken}
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+          </div>
+        </div>
+      )}
+
       {/* Test Buttons */}
       <div className="mb-8 p-4 bg-gray-50 rounded-lg">
         <h2 className="text-xl font-semibold text-gray-800 mb-3">
           Test Functions
         </h2>
+        
+        {/* Platform-specific guidance */}
+        <div className="mb-4 p-3 bg-blue-100 rounded-lg text-sm">
+          <strong>Platform Guidance:</strong>
+          <ul className="list-disc list-inside ml-4 mt-1">
+            {isNative ? (
+              <>
+                <li><strong>"Test New Push Service"</strong> - Use this for native push notifications (recommended)</li>
+                <li><strong>"Test Old Capacitor Service"</strong> - Legacy implementation for comparison</li>
+                <li><strong>Note:</strong> Web notification tests don't work on native platforms</li>
+              </>
+            ) : (
+              <>
+                <li><strong>"Test Web Notifications"</strong> - Use this for browser push notifications</li>
+                <li><strong>"Test Service Worker"</strong> - Verify service worker registration</li>
+                <li><strong>Note:</strong> Native notification tests don't work in browsers</li>
+              </>
+            )}
+          </ul>
+        </div>
+
         <div className="flex flex-wrap gap-3">
           {isNative ? (
-            <button
-              onClick={testCapacitorNotifications}
-              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
-              disabled={!capacitorNotifications.isSupported}
-            >
-              Test Capacitor Notifications
-            </button>
+            <>
+              <button
+                onClick={testSimplifiedCapacitorNotifications}
+                className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
+                disabled={!newCapacitorNotifications.isSupported}
+              >
+                Test New Push Service
+              </button>
+              <button
+                onClick={testCapacitorNotifications}
+                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+                disabled={!capacitorNotifications.isSupported}
+              >
+                Test Old Capacitor Service
+              </button>
+              <button
+                onClick={testBackendConnection}
+                className="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 transition-colors"
+              >
+                Test Backend
+              </button>
+              <button
+                onClick={clearLogs}
+                className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors"
+              >
+                Clear Logs
+              </button>
+            </>
           ) : (
             <>
               <button
@@ -317,6 +501,29 @@ const CapacitorTestPage: React.FC = () => {
                 Clear Logs
               </button>
             </>
+          )}
+        </div>
+
+        {/* Platform-specific guidance */}
+        <div className="mt-4 p-3 bg-blue-50 rounded-lg text-sm">
+          {isNative ? (
+            <div>
+              <strong>📱 Native App Testing:</strong>
+              <ul className="mt-1 ml-4 list-disc">
+                <li>Use "Test New Push Service" for authentication-aware notifications</li>
+                <li>Make sure you're logged in to test token registration</li>
+                <li>Check that Firebase config files are in place for production builds</li>
+              </ul>
+            </div>
+          ) : (
+            <div>
+              <strong>🌐 Web Testing:</strong>
+              <ul className="mt-1 ml-4 list-disc">
+                <li>Use "Test Web Notifications" for browser-based FCM notifications</li>
+                <li>Allow notifications when prompted by the browser</li>
+                <li>Check that service worker is properly registered</li>
+              </ul>
+            </div>
           )}
         </div>
       </div>
@@ -447,6 +654,7 @@ const CapacitorTestPage: React.FC = () => {
               <li>Open in IDE: <code className="bg-gray-200 px-2 py-1 rounded">npm run cap:android</code> or <code className="bg-gray-200 px-2 py-1 rounded">npm run cap:ios</code></li>
               <li>Add Firebase config files (google-services.json, GoogleService-Info.plist)</li>
               <li>Test on real devices (push notifications don't work on simulators)</li>
+              <li><strong>Note:</strong> Native apps don't use browser Notification API - they use Capacitor's PushNotifications plugin</li>
             </ul>
           </div>
 
@@ -454,7 +662,14 @@ const CapacitorTestPage: React.FC = () => {
             <strong>Quick checks:</strong>
             <ul className="list-disc list-inside ml-4 mt-1">
               <li>Backend Status: {isBackendRunning === true ? '✅' : '❌'} Backend running</li>
-              <li>Browser Permission: {Notification.permission === 'granted' ? '✅' : '❌'} Notifications allowed</li>
+              <li>Browser Permission: {
+                (() => {
+                  const permission = getBrowserNotificationPermission();
+                  if (permission === 'n/a-native') return '➖ N/A (Native App)';
+                  if (permission === 'granted') return '✅ Notifications allowed';
+                  return '❌ Notifications not allowed';
+                })()
+              }</li>
               <li>Service Worker: Use "Test Service Worker" button to verify</li>
               <li>Firebase Config: {(import.meta as any).env.VITE_FIREBASE_VAPID_KEY ? '✅' : '❌'} VAPID key configured</li>
             </ul>

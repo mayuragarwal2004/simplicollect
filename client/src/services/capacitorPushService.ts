@@ -1,4 +1,3 @@
-import { useAuth } from '@/context/AuthContext';
 import { axiosInstance } from '@/utils/config';
 import { Capacitor } from '@capacitor/core';
 import {
@@ -11,19 +10,15 @@ import {
 export class CapacitorPushService {
   private static instance: CapacitorPushService;
   private isInitialized = false;
-  private isAuthenticated: boolean = false;
+  private pendingToken: string | null = null;
+  private authStateChangeCallbacks: Array<(isAuthenticated: boolean) => void> = [];
+  private isAuthenticated = false;
+  private retryCount = 0;
+  private maxRetries = 3;
+  private retryDelay = 2000; // 2 seconds
 
   constructor() {
-    // Use the hook in a workaround way since hooks can't be used in classes directly
-    try {
-      // This will only work if called inside a React component context
-      // If you use this service outside React, you need to pass isAuthenticated as a parameter
-      const auth = useAuth();
-      this.isAuthenticated = auth.isAuthenticated;
-    } catch {
-      // Not in a React context, fallback to false
-      this.isAuthenticated = false;
-    }
+    // Don't check auth state in constructor since hooks can't be used here
   }
 
   public static getInstance(): CapacitorPushService {
@@ -31,6 +26,49 @@ export class CapacitorPushService {
       CapacitorPushService.instance = new CapacitorPushService();
     }
     return CapacitorPushService.instance;
+  }
+
+  // Method to be called when authentication state changes
+  public onAuthStateChange(isAuthenticated: boolean): void {
+    console.log('CapacitorPushService: Auth state changed:', isAuthenticated);
+    
+    const wasAuthenticated = this.isAuthenticated;
+    this.isAuthenticated = isAuthenticated;
+    
+    if (isAuthenticated && !wasAuthenticated && this.pendingToken) {
+      console.log('CapacitorPushService: User authenticated, sending pending token to backend');
+      this.sendTokenToBackendWithRetry(this.pendingToken);
+    }
+    
+    // Notify all callbacks about auth state change
+    this.authStateChangeCallbacks.forEach(callback => callback(isAuthenticated));
+  }
+
+  // Method to register for auth state change notifications
+  public registerAuthStateCallback(callback: (isAuthenticated: boolean) => void): void {
+    this.authStateChangeCallbacks.push(callback);
+  }
+
+  // Method to check current auth state (to be called from React components)
+  public checkAuthAndSendToken(isAuthenticated: boolean): void {
+    console.log('CapacitorPushService: checkAuthAndSendToken called', { isAuthenticated, hasPendingToken: !!this.pendingToken });
+    
+    this.isAuthenticated = isAuthenticated;
+    
+    if (isAuthenticated && this.pendingToken) {
+      console.log('CapacitorPushService: Sending pending token to backend');
+      this.sendTokenToBackendWithRetry(this.pendingToken);
+    }
+  }
+
+  // Method to force send token regardless of auth state (for testing)
+  public forceSendToken(): void {
+    if (this.pendingToken) {
+      console.log('CapacitorPushService: Force sending token to backend');
+      this.sendTokenToBackendWithRetry(this.pendingToken);
+    } else {
+      console.log('CapacitorPushService: No token to send');
+    }
   }
 
   async initialize(): Promise<void> {
@@ -63,8 +101,8 @@ export class CapacitorPushService {
     // Registration success
     PushNotifications.addListener('registration', (token: Token) => {
       console.log('Push registration success, token: ' + token.value);
-      // Send token to your backend
-      this.sendTokenToBackend(token.value);
+      // Store token and try to send to backend
+      this.handleTokenReceived(token.value);
     });
 
     // Registration error
@@ -95,12 +133,52 @@ export class CapacitorPushService {
     );
   }
 
-  private async sendTokenToBackend(token: string): Promise<void> {
-    // Only send if user is authenticated
-    if (!this.isAuthenticated) {
-      console.log('User not authenticated, not sending push token to backend');
-      return;
+  private handleTokenReceived(token: string): void {
+    console.log('CapacitorPushService: Received push token:', token);
+    
+    // Always store the token
+    this.pendingToken = token;
+    this.retryCount = 0; // Reset retry count for new token
+    
+    // Try to send immediately if user is authenticated
+    if (this.isAuthenticated) {
+      console.log('CapacitorPushService: User is authenticated, sending token immediately');
+      this.sendTokenToBackendWithRetry(token);
+    } else {
+      console.log('CapacitorPushService: User not authenticated, token stored as pending');
     }
+  }
+
+  private async sendTokenToBackendWithRetry(token: string): Promise<void> {
+    try {
+      await this.sendTokenToBackend(token);
+      // Success - clear pending token and reset retry count
+      this.pendingToken = null;
+      this.retryCount = 0;
+      console.log('CapacitorPushService: Token sent successfully');
+    } catch (error) {
+      console.error('CapacitorPushService: Failed to send token, attempt', this.retryCount + 1, error);
+      
+      if (this.retryCount < this.maxRetries) {
+        this.retryCount++;
+        console.log(`CapacitorPushService: Retrying in ${this.retryDelay}ms...`);
+        
+        setTimeout(() => {
+          this.sendTokenToBackendWithRetry(token);
+        }, this.retryDelay);
+      } else {
+        console.error('CapacitorPushService: Max retries reached, keeping token as pending');
+        this.pendingToken = token; // Keep as pending for next auth state change
+        this.retryCount = 0; // Reset for next attempt
+      }
+    }
+  }
+
+  private async sendTokenToBackend(token: string): Promise<void> {
+    if (!this.isAuthenticated) {
+      throw new Error('User not authenticated');
+    }
+
     try {
       const response = await axiosInstance.post(
         '/api/notifications/fcm/subscribe',
@@ -110,16 +188,17 @@ export class CapacitorPushService {
         },
       );
 
-      console.log('Token sent to backend successfully');
+      console.log('CapacitorPushService: Token sent to backend successfully', response.data);
     } catch (error) {
       if (error instanceof Error) {
         console.error(
-          'Error sending token to backend:',
-          error.message,
-          error.stack,
+          'CapacitorPushService: Error sending token to backend:',
+          error.message
         );
+        throw error;
       } else {
-        console.error('Error sending token to backend:', JSON.stringify(error));
+        console.error('CapacitorPushService: Error sending token to backend:', JSON.stringify(error));
+        throw new Error('Failed to send token to backend');
       }
     }
   }
@@ -220,6 +299,27 @@ export class CapacitorPushService {
       PushNotifications.removeAllListeners();
     }
     this.isInitialized = false;
+  }
+
+  // Getter methods for debugging
+  public getDebugInfo() {
+    return {
+      isInitialized: this.isInitialized,
+      isAuthenticated: this.isAuthenticated,
+      hasPendingToken: !!this.pendingToken,
+      pendingToken: this.pendingToken ? this.pendingToken.substring(0, 20) + '...' : null,
+      retryCount: this.retryCount,
+      maxRetries: this.maxRetries,
+      isNativePlatform: Capacitor.isNativePlatform(),
+    };
+  }
+
+  public getPendingToken(): string | null {
+    return this.pendingToken;
+  }
+
+  public getAuthState(): boolean {
+    return this.isAuthenticated;
   }
 }
 

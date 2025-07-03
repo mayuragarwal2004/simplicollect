@@ -9,6 +9,7 @@ import 'flatpickr/dist/flatpickr.min.css';
 import { AuthProvider } from './context/AuthContext';
 import { DataProvider } from './context/DataContext';
 import { ThemeProvider } from './context/theme-provider';
+import PushNotificationManager from './components/PushNotificationManager';
 
 // Register service worker for push notifications
 if ('serviceWorker' in navigator) {
@@ -30,6 +31,7 @@ ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
       <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
         <AuthProvider>
           <DataProvider>
+            <PushNotificationManager />
             {/* <Router> */}
             <App />
             {/* </Router> */}
