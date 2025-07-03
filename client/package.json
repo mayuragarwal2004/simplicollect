@@ -19,6 +19,8 @@
   },
   "author": "Mayur Agarwal <mayur.m.agarwal@gmail.com> (https://simpliumtechnologies.com/)",
   "dependencies": {
+    "@capacitor/assets": "^3.0.5",
+    "@capacitor/preferences": "^7.0.1",
     "@capacitor/push-notifications": "^7.0.1",
     "@emotion/react": "^11.13.3",
     "@emotion/styled": "^11.13.0",

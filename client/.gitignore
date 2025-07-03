@@ -24,5 +24,6 @@ dist-ssr
 *.sln
 *.sw?
 
-android
-ios
+/android
+/ios
+/icons
