@@ -5,7 +5,9 @@ interface NotificationContextType {
   isSupported: boolean;
   isEnabled: boolean;
   permission: NotificationPermission | null;
-    setPermission: (permission: NotificationPermission | null) => void; 
+  setPermission: (permission: NotificationPermission | null) => void;
+  fcmToken: string | null;
+  setFcmToken: (token: string | null) => void;
   loading: boolean;
   error: string | null;
   notificationsBlocked: boolean;
@@ -18,6 +20,7 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
   const [isSupported, setIsSupported] = useState(false);
   const [isEnabled, setIsEnabled] = useState(false);
   const [permission, setPermission] = useState<NotificationPermission | null>(null);
+  const [fcmToken, setFcmToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -68,6 +71,8 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
         isEnabled: isEnabled && !notificationsBlocked,
         permission,
         setPermission,
+        fcmToken,
+        setFcmToken,
         loading,
         error,
         notificationsBlocked,

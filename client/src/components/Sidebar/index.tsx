@@ -55,6 +55,16 @@ const adminSidebarData = [
       },
     ],
   },
+  {
+    title: 'Notifications',
+    icon: 'Bell', // Bell icon for notifications
+    links: [
+      {
+        title: 'Notifications',
+        to: '/admin/notifications',
+      }
+    ]
+  }
 ];
 
 const Sidebar = ({ sidebarOpen, setSidebarOpen, admin }: SidebarProps) => {

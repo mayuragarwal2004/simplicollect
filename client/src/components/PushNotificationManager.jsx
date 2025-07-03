@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { PushNotifications } from '@capacitor/push-notifications';
 import { useAuth } from '@/context/AuthContext';
+import { useNotificationContext } from '@/context/NotificationContext';
 import { axiosInstance } from '@/utils/config';
 
 /**
@@ -11,6 +12,7 @@ import { axiosInstance } from '@/utils/config';
  */
 export const PushNotificationManager = () => {
   const { isAuthenticated } = useAuth();
+  const { setFcmToken } = useNotificationContext();
 
   useEffect(() => {
     // Only initialize on native platforms
@@ -87,10 +89,11 @@ export const PushNotificationManager = () => {
 
   const handleTokenReceived = (token) => {
     console.log('PushNotificationManager: Token received:', token.substring(0, 20) + '...');
-    
-    // Store token in localStorage for later use
-    localStorage.setItem('fcm_token', token);
-    
+    setFcmToken(token);
+    // Store token for web only
+    if (!Capacitor.isNativePlatform()) {
+      localStorage.setItem('fcm_token', token);
+    }
     // If user is authenticated, send token immediately
     if (isAuthenticated) {
       sendTokenToBackend(token);
@@ -101,8 +104,13 @@ export const PushNotificationManager = () => {
 
   const handleAuthenticationChange = () => {
     // When user logs in, check if we have a stored token and send it
-    const storedToken = localStorage.getItem('fcm_token');
-    
+    let storedToken = null;
+    if (!Capacitor.isNativePlatform()) {
+      storedToken = localStorage.getItem('fcm_token');
+    } else {
+      // On native, use context (already set by handleTokenReceived)
+      storedToken = null;
+    }
     if (storedToken && isAuthenticated) {
       console.log('PushNotificationManager: User authenticated, sending stored token');
       sendTokenToBackend(storedToken);

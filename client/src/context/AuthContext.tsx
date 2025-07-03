@@ -3,6 +3,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import { Preferences } from '@capacitor/preferences';
 import { Capacitor } from '@capacitor/core';
+import { useNotificationContext } from './NotificationContext';
 
 interface AuthContextType {
   accessToken: string | null;
@@ -34,6 +35,7 @@ interface AuthProviderProps {
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const { fcmToken } = useNotificationContext();
 
   // Calculate isAuthenticated based on accessToken
   // const isAuthenticated = !!accessToken;
@@ -103,6 +105,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const logout = async () => {
+    // Unsubscribe FCM token before logging out
+    try {
+      if (fcmToken) {
+        await axiosInstance.delete('/api/notifications/fcm/unsubscribe', {
+          data: { token: fcmToken },
+        });
+      }
+    } catch (e) {
+      console.warn('Failed to unsubscribe FCM token on logout:', e);
+    }
     setAccessToken(null);
     await removeToken();
   };
