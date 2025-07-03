@@ -13,8 +13,6 @@ const DropdownUser = () => {
   const { isAuthenticated, logout } = useAuth();
   const { memberData, allChaptersData } = useData();
 
-  console.log('Mayur here', memberData);
-
   if (!isAuthenticated) {
     return null;
   }

@@ -1,21 +1,51 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { Capacitor } from '@capacitor/core';
 import usePushNotifications from '../hooks/usePushNotifications';
+import { useNotificationContext } from '@/context/NotificationContext';
 
 const PushNotificationSettings: React.FC = () => {
   const { isSupported, isSubscribed, loading, subscribeToPush, unsubscribeFromPush } = usePushNotifications();
+  const {permission, notificationsBlocked, setPermission} = useNotificationContext();
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [showHelp, setShowHelp] = useState(false);
 
+
+  // Handle permission denied edge case
   const handleToggleSubscription = async () => {
+    setErrorMsg(null);
     try {
       if (isSubscribed) {
         await unsubscribeFromPush();
+        if (window && 'Notification' in window) {
+          setPermission(Notification.permission);
+        }
       } else {
+        // Check permission before subscribing
+        if (window && 'Notification' in window && Notification.permission === 'denied') {
+          setPermission('denied');
+          setErrorMsg('You have blocked notifications for this site. Please enable them in your browser settings.');
+          toast.error('Notifications are blocked. Enable them in browser settings.');
+          return;
+        }
         await subscribeToPush();
+        if (window && 'Notification' in window) {
+          setPermission(Notification.permission);
+        }
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error toggling push notifications:', error);
-      toast.error('Failed to update push notification settings');
+      // Show a user-friendly error if permission is not granted
+      if (typeof error?.message === 'string' && error.message.includes('Permission not granted')) {
+        setErrorMsg('Notifications are blocked or not allowed. Please enable them in your device or browser settings.');
+        toast.error('Notifications are blocked. Enable them in your settings.');
+      } else {
+        setErrorMsg('Failed to update push notification settings');
+        toast.error('Failed to update push notification settings');
+      }
+      if (window && 'Notification' in window) {
+        setPermission(Notification.permission);
+      }
     }
   };
 
@@ -25,20 +55,22 @@ const PushNotificationSettings: React.FC = () => {
       return {
         name: platform === 'ios' ? 'iOS' : 'Android',
         type: 'Native App',
-        service: 'Firebase Cloud Messaging'
+        service: 'Firebase Cloud Messaging',
       };
     } else {
       return {
         name: 'Web',
         type: 'Browser',
-        service: 'Firebase Cloud Messaging'
+        service: 'Firebase Cloud Messaging',
       };
     }
   };
 
   const platformInfo = getPlatformInfo();
 
-  if (!isSupported) {
+  // Show denied state for web or native
+  if (!isSupported || notificationsBlocked) {
+    const platform = Capacitor.isNativePlatform() ? Capacitor.getPlatform() : 'web';
     return (
       <div className="rounded-lg bg-yellow-50 p-4 dark:bg-yellow-900/20">
         <div className="flex">
@@ -49,23 +81,76 @@ const PushNotificationSettings: React.FC = () => {
           </div>
           <div className="ml-3">
             <h3 className="text-sm font-medium text-yellow-800 dark:text-yellow-400">
-              Push Notifications Not Supported
+              {permission === 'denied' ? 'Notifications Blocked' : 'Push Notifications Not Supported'}
             </h3>
             <p className="mt-2 text-sm text-yellow-700 dark:text-yellow-300">
-              Your browser doesn't support push notifications. Please use a modern browser like Chrome, Firefox, or Safari.
+              {permission === 'denied'
+                ? 'You have blocked notifications for this site. Please enable them in your browser or device settings.'
+                : 'Your browser or device does not support push notifications.'}
             </p>
+            <button
+              className="mt-2 text-xs text-blue-700 underline hover:text-blue-900"
+              onClick={() => setShowHelp((v) => !v)}
+            >
+              How to enable notifications?
+            </button>
+            {showHelp && (
+              <div className="mt-3 p-3 bg-blue-50 rounded text-xs text-blue-900 dark:bg-blue-900/30 dark:text-blue-200">
+                {platform === 'android' && (
+                  <>
+                    <strong>Android:</strong>
+                    <ol className="list-decimal ml-4 mt-1">
+                      <li>Open your device <b>Settings</b>.</li>
+                      <li>Go to <b>Apps</b> or <b>Apps & notifications</b>.</li>
+                      <li>Find and select <b>SimpliCollect</b>.</li>
+                      <li>Tap <b>Notifications</b>.</li>
+                      <li>Enable <b>Allow notifications</b>.</li>
+                    </ol>
+                  </>
+                )}
+                {platform === 'ios' && (
+                  <>
+                    <strong>iOS:</strong>
+                    <ol className="list-decimal ml-4 mt-1">
+                      <li>Open your device <b>Settings</b>.</li>
+                      <li>Scroll down and tap <b>SimpliCollect</b>.</li>
+                      <li>Tap <b>Notifications</b>.</li>
+                      <li>Enable <b>Allow Notifications</b>.</li>
+                    </ol>
+                  </>
+                )}
+                {platform === 'web' && (
+                  <>
+                    <strong>Web Browser:</strong>
+                    <ol className="list-decimal ml-4 mt-1">
+                      <li>Click the lock icon next to the website address in your browser.</li>
+                      <li>Find <b>Notifications</b> in the permissions list.</li>
+                      <li>Set it to <b>Allow</b>.</li>
+                      <li>Refresh this page.</li>
+                    </ol>
+                  </>
+                )}
+              </div>
+            )}
+            {errorMsg && (
+              <p className="mt-2 text-sm text-red-600 dark:text-red-400">{errorMsg}</p>
+            )}
           </div>
         </div>
       </div>
     );
   }
 
+  console.log("notificationsBlocked", notificationsBlocked);
+
+  
+
   return (
     <div className="rounded-lg bg-white p-6 shadow-md dark:bg-gray-800">
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-lg font-medium text-gray-900 dark:text-white">
-            Push Notifications
+            Push Notifications hi
           </h3>
           <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
             Receive notifications even when you're not using the app
@@ -75,29 +160,39 @@ const PushNotificationSettings: React.FC = () => {
               {platformInfo.service}
             </span>
             <span>{platformInfo.name} {platformInfo.type}</span>
+            {permission && (
+              <span className={`ml-2 px-2 py-1 rounded text-xs ${
+                permission === 'granted' ? 'bg-green-200 text-green-800' :
+                permission === 'denied' ? 'bg-red-200 text-red-800' :
+                'bg-yellow-200 text-yellow-800'
+              }`}>
+                {permission.charAt(0).toUpperCase() + permission.slice(1)}
+              </span>
+            )}
           </div>
         </div>
-        
         <button
           onClick={handleToggleSubscription}
-          disabled={loading}
+          disabled={loading || notificationsBlocked}
           className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 disabled:opacity-50 ${
-            isSubscribed 
-              ? 'bg-blue-600' 
+            isSubscribed && !notificationsBlocked
+              ? 'bg-blue-600'
               : 'bg-gray-200 dark:bg-gray-700'
           }`}
           role="switch"
-          aria-checked={isSubscribed}
+          aria-checked={isSubscribed && !notificationsBlocked}
         >
           <span
             className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow transform ring-0 transition duration-200 ease-in-out ${
-              isSubscribed ? 'translate-x-5' : 'translate-x-0'
+              isSubscribed && !notificationsBlocked ? 'translate-x-5' : 'translate-x-0'
             }`}
           />
         </button>
       </div>
-
-      {isSubscribed && (
+      {errorMsg && (
+        <div className="mt-2 text-sm text-red-600 dark:text-red-400">{errorMsg}</div>
+      )}
+      {isSubscribed && !notificationsBlocked && (
         <div className="mt-4 rounded-md bg-green-50 p-4 dark:bg-green-900/20">
           <div className="flex">
             <div className="flex-shrink-0">

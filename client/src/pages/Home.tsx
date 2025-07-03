@@ -57,6 +57,7 @@ import '../styles/fonts.css';
 import { useAuth } from '../context/AuthContext';
 import { axiosInstance } from '@/utils/config';
 import { toast } from 'react-toastify';
+import { useEnvContext } from '@/context/EnvContext';
 
 const navItems = [
   { name: 'Demo', link: '#demo' },
@@ -199,6 +200,7 @@ export default function Home() {
   const [loadingStates, setLoadingStates] = useState(authLoadingStates);
   const heroRef = useRef<HTMLDivElement>(null);
   const { isAuthenticated } = useAuth();
+  const { isNative } = useEnvContext();
   const [statData, setStatData] = useState({
     totalAmount: 1247,
     totalMembers: 12543,
@@ -215,6 +217,15 @@ export default function Home() {
       console.error('Error fetching statistics:', error);
     }
   };
+
+  useEffect(() => {
+    if (isNative) {
+      if (isAuthenticated) {
+        // If user is authenticated, navigate to dashboard
+        navigate('/auth/signin', { replace: true }); // sign in page will handle redirection
+      }
+    }
+  }, [isNative, isAuthenticated, navigate]);
 
   useEffect(() => {
     fetchStatData();
