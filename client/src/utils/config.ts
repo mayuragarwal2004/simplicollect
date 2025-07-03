@@ -1,5 +1,6 @@
 import axios from 'axios';
 import Cookies from 'universal-cookie'; // Or use localStorage if preferred
+import { Preferences } from '@capacitor/preferences';
 import { Capacitor } from '@capacitor/core';
 
 const cookies = new Cookies();
@@ -19,6 +20,7 @@ const getBaseURL = (): string => {
     if (isDevelopment) {
       console.log(`[Capacitor] Using API base URL: ${baseUrl}`);
     }
+    console.log(`[Capacitor] Using API base URL: ${baseUrl}`);
     
     return baseUrl;
   }
@@ -52,9 +54,17 @@ export const axiosInstance = axios.create({
 
 // Add an interceptor to include the authorization token in every request
 axiosInstance.interceptors.request.use(
-  (config: any) => {
-    // Retrieve token from cookies (or local storage)
-    const token = cookies.get('token'); // Example: using Cookies, adjust as needed
+  async (config: any) => {
+    let token: string | undefined | null;
+
+    if (Capacitor.isNativePlatform()) {
+      // Use Capacitor Preferences on native
+      const { value } = await Preferences.get({ key: 'accessToken' });
+      token = value;
+    } else {
+      // Use cookies on web
+      token = cookies.get('token');
+    }
 
     // If a token exists, add it to the request headers
     if (token) {

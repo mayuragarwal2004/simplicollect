@@ -6,6 +6,7 @@ import LogoDark from '../../images/logo/logo-dark.svg';
 import Logo from '../../images/logo/logo.svg';
 import { useAuth } from '../../context/AuthContext';
 import axios from 'axios';
+import { axiosInstance } from '@/utils/config';
 
 const SignIn: React.FC = () => {
   const navigate = useNavigate();
@@ -36,7 +37,7 @@ const SignIn: React.FC = () => {
     setError('');
 
     try {
-      const response = await axios.post('/api/auth/check-member', {
+      const response = await axiosInstance.post('/api/auth/check-member', {
         identifier,
       });
 

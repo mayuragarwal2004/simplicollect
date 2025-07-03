@@ -1,6 +1,6 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { useEffect, useState } from "react";
-import axios from "axios";
+import { axiosInstance } from "@/utils/config";
 
 const dummyStatus = { active: 120, inactive: 30, suspended: 10 };
 const dummyDue = { members: 40, inactive: 15, suspended: 5 };
@@ -12,7 +12,7 @@ export default function MemberStatusSummary() {
   useEffect(() => {
     async function fetchStatus() {
       try {
-        const res = await axios.get("/api/admin/member-status");
+        const res = await axiosInstance.get("/api/admin/member-status");
         setStatus(res.data.status);
         setDue(res.data.due);
       } catch (err) {

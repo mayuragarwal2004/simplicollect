@@ -930,7 +930,7 @@ export default function Home() {
         >
           {/* Gradient background with noise texture */}
           <div className="absolute inset-0 bg-[linear-gradient(to_right,#4f46e5,#06b6d4)] opacity-10" />
-          <div className="absolute inset-0 bg-[url('/noise.png')] mix-blend-overlay" />
+          <div className="absolute inset-0 mix-blend-overlay" />
 
           <div className="relative max-w-7xl mx-auto px-4 py-12">
             <motion.div

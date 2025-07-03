@@ -4,3 +4,6 @@ node_modules
 mobile-app
 /test
 *.py
+
+/google-services.json
+/GoogleService-Info.plist

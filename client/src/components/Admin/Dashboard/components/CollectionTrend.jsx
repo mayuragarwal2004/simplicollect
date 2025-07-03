@@ -8,7 +8,7 @@ import {
 } from "recharts";
 import { Card, CardContent } from "@/components/ui/card";
 import { useEffect, useState } from "react";
-import axios from "axios";
+import { axiosInstance } from "@/utils/config";
 
 // Dummy fallback data
 const dummyTrendData = [
@@ -35,7 +35,7 @@ export default function CollectionTrend() {
 
     async function fetchTrend() {
       try {
-        const res = await axios.get("/api/admin/collection-trend");
+        const res = await axiosInstance.get("/api/admin/collection-trend");
         if (isMounted) setTrendData(res.data);
       } catch (err) {
         console.error("Error fetching /api/admin/collection-trend:", err.message);

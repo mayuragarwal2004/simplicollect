@@ -1,6 +1,6 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { useEffect, useState } from "react";
-import axios from "axios";
+import { axiosInstance } from "@/utils/config";
 
 export default function CardsSummary() {
   const [stats, setStats] = useState({
@@ -13,7 +13,7 @@ export default function CardsSummary() {
   useEffect(() => {
     async function fetchStats() {
       try {
-        const res = await axios.get("/api/admin/stats");
+        const res = await axiosInstance.get("/api/admin/stats");
         setStats(res.data);
       } catch (err) {
         console.error("Error fetching stats", err);

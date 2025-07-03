@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { toast } from 'react-toastify';
 import { axiosInstance } from '../utils/config';
+import { useAuth } from '@/context/AuthContext';
 
 interface Notification {
   notificationId: string;
@@ -19,8 +20,10 @@ const NotificationBell: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const {isAuthenticated} = useAuth();
 
   useEffect(() => {
+    if (!isAuthenticated) return; // Do not fetch notifications if not authenticated
     fetchUnreadCount();
     
     // Close dropdown when clicking outside

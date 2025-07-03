@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import axios from "axios";
+import { axiosInstance } from '@/utils/config';
 
 const SearchMembers = ({ chapterId }) => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -26,7 +26,7 @@ const SearchMembers = ({ chapterId }) => {
     const fetchResults = async () => {
       setLoading(true);
       try {
-        const response = await axios.get("/api/admin/chapter-member-list/searchmembersforchapter", {
+        const response = await axiosInstance.get("/api/admin/chapter-member-list/searchmembersforchapter", {
           params: { searchQuery: debouncedQuery, chapterId }
         });
         setResults(response.data.data);

@@ -4,6 +4,7 @@ import { axiosInstance } from '../../utils/config';
 import { toast } from 'react-toastify';
 import ClickOutside from '../ClickOutside';
 import usePushNotifications from '../../hooks/usePushNotifications';
+import { useAuth } from '@/context/AuthContext';
 
 interface Notification {
   notificationId: string;
@@ -23,11 +24,16 @@ const DropdownNotification = () => {
   const [loading, setLoading] = useState(false);
   const [showPermissionPrompt, setShowPermissionPrompt] = useState(false);
   const { isSupported, isSubscribed, subscribeToPush } = usePushNotifications();
+  const { isAuthenticated } = useAuth();
 
   useEffect(() => {
+    if (!isAuthenticated) {
+      return;
+    }
+    // Fetch unread count and check notification permission on mount
     fetchUnreadCount();
     checkNotificationPermission();
-  }, []);
+  }, [isAuthenticated]);
 
   useEffect(() => {
     if (dropdownOpen && notifications.length === 0) {
@@ -43,7 +49,9 @@ const DropdownNotification = () => {
 
   const fetchUnreadCount = async () => {
     try {
-      const response = await axiosInstance.get('/api/notifications/unread-count');
+      const response = await axiosInstance.get(
+        '/api/notifications/unread-count',
+      );
       setUnreadCount(response.data.count);
     } catch (error) {
       console.error('Error fetching unread count:', error);
@@ -66,14 +74,14 @@ const DropdownNotification = () => {
   const markAsRead = async (notificationId: string) => {
     try {
       await axiosInstance.patch(`/api/notifications/${notificationId}/read`);
-      setNotifications(prev => 
-        prev.map(notif => 
-          notif.notificationId === notificationId 
+      setNotifications((prev) =>
+        prev.map((notif) =>
+          notif.notificationId === notificationId
             ? { ...notif, isRead: true }
-            : notif
-        )
+            : notif,
+        ),
       );
-      setUnreadCount(prev => Math.max(0, prev - 1));
+      setUnreadCount((prev) => Math.max(0, prev - 1));
     } catch (error) {
       console.error('Error marking notification as read:', error);
     }
@@ -193,13 +201,22 @@ const DropdownNotification = () => {
               <div className="p-4 bg-blue-50 border-b border-stroke dark:border-strokedark dark:bg-blue-900/20">
                 <div className="flex items-start space-x-3">
                   <div className="flex-shrink-0">
-                    <svg className="w-5 h-5 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                    <svg
+                      className="w-5 h-5 text-blue-500"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                        clipRule="evenodd"
+                      />
                     </svg>
                   </div>
                   <div className="flex-1">
                     <p className="text-sm text-blue-800 dark:text-blue-300">
-                      Enable push notifications to stay updated on important events
+                      Enable push notifications to stay updated on important
+                      events
                     </p>
                     <div className="mt-2 flex space-x-2">
                       <button
@@ -224,12 +241,24 @@ const DropdownNotification = () => {
               {loading ? (
                 <div className="p-4 text-center">
                   <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary mx-auto"></div>
-                  <p className="mt-2 text-sm text-bodydark2">Loading notifications...</p>
+                  <p className="mt-2 text-sm text-bodydark2">
+                    Loading notifications...
+                  </p>
                 </div>
               ) : notifications.length === 0 ? (
                 <div className="p-4 text-center text-bodydark2">
-                  <svg className="mx-auto h-10 w-10 text-bodydark2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-5-5V9.5a6.5 6.5 0 1 0-13 0V12l-5 5h5m13 0v1a3 3 0 1 1-6 0v-1m6 0H9" />
+                  <svg
+                    className="mx-auto h-10 w-10 text-bodydark2"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M15 17h5l-5-5V9.5a6.5 6.5 0 1 0-13 0V12l-5 5h5m13 0v1a3 3 0 1 1-6 0v-1m6 0H9"
+                    />
                   </svg>
                   <p className="mt-2 text-sm">No notifications</p>
                 </div>
@@ -239,9 +268,14 @@ const DropdownNotification = () => {
                     <li key={notification.notificationId}>
                       <div
                         className={`flex flex-col gap-2.5 border-t border-stroke px-4.5 py-3 hover:bg-gray-2 dark:border-strokedark dark:hover:bg-meta-4 cursor-pointer border-l-4 ${getPriorityColor(notification.priority)} ${
-                          !notification.isRead ? 'bg-blue-50 dark:bg-blue-900/20' : ''
+                          !notification.isRead
+                            ? 'bg-blue-50 dark:bg-blue-900/20'
+                            : ''
                         }`}
-                        onClick={() => !notification.isRead && markAsRead(notification.notificationId)}
+                        onClick={() =>
+                          !notification.isRead &&
+                          markAsRead(notification.notificationId)
+                        }
                       >
                         <div className="flex items-start justify-between">
                           <div className="flex items-start space-x-2 flex-1">
@@ -250,7 +284,9 @@ const DropdownNotification = () => {
                             </span>
                             <div className="flex-1 min-w-0">
                               <p className="text-sm">
-                                <span className={`${!notification.isRead ? 'font-semibold text-black dark:text-white' : 'text-black dark:text-white'}`}>
+                                <span
+                                  className={`${!notification.isRead ? 'font-semibold text-black dark:text-white' : 'text-black dark:text-white'}`}
+                                >
                                   {notification.title}
                                 </span>
                               </p>
@@ -263,7 +299,7 @@ const DropdownNotification = () => {
                             <span className="w-2 h-2 bg-primary rounded-full flex-shrink-0 mt-2"></span>
                           )}
                         </div>
-                        
+
                         <div className="flex items-center justify-between text-xs text-bodydark2">
                           <span>{formatDate(notification.createdAt)}</span>
                           {notification.senderName && (

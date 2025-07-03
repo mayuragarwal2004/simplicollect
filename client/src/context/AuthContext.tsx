@@ -1,10 +1,17 @@
+import { axiosInstance } from '@/utils/config';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
+import { Preferences } from '@capacitor/preferences';
+import { Capacitor } from '@capacitor/core';
 
 interface AuthContextType {
   accessToken: string | null;
   isAuthenticated: boolean;
-  login: (email: string, password: string, onSuccess?: Function) => Promise<void>;
+  login: (
+    email: string,
+    password: string,
+    onSuccess?: Function,
+  ) => Promise<void>;
   logout: () => void;
   refreshToken: () => Promise<void>;
 }
@@ -37,65 +44,86 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   // Retrieve accessToken from sessionStorage on initial render
   useEffect(() => {
-    const storedToken = sessionStorage.getItem('accessToken');
-    if (storedToken) {
-      setAccessToken(storedToken);
-    }
+    getToken().then((storedToken) => {
+      if (storedToken) setAccessToken(storedToken);
+    });
   }, []);
 
-  const login = async (identifier: string, password: string, onSuccess?: Function) => {
-    try {
-      const response = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ identifier, password }),
-      });
-      const data = await response.json();
-  
-      if (response.ok) {
-        setAccessToken(data.accessToken);
-        sessionStorage.setItem("accessToken", data.accessToken);
-        document.cookie = `refreshToken=${data.refreshToken}; Secure; SameSite=Strict; path=/;`;
-        document.cookie = `token=${data.accessToken}; Secure; SameSite=Strict; path=/;`;
-        console.log("User logged in successfully");
-        if (onSuccess) {
-          onSuccess();
-        }
-      } else {
-        toast.error(data.message || "Unknown error");
-        console.error("Login failed:", data.message || "Unknown error");
-      }
-    } catch (error) {
-      toast.error("Could not log in. Please try again later.");
-      console.error("An error occurred:", error);
+  // Helper functions
+  const setToken = async (token: string) => {
+    if (Capacitor.isNativePlatform()) {
+      await Preferences.set({ key: 'accessToken', value: token });
+      console.log("Preferences used to set token:", token);
+    } else {
+      console.log("SessionStorage used to set token:", token);
+      sessionStorage.setItem('accessToken', token);
+      document.cookie = `token=${token}; Secure; SameSite=Strict; path=/;`;
     }
   };
-  
-  const logout = () => {
+
+  const getToken = async (): Promise<string | null> => {
+    if (Capacitor.isNativePlatform()) {
+      const { value } = await Preferences.get({ key: 'accessToken' });
+      return value || null;
+    } else {
+      return sessionStorage.getItem('accessToken');
+    }
+  };
+
+  const removeToken = async () => {
+    if (Capacitor.isNativePlatform()) {
+      await Preferences.remove({ key: 'accessToken' });
+    } else {
+      sessionStorage.removeItem('accessToken');
+      document.cookie = 'token=; Max-Age=0; path=/;';
+    }
+  };
+
+  const login = async (
+    identifier: string,
+    password: string,
+    onSuccess?: Function,
+  ) => {
+    try {
+      const response = await axiosInstance.post('/api/auth/login', {
+        identifier,
+        password,
+      });
+
+      const data = response.data;
+      await setToken(data.accessToken);
+      setAccessToken(data.accessToken);
+      // ...existing code...
+      if (onSuccess) onSuccess();
+    } catch (error: any) {
+      const message = error?.response?.data?.message || 'Unknown error';
+      toast.error(message);
+      console.error('Login failed:', message);
+    }
+  };
+
+  const logout = async () => {
     setAccessToken(null);
-    sessionStorage.removeItem('accessToken');
-    document.cookie = 'refreshToken=; Max-Age=0; path=/;';
-    console.log('User logged out');
+    await removeToken();
   };
 
   const refreshToken = async () => {
     try {
-      const response = await fetch('/api/auth/refresh', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-      });
-      const data = await response.json();
+      const response = await axiosInstance.post(
+        '/api/auth/refresh',
+        {},
+        {
+          withCredentials: true,
+          headers: { 'Content-Type': 'application/json' },
+        },
+      );
+      const data = response.data;
 
-      if (response.ok) {
-        setAccessToken(data.accessToken);
-        sessionStorage.setItem('accessToken', data.accessToken);
-        console.log('Access token refreshed');
-      } else {
-        console.error('Token refresh failed:', data.message || 'Unknown error');
-      }
-    } catch (error) {
-      console.error('An error occurred during token refresh:', error);
+      await setToken(data.accessToken);
+      setAccessToken(data.accessToken);
+    } catch (error: any) {
+      const message = error?.response?.data?.message || 'Unknown error';
+      console.error('Token refresh failed:', message);
     }
   };
 

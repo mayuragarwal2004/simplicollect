@@ -5,7 +5,7 @@ import Breadcrumb from '../../components/Breadcrumbs/BreadcrumbOriginal';
 import LogoDark from '../../images/logo/logo-dark.svg';
 import Logo from '../../images/logo/logo.svg';
 import { useAuth } from '../../context/AuthContext';
-import axios from 'axios';
+import { axiosInstance } from '@/utils/config';
 
 const AdminSignIn: React.FC = () => {
   const navigate = useNavigate();
@@ -33,7 +33,7 @@ const AdminSignIn: React.FC = () => {
     setError('');
 
     try {
-      const response = await axios.post('/api/auth/check-member', {
+      const response = await axiosInstance.post('/api/auth/check-member', {
         identifier,
       });
 
@@ -43,7 +43,7 @@ const AdminSignIn: React.FC = () => {
         setError('User does not exist!');
       } else if (response.data.defaultOTP) {
         // Send OTP automatically and navigate to OTP verification
-        await axios.post('/api/auth/send-otp', { identifier });
+        await axiosInstance.post('/api/auth/send-otp', { identifier });
         navigate('/auth/otp-verification', { state: { identifier } }); // No password → OTP verification
       } else if (response.data.exists && !response.data.defaultOTP) {
         setShowPasswordField(true); // Show password field for login

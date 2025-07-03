@@ -1,6 +1,6 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { useEffect, useState } from "react";
-import axios from "axios";
+import { axiosInstance } from "@/utils/config";
 
 export default function RecentTransactions() {
   const [transactions, setTransactions] = useState([]);
@@ -8,7 +8,7 @@ export default function RecentTransactions() {
   useEffect(() => {
     async function fetchTransactions() {
       try {
-        const res = await axios.get("/api/admin/transactions");
+        const res = await axiosInstance.get("/api/admin/transactions");
         setTransactions(res.data);
       } catch (err) {
         console.error("Error fetching transactions", err);

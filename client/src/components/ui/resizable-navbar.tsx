@@ -168,6 +168,7 @@ export const MobileNav = ({ children, className, visible }: MobileNavProps) => {
       style={{
         paddingLeft: '1.3rem',
         paddingRight: '1.3rem',
+        marginTop: 'env(safe-area-inset-top)'
       }}
     >
       {children}

@@ -13,7 +13,8 @@ import { ThemeProvider } from './context/theme-provider';
 // Register service worker for push notifications
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js')
+    navigator.serviceWorker
+      .register('/sw.js')
       .then((registration) => {
         console.log('SW registered: ', registration);
       })
@@ -25,14 +26,16 @@ if ('serviceWorker' in navigator) {
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>
-    <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
-      <AuthProvider>
-        <DataProvider>
-          {/* <Router> */}
-          <App />
-          {/* </Router> */}
-        </DataProvider>
-      </AuthProvider>
-    </ThemeProvider>
+    <div style={{ paddingTop: 'env(safe-area-inset-top)' }}>
+      <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
+        <AuthProvider>
+          <DataProvider>
+            {/* <Router> */}
+            <App />
+            {/* </Router> */}
+          </DataProvider>
+        </AuthProvider>
+      </ThemeProvider>
+    </div>
   </React.StrictMode>,
 );
