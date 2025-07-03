@@ -10,6 +10,8 @@ import { AuthProvider } from './context/AuthContext';
 import { DataProvider } from './context/DataContext';
 import { ThemeProvider } from './context/theme-provider';
 import PushNotificationManager from './components/PushNotificationManager';
+import { EnvProvider } from './context/EnvContext';
+import { NotificationProvider } from './context/NotificationContext';
 
 // Register service worker for push notifications
 if ('serviceWorker' in navigator) {
@@ -28,16 +30,18 @@ if ('serviceWorker' in navigator) {
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>
     <div style={{ paddingTop: 'env(safe-area-inset-top)' }}>
-      <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
-        <AuthProvider>
-          <DataProvider>
-            <PushNotificationManager />
-            {/* <Router> */}
-            <App />
-            {/* </Router> */}
-          </DataProvider>
-        </AuthProvider>
-      </ThemeProvider>
+      <EnvProvider>
+        <NotificationProvider>
+          <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
+            <AuthProvider>
+              <DataProvider>
+                <PushNotificationManager />
+                <App />
+              </DataProvider>
+            </AuthProvider>
+          </ThemeProvider>
+        </NotificationProvider>
+      </EnvProvider>
     </div>
   </React.StrictMode>,
 );

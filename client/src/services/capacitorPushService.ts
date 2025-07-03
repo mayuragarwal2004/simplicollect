@@ -79,6 +79,12 @@ export class CapacitorPushService {
     try {
       // Request permissions
       const result = await PushNotifications.requestPermissions();
+      // Dispatch permission state to window for React context to consume
+      window.dispatchEvent(
+        new CustomEvent('pushPermissionChanged', {
+          detail: { permission: result.receive },
+        })
+      );
       if (result.receive !== 'granted') {
         throw new Error('Push notification permission not granted');
       }
@@ -92,7 +98,23 @@ export class CapacitorPushService {
       this.isInitialized = true;
       console.log('Capacitor push service initialized successfully');
     } catch (error) {
-      console.error('Error initializing Capacitor push service:', error);
+      // If error is permission related, dispatch denied event
+      if (
+        error instanceof Error &&
+        error.message &&
+        error.message.toLowerCase().includes('permission')
+      ) {
+        window.dispatchEvent(
+          new CustomEvent('pushPermissionChanged', {
+            detail: { permission: 'denied' },
+          })
+        );
+      }
+      if (error instanceof Error) {
+        console.error('Error initializing Capacitor push service:', error.message, error.stack);
+      } else {
+        console.error('Error initializing Capacitor push service:', JSON.stringify(error));
+      }
       throw error;
     }
   }
@@ -107,7 +129,11 @@ export class CapacitorPushService {
 
     // Registration error
     PushNotifications.addListener('registrationError', (error: any) => {
-      console.error('Push registration error: ', error);
+      if (error instanceof Error) {
+        console.error('Push registration error:', error.message, error.stack);
+      } else {
+        console.error('Push registration error:', JSON.stringify(error));
+      }
     });
 
     // Notification received while app is in foreground
@@ -157,12 +183,14 @@ export class CapacitorPushService {
       this.retryCount = 0;
       console.log('CapacitorPushService: Token sent successfully');
     } catch (error) {
-      console.error('CapacitorPushService: Failed to send token, attempt', this.retryCount + 1, error);
-      
+      if (error instanceof Error) {
+        console.error('CapacitorPushService: Failed to send token, attempt', this.retryCount + 1, error.message, error.stack);
+      } else {
+        console.error('CapacitorPushService: Failed to send token, attempt', this.retryCount + 1, JSON.stringify(error));
+      }
       if (this.retryCount < this.maxRetries) {
         this.retryCount++;
         console.log(`CapacitorPushService: Retrying in ${this.retryDelay}ms...`);
-        
         setTimeout(() => {
           this.sendTokenToBackendWithRetry(token);
         }, this.retryDelay);
@@ -193,7 +221,8 @@ export class CapacitorPushService {
       if (error instanceof Error) {
         console.error(
           'CapacitorPushService: Error sending token to backend:',
-          error.message
+          error.message,
+          error.stack
         );
         throw error;
       } else {
@@ -256,7 +285,11 @@ export class CapacitorPushService {
       const result = await PushNotifications.getDeliveredNotifications();
       return result.notifications;
     } catch (error) {
-      console.error('Error getting delivered notifications:', error);
+      if (error instanceof Error) {
+        console.error('Error getting delivered notifications:', error.message, error.stack);
+      } else {
+        console.error('Error getting delivered notifications:', JSON.stringify(error));
+      }
       return [];
     }
   }
@@ -277,7 +310,11 @@ export class CapacitorPushService {
       });
       console.log('Delivered notifications removed:', ids);
     } catch (error) {
-      console.error('Error removing delivered notifications:', error);
+      if (error instanceof Error) {
+        console.error('Error removing delivered notifications:', error.message, error.stack);
+      } else {
+        console.error('Error removing delivered notifications:', JSON.stringify(error));
+      }
     }
   }
 
@@ -290,7 +327,11 @@ export class CapacitorPushService {
       await PushNotifications.removeAllDeliveredNotifications();
       console.log('All delivered notifications removed');
     } catch (error) {
-      console.error('Error removing all delivered notifications:', error);
+      if (error instanceof Error) {
+        console.error('Error removing all delivered notifications:', error.message, error.stack);
+      } else {
+        console.error('Error removing all delivered notifications:', JSON.stringify(error));
+      }
     }
   }
 
