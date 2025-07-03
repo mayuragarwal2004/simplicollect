@@ -83,8 +83,8 @@ const sendToToken = async (token, notificationData) => {
       notification: {
         title: notificationData.title,
         body: notificationData.message,
-        icon: '/icon-192x192.png',
-        badge: '/badge-72x72.png',
+        icon: notificationData.icon || '/android-chrome-192x192.png',
+        badge: notificationData.badge || '/badge-72x72.png',
         tag: notificationData.type || 'general',
         requireInteraction: notificationData.priority === 'urgent',
         actions: [
@@ -159,8 +159,8 @@ const sendToMultipleTokens = async (tokens, notificationData) => {
       notification: {
         title: notificationData.title,
         body: notificationData.message,
-        icon: '/icon-192x192.png',
-        badge: '/badge-72x72.png',
+        icon: notificationData.icon || '/icon-192x192.png',
+        badge: notificationData.badge || '/badge-72x72.png',
         tag: notificationData.type || 'general',
         requireInteraction: notificationData.priority === 'urgent'
       }
