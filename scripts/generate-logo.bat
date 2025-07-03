@@ -21,6 +21,9 @@ npx capacitor-assets generate
 echo ✅ Generating Android Icons with cordova-res...
 cordova-res android --skip-config --copy
 
+echo ✅ Copying notification badge icon for Android...
+copy /Y public\badge-72x72.png android\app\src\main\res\drawable\ic_stat_notify.png
+
 echo ✅ Building project and syncing...
 npm run build && npx cap copy && npx cap sync
 
