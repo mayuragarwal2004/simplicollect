@@ -58,6 +58,7 @@ import { useAuth } from '../context/AuthContext';
 import { axiosInstance } from '@/utils/config';
 import { toast } from 'react-toastify';
 import { useEnvContext } from '@/context/EnvContext';
+import ContactForm from '../components/ContactForm/ContactForm';
 
 const navItems = [
   { name: 'Demo', link: '#demo' },
@@ -65,6 +66,7 @@ const navItems = [
   // { name: 'Testimonials', link: '#testimonials' },
   { name: 'Stats', link: '#stats' },
   { name: 'About', link: '#about' },
+  { name: 'Contact', link: '#contact' },
 ];
 
 const testimonials = [
@@ -1067,6 +1069,124 @@ export default function Home() {
                   </motion.div>
                 </BoxReveal>
               </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Contact Us Section */}
+        <section
+          id="contact"
+          className="relative py-24 bg-gradient-to-b from-white to-gray-50 overflow-hidden z-20"
+        >
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(120,119,198,0.1),rgba(255,255,255,0))]" />
+          
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8 }}
+              viewport={{ once: true }}
+              className="text-center mb-16"
+            >
+              <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
+                Get in Touch
+              </h2>
+              <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+                Have questions about SimpliCollect? Need a demo or want to discuss your requirements? 
+                We're here to help you transform your organization management.
+              </p>
+            </motion.div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
+              {/* Contact Information */}
+              <motion.div
+                initial={{ opacity: 0, x: -30 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.8, delay: 0.2 }}
+                viewport={{ once: true }}
+                className="space-y-8"
+              >
+                <div>
+                  <h3 className="text-2xl font-bold text-gray-900 mb-6">
+                    Why Choose SimpliCollect?
+                  </h3>
+                  <div className="space-y-4">
+                    <div className="flex items-start gap-4">
+                      <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <BarChart3 className="w-4 h-4 text-blue-600" />
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-gray-900">Complete Management Solution</h4>
+                        <p className="text-gray-600">End-to-end platform for member, event, and financial management.</p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-start gap-4">
+                      <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <Shield className="w-4 h-4 text-green-600" />
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-gray-900">Secure & Reliable</h4>
+                        <p className="text-gray-600">Bank-grade security with 99.9% uptime guarantee.</p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-start gap-4">
+                      <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <Users className="w-4 h-4 text-purple-600" />
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-gray-900">24/7 Support</h4>
+                        <p className="text-gray-600">Dedicated support team ready to help you succeed.</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-gradient-to-r from-blue-600 to-purple-700 rounded-xl p-8 text-white">
+                  <h4 className="text-xl font-bold mb-4">Ready to Get Started?</h4>
+                  <p className="text-blue-100 mb-6">
+                    Join over 1000+ organizations already using SimpliCollect to streamline their operations.
+                  </p>
+                  <div className="flex flex-col sm:flex-row gap-4">
+                    <a
+                      href="https://wa.me/919975570005?text=Hello,%20I%20want%20to%20schedule%20a%20demo%20of%20SimpliCollect."
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center justify-center px-6 py-3 bg-white text-blue-600 font-medium rounded-lg hover:bg-gray-100 transition-colors duration-200"
+                    >
+                      <MessageSquare className="w-4 h-4 mr-2" />
+                      Schedule a Demo
+                    </a>
+                    <a
+                      href="tel:+919975570005"
+                      className="inline-flex items-center justify-center px-6 py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition-colors duration-200"
+                    >
+                      <ArrowRight className="w-4 h-4 mr-2" />
+                      Call Now
+                    </a>
+                  </div>
+                </div>
+              </motion.div>
+
+              {/* Contact Form */}
+              <motion.div
+                initial={{ opacity: 0, x: 30 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.8, delay: 0.4 }}
+                viewport={{ once: true }}
+              >
+                <ContactForm
+                  onSuccess={(data) => {
+                    toast.success(`Thank you! Your message has been sent. Reference ID: ${data.referenceId}`);
+                  }}
+                  onError={(error) => {
+                    toast.error(error);
+                  }}
+                  showTitle={false}
+                  compact={true}
+                />
+              </motion.div>
             </div>
           </div>
         </section>

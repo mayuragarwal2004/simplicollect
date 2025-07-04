@@ -62,9 +62,19 @@ const adminSidebarData = [
       {
         title: 'Notifications',
         to: '/admin/notifications',
-      }
-    ]
-  }
+      },
+    ],
+  },
+  {
+    title: 'Contact Queries',
+    icon: 'MessageSquare', // Message icon for contact queries
+    links: [
+      {
+        title: 'Contact Queries',
+        to: '/admin/contact-queries',
+      },
+    ],
+  },
 ];
 
 const Sidebar = ({ sidebarOpen, setSidebarOpen, admin }: SidebarProps) => {

@@ -12,13 +12,9 @@ const transporter = nodemailer.createTransport({
 });
 
 const sendEMail = async (mailOptions) => {
-  console.log({mailOptions});
-  
   if (!mailOptions.from) {
     mailOptions.from = `"${process.env.SMTP_FROM_NAME}" <${process.env.SMTP_FROM_EMAIL}>`;
   }
-  console.log("{mailOptions}");
-  console.log({mailOptions});
 
   return new Promise((resolve, reject) => {
     transporter.sendMail(mailOptions, (error, info) => {

@@ -138,7 +138,7 @@ const sendPushNotification = async (memberId, payload) => {
       }
     });
 
-    await Promise.allSettled(pushPromises);
+    await Promise.allSettled(webPushPromises);
   } catch (error) {
     console.error('Error sending push notification:', error);
   }

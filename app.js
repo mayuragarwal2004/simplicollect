@@ -13,6 +13,7 @@ const feeRecieverRoutes = require("./src/feeReceiver/route/feeReceiverRoutes");
 const meetingRoutes = require("./src/meeting/route/meetingRoutes");
 const homepageRoutes = require("./src/homepage/route/homepageRoutes");
 const notificationRoutes = require("./src/notification/route/notificationRoutes");
+const contactRoutes = require("./src/contact/route/contactRoutes");
 
 const { authenticateToken, AuthenticateAdmin } = require("./src/middlewares/authMiddleware");
 require('./src/feeReceiver/cron/pendingRequestNotifier');
@@ -60,6 +61,7 @@ app.use("/api/feeReciever", authenticateToken, feeRecieverRoutes);
 app.use("/api/meetings", authenticateToken, meetingRoutes);
 app.use("/api/profile", authenticateToken, require("./src/profile/route/profileRoutes"));
 app.use("/api/notifications", authenticateToken, notificationRoutes);
+app.use("/api/contact", contactRoutes);
 app.use("/api/report",authenticateToken, require("./src/report/route/reportRoutes"));
 app.use("/api/term", authenticateToken, require("./src/term/route/termRoutes"));
 app.use("/api/chapter-payment", authenticateToken, require("./src/chapterPayment/route/chapterPaymentRoutes"));

@@ -50,7 +50,9 @@ import TrackVisitor from './pages/Visitor/TrackVisitor';
 import SwitchChapter from './pages/Member/SwitchChapter';
 import AdminPackage from './pages/Admin/Package/AdminPackage';
 import AdminNotificationsPage from './pages/Admin/Notifications/AdminNotificationsPage';
+import AdminContactQueriesPage from './pages/Admin/ContactQueries/AdminContactQueriesPage';
 import CapacitorTestPage from './pages/Test/CapacitorTestPage';
+import ContactUsPage from './pages/Contact/ContactUsPage';
 import { useData } from './context/DataContext';
 import Home from './pages/Home';
 
@@ -87,6 +89,19 @@ const routes = [
       {
         path: 'notifications',
         element: <AdminNotificationsPage />,
+      },
+      {
+        path: 'contact-queries',
+        children: [
+          {
+            index: true,
+            element: <AdminContactQueriesPage />,
+          },
+          {
+            path: ':queryId',
+            element: <AdminContactQueriesPage />,
+          },
+        ],
       },
       {
         path: 'chapters',
@@ -140,6 +155,10 @@ const routes = [
       {
         path: 'cookie-policy',
         element: <CookiePolicy />,
+      },
+      {
+        path: 'contact',
+        element: <ContactUsPage />,
       },
       {
         path: 'auth',
