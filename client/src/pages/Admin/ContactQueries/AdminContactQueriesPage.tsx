@@ -64,6 +64,7 @@ import contactService, {
   ContactQueryFilters,
 } from '../../../services/contact/contactService';
 import { useParams, useNavigate } from 'react-router-dom';
+import CATEGORIES from '../../../components/ContactForm/categories';
 
 const AdminContactQueriesPage: React.FC = () => {
   const { queryId } = useParams<{ queryId: string }>();
@@ -552,12 +553,11 @@ const AdminContactQueriesPage: React.FC = () => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Categories</SelectItem>
-                <SelectItem value="general">General</SelectItem>
-                <SelectItem value="technical">Technical</SelectItem>
-                <SelectItem value="billing">Billing</SelectItem>
-                <SelectItem value="feature_request">Feature Request</SelectItem>
-                <SelectItem value="bug_report">Bug Report</SelectItem>
-                <SelectItem value="other">Other</SelectItem>
+                {CATEGORIES.map((category) => (
+                  <SelectItem key={category.value} value={category.value}>
+                    {category.label}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
 

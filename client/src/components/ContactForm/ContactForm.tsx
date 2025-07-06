@@ -19,7 +19,7 @@ import { Alert, AlertDescription } from '../ui/alert';
 import { useAuth } from '../../context/AuthContext';
 import { useData } from '../../context/DataContext';
 import contactService, { ContactQueryData } from '../../services/contact/contactService';
-
+import CATEGORIES from './categories';
 interface ContactFormProps {
   onSuccess?: (data: any) => void;
   onError?: (error: string) => void;
@@ -36,17 +36,6 @@ interface FormData {
   message: string;
   category: string;
 }
-
-const CATEGORIES = [
-  { value: 'general', label: 'General Inquiry' },
-  { value: 'technical', label: 'Technical Support' },
-  { value: 'billing', label: 'Billing & Payments' },
-  { value: 'feature_request', label: 'Feature Request' },
-  { value: 'bug_report', label: 'Bug Report' },
-  { value: 'partnership', label: 'Partnership' },
-  { value: 'feedback', label: 'Feedback' },
-  { value: 'other', label: 'Other' }
-];
 
 const ContactForm: React.FC<ContactFormProps> = ({
   onSuccess,
