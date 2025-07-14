@@ -6,6 +6,7 @@ import SelectGroupOne from '../../components/Forms/SelectGroup/SelectGroupOne';
 import { useParams } from 'react-router-dom';
 import TimePicker from '../../components/Forms/TimePicker';
 import Alerts from '../UiElements/Alerts';
+import { axiosInstance } from '../../utils/config';
 
 interface FieldProperties {
   value: any;
@@ -82,10 +83,10 @@ const EOI: React.FC = () => {
     const fetchChapterAndMeetings = async () => {
       try {
         // First fetch chapter details
-        const chapterResponse = await fetch(`/api/visitor/verifyVisitorLink/${chapterSlug}`);
-        const chapterResult = await chapterResponse.json();
-        
-        if (!chapterResponse.ok) {
+        const chapterResponse = await axiosInstance.get(`/api/visitor/verifyVisitorLink/${chapterSlug}`);
+        const chapterResult = chapterResponse.data;
+
+        if (chapterResponse.status !== 200) {
           throw new Error(chapterResult.message);
         }
 
@@ -99,7 +100,7 @@ const EOI: React.FC = () => {
         setChapterDetails(chapterResult);
 
         // Then fetch meetings for this chapter
-        const meetingsResponse = await fetch(`/api/visitor/getChapterMeetings/${chapterResult.chapterId}`);
+        const meetingsResponse = await axiosInstance(`/api/visitor/getChapterMeetings/${chapterResult.chapterId}`);
         const meetingsResult = await meetingsResponse.json();
         
         if (meetingsResponse.ok) {
@@ -154,11 +155,11 @@ const EOI: React.FC = () => {
   const handlePhoneSubmit = async (e: any) => {
     e.preventDefault();
     try {
-      const response = await fetch(`/api/visitor/checkVisitor?phone=${phoneNumber}`);
-      const result = await response.json();
-      
-      if (!response.ok) throw new Error(result.message);
-      
+      const response = await axiosInstance.get(`/api/visitor/checkVisitor?phone=${phoneNumber}`);
+      const result = response.data;
+
+      if (response.status !== 200) throw new Error(result.message);
+
       if (result.exists) {
         setVisitorExists(true);
         setShowFeedback(true);
@@ -286,18 +287,13 @@ const EOI: React.FC = () => {
     }
 
     const endpoint = visitorExists ? 'addFeedback' : 'addVisitor';
-    const response = await fetch(`/api/visitor/${endpoint}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(formData)
-    });
+    const response = await axiosInstance.post(`/api/visitor/${endpoint}`, formData);
 
-    if (response.ok) {
+    if (response.status === 200) {
       setShowQRPage(true);
       setPageNo(3);
     } else {
-      const error = await response.json();
-      throw new Error(error.message || 'Error saving visitor details');
+      throw new Error(response.data.message || 'Error saving visitor details');
     }
   } catch (error) {
     console.error('Error saving visitor:', error);

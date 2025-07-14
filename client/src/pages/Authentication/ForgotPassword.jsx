@@ -3,6 +3,7 @@ import { useNavigate, Link, useLocation } from "react-router-dom";
 import Breadcrumb from "../../components/Breadcrumbs/BreadcrumbOriginal";
 import LogoDark from "../../images/logo/logo-dark.svg";
 import Logo from "../../images/logo/logo.svg";
+import { axiosInstance } from "../../utils/config";
 
 const ForgotPassword = () => {
   const navigate = useNavigate();
@@ -19,10 +20,8 @@ const ForgotPassword = () => {
     setLoadingOtp(true);
     setError("");
     try {
-      const response = await fetch("/api/auth/forgot-password", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
+      const response = await axiosInstance.post("/api/auth/forgot-password", {
+        email,
       });
       const data = await response.json();
       if (response.ok) {
@@ -43,10 +42,10 @@ const ForgotPassword = () => {
     setLoadingReset(true);
     setError("");
     try {
-      const response = await fetch("/api/auth/reset-password", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, otp, newPassword }),
+      const response = await axiosInstance.post("/api/auth/reset-password", {
+        email,
+        otp,
+        newPassword,
       });
       const data = await response.json();
       if (response.ok) {

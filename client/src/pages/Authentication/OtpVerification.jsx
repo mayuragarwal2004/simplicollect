@@ -6,6 +6,7 @@ import Breadcrumb from '../../components/Breadcrumbs/BreadcrumbOriginal';
 import LogoDark from '../../images/logo/logo-dark.svg';
 import Logo from '../../images/logo/logo.svg';
 import { toast } from 'react-toastify';
+import { axiosInstance } from '../../utils/config';
 
 const OtpVerification = () => {
   const navigate = useNavigate();
@@ -39,10 +40,8 @@ const OtpVerification = () => {
 
   const sendOtp = async () => {
     try {
-      const response = await fetch('/api/auth/send-otp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ identifier }),
+      const response = await axiosInstance.post('/api/auth/send-otp', {
+        identifier,
       });
       const data = await response.json();
       if (!response.ok) {
@@ -66,10 +65,10 @@ const OtpVerification = () => {
     setError('');
 
     try {
-        const response = await fetch("/api/auth/verify-otp", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ identifier, otp,password: newPassword }),
+        const response = await axiosInstance.post("/api/auth/verify-otp", {
+            identifier,
+            otp,
+            password: newPassword
         });
         const data = await response.json();
         if (response.ok) {
