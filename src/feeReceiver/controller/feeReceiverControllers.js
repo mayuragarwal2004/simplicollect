@@ -30,12 +30,12 @@ const getCurrentReceiversController = async (req, res) => {
 const getAllReceiversController = async (req, res) => {
   const { chapterId } = req.params;
   const { type } = req.query; // 'cash', 'online', or undefined for all
-  
+
   try {
     let receivers;
-    if (type === 'cash') {
+    if (type === "cash") {
       receivers = await feeReceiverModel.getCashReceivers(chapterId);
-    } else if (type === 'online') {
+    } else if (type === "online") {
       receivers = await feeReceiverModel.getQRReceivers(chapterId);
     } else {
       // Get both types
@@ -53,15 +53,17 @@ const getAllReceiversController = async (req, res) => {
 // Unified controller to add receivers
 const addReceiverController = async (req, res) => {
   const { chapterId } = req.params;
-  const { 
-    receiverName, 
-    memberId, 
-    enableDate, 
-    disableDate, 
+  const {
+    receiverName,
+    memberId,
+    enableDate,
+    disableDate,
     paymentType,
     qrImageLink,
     receiverAmountType,
-    receiverAmount
+    receiverAmount,
+    receiverFeeOptional,
+    receiverFeeOptionalMessage,
   } = req.body;
 
   try {
@@ -74,20 +76,25 @@ const addReceiverController = async (req, res) => {
       paymentType,
       enableDate,
       disableDate,
+      receiverAmountType: receiverAmountType || null,
+      receiverAmount: receiverAmount || null,
+      receiverFeeOptional: receiverFeeOptional || false,
+      receiverFeeOptionalMessage: receiverFeeOptionalMessage,
     };
 
     let newReceiver;
-    if (paymentType === 'cash') {
-      newReceiver = await feeReceiverModel.addCashReceiver(baseData);
-    } else if (paymentType === 'online') {
+    if (paymentType === "cash") {
+      // Include receiverAmountType and receiverAmount for cash receivers too
+      newReceiver = await feeReceiverModel.addCashReceiver({
+        ...baseData,
+      });
+    } else if (paymentType === "online") {
       newReceiver = await feeReceiverModel.addQRReceiver({
         ...baseData,
         qrImageLink,
-        receiverAmountType,
-        receiverAmount,
       });
     } else {
-      return res.status(400).json({ error: 'Invalid payment type' });
+      return res.status(400).json({ error: "Invalid payment type" });
     }
 
     res.json(newReceiver);
@@ -100,15 +107,17 @@ const addReceiverController = async (req, res) => {
 // Unified controller to update receivers
 const updateReceiverController = async (req, res) => {
   const { chapterId, receiverId } = req.params;
-  const { 
-    receiverName, 
-    memberId, 
-    enableDate, 
-    disableDate, 
+  const {
+    receiverName,
+    memberId,
+    enableDate,
+    disableDate,
     paymentType,
     qrImageLink,
     receiverAmountType,
-    receiverAmount
+    receiverAmount,
+    receiverFeeOptional,
+    receiverFeeOptionalMessage,
   } = req.body;
 
   try {
@@ -117,28 +126,34 @@ const updateReceiverController = async (req, res) => {
       memberId,
       enableDate,
       disableDate,
+      receiverAmountType: receiverAmountType || null,
+      receiverAmount: receiverAmount || null,
+      receiverFeeOptional:
+        receiverFeeOptional !== undefined ? receiverFeeOptional : false,
+      receiverFeeOptionalMessage: receiverFeeOptionalMessage,
     };
 
     let updatedReceiver;
-    if (paymentType === 'cash') {
+    if (paymentType === "cash") {
+      // Include receiverAmountType and receiverAmount for cash receivers too
       updatedReceiver = await feeReceiverModel.updateCashReceiver(
-        chapterId, 
-        receiverId, 
-        updateData
+        chapterId,
+        receiverId,
+        {
+          ...updateData,
+        }
       );
-    } else if (paymentType === 'online') {
+    } else if (paymentType === "online") {
       updatedReceiver = await feeReceiverModel.updateQRReceiver(
-        chapterId, 
-        receiverId, 
+        chapterId,
+        receiverId,
         {
           ...updateData,
           qrImageLink,
-          receiverAmountType,
-          receiverAmount,
         }
       );
     } else {
-      return res.status(400).json({ error: 'Invalid payment type' });
+      return res.status(400).json({ error: "Invalid payment type" });
     }
 
     res.json(updatedReceiver);
@@ -155,12 +170,20 @@ const deleteReceiverController = async (req, res) => {
 
   try {
     let deletedReceiver;
-    if (paymentType === 'cash') {
-      deletedReceiver = await feeReceiverModel.deleteCashReceiver(chapterId, receiverId);
-    } else if (paymentType === 'online') {
-      deletedReceiver = await feeReceiverModel.deleteQRReceiver(chapterId, receiverId);
+    if (paymentType === "cash") {
+      deletedReceiver = await feeReceiverModel.deleteCashReceiver(
+        chapterId,
+        receiverId
+      );
+    } else if (paymentType === "online") {
+      deletedReceiver = await feeReceiverModel.deleteQRReceiver(
+        chapterId,
+        receiverId
+      );
     } else {
-      return res.status(400).json({ error: 'Payment type is required for deletion' });
+      return res
+        .status(400)
+        .json({ error: "Payment type is required for deletion" });
     }
 
     res.json(deletedReceiver);

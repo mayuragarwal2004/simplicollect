@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
@@ -10,7 +10,13 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Edit, Trash2, QrCode, Banknote } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Edit, Trash2, QrCode, Banknote, X } from 'lucide-react';
 
 const ReceiverTable = ({
   receivers,
@@ -20,10 +26,19 @@ const ReceiverTable = ({
   amountCollected
 }) => {
   const isOnlineReceiver = receiverType === 'online';
+  const [imagePreview, setImagePreview] = useState({ open: false, src: '', receiverName: '' });
 
   const getAmountCollectedForReceiver = (receiverId) => {
     const collected = amountCollected.find(item => item.receiverId === receiverId);
     return collected ? parseFloat(collected.totalAmountCollected || 0).toFixed(2) : '0.00';
+  };
+
+  const handleImageClick = (src, receiverName) => {
+    setImagePreview({ open: true, src, receiverName });
+  };
+
+  const closeImagePreview = () => {
+    setImagePreview({ open: false, src: '', receiverName: '' });
   };
 
   if (!receivers || receivers.length === 0) {
@@ -55,12 +70,11 @@ const ReceiverTable = ({
               <TableHead>Receiver Name</TableHead>
               <TableHead>Member ID</TableHead>
               {isOnlineReceiver && (
-                <>
-                  <TableHead>QR Image</TableHead>
-                  <TableHead>Amount Type</TableHead>
-                  <TableHead>Amount</TableHead>
-                </>
+                <TableHead>QR Image</TableHead>
               )}
+              <TableHead>Amount Type</TableHead>
+              <TableHead>Amount</TableHead>
+              <TableHead>Optional Fee</TableHead>
               <TableHead>Enable Date</TableHead>
               <TableHead>Disable Date</TableHead>
               <TableHead>Amount Collected</TableHead>
@@ -77,49 +91,57 @@ const ReceiverTable = ({
                   {receiver.memberId}
                 </TableCell>
                 {isOnlineReceiver && (
-                  <>
-                    <TableCell>
-                      {receiver.qrImageLink ? (
-                        <img
-                          src={receiver.qrImageLink}
-                          alt="QR Code"
-                          className="h-12 w-12 object-cover rounded-md border"
-                        />
-                      ) : (
-                        <div className="h-12 w-12 bg-muted rounded-md flex items-center justify-center">
-                          <QrCode className="h-6 w-6 text-muted-foreground" />
-                        </div>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      {receiver.receiverAmountType ? (
-                        <Badge variant="secondary" className="capitalize">
-                          {receiver.receiverAmountType}
-                        </Badge>
-                      ) : (
-                        <span className="text-muted-foreground">Not set</span>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      {receiver.receiverAmountType === 'lumpsum' 
-                        ? (
-                          <Badge variant="outline">
-                            ₹{receiver.receiverAmount || 0}
-                          </Badge>
-                        )
-                        : receiver.receiverAmountType === 'percentage' 
-                          ? (
-                            <Badge variant="outline">
-                              Variable
-                            </Badge>
-                          )
-                          : (
-                            <span className="text-muted-foreground">Not set</span>
-                          )
-                      }
-                    </TableCell>
-                  </>
+                  <TableCell>
+                    {receiver.qrImageLink ? (
+                      <img
+                        src={receiver.qrImageLink}
+                        alt="QR Code"
+                        className="h-12 w-12 object-cover rounded-md border cursor-pointer hover:opacity-80 transition-opacity"
+                        onClick={() => handleImageClick(receiver.qrImageLink, receiver.receiverName)}
+                        title="Click to view full size"
+                      />
+                    ) : (
+                      <div className="h-12 w-12 bg-muted rounded-md flex items-center justify-center">
+                        <QrCode className="h-6 w-6 text-muted-foreground" />
+                      </div>
+                    )}
+                  </TableCell>
                 )}
+                <TableCell>
+                  {receiver.receiverAmountType ? (
+                    <Badge variant="secondary" className="capitalize">
+                      {receiver.receiverAmountType}
+                    </Badge>
+                  ) : (
+                    <span className="text-muted-foreground">Not set</span>
+                  )}
+                </TableCell>
+                <TableCell>
+                  {receiver.receiverAmountType === 'lumpsum' 
+                    ? (
+                      <Badge variant="outline">
+                        ₹{receiver.receiverAmount || 0}
+                      </Badge>
+                    )
+                    : receiver.receiverAmountType === 'percentage' 
+                      ? (
+                        <Badge variant="outline">
+                          {receiver.receiverAmount || 0}%
+                        </Badge>
+                      )
+                      : (
+                        <span className="text-muted-foreground">Not set</span>
+                      )
+                  }
+                </TableCell>
+                <TableCell>
+                  <Badge 
+                    variant={receiver.receiverFeeOptional ? "default" : "secondary"}
+                    className={receiver.receiverFeeOptional ? "bg-green-100 text-green-800" : ""}
+                  >
+                    {receiver.receiverFeeOptional ? 'Optional' : 'Required'}
+                  </Badge>
+                </TableCell>
                 <TableCell className="text-muted-foreground">
                   {new Date(receiver.enableDate).toLocaleDateString()}
                 </TableCell>
@@ -156,6 +178,27 @@ const ReceiverTable = ({
           </TableBody>
         </Table>
       </CardContent>
+
+      {/* Image Preview Dialog */}
+      <Dialog open={imagePreview.open} onOpenChange={closeImagePreview}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center justify-between">
+              <span className="flex items-center gap-2">
+                <QrCode className="h-5 w-5" />
+                QR Code - {imagePreview.receiverName}
+              </span>
+            </DialogTitle>
+          </DialogHeader>
+          <div className="flex justify-center">
+            <img
+              src={imagePreview.src}
+              alt="QR Code Preview"
+              className="max-w-full max-h-96 object-contain rounded-lg border"
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 };

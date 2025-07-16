@@ -52,6 +52,8 @@ const FeeReceiver = () => {
     qrImageLink: '',
     receiverAmountType: '',
     receiverAmount: '',
+    receiverFeeOptional: false,
+    receiverFeeOptionalMessage: '',
   });
 
   const {
@@ -125,6 +127,8 @@ const FeeReceiver = () => {
       qrImageLink: '',
       receiverAmountType: '',
       receiverAmount: '',
+      receiverFeeOptional: false,
+      receiverFeeOptionalMessage: '',
     });
     setEditData(null);
     setIsEditMode(false);
@@ -165,9 +169,11 @@ const FeeReceiver = () => {
         enableDate: formData.enableDate,
         disableDate: formData.disableDate,
         paymentType: formData.paymentType,
+        receiverFeeOptional: formData.receiverFeeOptional,
+        receiverFeeOptionalMessage: formData.receiverFeeOptionalMessage,
+        receiverAmountType: formData.receiverAmountType,
+        receiverAmount: formData.receiverAmount,
         ...(formData.paymentType === 'online' && {
-          receiverAmountType: formData.receiverAmountType,
-          receiverAmount: formData.receiverAmount,
           qrImageLink: editData?.qrImageLink || '', // Keep existing image for edits
         }),
       };
@@ -200,16 +206,26 @@ const FeeReceiver = () => {
   const handleEdit = (receiver) => {
     setEditData(receiver);
     setIsEditMode(true);
+    
+    // Format dates for HTML date inputs (YYYY-MM-DD format)
+    const formatDateForInput = (dateString) => {
+      if (!dateString) return '';
+      const date = new Date(dateString);
+      return date.toISOString().split('T')[0];
+    };
+    
     setFormData({
       receiverName: receiver.receiverName,
       memberId: receiver.memberId,
-      enableDate: receiver.enableDate,
-      disableDate: receiver.disableDate,
+      enableDate: formatDateForInput(receiver.enableDate),
+      disableDate: formatDateForInput(receiver.disableDate),
       paymentType: receiver.paymentType,
       imageFile: null,
       qrImageLink: receiver.qrImageLink || '',
       receiverAmountType: receiver.receiverAmountType || '',
       receiverAmount: receiver.receiverAmount || '',
+      receiverFeeOptional: receiver.receiverFeeOptional || false,
+      receiverFeeOptionalMessage: receiver.receiverFeeOptionalMessage || '',
     });
     setModalType(receiver.paymentType);
     setIsModalOpen(true);

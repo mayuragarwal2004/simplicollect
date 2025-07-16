@@ -213,7 +213,7 @@ const PaymentOverview = ({
                 className="h-5" // Increased size of the switch
               />
               <Label className="text-lg">
-                Do You Want the GST Bill? (charges applicable)
+                {selectedReceiverObject?.receiverFeeOptionalMessage || 'Would you like to pay the receiver fee? (charges applicable)'}
               </Label>{' '}
               {/* Increased text size */}
             </div>
