@@ -8,7 +8,7 @@ const getDateWiseTransactions = async (date, chapterId) => {
       "paymentDate",
       `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`
     )
-    // .andWhere("chapterId", chapterId)
+    .andWhere("chapterId", chapterId)
     .leftJoin("members", "transactions.memberId", "members.memberId")
     .orderBy("paymentType", "asc")
     .orderBy("paymentReceivedById", "asc")
