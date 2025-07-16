@@ -123,7 +123,7 @@ const MemberFeeApproval: React.FC = () => {
     if (!chapterData?.chapterId) return;
     try {
       const res = await axiosInstance.get(
-        `/api/feeReciever/currentReceivers/${chapterData.chapterId}`,
+        `/api/feeReceiver/current/${chapterData.chapterId}`,
         {
           params: {
             date: formatDateDDMMYYYY(new Date()),

@@ -43,7 +43,7 @@ export const PaymentDataProvider = ({ children }) => {
     // Fetch all receivers
     try {
       const data = await axiosInstance
-        .get(`/api/feeReciever/currentReceivers/${chapterData?.chapterId}`, {
+        .get(`/api/feeReceiver/current/${chapterData?.chapterId}`, {
           params: {
             date: formatDateDDMMYYYY(calculationDate),
           },

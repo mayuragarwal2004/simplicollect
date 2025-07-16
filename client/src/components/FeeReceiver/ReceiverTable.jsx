@@ -101,13 +101,13 @@ const ReceiverTable = ({
                       )}
                     </TableCell>
                     <TableCell>
-                      {receiver.receiverAmountType === 'fixed' 
+                      {receiver.receiverAmountType === 'lumpsum' 
                         ? (
                           <Badge variant="outline">
                             ₹{receiver.receiverAmount || 0}
                           </Badge>
                         )
-                        : receiver.receiverAmountType === 'variable' 
+                        : receiver.receiverAmountType === 'percentage' 
                           ? (
                             <Badge variant="outline">
                               Variable

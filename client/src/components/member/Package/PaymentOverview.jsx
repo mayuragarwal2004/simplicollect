@@ -76,7 +76,7 @@ const PaymentOverview = ({
   useEffect(() => {
     if (selectedReceiverObject) {
       if (
-        selectedReceiverObject.receiverAmountType === 'Lumpsum' &&
+        selectedReceiverObject.receiverAmountType === 'lumpsum' &&
         feeReceiverSwitch
       ) {
         setPaymentData((prev) => ({
@@ -84,7 +84,7 @@ const PaymentOverview = ({
           receiverFeeAmount: selectedReceiverObject.receiverAmount,
         }));
       } else if (
-        selectedReceiverObject.receiverAmountType === 'Percentage' &&
+        selectedReceiverObject.receiverAmountType === 'percentage' &&
         feeReceiverSwitch
       ) {
         const receiverFee =

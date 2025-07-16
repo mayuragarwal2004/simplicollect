@@ -101,13 +101,13 @@ const ReceiverForm = ({
                     <SelectValue placeholder="Select amount type" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="fixed">Fixed</SelectItem>
-                    <SelectItem value="variable">Variable</SelectItem>
+                    <SelectItem value="lumpsum">Lumpsum</SelectItem>
+                    <SelectItem value="percentage">Percentage</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
-              {formData.receiverAmountType === 'fixed' && (
+              {formData.receiverAmountType === 'lumpsum' && (
                 <div className="space-y-2">
                   <Label htmlFor="receiverAmount" className="text-sm font-medium">
                     Amount
