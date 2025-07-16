@@ -37,6 +37,9 @@ const getSidebarRightsController = async (req, res) => {
       const links = [];
       let icon = "";
       for (j = 0; j < rights.length; j++) {
+        if (rights[j].featureDisabled) {
+          continue; // skip disabled features
+        }
         if (
           rights[j].featureParent === feature.featureParent ||
           (isFeeReceiver && rights[j].featureId === "fee-receiver") // if the feature is fee-receiver, then add it to the links array

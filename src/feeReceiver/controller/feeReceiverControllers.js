@@ -26,68 +26,144 @@ const getCurrentReceiversController = async (req, res) => {
   }
 };
 
-const getCashReceiversController = async (req, res) => {
+// Unified controller to get all receivers
+const getAllReceiversController = async (req, res) => {
   const { chapterId } = req.params;
+  const { type } = req.query; // 'cash', 'online', or undefined for all
+  
   try {
-    const cashReceivers = await feeReceiverModel.getCashReceivers(chapterId);
-    res.json(cashReceivers);
+    let receivers;
+    if (type === 'cash') {
+      receivers = await feeReceiverModel.getCashReceivers(chapterId);
+    } else if (type === 'online') {
+      receivers = await feeReceiverModel.getQRReceivers(chapterId);
+    } else {
+      // Get both types
+      const cashReceivers = await feeReceiverModel.getCashReceivers(chapterId);
+      const qrReceivers = await feeReceiverModel.getQRReceivers(chapterId);
+      receivers = { cash: cashReceivers, online: qrReceivers };
+    }
+    res.json(receivers);
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: error.message });
   }
 };
 
-const addCashReceiversController = async (req, res) => {
+// Unified controller to add receivers
+const addReceiverController = async (req, res) => {
   const { chapterId } = req.params;
-  const { receiverName, memberId, enableDate, disableDate } = req.body;
+  const { 
+    receiverName, 
+    memberId, 
+    enableDate, 
+    disableDate, 
+    paymentType,
+    qrImageLink,
+    receiverAmountType,
+    receiverAmount
+  } = req.body;
+
   try {
     const receiverId = uuidv4();
-    const newCashReceiver = await feeReceiverModel.addCashReceiver({
+    const baseData = {
       receiverId,
-      receiverName: receiverName,
+      receiverName,
       memberId,
       chapterId,
-      paymentType: "cash",
+      paymentType,
       enableDate,
       disableDate,
-    });
-    res.json(newCashReceiver);
+    };
+
+    let newReceiver;
+    if (paymentType === 'cash') {
+      newReceiver = await feeReceiverModel.addCashReceiver(baseData);
+    } else if (paymentType === 'online') {
+      newReceiver = await feeReceiverModel.addQRReceiver({
+        ...baseData,
+        qrImageLink,
+        receiverAmountType,
+        receiverAmount,
+      });
+    } else {
+      return res.status(400).json({ error: 'Invalid payment type' });
+    }
+
+    res.json(newReceiver);
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: error.message });
   }
 };
 
-const getQRReceiversController = async (req, res) => {
-  const { chapterId } = req.params;
+// Unified controller to update receivers
+const updateReceiverController = async (req, res) => {
+  const { chapterId, receiverId } = req.params;
+  const { 
+    receiverName, 
+    memberId, 
+    enableDate, 
+    disableDate, 
+    paymentType,
+    qrImageLink,
+    receiverAmountType,
+    receiverAmount
+  } = req.body;
+
   try {
-    const qrReceivers = await feeReceiverModel.getQRReceivers(chapterId);
-    res.json(qrReceivers);
+    const updateData = {
+      receiverName,
+      memberId,
+      enableDate,
+      disableDate,
+    };
+
+    let updatedReceiver;
+    if (paymentType === 'cash') {
+      updatedReceiver = await feeReceiverModel.updateCashReceiver(
+        chapterId, 
+        receiverId, 
+        updateData
+      );
+    } else if (paymentType === 'online') {
+      updatedReceiver = await feeReceiverModel.updateQRReceiver(
+        chapterId, 
+        receiverId, 
+        {
+          ...updateData,
+          qrImageLink,
+          receiverAmountType,
+          receiverAmount,
+        }
+      );
+    } else {
+      return res.status(400).json({ error: 'Invalid payment type' });
+    }
+
+    res.json(updatedReceiver);
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: error.message });
   }
 };
 
-const addQRReceiversController = async (req, res) => {
-  const { chapterId } = req.params;
-  const { qrCodeName, memberId, qrImageLink, enableDate, disableDate, receiverAmountType, receiverAmount } =
-    req.body;
+// Unified controller to delete receivers
+const deleteReceiverController = async (req, res) => {
+  const { chapterId, receiverId } = req.params;
+  const { paymentType } = req.query;
+
   try {
-    const receiverId = uuidv4();
-    const newQRReceiver = await feeReceiverModel.addQRReceiver({
-      receiverId,
-      receiverName: qrCodeName,
-      memberId,
-      chapterId,
-      qrImageLink,
-      enableDate,
-      disableDate,
-      paymentType: "online",
-      receiverAmountType,
-      receiverAmount,
-    });
-    res.json(newQRReceiver);
+    let deletedReceiver;
+    if (paymentType === 'cash') {
+      deletedReceiver = await feeReceiverModel.deleteCashReceiver(chapterId, receiverId);
+    } else if (paymentType === 'online') {
+      deletedReceiver = await feeReceiverModel.deleteQRReceiver(chapterId, receiverId);
+    } else {
+      return res.status(400).json({ error: 'Payment type is required for deletion' });
+    }
+
+    res.json(deletedReceiver);
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: error.message });
@@ -109,81 +185,38 @@ const getAmountCollectedController = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
-const deleteCashReceiversController = async (req, res) => {
-  const { chapterId,receiverId } = req.params;
+
+// Legacy controllers for backward compatibility
+const getCashReceiversController = async (req, res) => {
+  const { chapterId } = req.params;
   try {
-    const deletedReceiver = await feeReceiverModel.deleteCashReceiver(
-      chapterId,
-      receiverId
-    );
-    res.json(deletedReceiver);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: error.message });
-  }
-}
-const deleteQRReceiversController = async (req, res) => {
-  const { chapterId,receiverId } = req.params;
-  try {
-    const deletedReceiver = await feeReceiverModel.deleteQRReceiver(
-      chapterId,
-      receiverId
-    );
-    res.json(deletedReceiver);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: error.message });
-  }
-}
-const updateCashReceiversController = async (req, res) => {
-  const { chapterId, receiverId } = req.params;
-  const { cashRecieverName, memberId, enableDate, disableDate } = req.body;
-  try {
-    const updatedCashReceiver = await feeReceiverModel.updateCashReceiver({
-      receiverId,
-      receiverName: cashRecieverName,
-      memberId,
-      chapterId,
-      paymentType: "cash",
-      enableDate,
-      disableDate,
-    });
-    res.json(updatedCashReceiver);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: error.message });
-  }
-}
-const updateQRReceiversController = async (req, res) => {
-  const { chapterId, receiverId } = req.params;
-  const { qrCodeName, memberId, qrImageLink, enableDate, disableDate } =
-    req.body;
-  try {
-    const updatedQRReceiver = await feeReceiverModel.updateQRReceiver({
-      receiverId,
-      receiverName: qrCodeName,
-      memberId,
-      chapterId,
-      qrImageLink,
-      enableDate,
-      disableDate,
-      paymentType: "online",
-    });
-    res.json(updatedQRReceiver);
+    const cashReceivers = await feeReceiverModel.getCashReceivers(chapterId);
+    res.json(cashReceivers);
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: error.message });
   }
 };
+
+const getQRReceiversController = async (req, res) => {
+  const { chapterId } = req.params;
+  try {
+    const qrReceivers = await feeReceiverModel.getQRReceivers(chapterId);
+    res.json(qrReceivers);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
 module.exports = {
   getCurrentReceiversController,
-  getCashReceiversController,
-  addCashReceiversController,
-  getQRReceiversController,
-  addQRReceiversController,
+  getAllReceiversController,
+  addReceiverController,
+  updateReceiverController,
+  deleteReceiverController,
   getAmountCollectedController,
-  deleteCashReceiversController,
-  deleteQRReceiversController,
-  updateCashReceiversController,
-  updateQRReceiversController
+  // Legacy exports
+  getCashReceiversController,
+  getQRReceiversController,
 };
