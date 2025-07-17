@@ -1,4 +1,7 @@
 import { useCapacitorNotifications } from './hooks/useCapacitorNotifications';
+import { useAppInstallBanner } from './hooks/useAppInstallBanner';
+import { AppInstallBanner } from './components/AppInstallBanner';
+import { APP_CONFIG } from './config/appConfig';
 import { Children, useEffect, useState } from 'react';
 import {
   createBrowserRouter,
@@ -265,6 +268,16 @@ function App() {
   // Initialize Capacitor push notifications for native platforms
   const capacitorNotifications = useCapacitorNotifications();
 
+  // Initialize app install banner for web users
+  const appInstallBanner = useAppInstallBanner({
+    appName: APP_CONFIG.appName,
+    appStoreLinks: APP_CONFIG.storeLinks,
+    showDelay: (import.meta as any).env.DEV ? 
+      APP_CONFIG.installBanner.development.showDelay : 
+      APP_CONFIG.installBanner.showDelay,
+    hideAfterDays: APP_CONFIG.installBanner.hideAfterDays,
+  });
+
   useEffect(() => {
     setTimeout(() => setLoadingLocal(false), 1000);
   }, []);
@@ -277,8 +290,13 @@ function App() {
         isInitialized: capacitorNotifications.isInitialized,
         error: capacitorNotifications.error
       });
+      
+      console.log('App install banner status:', {
+        showBanner: appInstallBanner.showBanner,
+        deviceInfo: appInstallBanner.deviceInfo,
+      });
     }
-  }, [capacitorNotifications]);
+  }, [capacitorNotifications, appInstallBanner]);
 
   return loadingLocal ? (
     <Loader />
@@ -298,6 +316,16 @@ function App() {
         transition={Bounce}
       />
       <RouterProvider router={router} />
+      
+      {/* App Install Banner for web users */}
+      {APP_CONFIG.features.enableAppInstallBanner && appInstallBanner.showBanner && (
+        <AppInstallBanner
+          appName={APP_CONFIG.appName}
+          onDownload={appInstallBanner.handleDownload}
+          onDismiss={appInstallBanner.dismissBanner}
+          deviceInfo={appInstallBanner.deviceInfo}
+        />
+      )}
     </>
   );
 }

@@ -4,6 +4,7 @@ import { useCapacitorNotifications } from '../../hooks/useCapacitorNotifications
 import useCapacitorPushNotifications from '../../hooks/useCapacitorPushNotifications';
 import usePushNotifications from '../../hooks/usePushNotifications';
 import { axiosInstance, getPlatformInfo } from '../../utils/config';
+import AppBannerDevTester from '../../components/Development/AppBannerDevTester';
 
 const CapacitorTestPage: React.FC = () => {
   const [platform, setPlatform] = useState<string>('');
@@ -231,6 +232,9 @@ const CapacitorTestPage: React.FC = () => {
       <h1 className="text-3xl font-bold text-gray-800 mb-6">
         Capacitor Integration Test
       </h1>
+
+      {/* App Install Banner Tester */}
+      <AppBannerDevTester />
 
       {/* Platform Information */}
       <div className="mb-8 p-4 bg-blue-50 rounded-lg">
