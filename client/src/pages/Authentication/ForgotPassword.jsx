@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate, Link, useLocation } from "react-router-dom";
-import Breadcrumb from "../../components/Breadcrumbs/BreadcrumbOriginal";
+import Breadcrumbs from "../../components/Breadcrumbs/Breadcrumb";
 import LogoDark from "../../images/logo/logo-dark.svg";
 import Logo from "../../images/logo/logo.svg";
 import { axiosInstance } from "../../utils/config";
@@ -63,7 +63,10 @@ const ForgotPassword = () => {
 
   return (
     <>
-      <Breadcrumb pageName="Forgot Password" />
+      <Breadcrumbs items={[
+        { name: 'Authentication', link: '/auth' },
+        { name: 'Forgot Password' }
+      ]} />
       <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark p-8 max-w-md mx-auto">
         <div className="flex flex-wrap items-center">
           <div className="w-full text-center mb-6">

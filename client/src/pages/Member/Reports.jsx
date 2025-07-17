@@ -1,5 +1,5 @@
 import React from 'react';
-import Breadcrumb from '../../components/Breadcrumbs/BreadcrumbOriginal';
+import Breadcrumbs from '../../components/Breadcrumbs/Breadcrumb';
 import {
   Select,
   SelectContent,
@@ -71,7 +71,9 @@ const Reports = () => {
 
   return (
     <>
-      <Breadcrumb pageName="Reports" />
+      <Breadcrumbs items={[
+        { name: 'Reports' }
+      ]} />
       <div className="rounded-sm border border-stroke bg-white p-3 shadow-default dark:border-strokedark dark:bg-boxdark sm:px-7.5 xl:pb-1">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-lg font-medium dark:text-white">

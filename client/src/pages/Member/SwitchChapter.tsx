@@ -1,13 +1,15 @@
 import React from 'react';
 import { useData } from '../../context/DataContext';
-import Breadcrumb from '../../components/Breadcrumbs/BreadcrumbOriginal';
+import Breadcrumbs from '../../components/Breadcrumbs/Breadcrumb';
 
 const SwitchChapter: React.FC = () => {
     const { allChaptersData, chapterData, switchChapter } = useData();
 
     return (
         <div className="max-w-lg mx-auto px-4 py-8 bg-white rounded-lg shadow">
-            <Breadcrumb pageName="Switch Chapter" />
+            <Breadcrumbs items={[
+              { name: 'Switch Chapter' }
+            ]} />
             <h2 className="text-2xl font-bold mb-6 text-gray-800">Select a Chapter</h2>
             <div className="space-y-4">
                 {allChaptersData?.map((chapter) => (

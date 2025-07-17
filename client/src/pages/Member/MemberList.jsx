@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { axiosInstance } from '../../utils/config';
 import { useData } from '../../context/DataContext';
-import Breadcrumb from '../../components/Breadcrumbs/BreadcrumbOriginal';
+import Breadcrumbs from '../../components/Breadcrumbs/Breadcrumb';
 import {
   Dialog,
   DialogContent,
@@ -357,7 +357,9 @@ const MemberList = () => {
 
   return (
     <div className="container mx-auto p-4 dark:bg-gray-800 dark:text-white">
-      <Breadcrumb pageName="Member List" />
+      <Breadcrumbs items={[
+        { name: 'Member List' }
+      ]} />
       <div className="flex justify-between items-center mb-4 gap-4">
         <SearchBar
           onChange={handleSearchChange}

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { axiosInstance } from '../../utils/config';
 import { useData } from '../../context/DataContext';
 import useWindowDimensions from '../../utils/useWindowDimensions';
-import Breadcrumb from '../../components/Breadcrumbs/BreadcrumbOriginal';
+import Breadcrumbs from '../../components/Breadcrumbs/Breadcrumb';
 import { Checkbox, IconButton } from '@mui/material';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import { toast } from 'react-toastify';
@@ -420,7 +420,9 @@ const MemberFeeApproval: React.FC = () => {
 
   return (
     <>
-      <Breadcrumb pageName="Member Fee Approval" />
+      <Breadcrumbs items={[
+        { name: 'Member Fee Approval' }
+      ]} />
       <div className="rounded-sm border border-stroke bg-white p-3 shadow-default dark:border-strokedark dark:bg-boxdark sm:px-7.5 xl:pb-1">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-lg font-medium dark:text-white">

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Link } from 'react-router-dom';
-import Breadcrumb from '../../components/Breadcrumbs/BreadcrumbOriginal';
+import Breadcrumbs from '../../components/Breadcrumbs/Breadcrumb';
 import LogoDark from '../../images/logo/logo-dark.svg';
 import Logo from '../../images/logo/logo.svg';
 import { useAuth } from '../../context/AuthContext';
@@ -89,7 +89,10 @@ const SignIn: React.FC = () => {
 
   return (
     <>
-      <Breadcrumb pageName="Sign In" />
+      <Breadcrumbs items={[
+        { name: 'Authentication', link: '/auth' },
+        { name: 'Sign In' }
+      ]} />
       <div className=" flex items-center justify-center flex-col">
         <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark p-8 max-w-md mx-auto">
           <div className="flex flex-wrap items-center">

@@ -19,7 +19,7 @@ export default function Breadcrumbs({ items }: BreadcrumbProps) {
         {items[items.length - 1].name}
       </h2>
 
-      <Breadcrumb className="pb-2 px-4">
+      {items.length > 1 && <Breadcrumb className="pb-2 px-4">
         <BreadcrumbList>
           {items.map((item, index) => (
             <BreadcrumbItem key={index}>
@@ -41,7 +41,7 @@ export default function Breadcrumbs({ items }: BreadcrumbProps) {
             </BreadcrumbItem>
           ))}
         </BreadcrumbList>
-      </Breadcrumb>
+      </Breadcrumb>}
     </div>
   );
 }

@@ -5,7 +5,7 @@ import { Visitor } from '../../models/Visitor';
 import AcceptPayment from './VisitorListComponents/AcceptPayment';
 import ViewVisitor from './VisitorListComponents/ViewVisitor';
 import { Link } from 'react-router-dom';
-import Breadcrumb from '../../components/Breadcrumbs/BreadcrumbOriginal';
+import Breadcrumbs from '../../components/Breadcrumbs/Breadcrumb';
 import FilterTags from '../../components/FilterTags';
 import ExportVisitorData from './VisitorListComponents/ExportVisitorData';
 import VisitorDelete from './VisitorListComponents/VisitorDelete';
@@ -256,7 +256,9 @@ const VisitorList: React.FC = () => {
 
   return (
     <>
-      <Breadcrumb pageName="Visitor List" />
+      <Breadcrumbs items={[
+        { name: 'Visitor List' }
+      ]} />
       <Card className="p-6 shadow-default">
         <Dialog open={backDropOpen} onOpenChange={setBackDropOpen}>
           <DialogContent className="sm:max-w-[425px]">

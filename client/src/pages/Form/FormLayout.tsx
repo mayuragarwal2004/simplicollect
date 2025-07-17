@@ -1,11 +1,14 @@
 import { Link } from 'react-router-dom';
-import Breadcrumb from '../../components/Breadcrumbs/BreadcrumbOriginal';
+import Breadcrumbs from '../../components/Breadcrumbs/Breadcrumb';
 import SelectGroupOne from '../../components/Forms/SelectGroup/SelectGroupOne';
 
 const FormLayout = () => {
   return (
     <>
-      <Breadcrumb pageName="Form Layout" />
+      <Breadcrumbs items={[
+        { name: 'Forms', link: '/forms' },
+        { name: 'Form Layout' }
+      ]} />
 
       <div className="grid grid-cols-1 gap-9 sm:grid-cols-2">
         <div className="flex flex-col gap-9">

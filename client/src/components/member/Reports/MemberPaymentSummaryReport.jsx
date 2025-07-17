@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useData } from '../../../context/DataContext';
 import { axiosInstance } from '../../../utils/config';
-import Breadcrumb from '../../Breadcrumbs/BreadcrumbOriginal';
+import Breadcrumbs from '../../Breadcrumbs/Breadcrumb';
 import {
   Select,
   SelectContent,

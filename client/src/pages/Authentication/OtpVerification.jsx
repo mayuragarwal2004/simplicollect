@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import Breadcrumb from '../../components/Breadcrumbs/BreadcrumbOriginal';
+import Breadcrumbs from '../../components/Breadcrumbs/Breadcrumb';
 import LogoDark from '../../images/logo/logo-dark.svg';
 import Logo from '../../images/logo/logo.svg';
 import { toast } from 'react-toastify';
@@ -88,7 +88,10 @@ const OtpVerification = () => {
 
   return (
     <>
-      <Breadcrumb pageName="OTP Verification" />
+      <Breadcrumbs items={[
+        { name: 'Authentication', link: '/auth' },
+        { name: 'OTP Verification' }
+      ]} />
 
       <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark p-8 max-w-md mx-auto">
         <div className="flex flex-wrap items-center">

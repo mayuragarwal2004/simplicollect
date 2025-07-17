@@ -1,11 +1,14 @@
 import { Link } from 'react-router-dom';
 
-import Breadcrumb from '../../components/Breadcrumbs/BreadcrumbOriginal';
+import Breadcrumbs from '../../components/Breadcrumbs/Breadcrumb';
 
 const Buttons = () => {
   return (
     <>
-      <Breadcrumb pageName="Buttons" />
+      <Breadcrumbs items={[
+        { name: 'UI Elements', link: '/ui' },
+        { name: 'Buttons' }
+      ]} />
 
       {/* <!-- Normal Button Items --> */}
       <div className="mb-10 rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">

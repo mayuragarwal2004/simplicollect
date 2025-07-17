@@ -8,7 +8,6 @@ const PackageViewerPage = () => {
     <>
       <Breadcrumb
         items={[
-          { name: 'Dashboard', link: '/member' },
           { name: 'Packages', link: '/member/packages' },
         ]}
       />

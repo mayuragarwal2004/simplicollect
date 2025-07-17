@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import Breadcrumb from '../../components/Breadcrumbs/BreadcrumbOriginal';
+import Breadcrumbs from '../../components/Breadcrumbs/Breadcrumb';
 import Input from '../../components/Forms/Input';
 import Button from '../../components/Forms/Button';
 import SelectGroupOne from '../../components/Forms/SelectGroup/SelectGroupOne';
@@ -321,7 +321,9 @@ const EOI: React.FC = () => {
         <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200 mb-4">
           {chapterDetails.chapterName} - {chapterDetails.region}
         </h2>
-        <Breadcrumb pageName="Visitor Registration" />
+        <Breadcrumbs items={[
+          { name: 'Visitor Registration' }
+        ]} />
 
         {/* Phone Number Input Section */}
         {!visitorExists && !showQRPage && pageNo === 1 && (
