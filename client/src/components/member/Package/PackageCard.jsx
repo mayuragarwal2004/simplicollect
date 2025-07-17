@@ -273,7 +273,7 @@ const PackageCard = ({
                       <span className={`text-orange-500`}>
                         {' '}
                         {pkg.previousBalance > 0 ? '-' : '+'} ₹
-                        {pkg.previousBalance} (
+                        {Math.abs(pkg.previousBalance)} (
                         {pkg.previousBalance > 0 ? 'Advance' : 'Previous Due'})
                       </span>
                     )}

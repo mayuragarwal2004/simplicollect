@@ -179,7 +179,7 @@ const PaymentOverview = ({
               <p className="text-orange-500">
                 {' '}
                 {selectedPackage.previousBalance > 0 ? '-' : '+'} ₹
-                {selectedPackage.previousBalance} (
+                {Math.abs(selectedPackage.previousBalance)} (
                 {selectedPackage.previousBalance > 0
                   ? 'Advance'
                   : 'Previous Due'}

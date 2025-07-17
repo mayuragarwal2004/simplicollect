@@ -525,7 +525,7 @@ const MemberFeeApproval: React.FC = () => {
         {currentTab === 'pending' ? (
           <>
             {width > 700 ? (
-              <div className="overflow-x-auto rounded-lg">
+              <div className="overflow-x-auto rounded-lg border border-solid">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -533,7 +533,7 @@ const MemberFeeApproval: React.FC = () => {
                       <TableHead>Package Name</TableHead>
                       <TableHead>Date</TableHead>
                       <TableHead>Amount Paid</TableHead>
-                      <TableHead>Dues</TableHead>
+                      <TableHead>Balance</TableHead>
                       {config.currentState === 'all_members_approval' && (
                         <TableHead>Received By</TableHead>
                       )}
@@ -566,12 +566,15 @@ const MemberFeeApproval: React.FC = () => {
                             }).format(fee.paidAmount)}
                           </TableCell>
                           <TableCell>
-                            {new Intl.NumberFormat('en-IN', {
-                              style: 'currency',
-                              currency: 'INR',
-                              minimumFractionDigits: 0,
-                              maximumFractionDigits: 2,
-                            }).format(fee.balanceAmount)}
+                            <span className={fee.balanceAmount < 0 ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'}>
+                              {new Intl.NumberFormat('en-IN', {
+                                style: 'currency',
+                                currency: 'INR',
+                                minimumFractionDigits: 0,
+                                maximumFractionDigits: 2,
+                              }).format(Math.abs(fee.balanceAmount))}
+                              {fee.balanceAmount < 0 ? ' (Due)' : ' (Advance)'}
+                            </span>
                           </TableCell>
                           {config.currentState === 'all_members_approval' && (
                             <TableCell>
@@ -663,10 +666,14 @@ const MemberFeeApproval: React.FC = () => {
                         </div>
                         <div className="flex-1 min-w-[120px]">
                           <span className="block text-xs text-gray-500 dark:text-gray-400">
-                            Dues
+                            Balance
                           </span>
-                          <span className="block text-base font-semibold text-red-700 dark:text-red-300">
-                            ₹{fee.balanceAmount}
+                          <span className={`block text-base font-semibold ${
+                            fee.balanceAmount < 0 
+                              ? 'text-red-700 dark:text-red-300' 
+                              : 'text-green-700 dark:text-green-300'
+                          }`}>
+                            ₹{Math.abs(fee.balanceAmount)} {fee.balanceAmount < 0 ? '(Due)' : '(Advance)'}
                           </span>
                         </div>
                       </div>
@@ -725,7 +732,7 @@ const MemberFeeApproval: React.FC = () => {
                       <TableHead>Package Name</TableHead>
                       <TableHead>Date</TableHead>
                       <TableHead>Amount Paid</TableHead>
-                      <TableHead>Dues</TableHead>
+                      <TableHead>Balance</TableHead>
                       <TableHead>Actions</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -755,12 +762,15 @@ const MemberFeeApproval: React.FC = () => {
                             }).format(fee.paidAmount)}
                           </TableCell>
                           <TableCell>
-                            {new Intl.NumberFormat('en-IN', {
-                              style: 'currency',
-                              currency: 'INR',
-                              minimumFractionDigits: 0,
-                              maximumFractionDigits: 2,
-                            }).format(fee.balanceAmount)}
+                            <span className={fee.balanceAmount < 0 ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'}>
+                              {new Intl.NumberFormat('en-IN', {
+                                style: 'currency',
+                                currency: 'INR',
+                                minimumFractionDigits: 0,
+                                maximumFractionDigits: 2,
+                              }).format(Math.abs(fee.balanceAmount))}
+                              {fee.balanceAmount < 0 ? ' (Due)' : ' (Advance)'}
+                            </span>
                           </TableCell>
                           <TableCell>
                             <Button
@@ -824,10 +834,14 @@ const MemberFeeApproval: React.FC = () => {
                         </div>
                         <div className="flex-1 min-w-[120px]">
                           <span className="block text-xs text-gray-500 dark:text-gray-400">
-                            Dues
+                            Balance
                           </span>
-                          <span className="block text-base font-semibold text-red-700 dark:text-red-300">
-                            ₹{fee.balanceAmount}
+                          <span className={`block text-base font-semibold ${
+                            fee.balanceAmount < 0 
+                              ? 'text-red-700 dark:text-red-300' 
+                              : 'text-green-700 dark:text-green-300'
+                          }`}>
+                            ₹{Math.abs(fee.balanceAmount)} {fee.balanceAmount < 0 ? '(Due)' : '(Advance)'}
                           </span>
                         </div>
                       </div>
