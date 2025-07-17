@@ -14,12 +14,12 @@ interface BreadcrumbProps {
 
 export default function Breadcrumbs({ items }: BreadcrumbProps) {
   return (
-    <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <div className="mb-0 flex flex-col gap-1 sm:flex-row md:mb-6 md:gap-3 sm:items-center sm:justify-between">
       <h2 className="text-title-md2 font-semibold text-black dark:text-white">
         {items[items.length - 1].name}
       </h2>
 
-      <Breadcrumb className="py-2 px-4">
+      <Breadcrumb className="pb-2 px-4">
         <BreadcrumbList>
           {items.map((item, index) => (
             <BreadcrumbItem key={index}>

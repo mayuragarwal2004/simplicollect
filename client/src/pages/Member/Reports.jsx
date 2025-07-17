@@ -72,7 +72,7 @@ const Reports = () => {
   return (
     <>
       <Breadcrumb pageName="Reports" />
-      <div className="rounded-sm border border-stroke bg-white p-5 shadow-md dark:border-strokedark dark:bg-boxdark">
+      <div className="rounded-sm border border-stroke bg-white p-3 shadow-default dark:border-strokedark dark:bg-boxdark sm:px-7.5 xl:pb-1">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-lg font-medium dark:text-white">
             View Your Chapter's Reports

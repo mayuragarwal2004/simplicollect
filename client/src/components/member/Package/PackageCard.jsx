@@ -212,14 +212,22 @@ const PackageCard = ({
 
   const filteredPackages = packageData
     .filter((pkg) => pkg.packageParent === parentType)
-    .filter((pkg) => !showUnpaidOnly || !pkg.isPaid);
+    .filter((pkg) => !showUnpaidOnly || !pkg.isPaid)
+    .sort((a, b) => {
+      // Sort by disabled status: enabled packages first (false < true)
+      if (a.isDisabled !== b.isDisabled) {
+        return a.isDisabled - b.isDisabled;
+      }
+      // If both have same disabled status, maintain original order
+      return 0;
+    });
 
   return (
     <div>
       {/* Filters: Show Unpaid Only, DatePicker */}
-      <div className="flex justify-between items-center p-4">
+      <div className="flex justify-between items-center p-4 hidden">
         {/* Right Side: Show Unpaid Only */}
-        <div className="flex justify-end hidden">
+        <div className="flex justify-end">
           <label className="flex items-center space-x-2">
             <input
               type="checkbox"

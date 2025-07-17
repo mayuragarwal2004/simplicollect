@@ -124,8 +124,11 @@ const PackageViewer = () => {
 
   console.log({ calculationDate });
 
+  console.log({pendingPayments});
+  
+
   return (
-    <div className="rounded-sm border border-stroke bg-white px-5 pt-6 pb-2.5 shadow-default dark:border-strokedark dark:bg-boxdark sm:px-7.5 xl:pb-1">
+    <div className="rounded-sm border border-stroke bg-white p-3 shadow-default dark:border-strokedark dark:bg-boxdark sm:px-7.5 xl:pb-1">
       {/* add alert if there are pending payments */}
       {pendingPayments.length > 0 && (
         <div className="mb-4">
@@ -144,47 +147,76 @@ const PackageViewer = () => {
           <div className="mt-4">
             {pendingPayments.map((payment) => (
               <div
-                key={payment.packageId}
-                className="mb-2 p-4 border border-yellow-300 rounded-md bg-yellow-50"
+                key={payment.transactionId}
+                className="mb-3 p-4 border border-yellow-300 rounded-lg bg-yellow-50 dark:bg-yellow-900/20"
               >
-                <p className="text-sm text-yellow-800 dark:text-yellow-200">
-                  <strong>Package Name:</strong> {payment.packageName}
-                </p>
-                <p className="text-sm text-yellow-800 dark:text-yellow-200">
-                  <strong>Number of Meetings:</strong>{' '}
-                  {payment?.meetingIds?.length}
-                </p>
-                <p className="text-sm text-yellow-800 dark:text-yellow-200">
-                  <strong>Payable Amount:</strong> ₹{payment.payableAmount}
-                </p>
-                <p className="text-sm text-yellow-800 dark:text-yellow-200">
-                  <strong>Payment Date:</strong>{' '}
-                  {new Date(payment.paymentDate).toLocaleDateString()}
-                </p>
-                <p className="text-s text-red-800 bg-red-200 py-2 px-5 rounded-md w-fit">
-                  <strong>Status:</strong> {payment.status}
-                </p>
-                {/* make more button like  */}
-                <button
-                  className="px-3 py-1 mt-2 text-sm font-semibold text-red-800 border border-red rounded-md hover:bg-red-400 dark:text-red-200 dark:bg-red-400"
-                  onClick={() =>
-                    handleDeletePendingRequest(payment.transactionId)
-                  }
-                >
-                  Delete Request
-                </button>
+                {/* Header with Package Name and Status */}
+                <div className="flex justify-between items-center mb-3">
+                  <div>
+                    <h4 className="text-lg font-semibold text-yellow-900 dark:text-yellow-100">
+                      {payment.packageName}
+                    </h4>
+                    <p className="text-sm text-yellow-700 dark:text-yellow-300">
+                      {payment.packageFeeType} • {new Date(payment.paymentDate).toLocaleDateString()}
+                    </p>
+                  </div>
+                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-200">
+                    {payment.status.toUpperCase()}
+                  </span>
+                </div>
+
+                {/* Payment Summary - Single Row */}
+                <div className="flex flex-wrap gap-4 mb-3">
+                  <div className="flex items-center space-x-1">
+                    <span className="text-sm text-yellow-700 dark:text-yellow-300">Paid:</span>
+                    <span className="font-semibold text-green-700 dark:text-green-400">
+                      ₹{payment.paidAmount?.toLocaleString()}
+                    </span>
+                  </div>
+                  <div className="flex items-center space-x-1">
+                    <span className="text-sm text-yellow-700 dark:text-yellow-300">Original Payable Amount:</span>
+                    <span className="font-semibold text-blue-700 dark:text-blue-400">
+                      ₹{payment.payableAmount?.toLocaleString()}
+                    </span>
+                  </div>
+                  <div className="flex items-center space-x-1">
+                    <span className="text-sm text-yellow-700 dark:text-yellow-300">Balance:</span>
+                    <span className={`font-semibold ${
+                      payment.balanceAmount < 0 
+                        ? 'text-red-600 dark:text-red-400' 
+                        : 'text-green-600 dark:text-green-400'
+                    }`}>
+                      ₹{Math.abs(payment.balanceAmount)?.toLocaleString()} 
+                      {payment.balanceAmount < 0 ? ' Due' : ' Advance'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Action Row */}
+                <div className="flex justify-between items-center pt-2 border-t border-yellow-200">
+                  <div className="text-sm text-yellow-700 dark:text-yellow-300">
+                    <span className="capitalize">{payment.paymentType}</span> • 
+                    <span className="ml-1">{payment.paymentReceivedByName || 'Unknown'}</span>
+                  </div>
+                  <button
+                    className="px-3 py-1 text-sm font-medium text-red-700 bg-red-100 border border-red-300 rounded hover:bg-red-200 dark:bg-red-900/30 dark:text-red-200 dark:border-red-600"
+                    onClick={() => handleDeletePendingRequest(payment.transactionId)}
+                  >
+                    Delete
+                  </button>
+                </div>
               </div>
             ))}
           </div>
         </div>
       )}
-      <div className="flex justify-between items-start">
+      <div className="flex justify-between items-start flex-wrap">
         <div>
           <div className="flex items-center space-x-4">
-            <p className="text-lg font-semibold text-gray-700 dark:text-gray-300">
+            <p className="text-lg font-semibold text-gray-700 dark:text-gray-300 text-nowrap">
               Current Date:
             </p>
-            <p className="text-lg font-semibold text-gray-700 dark:text-gray-300">
+            <p className="text-lg font-semibold text-gray-700 dark:text-gray-300 text-nowrap">
               <CurrentDateTime />
             </p>
           </div>
@@ -263,7 +295,7 @@ const PackageViewer = () => {
         {/* Right Side: Due Amount, show red for positive value, green for negative value */}
         {Boolean(balance) && (
           <div className="flex items-center justify-end">
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-2 text-nowrap">
               <p className="text-lg font-semibold text-gray-700 dark:text-gray-300">
                 {balance > 0 ? 'Advance Amount' : 'Due Amount'}:
               </p>
