@@ -31,4 +31,7 @@ router.delete('/fcm/unsubscribe', notificationController.unsubscribeFCM);
 router.post('/send', AuthenticateAdmin, notificationController.sendNotification);
 router.post('/send-bulk', AuthenticateAdmin, notificationController.sendBulkNotifications);
 
+// Test route for development (requires authentication but not admin)
+router.post('/test/send', notificationController.sendTestNotification);
+
 module.exports = router;

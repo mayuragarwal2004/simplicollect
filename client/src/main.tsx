@@ -25,6 +25,29 @@ if ('serviceWorker' in navigator) {
         console.log('SW registration failed: ', registrationError);
       });
   });
+
+  // Listen for messages from service worker
+  navigator.serviceWorker.addEventListener('message', (event) => {
+    console.log('Received message from service worker:', event.data);
+    
+    if (event.data.type === 'NOTIFICATION_CLICKED') {
+      const { url, customData } = event.data;
+      
+      // Navigate to the specified URL
+      if (url && url !== window.location.pathname) {
+        window.location.href = url;
+      }
+      
+      // You can also dispatch custom events here for the app to handle
+      window.dispatchEvent(new CustomEvent('notificationClicked', {
+        detail: {
+          url,
+          customData,
+          action: event.data.action
+        }
+      }));
+    }
+  });
 }
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(

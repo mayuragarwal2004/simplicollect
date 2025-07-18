@@ -253,7 +253,7 @@ export default function Home() {
     // Navigate to dashboard after loading states
     setTimeout(() => {
       setIsLoading(false);
-      navigate('/member/dashboard'); // or wherever your dashboard route is
+      navigate('/member'); // or wherever your dashboard route is
     }, dashboardLoadingStates.length * 2000);
   };
 

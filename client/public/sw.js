@@ -30,7 +30,11 @@ self.addEventListener('push', (event) => {
       icon: data.icon || '/icon-192x192.png',
       badge: data.badge || '/badge-72x72.png',
       tag: data.tag || 'general',
-      data: data.data || {},
+      data: {
+        ...data.data,
+        clickAction: data.clickAction,
+        customData: data.customData
+      },
       requireInteraction: data.data?.priority === 'urgent',
       actions: [
         {
@@ -57,7 +61,8 @@ self.addEventListener('push', (event) => {
       self.registration.showNotification('New Notification', {
         body: 'You have a new notification from SimpliCollect',
         icon: '/icon-192x192.png',
-        tag: 'fallback'
+        tag: 'fallback',
+        data: { clickAction: '/member' }
       })
     );
   }
@@ -73,8 +78,15 @@ self.addEventListener('notificationclick', (event) => {
     return;
   }
 
-  // Handle notification click
-  const urlToOpen = event.notification.data?.url || '/';
+  // Get the URL to navigate to from clickAction or fall back to legacy url
+  const urlToOpen = event.notification.data?.clickAction || 
+                    event.notification.data?.url || 
+                    '/member';
+  
+  // Get custom data for enhanced navigation
+  const customData = event.notification.data?.customData || {};
+  
+  console.log('Opening URL:', urlToOpen, 'with custom data:', customData);
   
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true })
@@ -87,14 +99,32 @@ self.addEventListener('notificationclick', (event) => {
             client.postMessage({
               type: 'NOTIFICATION_CLICKED',
               url: urlToOpen,
-              data: event.notification.data
+              data: event.notification.data,
+              customData: customData,
+              action: event.action || 'view'
             });
             return;
           }
         }
         
-        // If no window is open, open a new one
-        return self.clients.openWindow(urlToOpen);
+        // If no window is open, open a new one with the specific URL
+        const targetUrl = new URL(urlToOpen, self.location.origin);
+        
+        // Add query parameters for additional context if needed
+        if (customData.transactionId) {
+          targetUrl.searchParams.set('transactionId', customData.transactionId);
+        }
+        if (customData.chapterId) {
+          targetUrl.searchParams.set('chapterId', customData.chapterId);
+        }
+        if (customData.meetingId) {
+          targetUrl.searchParams.set('meetingId', customData.meetingId);
+        }
+        if (customData.reportId) {
+          targetUrl.searchParams.set('reportId', customData.reportId);
+        }
+        
+        return self.clients.openWindow(targetUrl.toString());
       })
   );
 });

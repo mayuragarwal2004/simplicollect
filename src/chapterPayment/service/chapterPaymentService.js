@@ -2,6 +2,7 @@ const { v4: uuidv4 } = require("uuid");
 const chapterPaymentModel = require("../model/chapterPaymentModel");
 const memberModel = require("../../member/model/memberModel");
 const db = require("../../config/db");
+const { sendPaymentApprovedNotification } = require("../../utils/notificationUtils");
 
 const getChapterTransactionsService = async (
   chapterId,
@@ -92,11 +93,41 @@ const approvePaymentService = async (memberId, transactionId) => {
     transactionId,
     status: "approved",
   };
+  
   const result = await chapterPaymentModel.approvePendingRequest(
     transactionData.transactionId,
     transactionData.approvedById,
     transactionData.approvedByName
   );
+
+  // Send notification to the member who made the payment
+  try {
+    // Get transaction details to find the member who made the payment
+    const transactionDetails = await db('chapter_payments')
+      .where('id', transactionId)
+      .first();
+    
+    if (transactionDetails) {
+      // Get chapter details for notification
+      const chapterQuery = await db('chapters').where('chapterId', transactionDetails.chapterId).first();
+      const chapterName = chapterQuery ? chapterQuery.chapterName : 'Unknown Chapter';
+
+      await sendPaymentApprovedNotification(
+        transactionDetails.senderId,
+        {
+          transactionId: transactionId,
+          paidAmount: transactionDetails.transferredAmount || 0,
+          chapterId: transactionDetails.chapterId
+        },
+        transactionData.approvedByName,
+        chapterName
+      );
+    }
+  } catch (notificationError) {
+    console.error('Error sending chapter payment approval notification:', notificationError);
+    // Don't fail the approval process if notification fails
+  }
+
   return result;
 };
 

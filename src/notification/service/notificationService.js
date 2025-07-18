@@ -23,7 +23,10 @@ const sendNotification = async (notificationData) => {
         title: notificationData.title,
         body: notificationData.message,
         type: notificationData.type,
-        notificationId: notification.notificationId
+        notificationId: notification.notificationId,
+        priority: notificationData.priority,
+        clickAction: notificationData.clickAction,
+        customData: notificationData.customData
       });
     }
 
@@ -53,7 +56,10 @@ const sendBulkNotifications = async (notificationData, targetType, targetData) =
         sendPushNotification(recipient.memberId, {
           title: notificationData.title,
           body: notificationData.message,
-          type: notificationData.type
+          type: notificationData.type,
+          priority: notificationData.priority,
+          clickAction: notificationData.clickAction,
+          customData: notificationData.customData
         }).catch(error => {
           console.error(`Failed to send push notification to ${recipient.memberId}:`, error);
           return null;
@@ -97,7 +103,8 @@ const sendPushNotification = async (memberId, payload) => {
           type: payload.type,
           priority: payload.priority || 'medium',
           notificationId: payload.notificationId,
-          customData: payload.data || {}
+          clickAction: payload.clickAction,
+          customData: payload.customData || {}
         });
         promises.push(fcmPromise);
       } catch (error) {
@@ -114,10 +121,15 @@ const sendPushNotification = async (memberId, payload) => {
           icon: '/icon-192x192.png',
           badge: '/badge-72x72.png',
           tag: payload.type || 'general',
+          clickAction: payload.clickAction,
+          customData: payload.customData,
           data: {
             notificationId: payload.notificationId,
             type: payload.type,
-            url: getNotificationUrl(payload.type)
+            clickAction: payload.clickAction,
+            customData: payload.customData,
+            // Legacy URL field for backward compatibility
+            url: payload.clickAction || getNotificationUrl(payload.type)
           }
         });
 
@@ -315,6 +327,7 @@ const sendChapterReportNotification = async (recipientId, reportData) => {
   });
 };
 
+// Not being used anywhere right now
 const sendMeetingReminderNotification = async (recipientId, meetingData) => {
   return sendNotification({
     title: 'Meeting Reminder',

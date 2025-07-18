@@ -4,6 +4,7 @@ const memberModel = require("../../member/model/memberModel");
 const paymentModel = require("../model/paymentModel");
 const paymentService = require("../service/paymentService");
 const { v4: uuidv4 } = require("uuid");
+const { sendPaymentReceivedNotification, sendPaymentApprovedNotification } = require("../../utils/notificationUtils");
 
 const addPayment = async (req, res) => {
   let {memberId} = req.body;
@@ -63,6 +64,35 @@ const addPayment = async (req, res) => {
   try {
     const result1 = await paymentModel.addTransaction(transactionTableData);
     const result = await paymentModel.addPayment(newRecords);
+
+    // Send notification to payment receiver if receiver ID is provided
+    if (paymentDetails.paymentReceivedById) {
+      try {
+        // Get sender member details for notification
+        const senderMember = await memberModel.findMemberById(memberId);
+        const senderName = senderMember ? `${senderMember.firstName} ${senderMember.lastName}` : 'Unknown Member';
+        
+        // Get chapter details for notification
+        const chapterQuery = await db('chapters').where('chapterId', paymentDetails.chapterId).first();
+        const chapterName = chapterQuery ? chapterQuery.chapterName : 'Unknown Chapter';
+
+        // Send notification to fee receiver
+        await sendPaymentReceivedNotification(
+          paymentDetails.paymentReceivedById,
+          {
+            ...paymentDetails,
+            transactionId: transactionTableData.transactionId,
+            paidAmount: paymentDetails.paidAmount
+          },
+          senderName,
+          chapterName
+        );
+      } catch (notificationError) {
+        console.error('Error sending payment notification:', notificationError);
+        // Don't fail the payment process if notification fails
+      }
+    }
+
     res.json(result);
   } catch (error) {
     console.log(error);
@@ -181,6 +211,34 @@ const approvePendingPaymentController = async (req, res) => {
         balance: transaction.balanceAmount,
       }));
       await paymentModel.updateBalance(balanceList, trx);
+
+      // Send notifications to members about payment approval
+      try {
+        const approverName = `${memberDetails.firstName} ${memberDetails.lastName}`;
+        
+        // Get chapter details for notification
+        const chapterQuery = await db('chapters').where('chapterId', transactionDetails[0]?.chapterId).first();
+        const chapterName = chapterQuery ? chapterQuery.chapterName : 'Unknown Chapter';
+
+        // Send approval notifications to each member
+        const notificationPromises = transactionDetails.map(async (transaction) => {
+          return sendPaymentApprovedNotification(
+            transaction.memberId,
+            {
+              transactionId: transaction.transactionId,
+              paidAmount: transaction.paidAmount || 0,
+              chapterId: transaction.chapterId
+            },
+            approverName,
+            chapterName
+          );
+        });
+
+        await Promise.allSettled(notificationPromises);
+      } catch (notificationError) {
+        console.error('Error sending approval notifications:', notificationError);
+        // Don't fail the approval process if notifications fail
+      }
 
       // If all succeeds, transaction commits automatically
       res.json({ success: true });

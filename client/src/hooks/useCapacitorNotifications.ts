@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Capacitor } from '@capacitor/core';
 import CapacitorPushService from '../services/capacitorPushService';
 import { useAuth } from '../context/AuthContext';
@@ -15,6 +16,7 @@ export const useCapacitorNotifications = () => {
   const [isInitialized, setIsInitialized] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const isNative = Capacitor.isNativePlatform();
@@ -85,17 +87,41 @@ export const useCapacitorNotifications = () => {
     }
   };
 
-  const handleNotificationNavigation = (event: CustomEvent<{ route: string }>) => {
-    const { route } = event.detail;
+  const handleNotificationNavigation = (event: CustomEvent<{ 
+    route: string; 
+    originalRoute?: string; 
+    customData?: any; 
+    action?: string; 
+    source?: string; 
+  }>) => {
+    const { route, originalRoute, customData, action, source } = event.detail;
     
-    // You can use React Router or your navigation system here
-    // For example, if using React Router:
-    // history.push(route);
+    console.log('Capacitor notification navigation:', {
+      route,
+      originalRoute,
+      customData,
+      action,
+      source
+    });
     
-    console.log('Navigate to route:', route);
-    
-    // For now, we'll just show a toast with the route
-    toast.info(`Navigating to: ${route}`);
+    // Use React Router to navigate to the route
+    if (route) {
+      navigate(route);
+      
+      // Show a toast with context about the navigation
+      const actionText = action === 'approve_payment' ? 'Payment approval' 
+                        : action === 'view_meeting_details' ? 'Meeting details'
+                        : action === 'view_report' ? 'Report'
+                        : 'Notification';
+      
+      toast.success(`Navigating to ${actionText}`, {
+        position: "top-right",
+        autoClose: 3000,
+      });
+    } else {
+      console.warn('No route provided in notification navigation event');
+      toast.warn('Unable to navigate - no route specified');
+    }
   };
 
   const getDeliveredNotifications = async () => {

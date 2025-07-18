@@ -256,24 +256,86 @@ export class CapacitorPushService {
 
   private handleNotificationAction(notification: ActionPerformed): void {
     const data = notification.notification.data;
+    
+    console.log('Capacitor notification action performed:', notification);
+    console.log('Notification data:', data);
 
-    // Handle deep linking based on notification data
-    if (data?.route) {
-      // Navigate to specific route
+    // Handle enhanced navigation data from our notification system
+    let targetRoute = null;
+    let customData: any = {};
+
+    // Check for clickAction (preferred method)
+    if (data?.clickAction) {
+      targetRoute = data.clickAction;
+    }
+    // Fallback to legacy route field
+    else if (data?.route) {
+      targetRoute = data.route;
+    }
+
+    // Parse customData if it exists
+    if (data?.customData) {
+      try {
+        // customData might be a string or already an object
+        customData = typeof data.customData === 'string' 
+          ? JSON.parse(data.customData) 
+          : data.customData;
+      } catch (error) {
+        console.warn('Failed to parse customData:', error);
+        customData = {};
+      }
+    }
+
+    // Handle navigation with enhanced routing
+    if (targetRoute) {
+      // Build query parameters from customData
+      const searchParams = new URLSearchParams();
+      
+      if (customData.transactionId) {
+        searchParams.set('transactionId', customData.transactionId);
+      }
+      if (customData.chapterId) {
+        searchParams.set('chapterId', customData.chapterId);
+      }
+      if (customData.meetingId) {
+        searchParams.set('meetingId', customData.meetingId);
+      }
+      if (customData.reportId) {
+        searchParams.set('reportId', customData.reportId);
+      }
+
+      // Build final route with query parameters
+      const finalRoute = searchParams.toString() 
+        ? `${targetRoute}?${searchParams.toString()}`
+        : targetRoute;
+
+      console.log('Capacitor navigating to:', finalRoute, 'with customData:', customData);
+
+      // Navigate using enhanced routing
       window.dispatchEvent(
         new CustomEvent('notificationNavigation', {
-          detail: { route: data.route },
+          detail: { 
+            route: finalRoute,
+            originalRoute: targetRoute,
+            customData: customData,
+            action: customData.action || 'view',
+            source: 'capacitor'
+          },
         }),
       );
     }
 
+    // Handle direct URL navigation (legacy)
     if (data?.url) {
       // Open URL
       window.open(data.url, '_blank');
     }
 
-    // You can add more custom actions here
-    console.log('Notification action handled:', data);
+    console.log('Capacitor notification action handled:', {
+      targetRoute,
+      customData,
+      finalRoute: targetRoute + (new URLSearchParams().toString() ? '?' + new URLSearchParams().toString() : '')
+    });
   }
 
   async getDeliveredNotifications(): Promise<any[]> {

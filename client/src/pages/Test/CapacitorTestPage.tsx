@@ -207,6 +207,75 @@ const CapacitorTestPage: React.FC = () => {
     }
   };
 
+  const testEnhancedNavigation = async () => {
+    addLog('Starting enhanced navigation test...');
+    
+    try {
+      // Test 1: Payment notification with enhanced data
+      addLog('Testing payment notification with enhanced navigation...');
+      const paymentPayload = {
+        title: 'Payment Received (Test)',
+        message: 'A test payment notification to verify enhanced navigation works.',
+        type: 'payment',
+        priority: 'medium',
+        clickAction: '/member/fee-approval',
+        customData: {
+          route: '/member/fee-approval',
+          transactionId: 'TEST123',
+          chapterId: 'CHAPTER456',
+          action: 'approve_payment'
+        }
+      };
+
+      const response1 = await axiosInstance.post('/api/notifications/test/send', paymentPayload);
+      if (response1.data.success) {
+        addLog('✓ Payment notification sent successfully');
+        addLog(`  - Target route: ${paymentPayload.clickAction}`);
+        addLog(`  - Transaction ID: ${paymentPayload.customData.transactionId}`);
+      } else {
+        addLog('❌ Failed to send payment notification');
+      }
+
+      // Wait a bit before next test
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      // Test 2: Meeting notification with enhanced data
+      addLog('Testing meeting notification with enhanced navigation...');
+      const meetingPayload = {
+        title: 'Meeting Reminder (Test)',
+        message: 'A test meeting reminder to verify enhanced navigation works.',
+        type: 'meeting',
+        priority: 'medium',
+        clickAction: '/member/meetings',
+        customData: {
+          route: '/member/meetings',
+          meetingId: 'MEETING789',
+          chapterId: 'CHAPTER456',
+          action: 'view_meeting_details'
+        }
+      };
+
+      const response2 = await axiosInstance.post('/api/notifications/test/send', meetingPayload);
+      if (response2.data.success) {
+        addLog('✓ Meeting notification sent successfully');
+        addLog(`  - Target route: ${meetingPayload.clickAction}`);
+        addLog(`  - Meeting ID: ${meetingPayload.customData.meetingId}`);
+      } else {
+        addLog('❌ Failed to send meeting notification');
+      }
+
+      addLog('📱 Check your device for test notifications and tap them to verify navigation');
+      addLog('🔍 Expected behavior:');
+      addLog('  - Payment notification → /member/fee-approval?transactionId=TEST123&chapterId=CHAPTER456');
+      addLog('  - Meeting notification → /member/meetings?meetingId=MEETING789&chapterId=CHAPTER456');
+      
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      addLog(`❌ Enhanced navigation test failed: ${errorMessage}`);
+      console.error('Enhanced navigation test failed:', error);
+    }
+  };
+
   const getNotificationStatus = () => {
     if (isNative) {
       return {
@@ -465,6 +534,13 @@ const CapacitorTestPage: React.FC = () => {
                 Test Old Capacitor Service
               </button>
               <button
+                onClick={testEnhancedNavigation}
+                className="px-4 py-2 bg-orange-600 text-white rounded hover:bg-orange-700 transition-colors"
+                disabled={!isBackendRunning}
+              >
+                Test Enhanced Navigation
+              </button>
+              <button
                 onClick={testBackendConnection}
                 className="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 transition-colors"
               >
@@ -485,6 +561,13 @@ const CapacitorTestPage: React.FC = () => {
                 disabled={!webNotifications.isSupported || webNotifications.loading}
               >
                 {webNotifications.loading ? 'Testing...' : 'Test Web Notifications'}
+              </button>
+              <button
+                onClick={testEnhancedNavigation}
+                className="px-4 py-2 bg-orange-600 text-white rounded hover:bg-orange-700 transition-colors"
+                disabled={!isBackendRunning}
+              >
+                Test Enhanced Navigation
               </button>
               <button
                 onClick={testBackendConnection}

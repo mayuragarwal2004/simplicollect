@@ -299,6 +299,52 @@ const unsubscribeFCM = async (req, res) => {
   }
 };
 
+// Send test notification (for development/testing)
+const sendTestNotification = async (req, res) => {
+  try {
+    const { memberId } = req.user;
+    const { title, message, type, priority, clickAction, customData } = req.body;
+
+    // Validate required fields
+    if (!title || !message) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Title and message are required' 
+      });
+    }
+
+    // Create test notification data
+    const notificationData = {
+      title,
+      message,
+      type: type || 'test',
+      priority: priority || 'medium',
+      recipientId: memberId,
+      isPersistent: true,
+      clickAction,
+      customData
+    };
+
+    console.log('Sending test notification:', notificationData);
+
+    // Send the notification
+    const result = await notificationService.sendNotification(notificationData);
+
+    res.json({ 
+      success: true, 
+      message: 'Test notification sent successfully',
+      notificationId: result.notificationId
+    });
+  } catch (error) {
+    console.error('Error sending test notification:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Failed to send test notification',
+      error: error.message 
+    });
+  }
+};
+
 module.exports = {
   getNotifications,
   markAsRead,
@@ -310,5 +356,6 @@ module.exports = {
   subscribeToPush,
   unsubscribeFromPush,
   subscribeFCM,
-  unsubscribeFCM
+  unsubscribeFCM,
+  sendTestNotification
 };

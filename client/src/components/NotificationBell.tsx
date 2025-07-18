@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { toast } from 'react-toastify';
+import { useNavigate } from 'react-router-dom';
 import { axiosInstance } from '../utils/config';
 import { useAuth } from '@/context/AuthContext';
 
@@ -12,6 +13,15 @@ interface Notification {
   isRead: boolean;
   createdAt: string;
   senderName?: string;
+  clickAction?: string;
+  customData?: {
+    route: string;
+    transactionId?: string;
+    chapterId?: string;
+    meetingId?: string;
+    reportId?: string;
+    action?: string;
+  };
 }
 
 const NotificationBell: React.FC = () => {
@@ -20,7 +30,8 @@ const NotificationBell: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const {isAuthenticated} = useAuth();
+  const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (!isAuthenticated) return; // Do not fetch notifications if not authenticated
@@ -129,6 +140,48 @@ const NotificationBell: React.FC = () => {
     }
   };
 
+  const handleNotificationClick = async (notification: Notification) => {
+    try {
+      // Mark as read if not already read
+      if (!notification.isRead) {
+        await markAsRead(notification.notificationId);
+      }
+
+      // Handle navigation based on clickAction or customData
+      if (notification.clickAction || notification.customData?.route) {
+        const targetRoute = notification.clickAction || notification.customData?.route || '/member';
+        
+        // Build query parameters from customData
+        const searchParams = new URLSearchParams();
+        const customData = notification.customData;
+        
+        if (customData?.transactionId) {
+          searchParams.set('transactionId', customData.transactionId);
+        }
+        if (customData?.chapterId) {
+          searchParams.set('chapterId', customData.chapterId);
+        }
+        if (customData?.meetingId) {
+          searchParams.set('meetingId', customData.meetingId);
+        }
+        if (customData?.reportId) {
+          searchParams.set('reportId', customData.reportId);
+        }
+
+        // Navigate to the target route with query parameters
+        const fullRoute = searchParams.toString() 
+          ? `${targetRoute}?${searchParams.toString()}`
+          : targetRoute;
+        
+        console.log('Navigating to:', fullRoute, 'from notification:', notification);
+        navigate(fullRoute);
+        setIsOpen(false); // Close the dropdown
+      }
+    } catch (error) {
+      console.error('Error handling notification click:', error);
+    }
+  };
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
@@ -208,7 +261,7 @@ const NotificationBell: React.FC = () => {
                   className={`p-4 border-b border-gray-200 dark:border-gray-700 last:border-b-0 border-l-4 ${getPriorityColor(notification.priority)} ${
                     !notification.isRead ? 'bg-blue-50 dark:bg-blue-900/20' : ''
                   } hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer transition-colors`}
-                  onClick={() => !notification.isRead && markAsRead(notification.notificationId)}
+                  onClick={() => handleNotificationClick(notification)}
                 >
                   <div className="flex items-start space-x-3">
                     <span className="text-lg flex-shrink-0 mt-0.5">
