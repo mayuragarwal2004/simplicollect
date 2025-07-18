@@ -7,6 +7,11 @@ import Logo from '../../images/logo/logo.svg';
 import { useAuth } from '../../context/AuthContext';
 import axios from 'axios';
 import { axiosInstance } from '@/utils/config';
+import { PhoneInput } from '@/components/ui/phone-input';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { Eye, EyeOff } from 'lucide-react';
 
 const SignIn: React.FC = () => {
   const navigate = useNavigate();
@@ -15,12 +20,15 @@ const SignIn: React.FC = () => {
   const [identifier, setIdentifier] = useState(
     location.state?.identifier || '',
   ); // Email or Phone
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [selectedCountry, setSelectedCountry] = useState('IN'); // Track selected country
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [loadingMsg, setLoadingMsg] = useState('');
   const [error, setError] = useState('');
   const [showPasswordField, setShowPasswordField] = useState(false);
+  const [inputType, setInputType] = useState<'email' | 'phone'>('email');
 
   // Check if the user is already authenticated
   useEffect(() => {
@@ -31,6 +39,24 @@ const SignIn: React.FC = () => {
     }
   }, [isAuthenticated, location, navigate]);
 
+  // Handle input type toggle
+  const handleInputTypeToggle = (type: 'email' | 'phone') => {
+    setInputType(type);
+    setIdentifier('');
+    setPhoneNumber('');
+    setSelectedCountry('IN'); // Reset to default country
+    setError('');
+    setShowPasswordField(false);
+    setPassword('');
+  };
+
+  // Handle going back to edit identifier
+  const handleGoBack = () => {
+    setShowPasswordField(false);
+    setPassword('');
+    setError('');
+  };
+
   // Handle Continue button click
   const handleContinue = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,8 +64,18 @@ const SignIn: React.FC = () => {
     setError('');
 
     try {
+      // Use the appropriate identifier based on input type
+      const finalIdentifier =
+        inputType === 'phone' ? phoneNumber.slice(1) : identifier;
+
+      if (!finalIdentifier) {
+        setError('Please enter a valid email or phone number.');
+        setLoading(false);
+        return;
+      }
+
       const response = await axiosInstance.post('/api/auth/check-member', {
-        identifier,
+        identifier: finalIdentifier,
       });
 
       if (!response.data.exists) {
@@ -47,7 +83,12 @@ const SignIn: React.FC = () => {
       } else if (response.data.defaultOTP) {
         setLoadingMsg('Sending OTP...');
         navigate('/auth/otp-verification', {
-          state: { identifier, from: location.state?.from },
+          state: {
+            identifier: inputType === 'phone' ? phoneNumber : identifier,
+            from: location.state?.from,
+            inputType: inputType,
+            selectedCountry: selectedCountry,
+          },
         });
       } else if (response.data.exists && !response.data.defaultOTP) {
         setShowPasswordField(true);
@@ -64,8 +105,18 @@ const SignIn: React.FC = () => {
     try {
       setLoading(true);
       setLoadingMsg('Sending OTP...');
+
+      // Use the appropriate identifier based on input type
+      // Send phone number directly without slicing
+      const finalIdentifier = inputType === 'phone' ? phoneNumber : identifier;
+
       navigate('/auth/otp-verification', {
-        state: { identifier, from: location.state?.from },
+        state: {
+          identifier: finalIdentifier,
+          from: location.state?.from,
+          inputType: inputType,
+          selectedCountry: selectedCountry,
+        },
       });
     } catch (error) {
       setError('Error sending OTP.');
@@ -78,7 +129,11 @@ const SignIn: React.FC = () => {
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await login(identifier, password, () => {
+      // Use the appropriate identifier based on input type
+      const finalIdentifier =
+        inputType === 'phone' ? phoneNumber.slice(1) : identifier;
+
+      await login(finalIdentifier, password, () => {
         const from = location.state?.from?.pathname || '/member/fee';
         navigate(from, { replace: true });
       });
@@ -89,10 +144,9 @@ const SignIn: React.FC = () => {
 
   return (
     <>
-      <Breadcrumbs items={[
-        { name: 'Authentication', link: '/auth' },
-        { name: 'Sign In' }
-      ]} />
+      <Breadcrumbs
+        items={[{ name: 'Authentication', link: '/auth' }, { name: 'Sign In' }]}
+      />
       <div className=" flex items-center justify-center flex-col">
         <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark p-8 max-w-md mx-auto">
           <div className="flex flex-wrap items-center">
@@ -118,64 +172,138 @@ const SignIn: React.FC = () => {
               className="w-full"
               onSubmit={showPasswordField ? handleSignIn : handleContinue}
             >
+              {/* Input Type Toggle */}
+              <div className="mb-4">
+                <div className="flex rounded-md border border-stroke dark:border-strokedark overflow-hidden">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className={`flex-1 rounded-none transition-colors ${
+                      inputType === 'email'
+                        ? 'bg-blue-600 text-white hover:bg-blue-700'
+                        : 'bg-gray-50 text-gray-700 dark:bg-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600'
+                    }`}
+                    onClick={() => handleInputTypeToggle('email')}
+                    disabled={showPasswordField}
+                  >
+                    Email
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className={`flex-1 rounded-none transition-colors ${
+                      inputType === 'phone'
+                        ? 'bg-blue-600 text-white hover:bg-blue-700'
+                        : 'bg-gray-50 text-gray-700 dark:bg-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600'
+                    }`}
+                    onClick={() => handleInputTypeToggle('phone')}
+                    disabled={showPasswordField}
+                  >
+                    Phone
+                  </Button>
+                </div>
+              </div>
+
               {/* Email or Phone Input */}
               <div className="mb-4">
-                <label
-                  className="block text-gray-700 dark:text-gray-300 mb-2"
+                <Label
                   htmlFor="identifier"
+                  className="block text-gray-700 dark:text-gray-300 mb-2"
                 >
-                  Email or Phone
-                </label>
-                <input
-                  type="text"
-                  id="identifier"
-                  className="w-full p-3 border border-stroke rounded-md dark:border-strokedark dark:bg-boxdark"
-                  value={identifier}
-                  onChange={(e) => setIdentifier(e.target.value)}
-                  required
-                  disabled={showPasswordField}
-                />
+                  {inputType === 'email' ? 'Email Address' : 'Phone Number'}
+                </Label>
+
+                {/* Edit button for password field */}
+                {showPasswordField && (
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm text-gray-500 dark:text-gray-400">
+                      {inputType === 'email' ? identifier : phoneNumber}
+                    </span>
+                    <Button
+                      type="button"
+                      variant="link"
+                      className="h-auto p-0 text-blue-500 hover:underline"
+                      onClick={handleGoBack}
+                    >
+                      Edit
+                    </Button>
+                  </div>
+                )}
+
+                {inputType === 'email' ? (
+                  <Input
+                    type="email"
+                    id="identifier"
+                    value={identifier}
+                    onChange={(e) => setIdentifier(e.target.value)}
+                    placeholder="Enter your email address"
+                    required
+                    disabled={showPasswordField}
+                    autoComplete="username"
+                  />
+                ) : (
+                  <div>
+                    <PhoneInput
+                      defaultCountry="IN"
+                      value={phoneNumber}
+                      onChange={(value) => setPhoneNumber(value || '')}
+                      onCountryChange={(country) => {
+                        setSelectedCountry(country || 'IN');
+                      }}
+                      placeholder="Enter your phone number"
+                      disabled={showPasswordField}
+                      autoComplete="username"
+                    />
+                  </div>
+                )}
               </div>
 
               {/* Password Input (if password is set) */}
               {showPasswordField && (
                 <div className="mb-6">
-                  <label
-                    className="block text-gray-700 dark:text-gray-300 mb-2"
+                  <Label
                     htmlFor="password"
+                    className="block text-gray-700 dark:text-gray-300 mb-2"
                   >
                     Password
-                  </label>
+                  </Label>
                   <div className="relative">
-                    <input
-                      type={showPassword ? "text" : "password"}
+                    <Input
+                      type={showPassword ? 'text' : 'password'}
                       id="password"
-                      className="w-full p-3 border border-stroke rounded-md dark:border-strokedark dark:bg-boxdark pr-10"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
+                      className="pr-10"
                       required
+                      autoComplete="current-password"
                     />
-                    <button
+                    <Button
                       type="button"
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 focus:outline-none"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                       onClick={() => setShowPassword((prev) => !prev)}
                       tabIndex={-1}
                     >
                       {showPassword ? (
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                        <EyeOff className="h-4 w-4" />
                       ) : (
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.477 0-8.268-2.943-9.542-7a9.956 9.956 0 012.223-3.592m3.62-2.564A9.953 9.953 0 0112 5c4.477 0 8.268 2.943 9.542 7a9.956 9.956 0 01-4.422 5.568M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3l18 18" /></svg>
+                        <Eye className="h-4 w-4" />
                       )}
-                    </button>
+                    </Button>
                   </div>
                 </div>
               )}
 
-              {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
+              {error && (
+                <div className="mb-4 p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md dark:text-red-400 dark:bg-red-900/20 dark:border-red-800">
+                  {error}
+                </div>
+              )}
 
-              <button
+              <Button
                 type="submit"
-                className="w-full py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition"
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white"
                 disabled={loading}
               >
                 {loading
@@ -183,20 +311,21 @@ const SignIn: React.FC = () => {
                   : showPasswordField
                     ? 'Sign In'
                     : 'Continue'}
-              </button>
+              </Button>
             </form>
 
             {/* Forgot Password Link (only shown after password field is displayed) */}
             {showPasswordField && (
               <div className="mt-4 text-center">
-                <button
+                <Button
                   type="button"
-                  className="text-blue-500 hover:underline disabled:opacity-50"
+                  variant="link"
+                  className="text-blue-500 hover:underline"
                   disabled={loading}
                   onClick={handleForgotPassword}
                 >
                   Forgot Password?
-                </button>
+                </Button>
               </div>
             )}
           </div>

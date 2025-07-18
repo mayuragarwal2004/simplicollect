@@ -1,11 +1,24 @@
 import React, { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'react-toastify';
 import { axiosInstance } from '../../../utils/config';
+import { PhoneInput } from '@/components/ui/phone-input';
+import { isValidPhoneNumber } from "react-phone-number-input";
 
-export default function AddMemberDialog({ open, onOpenChange, chapterId, refresh }) {
+export default function AddMemberDialog({
+  open,
+  onOpenChange,
+  chapterId,
+  refresh,
+}) {
   const [mode, setMode] = useState('search'); // 'search' or 'addNew'
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
@@ -43,7 +56,9 @@ export default function AddMemberDialog({ open, onOpenChange, chapterId, refresh
     if (!searchQuery) return;
     setLoading(true);
     try {
-      const res = await axiosInstance.get(`/api/member/search?query=${encodeURIComponent(searchQuery)}`);
+      const res = await axiosInstance.get(
+        `/api/member/search?query=${encodeURIComponent(searchQuery)}`,
+      );
       setSearchResults(res.data);
     } catch (error) {
       setSearchResults([]);
@@ -79,7 +94,42 @@ export default function AddMemberDialog({ open, onOpenChange, chapterId, refresh
     }
   };
 
+  const validateNewMember = () => {
+    // Check if first name is provided
+    if (!newMember.firstName.trim()) {
+      toast.error('First name is required');
+      return false;
+    }
+
+    // Check if at least one contact method is provided
+    if (!newMember.email.trim() && !newMember.phoneNumber.trim()) {
+      toast.error('Either email or phone number must be provided');
+      return false;
+    }
+
+    // Validate phone number if provided
+    if (newMember.phoneNumber.trim() && !isValidPhoneNumber(newMember.phoneNumber)) {
+      toast.error('Please enter a valid phone number');
+      return false;
+    }
+
+    // Validate email format if provided
+    if (newMember.email.trim()) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(newMember.email)) {
+        toast.error('Please enter a valid email address');
+        return false;
+      }
+    }
+
+    return true;
+  };
+
   const handleAddNew = async () => {
+    if (!validateNewMember()) {
+      return;
+    }
+
     setLoading(true);
     try {
       const res = await axiosInstance.post('/api/member/add', [
@@ -111,22 +161,40 @@ export default function AddMemberDialog({ open, onOpenChange, chapterId, refresh
           <DialogTitle>Add Member</DialogTitle>
         </DialogHeader>
         <div className="flex gap-2 mb-4">
-          <Button variant={mode === 'search' ? 'default' : 'outline'} onClick={() => setMode('search')}>Search Existing</Button>
-          <Button variant={mode === 'addNew' ? 'default' : 'outline'} onClick={() => setMode('addNew')}>Invite New</Button>
+          <Button
+            variant={mode === 'search' ? 'default' : 'outline'}
+            onClick={() => setMode('search')}
+          >
+            Search Existing
+          </Button>
+          <Button
+            variant={mode === 'addNew' ? 'default' : 'outline'}
+            onClick={() => setMode('addNew')}
+          >
+            Invite New
+          </Button>
         </div>
         {mode === 'search' ? (
           <div>
             <Input
               placeholder="Search by email, phone, or name"
               value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && handleSearch()}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
               className="mb-2"
             />
-            <Button onClick={handleSearch} disabled={loading || !searchQuery} className="mb-2">{loading ? 'Searching...' : 'Search'}</Button>
+            <Button
+              onClick={handleSearch}
+              disabled={loading || !searchQuery}
+              className="mb-2"
+            >
+              {loading ? 'Searching...' : 'Search'}
+            </Button>
             <div className="max-h-48 overflow-y-auto">
-              {searchResults.length === 0 && searchQuery && !loading && <div className="text-gray-500">No members found.</div>}
-              {searchResults.map(member => (
+              {searchResults.length === 0 && searchQuery && !loading && (
+                <div className="text-gray-500">No members found.</div>
+              )}
+              {searchResults.map((member) => (
                 <div
                   key={member.memberId}
                   className={`p-2 border rounded mb-2 cursor-pointer ${selectedMember?.memberId === member.memberId ? 'bg-blue-100' : ''}`}
@@ -135,7 +203,12 @@ export default function AddMemberDialog({ open, onOpenChange, chapterId, refresh
                     setSelectedJoinDate('');
                   }}
                 >
-                  <div><b>{member.firstName} {member.lastName}</b> ({member.email || member.phoneNumber})</div>
+                  <div>
+                    <b>
+                      {member.firstName} {member.lastName}
+                    </b>{' '}
+                    ({member.email || member.phoneNumber})
+                  </div>
                 </div>
               ))}
             </div>
@@ -145,12 +218,16 @@ export default function AddMemberDialog({ open, onOpenChange, chapterId, refresh
                   type="date"
                   placeholder="Join Date"
                   value={selectedJoinDate}
-                  onChange={e => setSelectedJoinDate(e.target.value)}
+                  onChange={(e) => setSelectedJoinDate(e.target.value)}
                 />
               </div>
             )}
             <DialogFooter>
-              <Button onClick={handleAddExisting} disabled={!selectedMember || !selectedJoinDate || loading} className="w-full mt-2">
+              <Button
+                onClick={handleAddExisting}
+                disabled={!selectedMember || !selectedJoinDate || loading}
+                className="w-full mt-2"
+              >
                 {loading ? 'Adding...' : 'Add to Chapter'}
               </Button>
             </DialogFooter>
@@ -160,31 +237,50 @@ export default function AddMemberDialog({ open, onOpenChange, chapterId, refresh
             <Input
               placeholder="First Name*"
               value={newMember.firstName}
-              onChange={e => setNewMember({ ...newMember, firstName: e.target.value })}
+              onChange={(e) =>
+                setNewMember({ ...newMember, firstName: e.target.value })
+              }
             />
             <Input
               placeholder="Last Name"
               value={newMember.lastName}
-              onChange={e => setNewMember({ ...newMember, lastName: e.target.value })}
+              onChange={(e) =>
+                setNewMember({ ...newMember, lastName: e.target.value })
+              }
             />
             <Input
               placeholder="Email"
               value={newMember.email}
-              onChange={e => setNewMember({ ...newMember, email: e.target.value })}
+              onChange={(e) =>
+                setNewMember({ ...newMember, email: e.target.value })
+              }
             />
-            <Input
+            <PhoneInput
               placeholder="Phone Number"
               value={newMember.phoneNumber}
-              onChange={e => setNewMember({ ...newMember, phoneNumber: e.target.value })}
+              onChange={(value) =>
+                setNewMember({ ...newMember, phoneNumber: value })
+              }
+              className="w-full"
+              defaultCountry="IN" // Set default country code
             />
-            <Input
+            <div className="flex items-center gap-2">
+              <span className='text-sm text-gray-500 text-nowrap'>Date of Joining</span>
+              <Input
               placeholder="Join Date"
               type="date"
               value={newMember.joinDate}
-              onChange={e => setNewMember({ ...newMember, joinDate: e.target.value })}
-            />
+              onChange={(e) =>
+                setNewMember({ ...newMember, joinDate: e.target.value })
+              }
+              />
+            </div>
             <DialogFooter>
-              <Button onClick={handleAddNew} className="w-full" disabled={loading}>
+              <Button
+                onClick={handleAddNew}
+                className="w-full"
+                disabled={loading || !newMember.firstName.trim() || (!newMember.email.trim() && !newMember.phoneNumber.trim())}
+              >
                 {loading ? 'Inviting...' : 'Invite & Add'}
               </Button>
             </DialogFooter>

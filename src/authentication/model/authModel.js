@@ -43,7 +43,7 @@ const sendOTP = async (identifier) => {
     }
 
     if (user.phoneNumber) {
-      await sendWhatsAppMessage('otp', "91" + user.phoneNumber, { otp });
+      await sendWhatsAppMessage('otp', user.phoneNumber, { otp });
       messages.push("WhatsApp sent");
     }
 
@@ -57,8 +57,8 @@ const sendOTP = async (identifier) => {
 
     const maskPhone = (phone) => {
       return phone.replace(
-        /^(\d{2})\d+(\d{2})$/,
-        (_, start, end) => `${start}${"*".repeat(phone.length - 4)}${end}`
+      /^(\d{4})\d+(\d{2})$/,
+      (_, start, end) => `${start}${"*".repeat(phone.length - 6)}${end}`
       );
     };
 
