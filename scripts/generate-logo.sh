@@ -44,6 +44,6 @@ if [[ -f "public/badge-72x72.png" ]]; then
 fi
 
 echo "🔄 Syncing Capacitor..."
-npm run build && npx cap copy && npx cap sync ios
+npm run build && npx cap copy && npx cap sync ios && npx cap sync android
 
 echo "🎉 Logo & Splash asset generation completed successfully!"
