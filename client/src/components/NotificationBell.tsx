@@ -31,7 +31,15 @@ const NotificationBell: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const { isAuthenticated } = useAuth();
-  const navigate = useNavigate();
+  
+  // Safely use navigate hook - it may not be available in all contexts
+  let navigate: ReturnType<typeof useNavigate> | null = null;
+  try {
+    navigate = useNavigate();
+  } catch (error) {
+    console.warn('useNavigate not available in this context, falling back to window.location');
+    navigate = null;
+  }
 
   useEffect(() => {
     if (!isAuthenticated) return; // Do not fetch notifications if not authenticated
@@ -174,7 +182,14 @@ const NotificationBell: React.FC = () => {
           : targetRoute;
         
         console.log('Navigating to:', fullRoute, 'from notification:', notification);
-        navigate(fullRoute);
+        
+        // Use navigate if available, otherwise fall back to window.location
+        if (navigate) {
+          navigate(fullRoute);
+        } else {
+          window.location.href = fullRoute;
+        }
+        
         setIsOpen(false); // Close the dropdown
       }
     } catch (error) {

@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Capacitor } from '@capacitor/core';
 import CapacitorPushService from '../services/capacitorPushService';
 import { useAuth } from '../context/AuthContext';
@@ -16,7 +15,6 @@ export const useCapacitorNotifications = () => {
   const [isInitialized, setIsInitialized] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { isAuthenticated } = useAuth();
-  const navigate = useNavigate();
 
   useEffect(() => {
     const isNative = Capacitor.isNativePlatform();
@@ -104,9 +102,13 @@ export const useCapacitorNotifications = () => {
       source
     });
     
-    // Use React Router to navigate to the route
+    // Use global navigation instead of React Router's navigate
     if (route) {
-      navigate(route);
+      // Check if we're already on the target route
+      if (route !== window.location.pathname + window.location.search) {
+        // Use window.location for navigation (will work regardless of router context)
+        window.location.href = route;
+      }
       
       // Show a toast with context about the navigation
       const actionText = action === 'approve_payment' ? 'Payment approval' 
