@@ -110,11 +110,11 @@ const AdminChaptersMemberList = () => {
   return (
     <Card className="p-5 shadow-md">
       <div className="mb-6">
-        <div className="flex justify-between items-center">
+        <div className="flex justify-between items-center flex-wrap gap-4">
           <h2 className="text-xl font-semibold">
             Super Admin Chapter Member Table
           </h2>
-          <div className='flex gap-5'>
+          <div className='flex gap-2 flex-wrap sm:gap-5'>
             <Button onClick={() => setIsSearchOpen(true)}>Add Member</Button>
             <Button onClick={() => setIsBulkOpen(true)}>Add Bulk Member</Button>
           </div>

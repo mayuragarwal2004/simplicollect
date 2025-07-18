@@ -55,11 +55,11 @@ const addMember = async (req, res) => {
           results.push({ error: "Member already in chapter", memberId: existing.memberId });
           continue;
         } else if (mapping && mapping.status === "left") {
-          await memberModel.addOrUpdateMemberChapterMappingWithRoles(existing.memberId, member.chapterId, member.joinDate, defaultRoleIds);
+          await memberModel.addOrUpdateMemberChapterMappingWithRoles(existing.memberId, member.chapterId, member.joinDate, roleIdsStr);
           results.push({ message: "Member re-joined chapter", memberId: existing.memberId });
           continue;
         } else {
-          await memberModel.addOrUpdateMemberChapterMappingWithRoles(existing.memberId, member.chapterId, member.joinDate, defaultRoleIds);
+          await memberModel.addOrUpdateMemberChapterMappingWithRoles(existing.memberId, member.chapterId, member.joinDate, roleIdsStr);
           results.push({ message: "Member added to chapter", memberId: existing.memberId });
           continue;
         }
@@ -96,7 +96,7 @@ const addMember = async (req, res) => {
           phoneNumber: member.phoneNumber || null,
           password,
         });
-        await memberModel.addOrUpdateMemberChapterMappingWithRoles(newMemberId, member.chapterId, member.joinDate, defaultRoleIds);
+        await memberModel.addOrUpdateMemberChapterMappingWithRoles(newMemberId, member.chapterId, member.joinDate, roleIdsStr);
         results.push({ message: "New member created and added to chapter", memberId: newMemberId });
       }
     }

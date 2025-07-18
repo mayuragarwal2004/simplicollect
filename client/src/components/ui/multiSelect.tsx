@@ -292,7 +292,7 @@ export const MultiSelect = React.forwardRef<
             />
             <CommandList>
               <CommandEmpty>No results found.</CommandEmpty>
-              <CommandGroup>
+                <CommandGroup className="h-50 overflow-y-auto w-full [&::-webkit-scrollbar]:w-3 [&::-webkit-scrollbar-track]:bg-gray-100 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-button]:bg-gray-200 [&::-webkit-scrollbar-button]:hover:bg-gray-300 [&::-webkit-scrollbar-button]:h-4 [&::-webkit-scrollbar-button]:w-3 [&::-webkit-scrollbar-button:vertical:start:decrement]:bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAxNiAxNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTggNEw0IDhIMTJMOCA0WiIgZmlsbD0iIzM3NDE1MSIvPgo8L3N2Zz4K')] [&::-webkit-scrollbar-button:vertical:end:increment]:bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAxNiAxNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTQgOEw4IDEyTDEyIDhINCIgZmlsbD0iIzM3NDE1MSIvPgo8L3N2Zz4K')] [&::-webkit-scrollbar-button]:bg-no-repeat [&::-webkit-scrollbar-button]:bg-center [&::-webkit-scrollbar-corner]:bg-gray-100">
                 <CommandItem
                   key="all"
                   onSelect={toggleAll}

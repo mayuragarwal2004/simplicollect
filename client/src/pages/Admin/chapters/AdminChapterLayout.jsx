@@ -43,7 +43,7 @@ const AdminChapterLayout = () => {
   return (
     <div className="flex flex-col gap-4 p-4">
       {/* Navigation Tabs */}
-      <Card className="p-4 flex gap-4">
+      <Card className="p-4 flex gap-4 overflow-hidden overflow-x-auto">
         {list.map((item) => (
           <Button
             key={item.name}
