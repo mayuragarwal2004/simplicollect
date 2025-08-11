@@ -10,7 +10,7 @@ export const APP_CONFIG = {
   // App Store Links
   storeLinks: {
     // iOS App Store - Replace with your actual App Store ID
-    ios: 'https://apps.apple.com/app/simplicollect/id6738824043',
+    ios: 'https://apps.apple.com/us/app/simplicollect/id6748660295',
     
     // Google Play Store - Using the package ID from capacitor.config.json
     android: 'https://play.google.com/store/apps/details?id=com.simplium.simplicollect',

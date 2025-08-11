@@ -68,6 +68,7 @@
     "jspdf-autotable": "^3.8.4",
     "jsvectormap": "^1.5.3",
     "keen-slider": "^6.8.6",
+    "libphonenumber-js": "^1.12.10",
     "lodash.debounce": "^4.0.8",
     "lucide-react": "^0.473.0",
     "match-sorter": "^6.3.1",
