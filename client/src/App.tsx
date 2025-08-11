@@ -2,74 +2,89 @@ import { useCapacitorNotifications } from './hooks/useCapacitorNotifications';
 import { useAppInstallBanner } from './hooks/useAppInstallBanner';
 import { AppInstallBanner } from './components/AppInstallBanner';
 import { APP_CONFIG } from './config/appConfig';
-import { Children, useEffect, useState } from 'react';
+import { Suspense, useEffect, useState, lazy } from 'react';
 import {
   createBrowserRouter,
   Navigate,
-  Route,
   RouterProvider,
-  Routes,
-  useLocation,
 } from 'react-router-dom';
 import 'react-toastify/dist/ReactToastify.css';
+import { ToastContainer, Bounce } from 'react-toastify';
 
 import Loader from './common/Loader';
-import SignIn from './pages/Authentication/SignIn';
-import OtpVerification from './pages/Authentication/OtpVerification';
-import ForgotPassword from './pages/Authentication/ForgotPassword';
-import EOI from './pages/Visitor/EOI';
-import Profile from './pages/Member/Profile';
-import Settings from './pages/Settings';
-// import Tables from './pages/Tables';
-import AlertsPage from './pages/UiElements/AlertsPage';
-import Buttons from './pages/UiElements/Buttons';
-import DefaultLayout from './layout/DefaultLayout';
-import ShareForm from './pages/Visitor/ShareForm';
-import VisitorList from './pages/Visitor/VisitorList';
-import MemberList from './pages/Member/MemberList';
-import Reports from './pages/Member/Reports';
-import PackageViewerPage from './pages/Member/Package/PackageViewerPage';
-import MemberFeeApproval from './pages/Member/MemberFeeApproval';
-import FeeReciever from './pages/Member/FeeReciever';
-import RequireAuth from './utils/RequireAut';
-import PrivacyPolicy from './pages/simpliCollectPrivacyPolicy';
-import TermsAndConditions from './pages/TermsAndConditions';
-import CookiePolicy from './pages/CookiePolicy';
-import NoChapterPage from './pages/NoChapterPage';
-import { Bounce, ToastContainer } from 'react-toastify';
-import AdminSignIn from './pages/Authentication/AdminSignIn';
-import AdminOrganisationsPage from './pages/Admin/organisation/AdminOrganisationsTablePage';
-import AdminChaptersTablePage from './pages/Admin/chapters/AdminChaptersTablePage';
-import AdminChapterLayout from './pages/Admin/chapters/AdminChapterLayout';
-import AdminChapterMemberList from './pages/Admin/chapters/AdminChapterMemberList';
-import AdminChapterDashboardPage from './pages/Admin/chapters/AdminChapterDashboardPage';
-import AdminChapterSettings from './pages/Admin/chapters/AdminChapterSettings';
-import AdminMembersTablePage from './pages/Admin/members/AdminMembersTablePage';
-import AcceptChapterPaymentPage from './pages/Member/FeeReceiver/AcceptChapterPaymentPage';
-import ChapterRoles from './components/Admin/Chapter/CreateNew/ChapterRoles/ChapterRoles';
-import MyLedger from './pages/Member/MyLedger';
-import DashboardPage from './pages/Admin/Dashboard/DashboardPage'
-import TrackVisitor from './pages/Visitor/TrackVisitor';
-import SwitchChapter from './pages/Member/SwitchChapter';
-import AdminPackage from './pages/Admin/Package/AdminPackage';
-import AdminNotificationsPage from './pages/Admin/Notifications/AdminNotificationsPage';
-import AdminContactQueriesPage from './pages/Admin/ContactQueries/AdminContactQueriesPage';
-import CapacitorTestPage from './pages/Test/CapacitorTestPage';
-import ContactUsPage from './pages/Contact/ContactUsPage';
+import SuspenseLoader from './components/SuspenseLoader';
 import { useData } from './context/DataContext';
-import Home from './pages/Home';
+
+// Lazy load all components
+const SignIn = lazy(() => import('./pages/Authentication/SignIn'));
+const OtpVerification = lazy(() => import('./pages/Authentication/OtpVerification'));
+const ForgotPassword = lazy(() => import('./pages/Authentication/ForgotPassword'));
+const AdminSignIn = lazy(() => import('./pages/Authentication/AdminSignIn'));
+const EOI = lazy(() => import('./pages/Visitor/EOI'));
+const Profile = lazy(() => import('./pages/Member/Profile'));
+const Settings = lazy(() => import('./pages/Settings'));
+const AlertsPage = lazy(() => import('./pages/UiElements/AlertsPage'));
+const Buttons = lazy(() => import('./pages/UiElements/Buttons'));
+const DefaultLayout = lazy(() => import('./layout/DefaultLayout'));
+const ShareForm = lazy(() => import('./pages/Visitor/ShareForm'));
+const VisitorList = lazy(() => import('./pages/Visitor/VisitorList'));
+const MemberList = lazy(() => import('./pages/Member/MemberList'));
+const Home = lazy(() => import('./pages/Home'));
+const RequireAuth = lazy(() => import('./utils/RequireAut'));
+const PrivacyPolicy = lazy(() => import('./pages/simpliCollectPrivacyPolicy'));
+const TermsAndConditions = lazy(() => import('./pages/TermsAndConditions'));
+const CookiePolicy = lazy(() => import('./pages/CookiePolicy'));
+const ContactUsPage = lazy(() => import('./pages/Contact/ContactUsPage'));
+const TrackVisitor = lazy(() => import('./pages/Visitor/TrackVisitor'));
+const CapacitorTestPage = lazy(() => import('./pages/Test/CapacitorTestPage'));
+
+// Admin components
+const AdminOrganisationsPage = lazy(() => import('./pages/Admin/organisation/AdminOrganisationsTablePage'));
+const DashboardPage = lazy(() => import('./pages/Admin/Dashboard/DashboardPage'));
+const AdminPackage = lazy(() => import('./pages/Admin/Package/AdminPackage'));
+const AdminNotificationsPage = lazy(() => import('./pages/Admin/Notifications/AdminNotificationsPage'));
+const AdminContactQueriesPage = lazy(() => import('./pages/Admin/ContactQueries/AdminContactQueriesPage'));
+const AdminChaptersTablePage = lazy(() => import('./pages/Admin/chapters/AdminChaptersTablePage'));
+const AdminChapterLayout = lazy(() => import('./pages/Admin/chapters/AdminChapterLayout'));
+const AdminChapterDashboardPage = lazy(() => import('./pages/Admin/chapters/AdminChapterDashboardPage'));
+const AdminChapterMemberList = lazy(() => import('./pages/Admin/chapters/AdminChapterMemberList'));
+const ChapterRoles = lazy(() => import('./components/Admin/Chapter/CreateNew/ChapterRoles/ChapterRoles'));
+const AdminChapterSettings = lazy(() => import('./pages/Admin/chapters/AdminChapterSettings'));
+const AdminMembersTablePage = lazy(() => import('./pages/Admin/members/AdminMembersTablePage'));
+
+// Member components
+const PackageViewerPage = lazy(() => import('./pages/Member/Package/PackageViewerPage'));
+const MyLedger = lazy(() => import('./pages/Member/MyLedger'));
+const MemberFeeApproval = lazy(() => import('./pages/Member/MemberFeeApproval'));
+const FeeReciever = lazy(() => import('./pages/Member/FeeReciever'));
+const Reports = lazy(() => import('./pages/Member/Reports'));
+const AcceptChapterPaymentPage = lazy(() => import('./pages/Member/FeeReceiver/AcceptChapterPaymentPage'));
+const SwitchChapter = lazy(() => import('./pages/Member/SwitchChapter'));
+
+// Wrapper component for Suspense
+const SuspenseWrapper = ({ children, message }: { children: React.ReactNode; message?: string }) => (
+  <Suspense fallback={<SuspenseLoader message={message} />}>
+    {children}
+  </Suspense>
+);
 
 const routes = [
   {
     index: true,
-    element: <Home />,
+    element: (
+      <SuspenseWrapper message="Loading Home">
+        <Home />
+      </SuspenseWrapper>
+    ),
   },
   {
     path: '/admin',
     element: (
-      <RequireAuth>
-        <DefaultLayout admin={true} />
-      </RequireAuth>
+      <SuspenseWrapper message="Loading Admin Panel">
+        <RequireAuth>
+          <DefaultLayout admin={true} />
+        </RequireAuth>
+      </SuspenseWrapper>
     ),
     children: [
       {
@@ -79,30 +94,54 @@ const routes = [
       },
       {
         path: 'organisations',
-        element: <AdminOrganisationsPage />,
+        element: (
+          <SuspenseWrapper message="Loading Organizations">
+            <AdminOrganisationsPage />
+          </SuspenseWrapper>
+        ),
       },
       {
         path: 'dashboard',
-        element: <DashboardPage />,
+        element: (
+          <SuspenseWrapper message="Loading Dashboard">
+            <DashboardPage />
+          </SuspenseWrapper>
+        ),
       },
       {
         path: 'package',
-        element: <AdminPackage />,
+        element: (
+          <SuspenseWrapper message="Loading Packages">
+            <AdminPackage />
+          </SuspenseWrapper>
+        ),
       },
       {
         path: 'notifications',
-        element: <AdminNotificationsPage />,
+        element: (
+          <SuspenseWrapper message="Loading Notifications">
+            <AdminNotificationsPage />
+          </SuspenseWrapper>
+        ),
       },
       {
         path: 'contact-queries',
         children: [
           {
             index: true,
-            element: <AdminContactQueriesPage />,
+            element: (
+              <SuspenseWrapper message="Loading Contact Queries">
+                <AdminContactQueriesPage />
+              </SuspenseWrapper>
+            ),
           },
           {
             path: ':queryId',
-            element: <AdminContactQueriesPage />,
+            element: (
+              <SuspenseWrapper message="Loading Contact Query">
+                <AdminContactQueriesPage />
+              </SuspenseWrapper>
+            ),
           },
         ],
       },
@@ -111,27 +150,51 @@ const routes = [
         children: [
           {
             index: true,
-            element: <AdminChaptersTablePage />,
+            element: (
+              <SuspenseWrapper message="Loading Chapters">
+                <AdminChaptersTablePage />
+              </SuspenseWrapper>
+            ),
           },
           {
             path: ':chapterSlug',
-            element: <AdminChapterLayout />,
+            element: (
+              <SuspenseWrapper message="Loading Chapter">
+                <AdminChapterLayout />
+              </SuspenseWrapper>
+            ),
             children: [
               {
                 path: "dashboard",
-                element: <AdminChapterDashboardPage />,
+                element: (
+                  <SuspenseWrapper message="Loading Chapter Dashboard">
+                    <AdminChapterDashboardPage />
+                  </SuspenseWrapper>
+                ),
               },
               {
                 path: 'member',
-                element: <AdminChapterMemberList />,
+                element: (
+                  <SuspenseWrapper message="Loading Members">
+                    <AdminChapterMemberList />
+                  </SuspenseWrapper>
+                ),
               },
               {
                 path: 'roles',
-                element: <ChapterRoles />,
+                element: (
+                  <SuspenseWrapper message="Loading Roles">
+                    <ChapterRoles />
+                  </SuspenseWrapper>
+                ),
               },
               {
                 path: 'settings',
-                element: <AdminChapterSettings />,
+                element: (
+                  <SuspenseWrapper message="Loading Settings">
+                    <AdminChapterSettings />
+                  </SuspenseWrapper>
+                ),
               },
             ],
           },
@@ -139,98 +202,186 @@ const routes = [
       },
       {
         path: 'members',
-        element: <AdminMembersTablePage />,
+        element: (
+          <SuspenseWrapper message="Loading Members">
+            <AdminMembersTablePage />
+          </SuspenseWrapper>
+        ),
       },
     ],
   },
   {
     path: '/',
-    element: <DefaultLayout />,
+    element: (
+      <SuspenseWrapper message="Loading Layout">
+        <DefaultLayout />
+      </SuspenseWrapper>
+    ),
     children: [
       {
         path: 'privacy-policy',
-        element: <PrivacyPolicy />,
+        element: (
+          <SuspenseWrapper message="Loading Privacy Policy">
+            <PrivacyPolicy />
+          </SuspenseWrapper>
+        ),
       },
       {
         path: 'terms-and-conditions',
-        element: <TermsAndConditions />,
+        element: (
+          <SuspenseWrapper message="Loading Terms & Conditions">
+            <TermsAndConditions />
+          </SuspenseWrapper>
+        ),
       },
       {
         path: 'cookie-policy',
-        element: <CookiePolicy />,
+        element: (
+          <SuspenseWrapper message="Loading Cookie Policy">
+            <CookiePolicy />
+          </SuspenseWrapper>
+        ),
       },
       {
         path: 'contact',
-        element: <ContactUsPage />,
+        element: (
+          <SuspenseWrapper message="Loading Contact">
+            <ContactUsPage />
+          </SuspenseWrapper>
+        ),
       },
       {
         path: 'auth',
         children: [
           {
             path: 'admin-sign-in',
-            element: <AdminSignIn />,
+            element: (
+              <SuspenseWrapper message="Loading Admin Sign In">
+                <AdminSignIn />
+              </SuspenseWrapper>
+            ),
           },
           {
             path: 'signin',
-            element: <SignIn />,
+            element: (
+              <SuspenseWrapper message="Loading Sign In">
+                <SignIn />
+              </SuspenseWrapper>
+            ),
           },
           {
             path: 'otp-verification',
-            element: <OtpVerification />,
+            element: (
+              <SuspenseWrapper message="Verifying OTP">
+                <OtpVerification />
+              </SuspenseWrapper>
+            ),
           },
           {
             path: 'forgot-password',
-            element: <ForgotPassword />,
+            element: (
+              <SuspenseWrapper message="Loading Password Reset">
+                <ForgotPassword />
+              </SuspenseWrapper>
+            ),
           },
         ],
       },
       {
         path: 'eoi/:chapterSlug',
-        element: <EOI />,
+        element: (
+          <SuspenseWrapper message="Loading Expression of Interest">
+            <EOI />
+          </SuspenseWrapper>
+        ),
       },
       {
         path: 'member',
-        element: <RequireAuth />,
+        element: (
+          <SuspenseWrapper message="Loading Member Area">
+            <RequireAuth />
+          </SuspenseWrapper>
+        ),
         children: [
           {
             path: 'list',
-            element: <MemberList />,
+            element: (
+              <SuspenseWrapper message="Loading Member List">
+                <MemberList />
+              </SuspenseWrapper>
+            ),
           },
           {
             path: 'fee',
-            element: <PackageViewerPage />,
+            element: (
+              <SuspenseWrapper message="Loading Fee Information">
+                <PackageViewerPage />
+              </SuspenseWrapper>
+            ),
           },
           {
             path: 'my-ledger',
-            element: <MyLedger />,
+            element: (
+              <SuspenseWrapper message="Loading Ledger">
+                <MyLedger />
+              </SuspenseWrapper>
+            ),
           },
           {
             path: 'fee_approval',
-            element: <MemberFeeApproval />,
+            element: (
+              <SuspenseWrapper message="Loading Fee Approval">
+                <MemberFeeApproval />
+              </SuspenseWrapper>
+            ),
           },
           {
             path: 'fee-reciver-edit',
-            element: <FeeReciever />,
+            element: (
+              <SuspenseWrapper message="Loading Fee Receiver">
+                <FeeReciever />
+              </SuspenseWrapper>
+            ),
           },
           {
             path: 'share-visitor-form',
-            element: <ShareForm />,
+            element: (
+              <SuspenseWrapper message="Loading Visitor Form">
+                <ShareForm />
+              </SuspenseWrapper>
+            ),
           },
           {
             path: 'reports',
-            element: <Reports />,
+            element: (
+              <SuspenseWrapper message="Loading Reports">
+                <Reports />
+              </SuspenseWrapper>
+            ),
           },
           {
             path: 'profile',
-            element: <Profile />,
+            element: (
+              <SuspenseWrapper message="Loading Profile">
+                <Profile />
+              </SuspenseWrapper>
+            ),
           },
           {
             path: 'accept-chapter-transaction',
-            element: <AcceptChapterPaymentPage />,
+            element: (
+              <SuspenseWrapper message="Loading Payment Page">
+                <AcceptChapterPaymentPage />
+              </SuspenseWrapper>
+            ),
           },
           {
             path: 'switch-chapter',
-            element: <SwitchChapter />,
+            element: (
+              <SuspenseWrapper message="Loading Chapters">
+                <SwitchChapter />
+              </SuspenseWrapper>
+            ),
           },
         ],
       },
@@ -239,17 +390,29 @@ const routes = [
         children: [
           {
             path: 'list',
-            element: <VisitorList />,
+            element: (
+              <SuspenseWrapper message="Loading Visitor List">
+                <VisitorList />
+              </SuspenseWrapper>
+            ),
           },
         ],
       },
       {
         path: 'track-visitor/:visitorId',
-        element: <TrackVisitor/>,
+        element: (
+          <SuspenseWrapper message="Loading Visitor Details">
+            <TrackVisitor />
+          </SuspenseWrapper>
+        ),
       },
       {
         path: 'test/capacitor',
-        element: <CapacitorTestPage />,
+        element: (
+          <SuspenseWrapper message="Loading Test Page">
+            <CapacitorTestPage />
+          </SuspenseWrapper>
+        ),
       },
       {
         path: '*',
@@ -299,7 +462,7 @@ function App() {
   }, [capacitorNotifications, appInstallBanner]);
 
   return loadingLocal ? (
-    <Loader />
+    <SuspenseLoader message="Initializing SimpliCollect..." showLogo={true} />
   ) : (
     <>
       <ToastContainer
