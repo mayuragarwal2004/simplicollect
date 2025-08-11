@@ -88,14 +88,47 @@ axiosInstance.interceptors.response.use(
     // Handle the response data
     return response;
   },
-  (error) => {
+  async (error) => {
     // Handle errors globally
-    if (error.response && error.response.status === 403) {
-      // Redirect to login or show a message
-      cookies.remove('token'); // Remove token from cookies
-      sessionStorage.removeItem('accessToken');
-      // redirect to login page
-      window.location.href = '/'; // Adjust the redirect URL as needed
+    if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+      console.log('[Auth] Token expired or unauthorized, cleaning up...');
+      
+      // Platform-specific token cleanup
+      if (Capacitor.isNativePlatform()) {
+        // Native app: remove tokens from Capacitor Preferences
+        try {
+          await Preferences.remove({ key: 'accessToken' });
+          await Preferences.remove({ key: 'refreshToken' });
+          console.log('[Auth] Native tokens removed from Preferences');
+        } catch (prefError) {
+          console.error('[Auth] Error removing native tokens:', prefError);
+        }
+      } else {
+        // Web: remove tokens from cookies and sessionStorage
+        cookies.remove('token');
+        cookies.remove('refreshToken'); // Also remove refresh token cookie
+        sessionStorage.removeItem('accessToken');
+        console.log('[Auth] Web tokens removed from cookies and sessionStorage');
+      }
+      
+      // Trigger a custom event for AuthContext to listen to
+      window.dispatchEvent(new CustomEvent('authTokenExpired', {
+        detail: { 
+          status: error.response.status,
+          platform: Capacitor.isNativePlatform() ? 'native' : 'web'
+        }
+      }));
+      
+      // For native apps, don't use window.location.href
+      if (Capacitor.isNativePlatform()) {
+        // Let the AuthContext handle navigation for native apps
+        console.log('[Auth] Native app token expired - AuthContext will handle navigation');
+      } else {
+        // Web: redirect to login page
+        setTimeout(() => {
+          window.location.href = '/auth/signin';
+        }, 100); // Small delay to allow event dispatch
+      }
     }
     return Promise.reject(error);
   },

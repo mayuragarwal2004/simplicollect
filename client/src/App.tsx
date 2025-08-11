@@ -10,6 +10,7 @@ import {
 } from 'react-router-dom';
 import 'react-toastify/dist/ReactToastify.css';
 import { ToastContainer, Bounce } from 'react-toastify';
+import { Capacitor } from '@capacitor/core';
 
 import Loader from './common/Loader';
 import SuspenseLoader from './components/SuspenseLoader';
@@ -443,6 +444,16 @@ function App() {
 
   useEffect(() => {
     setTimeout(() => setLoadingLocal(false), 1000);
+    
+    // Preload critical components for Capacitor apps
+    if (Capacitor.isNativePlatform()) {
+      // Preload the most commonly used screens
+      setTimeout(() => {
+        import('./pages/Member/Profile');
+        import('./pages/Member/MemberList');
+        import('./pages/Authentication/SignIn');
+      }, 2000); // Preload after initial load
+    }
   }, []);
 
   // Log Capacitor notification status in development
