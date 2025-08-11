@@ -31,7 +31,25 @@ fi
 echo "✅ Generating Capacitor Assets..."
 npx capacitor-assets generate
 
-echo "✅ Generating Icons and Splash for Android..."
+# Generate Android resources with adaptive icons
+echo "✅ Generating Adaptive Icons for Android..."
+# Ensure the directories exist
+mkdir -p android/app/src/main/res/mipmap-mdpi
+mkdir -p android/app/src/main/res/mipmap-hdpi
+mkdir -p android/app/src/main/res/mipmap-xhdpi
+mkdir -p android/app/src/main/res/mipmap-xxhdpi
+mkdir -p android/app/src/main/res/mipmap-xxxhdpi
+
+# Copy foreground icon if it exists
+if [[ -f "assets/icon-foregound.png" ]]; then
+    echo "✅ Copying Android adaptive icon foreground..."
+    for dpi in mdpi hdpi xhdpi xxhdpi xxxhdpi; do
+        cp "assets/icon-foregound.png" "android/app/src/main/res/mipmap-$dpi/ic_launcher_foreground.png"
+    done
+fi
+
+# Now run cordova-res for remaining assets
+echo "✅ Generating remaining Icons and Splash for Android..."
 cordova-res android --skip-config --copy
 
 echo "✅ Generating Icons and Splash for iOS..."
