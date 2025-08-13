@@ -226,6 +226,37 @@ const getTransactions = async (chapterId, rows, page, startDate, endDate) => {
   return { transactions, totalRecords: parseInt(count, 10) };
 };
 
+// Get all transactions for export (no pagination limits)
+const getAllTransactionsForExport = async (chapterId, startDate, endDate) => {
+  let query = db("transactions as t")
+    .join("members as m", "t.memberId", "m.memberId")
+    .join("packages as p", "t.packageId", "p.packageId")
+    .where("p.chapterId", chapterId);
+
+  // Add date filter if both are provided
+  if (startDate && endDate) {
+    query = query.whereBetween("t.transactionDate", [startDate, endDate]);
+  }
+
+  // Select only the required fields
+  const transactions = await query
+    .select(
+      "m.firstName", // Member Name (First Name)
+      "m.lastName", // Member Name (Last Name)
+      "t.paidAmount", // Amount Paid
+      "t.balanceAmount", // Balance
+      "p.packageName", // Package Name
+      "t.paymentType", // Payment Type
+      "t.paymentReceivedByName", // Collected By
+      "t.approvedByName", // Approved By
+      "t.transactionDate", // Date
+      "t.status as approvalStatus" // Approval Status
+    )
+    .orderBy("t.transactionDate", "desc"); // Order by date for better export
+
+  return { transactions };
+};
+
 const getMemberFinancialSummary = async (chapterId, row, page) => {
   const offset = parseInt(page, 10) * parseInt(row, 10);
   const transactionreport = await db("transactions as t")
@@ -430,6 +461,7 @@ module.exports = {
   updateBalance,
   getMemberChapterDue,
   getTransactions,
+  getAllTransactionsForExport,
   getMemberFinancialSummary,
   getTransactionsByMemberId,
   getMetaData,

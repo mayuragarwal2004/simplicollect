@@ -67,7 +67,7 @@ const AllTransactions = () => {
 
     axiosInstance
       .get(
-        `/api/report/${chapterData.chapterId}/member-transactions-json-report?rows=${rows}&page=${page}  `,
+        `/api/report/${chapterData.chapterId}/member-transactions-report?rows=${rows}&page=${page}  `,
         {
           params: {
             chapterId: chapterData.chapterId,
@@ -102,7 +102,7 @@ const AllTransactions = () => {
 
     try {
       const response = await axiosInstance.post(
-        `/api/report/${chapterData.chapterId}/member-transactions-report`,
+        `/api/report/${chapterData.chapterId}/member-transactions-report/export`,
         {
           startDate: fromDate,
           endDate: toDate,
@@ -159,7 +159,7 @@ const AllTransactions = () => {
 
     try {
       const response = await axiosInstance.post(
-        `/api/report/${chapterData.chapterId}/member-transactions-report`,
+        `/api/report/${chapterData.chapterId}/member-transactions-report/export`,
         payload,
         {
           responseType: 'blob', // Receive binary data

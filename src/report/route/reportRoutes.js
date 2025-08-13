@@ -7,8 +7,8 @@ const reportController = require("../controller/reportControllers");
 router.get("/:chapterId/package-summary", reportController.getPackageSummaryController);
 router.get("/:chapterId/member-Total", reportController.getMemberTotalAmountAndDues);
 
-router.post("/:chapterId/member-transactions-report", reportController.getAllMemberTransactionsReportController);
-router.get("/:chapterId/member-transactions-json-report", reportController.getAllMemberTransactionsJSONReportController);
+router.get("/:chapterId/member-transactions-report", reportController.getAllMemberTransactionsReportController);
+router.post("/:chapterId/member-transactions-report/export", reportController.getAllMemberTransactionsReportControllerExport);
 
 router.get("/:chapterId/receiver-daywise-report", reportController.getReceiverDaywiseReportController);
 router.get("/:chapterId/receiver-daywise-json-report", reportController.getReceiverDaywiseJsonReportController);
@@ -17,7 +17,7 @@ router.get("/:chapterId/member-ledger", reportController.getMemberLedgerControll
 router.get("/:chapterId/member-ledger-json", reportController.getMemberLedgerJSONController);
 
 // Export all members report to Excel (all package parents, each as a sheet)
-router.get('/:chapterId/all-members-excel', require('../controller/reportControllers').exportAllMembersReportsExcelController);
+router.get('/:chapterId/all-members-excel', reportController.exportAllMembersReportsExcelController);
 
 // Total Transactions Report (weekly, monthly, 3monthly, by term)
 router.get('/:chapterId/member-payment-summary-report', require('../controller/memberPaymentSummaryReportController').getMemberPaymentSummaryReportController);

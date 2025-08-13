@@ -75,16 +75,13 @@ const fieldKeyToHeader = {
   approvalStatus: "Approval Status",
 };
 
-const getAllMemberTransactionsReportController = async (req, res) => {
+const getAllMemberTransactionsReportControllerExport = async (req, res) => {
   const { chapterId } = req.params;
-  const { rows = 10, page = 0 } = req.query;
   const { startDate, endDate, selectedColumns, type = "pdf" } = req.body;
 
   try {
-    const { transactions } = await paymentModel.getTransactions(
+    const { transactions } = await paymentModel.getAllTransactionsForExport(
       chapterId,
-      rows,
-      page,
       startDate,
       endDate
     );
@@ -212,7 +209,7 @@ const getAllMemberTransactionsReportController = async (req, res) => {
   }
 };
 
-const getAllMemberTransactionsJSONReportController = async (req, res) => {
+const getAllMemberTransactionsReportController = async (req, res) => {
   const { chapterId } = req.params;
   const { rows = 10, page = 0, type = "pdf" } = req.query;
   const { startDate, endDate, selectedColumns } = req.body;
@@ -399,8 +396,8 @@ const exportAllMembersReportsExcelController = async (req, res) => {
 
 module.exports = {
   getPackageSummaryController,
-  getAllMemberTransactionsJSONReportController,
   getAllMemberTransactionsReportController,
+  getAllMemberTransactionsReportControllerExport,
   getMemberTotalAmountAndDues,
   getReceiverDaywiseReportController,
   getReceiverDaywiseJsonReportController,
