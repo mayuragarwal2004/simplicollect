@@ -1,0 +1,649 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Prisma is used for schema management and migrations only
+// Database queries are handled by Knex (see src/config/db.js)
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model cashreceivers {
+  cashRecieverId   String    @id @db.VarChar(255)
+  cashRecieverName String    @db.VarChar(255)
+  memberId         String    @db.VarChar(255)
+  chapterId        String    @db.VarChar(255)
+  enableDate       DateTime? @db.Date
+  disableDate      DateTime? @db.Date
+  members          members   @relation(fields: [memberId], references: [memberId], onDelete: Cascade, onUpdate: NoAction, map: "cashreceivers_ibfk_1")
+  chapters         chapters  @relation(fields: [chapterId], references: [chapterId], onDelete: Cascade, onUpdate: NoAction, map: "cashreceivers_ibfk_2")
+
+  @@index([chapterId], map: "chapterId")
+  @@index([memberId], map: "memberId")
+}
+
+model chapter_log {
+  logId          String   @id @db.VarChar(255)
+  chapterId      String   @db.VarChar(255)
+  logDate        DateTime @db.Date
+  logDescription String?  @db.Text
+  chapters       chapters @relation(fields: [chapterId], references: [chapterId], onDelete: Cascade, onUpdate: NoAction, map: "chapter_log_ibfk_1")
+
+  @@index([chapterId], map: "chapterId")
+}
+
+model chapters {
+  chapterId              String                      @id @db.VarChar(255)
+  chapterName            String                      @db.VarChar(255)
+  chapterSlug            String                      @unique(map: "chapterSlug") @db.VarChar(255)
+  region                 String?                     @db.VarChar(255)
+  city                   String?                     @db.VarChar(255)
+  state                  String?                     @db.VarChar(255)
+  country                String?                     @db.VarChar(255)
+  meetingDay             String?                     @db.VarChar(255)
+  meetingPeriodicity     chapters_meetingPeriodicity
+  meetingPaymentType     String
+  visitorPerMeetingFee   Decimal                     @db.Decimal(10, 2)
+  weeklyFee              Decimal?                    @db.Decimal(10, 2)
+  monthlyFee             Decimal?                    @db.Decimal(10, 2)
+  quarterlyFee           Decimal?                    @db.Decimal(10, 2)
+  organisationId         String                      @db.VarChar(255)
+  testMode               Boolean?                    @default(false)
+  platformFee            Decimal?                    @db.Decimal(10, 2)
+  platformFeeType        String?                     @db.VarChar(255)
+  platformFeeCase        String?                     @db.Char(255)
+  cashreceivers          cashreceivers[]
+  chapter_log            chapter_log[]
+  organisations          organisations               @relation(fields: [organisationId], references: [organisationId], onDelete: Cascade, onUpdate: NoAction, map: "fk_organisations")
+  fee_receivers          fee_receivers[]
+  meetings               meetings[]
+  member_chapter_mapping member_chapter_mapping[]
+  qrreceivers            qrreceivers[]
+
+  @@index([organisationId], map: "fk_organisations")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model contact_queries {
+  queryId                                      String                    @id @db.VarChar(255)
+  name                                         String                    @db.VarChar(255)
+  email                                        String                    @db.VarChar(255)
+  phoneNumber                                  String?                   @db.VarChar(20)
+  subject                                      String                    @db.VarChar(500)
+  message                                      String                    @db.Text
+  status                                       contact_queries_status?   @default(pending)
+  priority                                     contact_queries_priority? @default(medium)
+  category                                     String?                   @default("general") @db.VarChar(100)
+  submittedBy                                  String?                   @db.VarChar(255)
+  assignedTo                                   String?                   @db.VarChar(255)
+  adminNotes                                   String?                   @db.Text
+  responseMessage                              String?                   @db.Text
+  ipAddress                                    String?                   @db.VarChar(45)
+  userAgent                                    String?                   @db.Text
+  source                                       String?                   @default("web") @db.VarChar(50)
+  isSpam                                       Boolean?                  @default(false)
+  createdAt                                    DateTime                  @default(now()) @db.Timestamp(0)
+  updatedAt                                    DateTime                  @default(now()) @db.Timestamp(0)
+  resolvedAt                                   DateTime?                 @db.Timestamp(0)
+  members_contact_queries_assignedToTomembers  members?                  @relation("contact_queries_assignedToTomembers", fields: [assignedTo], references: [memberId], onUpdate: NoAction, map: "fk_contact_assigned_to")
+  members_contact_queries_submittedByTomembers members?                  @relation("contact_queries_submittedByTomembers", fields: [submittedBy], references: [memberId], onUpdate: NoAction, map: "fk_contact_submitted_by")
+  contact_query_history                        contact_query_history[]
+
+  @@index([assignedTo], map: "idx_assigned_to")
+  @@index([category, status], map: "idx_contact_queries_category_status")
+  @@index([status, createdAt(sort: Desc)], map: "idx_contact_queries_status_created")
+  @@index([createdAt], map: "idx_created_at")
+  @@index([email], map: "idx_email")
+  @@index([priority, status], map: "idx_priority_status")
+  @@index([status], map: "idx_status")
+  @@index([submittedBy], map: "idx_submitted_by")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model contact_query_history {
+  historyId       String          @id @db.VarChar(255)
+  queryId         String          @db.VarChar(255)
+  action          String          @db.VarChar(100)
+  oldValue        String?         @db.Text
+  newValue        String?         @db.Text
+  performedBy     String?         @db.VarChar(255)
+  notes           String?         @db.Text
+  createdAt       DateTime        @default(now()) @db.Timestamp(0)
+  members         members?        @relation(fields: [performedBy], references: [memberId], onUpdate: NoAction, map: "fk_history_performed_by")
+  contact_queries contact_queries @relation(fields: [queryId], references: [queryId], onDelete: Cascade, onUpdate: NoAction, map: "fk_history_query_id")
+
+  @@index([action], map: "idx_action")
+  @@index([performedBy], map: "idx_performed_by")
+  @@index([queryId], map: "idx_query_id")
+}
+
+model fcm_tokens {
+  id        Int       @id @default(autoincrement())
+  memberId  String    @db.VarChar(255)
+  token     String    @db.Text
+  platform  String?   @default("web") @db.VarChar(50)
+  isActive  Boolean?  @default(true)
+  createdAt DateTime? @default(now()) @db.Timestamp(0)
+  updatedAt DateTime? @default(now()) @db.Timestamp(0)
+
+  @@unique([memberId, token(length: 255)], map: "unique_member_token")
+  @@index([memberId, isActive], map: "idx_member_active")
+  @@index([memberId], map: "idx_member_id")
+  @@index([token(length: 100)], map: "idx_token_hash")
+}
+
+model features_master {
+  featureId          String   @id @db.VarChar(255)
+  featureName        String   @db.VarChar(255)
+  featureDescription String?  @db.Text
+  featureType        String?  @db.VarChar(255)
+  featureParent      String?  @db.VarChar(255)
+  featureUrl         String?  @db.VarChar(255)
+  featureIcon        String?  @db.VarChar(255)
+  featureOrder       BigInt?
+  featureDisabled    Boolean? @default(false)
+}
+
+model fee_receivers {
+  receiverId                 String    @id @db.VarChar(255)
+  receiverName               String    @db.VarChar(255)
+  memberId                   String    @db.VarChar(255)
+  chapterId                  String    @db.VarChar(255)
+  paymentType                String?   @db.VarChar(255)
+  receiverAmount             Decimal?  @db.Decimal(10, 2)
+  receiverAmountType         String?   @db.Text
+  qrImageLink                String?   @db.VarChar(255)
+  enableDate                 DateTime? @db.Date
+  disableDate                DateTime? @db.Date
+  receiverFeeOptional        Boolean?  @default(false)
+  receiverFeeOptionalMessage String?   @db.VarChar(500)
+  members                    members   @relation(fields: [memberId], references: [memberId], onDelete: Cascade, onUpdate: NoAction, map: "fee_receivers_ibfk_1")
+  chapters                   chapters  @relation(fields: [chapterId], references: [chapterId], onDelete: Cascade, onUpdate: NoAction, map: "fee_receivers_ibfk_2")
+
+  @@index([chapterId], map: "chapterId")
+  @@index([memberId], map: "memberId")
+}
+
+model meetings {
+  meetingId               String                    @id @db.VarChar(255)
+  termId                  String                    @db.VarChar(255)
+  chapterId               String                    @db.VarChar(255)
+  meetingName             String                    @db.VarChar(255)
+  meetingDate             DateTime                  @db.Date
+  meetingTime             String                    @db.VarChar(255)
+  meetingFeeMembers       BigInt?
+  meetingFeeVisitors      BigInt?
+  disabled                Boolean?                  @default(false)
+  chapters                chapters                  @relation(fields: [chapterId], references: [chapterId], onDelete: Cascade, onUpdate: NoAction, map: "meetings_ibfk_1")
+  members_meeting_mapping members_meeting_mapping[] @ignore
+
+  @@index([chapterId], map: "chapterId")
+}
+
+model member_chapter_mapping {
+  memberId   String                        @db.VarChar(255)
+  chapterId  String                        @db.VarChar(255)
+  roleIds    String?                       @db.VarChar(255)
+  balance    BigInt                        @default(0)
+  status     member_chapter_mapping_status @default(joined)
+  joinedDate DateTime?                     @db.Date
+  leaveDate  DateTime?                     @db.Date
+  members    members                       @relation(fields: [memberId], references: [memberId], onDelete: Cascade, onUpdate: NoAction, map: "member_chapter_mapping_ibfk_1")
+  chapters   chapters                      @relation(fields: [chapterId], references: [chapterId], onDelete: Cascade, onUpdate: NoAction, map: "member_chapter_mapping_ibfk_2")
+
+  @@id([memberId, chapterId])
+  @@index([chapterId], map: "chapterId")
+  @@index([roleIds], map: "roleId")
+}
+
+model members {
+  memberId                                             String                    @id @db.VarChar(255)
+  firstName                                            String                    @db.VarChar(255)
+  lastName                                             String?                   @db.VarChar(255)
+  phoneNumber                                          String?                   @unique(map: "phoneNumber") @db.VarChar(20)
+  email                                                String?                   @unique(map: "email") @db.VarChar(255)
+  password                                             String?                   @db.VarChar(255)
+  role                                                 String?                   @db.VarChar(255)
+  superAdmin                                           Boolean?                  @default(false)
+  test                                                 Boolean?                  @default(false)
+  cashreceivers                                        cashreceivers[]
+  contact_queries_contact_queries_assignedToTomembers  contact_queries[]         @relation("contact_queries_assignedToTomembers")
+  contact_queries_contact_queries_submittedByTomembers contact_queries[]         @relation("contact_queries_submittedByTomembers")
+  contact_query_history                                contact_query_history[]
+  fee_receivers                                        fee_receivers[]
+  member_chapter_mapping                               member_chapter_mapping[]
+  members_log                                          members_log[]
+  members_meeting_mapping                              members_meeting_mapping[] @ignore
+  notification_campaigns                               notification_campaigns[]
+  notification_templates                               notification_templates[]
+  notifications_notifications_recipientIdTomembers     notifications[]           @relation("notifications_recipientIdTomembers")
+  notifications_notifications_senderIdTomembers        notifications[]           @relation("notifications_senderIdTomembers")
+  otp_verifications                                    otp_verifications[]
+  push_subscriptions                                   push_subscriptions[]
+  qrreceivers                                          qrreceivers[]
+}
+
+model members_log {
+  logId          String   @id @db.VarChar(255)
+  memberId       String   @db.VarChar(255)
+  logDate        DateTime @db.Date
+  logDescription String?  @db.Text
+  members        members  @relation(fields: [memberId], references: [memberId], onDelete: Cascade, onUpdate: NoAction, map: "members_log_ibfk_1")
+
+  @@index([memberId], map: "memberId")
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model members_meeting_mapping {
+  memberId       String        @db.VarChar(255)
+  meetingId      String        @db.VarChar(255)
+  notToPay       Boolean?      @default(false)
+  notToPayReason String?       @db.Text
+  isPaid         Boolean?      @default(false)
+  transactionId  String?       @db.VarChar(255)
+  members        members       @relation(fields: [memberId], references: [memberId], onDelete: Cascade, onUpdate: NoAction, map: "members_meeting_mapping_ibfk_1")
+  meetings       meetings      @relation(fields: [meetingId], references: [meetingId], onDelete: Cascade, onUpdate: NoAction, map: "members_meeting_mapping_ibfk_2")
+  transactions   transactions? @relation(fields: [transactionId], references: [transactionId], onUpdate: NoAction, map: "members_meeting_mapping_ibfk_3")
+
+  @@index([meetingId], map: "meetingId")
+  @@index([memberId], map: "memberId")
+  @@index([transactionId], map: "transactionId")
+  @@ignore
+}
+
+model newsletter_subscribers {
+  id             Int       @id @default(autoincrement())
+  email          String    @unique(map: "email") @db.VarChar(255)
+  subscribedAt   DateTime? @default(now()) @db.Timestamp(0)
+  isActive       Boolean?  @default(true)
+  unsubscribedAt DateTime? @db.Timestamp(0)
+
+  @@index([email], map: "idx_email")
+  @@index([isActive], map: "idx_is_active")
+  @@index([subscribedAt], map: "idx_subscribed_at")
+}
+
+model notification_campaigns {
+  campaignId             String                            @id @db.VarChar(255)
+  name                   String                            @db.VarChar(255)
+  templateId             String                            @db.VarChar(255)
+  targetType             notification_campaigns_targetType
+  targetChapterId        String?                           @db.VarChar(255)
+  targetRole             String?                           @db.VarChar(255)
+  customRecipients       Json?
+  status                 notification_campaigns_status?    @default(draft)
+  scheduledAt            DateTime?                         @db.DateTime(0)
+  sentAt                 DateTime?                         @db.DateTime(0)
+  totalRecipients        Int?                              @default(0)
+  successCount           Int?                              @default(0)
+  failureCount           Int?                              @default(0)
+  createdBy              String                            @db.VarChar(255)
+  createdAt              DateTime?                         @default(now()) @db.DateTime(0)
+  updatedAt              DateTime?                         @default(now()) @db.DateTime(0)
+  notification_templates notification_templates            @relation(fields: [templateId], references: [templateId], onDelete: Cascade, onUpdate: NoAction, map: "notification_campaigns_ibfk_1")
+  members                members                           @relation(fields: [createdBy], references: [memberId], onDelete: Cascade, onUpdate: NoAction, map: "notification_campaigns_ibfk_2")
+
+  @@index([createdBy], map: "createdBy")
+  @@index([templateId], map: "templateId")
+}
+
+model notification_templates {
+  templateId             String                           @id @db.VarChar(255)
+  name                   String                           @db.VarChar(255)
+  title                  String                           @db.VarChar(500)
+  message                String                           @db.Text
+  type                   notification_templates_type?     @default(info)
+  priority               notification_templates_priority? @default(medium)
+  isPersistent           Boolean?                         @default(true)
+  createdBy              String                           @db.VarChar(255)
+  createdAt              DateTime?                        @default(now()) @db.DateTime(0)
+  updatedAt              DateTime?                        @default(now()) @db.DateTime(0)
+  notification_campaigns notification_campaigns[]
+  members                members                          @relation(fields: [createdBy], references: [memberId], onDelete: Cascade, onUpdate: NoAction, map: "notification_templates_ibfk_1")
+
+  @@index([createdBy], map: "createdBy")
+}
+
+model notifications {
+  notificationId                             String                  @id @db.VarChar(255)
+  title                                      String                  @db.VarChar(500)
+  message                                    String                  @db.Text
+  type                                       notifications_type?     @default(info)
+  priority                                   notifications_priority? @default(medium)
+  isPersistent                               Boolean?                @default(true)
+  isRead                                     Boolean?                @default(false)
+  recipientId                                String                  @db.VarChar(255)
+  senderId                                   String?                 @db.VarChar(255)
+  chapterId                                  String?                 @db.VarChar(255)
+  relatedEntityType                          String?                 @db.VarChar(100)
+  relatedEntityId                            String?                 @db.VarChar(255)
+  scheduledAt                                DateTime?               @db.DateTime(0)
+  sentAt                                     DateTime?               @db.DateTime(0)
+  readAt                                     DateTime?               @db.DateTime(0)
+  createdAt                                  DateTime?               @default(now()) @db.DateTime(0)
+  updatedAt                                  DateTime?               @default(now()) @db.DateTime(0)
+  members_notifications_recipientIdTomembers members                 @relation("notifications_recipientIdTomembers", fields: [recipientId], references: [memberId], onDelete: Cascade, onUpdate: NoAction, map: "notifications_ibfk_1")
+  members_notifications_senderIdTomembers    members?                @relation("notifications_senderIdTomembers", fields: [senderId], references: [memberId], onUpdate: NoAction, map: "notifications_ibfk_2")
+
+  @@index([chapterId], map: "chapter_idx")
+  @@index([createdAt], map: "created_idx")
+  @@index([recipientId], map: "recipient_idx")
+  @@index([senderId], map: "senderId")
+  @@index([type], map: "type_idx")
+}
+
+model organisations {
+  organisationId   String     @id @db.VarChar(255)
+  organisationName String     @db.VarChar(255)
+  chapters         chapters[]
+}
+
+model otp_verifications {
+  otp_id     Int      @id @default(autoincrement())
+  member_id  String   @db.VarChar(255)
+  otp_code   String   @db.VarChar(6)
+  created_at DateTime @default(now()) @db.Timestamp(0)
+  expires_at DateTime @default(dbgenerated("'2038-01-18 16:14:07'")) @db.Timestamp(0)
+  verified   Int?     @default(0) @db.TinyInt
+  members    members  @relation(fields: [member_id], references: [memberId], onDelete: Cascade, onUpdate: NoAction, map: "otp_verifications_ibfk_1")
+
+  @@index([member_id], map: "member_id")
+}
+
+model packages {
+  packageId                       String    @id @db.VarChar(255)
+  termId                          String    @db.VarChar(255)
+  packageName                     String    @db.VarChar(255)
+  packageParent                   String?   @db.VarChar(255)
+  packageFeeType                  String?   @db.VarChar(255)
+  packageFeeAmount                BigInt?
+  packagePayableStartDate         DateTime? @db.Date
+  packagePayableEndDate           DateTime? @db.Date
+  allowAfterEndDate               Boolean?
+  allowPenaltyPayableAfterEndDate Boolean?
+  penaltyType                     String?   @db.VarChar(255)
+  penaltyAmount                   BigInt?
+  penaltyFrequency                String?   @db.VarChar(255)
+  discountType                    String?   @db.VarChar(255)
+  discountAmount                  BigInt?
+  discountFrequency               String?   @db.VarChar(255)
+  discountEndDate                 DateTime? @db.Date
+  allowPackagePurchaseIfFeesPaid  Boolean?
+  meetingIds                      String?   @db.LongText
+  chapterId                       String?   @db.VarChar(255)
+
+  @@index([chapterId], map: "chapterId")
+}
+
+model push_subscriptions {
+  subscriptionId String    @id @db.VarChar(255)
+  memberId       String    @db.VarChar(255)
+  endpoint       String    @db.Text
+  p256dh         String    @db.Text
+  auth           String    @db.Text
+  userAgent      String?   @db.Text
+  isActive       Boolean?  @default(true)
+  createdAt      DateTime? @default(now()) @db.DateTime(0)
+  updatedAt      DateTime? @default(now()) @db.DateTime(0)
+  members        members   @relation(fields: [memberId], references: [memberId], onDelete: Cascade, onUpdate: NoAction, map: "push_subscriptions_ibfk_1")
+
+  @@index([memberId], map: "member_idx")
+}
+
+model qrreceivers {
+  qrCodeId    String    @id @db.VarChar(255)
+  qrCode      String    @db.VarChar(255)
+  memberId    String    @db.VarChar(255)
+  chapterId   String    @db.VarChar(255)
+  qrCodeName  String?   @db.VarChar(255)
+  qrImageLink String?   @db.VarChar(255)
+  enableDate  DateTime? @db.Date
+  disableDate DateTime? @db.Date
+  members     members   @relation(fields: [memberId], references: [memberId], onDelete: Cascade, onUpdate: NoAction, map: "qrreceivers_ibfk_1")
+  chapters    chapters  @relation(fields: [chapterId], references: [chapterId], onDelete: Cascade, onUpdate: NoAction, map: "qrreceivers_ibfk_2")
+
+  @@index([chapterId], map: "chapterId")
+  @@index([memberId], map: "memberId")
+}
+
+model receiver_chapter_transactions {
+  id                String   @id @db.VarChar(255)
+  chapterId         String   @db.VarChar(255)
+  senderId          String   @db.VarChar(255)
+  senderName        String   @db.VarChar(255)
+  approvedById      String?  @db.VarChar(255)
+  approvedByName    String?  @db.VarChar(255)
+  payableAmount     Decimal  @db.Decimal(10, 2)
+  transferredAmount Decimal  @db.Decimal(10, 2)
+  status            String?  @default("pending") @db.VarChar(255)
+  createdAt         DateTime @default(now()) @db.Timestamp(0)
+  updatedAt         DateTime @default(now()) @db.Timestamp(0)
+
+  @@index([approvedById], map: "approvedById")
+  @@index([chapterId], map: "chapterId")
+  @@index([senderId], map: "senderId")
+}
+
+model roles {
+  roleId          String   @id @db.VarChar(255)
+  roleName        String   @db.VarChar(255)
+  removable       Boolean? @default(true)
+  roleDescription String?  @db.Text
+  chapterId       String?  @db.VarChar(255)
+  rights          String?  @db.Text
+  default         Boolean? @default(false)
+
+  @@index([chapterId], map: "chapterId")
+}
+
+model term {
+  termId           String                @id @db.VarChar(255)
+  chapterId        String                @db.VarChar(255)
+  termName         String                @db.VarChar(255)
+  startDate        DateTime              @db.Date
+  endDate          DateTime              @db.Date
+  statusUpdateType term_statusUpdateType
+  status           term_status           @default(inactive)
+  activeStartDate  DateTime              @db.DateTime(0)
+  activeEndDate    DateTime              @db.DateTime(0)
+}
+
+model transactions {
+  transactionId                    String                    @id @db.VarChar(255)
+  memberId                         String                    @db.VarChar(255)
+  chapterId                        String?                   @db.VarChar(255)
+  transactionDate                  DateTime                  @db.Date
+  transactionType                  String?                   @db.Text
+  originalPayableAmount            BigInt?
+  discountAmount                   BigInt?
+  penaltyAmount                    BigInt?
+  receiverFee                      BigInt?
+  amountPaidToChapter              BigInt?
+  amountExpectedToChapter          BigInt?
+  platformFee                      BigInt?
+  balanceAmount                    BigInt?
+  payableAmount                    BigInt?
+  paidAmount                       BigInt?
+  userRemarks                      String?                   @db.Text
+  systemRemarks                    String?                   @db.Text
+  status                           String?                   @db.VarChar(255)
+  statusUpdateDate                 DateTime?                 @db.Date
+  paymentType                      String?                   @db.VarChar(255)
+  paymentDate                      DateTime?                 @db.Date
+  paymentImageLink                 String?                   @db.VarChar(255)
+  paymentReceivedById              String?                   @db.VarChar(255)
+  paymentReceivedByName            String?                   @db.VarChar(255)
+  packageId                        String?                   @db.VarChar(255)
+  approvedById                     String?                   @db.VarChar(255)
+  approvedByName                   String?                   @db.VarChar(255)
+  transferedToChapterTransactionId String?                   @db.VarChar(255)
+  members_meeting_mapping          members_meeting_mapping[] @ignore
+
+  @@index([approvedById], map: "approvedById")
+  @@index([memberId], map: "memberId")
+  @@index([packageId], map: "packageId")
+}
+
+model visitor_follow_ups {
+  followUpId       Int                             @id @default(autoincrement())
+  visitorId        String                          @db.VarChar(255)
+  followUpMemberId Int
+  followUpDate     DateTime                        @db.Date
+  followUpTime     DateTime                        @db.Time(0)
+  followUpMode     visitor_follow_ups_followUpMode
+  followUpNotes    String?                         @db.Text
+  createdAt        DateTime                        @default(now()) @db.Timestamp(0)
+
+  @@index([visitorId], map: "visitorId")
+}
+
+model visitors {
+  visitorId               String                  @id @db.VarChar(255)
+  invitedBy               String                  @db.VarChar(255)
+  chapterVisitDate        DateTime?               @db.Date
+  heardAboutBni           String?                 @db.VarChar(255)
+  firstName               String                  @db.VarChar(255)
+  lastName                String                  @db.VarChar(255)
+  companyName             String?                 @db.VarChar(255)
+  classification          String?                 @db.VarChar(255)
+  industry                String?                 @db.VarChar(255)
+  email                   String                  @db.VarChar(255)
+  mobileNumber            String                  @db.VarChar(20)
+  chapterId               String                  @db.VarChar(255)
+  meetingId               String?                 @db.VarChar(255)
+  feedbackScore           Int?
+  feedbackComments        String?                 @db.Text
+  nextStep                String?                 @db.Text
+  arrivalTime             DateTime?               @db.Time(0)
+  feelWelcome             Boolean?
+  visitedBniBefore        Boolean?
+  referralGroup           Boolean?
+  referralGroupExperience String?                 @db.Text
+  eoiFilled               Boolean?                @default(false)
+  visitorStatus           visitors_visitorStatus? @default(Preapproved)
+  paymentAcceptedMemberId String?                 @db.VarChar(255)
+  assignedMemberId        String?                 @db.VarChar(255)
+  paymentImageLink        String?                 @db.VarChar(255)
+  paymentAmount           Decimal?                @db.Decimal(10, 2)
+  paymentRecordedDate     DateTime                @default(now()) @db.Timestamp(0)
+  paymentType             visitors_paymentType?
+  createdAt               DateTime                @default(now()) @db.Timestamp(0)
+
+  @@index([assignedMemberId], map: "assignedMemberId")
+  @@index([chapterId], map: "chapterId")
+  @@index([meetingId], map: "fk_visitors_meetings")
+  @@index([paymentAcceptedMemberId], map: "paymentAcceptedMemberId")
+}
+
+enum notification_campaigns_targetType {
+  all
+  chapter
+  role
+  custom
+}
+
+enum notifications_type {
+  info
+  success
+  warning
+  error
+  payment
+  report
+  marketing
+}
+
+enum member_chapter_mapping_status {
+  joined
+  left
+}
+
+enum notification_templates_type {
+  info
+  success
+  warning
+  error
+  payment
+  report
+  marketing
+}
+
+enum notifications_priority {
+  low
+  medium
+  high
+  urgent
+}
+
+enum notification_templates_priority {
+  low
+  medium
+  high
+  urgent
+}
+
+enum term_statusUpdateType {
+  manual
+  auto
+}
+
+enum visitor_follow_ups_followUpMode {
+  call
+  message
+  email
+  inPerson
+}
+
+enum contact_queries_status {
+  pending
+  under_review
+  resolved
+  closed
+}
+
+enum term_status {
+  active
+  inactive
+  archived
+}
+
+enum contact_queries_priority {
+  low
+  medium
+  high
+  urgent
+}
+
+enum notification_campaigns_status {
+  draft
+  scheduled
+  sending
+  completed
+  failed
+}
+
+enum chapters_meetingPeriodicity {
+  weekly
+  fortnightly
+  monthly
+  bi_monthly    @map("bi-monthly")
+  quaterly
+  six_monthly   @map("6-monthly")
+  yearly
+}
+
+enum visitors_visitorStatus {
+  Approved
+  Preapproved
+  Declined
+}
+
+enum visitors_paymentType {
+  cash
+  online
+}
