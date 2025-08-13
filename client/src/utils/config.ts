@@ -90,7 +90,7 @@ axiosInstance.interceptors.response.use(
   },
   async (error) => {
     // Handle errors globally
-    if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+    if (error.response && error.response.status === 403) {
       console.log('[Auth] Token expired or unauthorized, cleaning up...');
       
       // Platform-specific token cleanup
