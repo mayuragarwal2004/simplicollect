@@ -40,9 +40,6 @@ const PackageFinalAmountInput = ({ setStep, handlePackagePayModalClose }) => {
   const [showConfirm, setShowConfirm] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  console.log({selectedMemberId});
-
-
   const handleConfirm = async () => {
     setLoading(true);
 
@@ -60,11 +57,8 @@ const PackageFinalAmountInput = ({ setStep, handlePackagePayModalClose }) => {
           },
         })
         .then((response) => {
-          console.log('Payment Proof Uploaded:', response.data);
           return response.data.imageUrl;
         });
-
-      console.log('Payment Proof Link:', paymentProofLink);
     }
 
     
@@ -99,14 +93,6 @@ const PackageFinalAmountInput = ({ setStep, handlePackagePayModalClose }) => {
     const response = await axiosInstance
       .post('/api/payment/addPayment', paymentDetails)
       .then((response) => {
-        console.log('Payment submitted:', {
-          selectedReceiver,
-          paymentProof,
-          paymentDate,
-          paymentType: receivers.find(
-            (receiver) => receiver.receiverId === selectedReceiver,
-          )?.paymentType,
-        });
         fetchAllData(); // Notify parent component of successful payment
         handlePackagePayModalClose();
         toast.success('Payment submitted successfully');

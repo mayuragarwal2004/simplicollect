@@ -43,8 +43,6 @@ const PaymentOverview = ({
   } = usePaymentData();
   const { chapterData } = useData();
 
-  console.log({ selectedPackage });
-
   const [paymentDate] = useState(new Date().toLocaleDateString()); // Current date
   const [showMeetings, setShowMeetings] = useState(false); // Toggle meeting details
   const [selectedMeetings, setSelectedMeetings] = useState([]);
@@ -54,17 +52,8 @@ const PaymentOverview = ({
   const [amountPaid, setAmountPaid] = useState(selectedPackage.totalAmount); // Amount paid by the member
   const [minimumPayable, setMinimumPayable] = useState(0); // Minimum payable amount
 
-  console.log({ feeReceiverSwitch });
-
   useEffect(() => {
     if (selectedPackage.meetingIds && chapterMeetings) {
-      console.log('Hi mayur');
-      console.log(selectedPackage.meetingIds);
-      console.log(typeof selectedPackage.meetingIds);
-      console.log(chapterMeetings.map((meeting) => meeting.meetingId));
-
-      console.log('Hi mayur');
-
       const filteredMeetings = chapterMeetings.filter((meeting) =>
         selectedPackage.meetingIds.includes(meeting.meetingId),
       );
@@ -141,8 +130,6 @@ const PaymentOverview = ({
       }));
     }
   };
-
-  console.log({ platformFeeAmount });
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-[1000]">
@@ -293,7 +280,6 @@ const PaymentOverview = ({
                       img.onload = async () => {
                         try {
                           const result = await QrScanner.scanImage(img);
-                          console.log('QR Code content:', result);
                           URL.revokeObjectURL(imageUrl);
 
                           if (

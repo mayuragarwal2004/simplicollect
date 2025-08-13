@@ -31,11 +31,8 @@ const PackageCard = ({
   } = usePaymentData();
   const [showUnpaidOnly, setShowUnpaidOnly] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(true);
-  console.log('From PackageCard', { receivers });
 
   const handlePackagePayModalClose = () => {
-    console.log('Triggered handlePackagePayModalClose');
-
     resetPaymentData();
 
     setIsModalOpen(false);
@@ -48,8 +45,6 @@ const PackageCard = ({
       setIsModalOpen(false);
     }
   }, [selectedPackage]);
-
-  console.log({ selectedPackage });
 
   // Helper function to check if any meetings within the package are paid
   const hasOverlappingPayments = (pkg) => {

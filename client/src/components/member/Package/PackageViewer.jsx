@@ -23,6 +23,109 @@ import {
 } from '@/components/ui/accordion';
 import ChooseMember from '../ChooseMemberPopoverCommand';
 
+// Component for displaying pending payments
+const PendingPaymentsView = ({ pendingPayments, handleDeletePendingRequest, fetchAllData }) => {
+  if (pendingPayments.length === 0) return null;
+
+  return (
+    <div className="mb-6">
+      <div className="flex items-center justify-between px-4 py-3 bg-yellow-100 rounded-md">
+        <p className="text-base font-medium text-yellow-800 dark:text-yellow-200">
+          You have <strong>pending payments</strong>. Please contact admin
+          to approve requests to continue.
+        </p>
+        <button
+          className="px-4 py-2 text-sm font-semibold text-yellow-800 bg-yellow-300 rounded-md hover:bg-yellow-400 dark:text-yellow-200 dark:bg-yellow-400 transition-colors"
+          onClick={fetchAllData}
+        >
+          Refresh
+        </button>
+      </div>
+      <div className="mt-4 space-y-4">
+        {pendingPayments.map((payment) => (
+          <div
+            key={payment.transactionId}
+            className="p-4 sm:p-6 border border-yellow-300 rounded-lg bg-yellow-50 dark:bg-yellow-900/20"
+          >
+            {/* Header with Package Name and Status */}
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 gap-2">
+              <div>
+                <h4 className="text-xl sm:text-2xl font-semibold text-yellow-900 dark:text-yellow-100 mb-1">
+                  {payment.packageName}
+                </h4>
+                <p className="text-base text-yellow-700 dark:text-yellow-300">
+                  {payment.packageFeeType} • {new Date(payment.paymentDate).toLocaleDateString()}
+                </p>
+              </div>
+              <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-200 self-start sm:self-center">
+                {payment.status.toUpperCase()}
+              </span>
+            </div>
+
+            {/* Payment Summary - Responsive Layout */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+              {/* Show only one amount if paid and payable are the same */}
+              {payment.paidAmount === payment.payableAmount ? (
+                <div className="flex flex-col">
+                  <span className="text-base text-yellow-700 dark:text-yellow-300 mb-1">Amount:</span>
+                  <span className="text-lg font-semibold text-blue-700 dark:text-blue-400">
+                    ₹{payment.paidAmount?.toLocaleString()}
+                  </span>
+                </div>
+              ) : (
+                <>
+                  <div className="flex flex-col">
+                    <span className="text-base text-yellow-700 dark:text-yellow-300 mb-1">Paid:</span>
+                    <span className="text-lg font-semibold text-green-700 dark:text-green-400">
+                      ₹{payment.paidAmount?.toLocaleString()}
+                    </span>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-base text-yellow-700 dark:text-yellow-300 mb-1">Original Amount:</span>
+                    <span className="text-lg font-semibold text-blue-700 dark:text-blue-400">
+                      ₹{payment.payableAmount?.toLocaleString()}
+                    </span>
+                  </div>
+                </>
+              )}
+              
+              {/* Only show balance if it's not zero */}
+              {payment.balanceAmount !== 0 && (
+                <div className="flex flex-col">
+                  <span className="text-base text-yellow-700 dark:text-yellow-300 mb-1">Balance:</span>
+                  <span className={`text-lg font-semibold ${
+                    payment.balanceAmount < 0 
+                      ? 'text-red-600 dark:text-red-400' 
+                      : 'text-green-600 dark:text-green-400'
+                  }`}>
+                    ₹{Math.abs(payment.balanceAmount)?.toLocaleString()} 
+                    {payment.balanceAmount < 0 ? ' Due' : ' Advance'}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* Action Row */}
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center pt-4 border-t border-yellow-200 gap-3">
+              <div className="text-base text-yellow-700 dark:text-yellow-300">
+                <span className="capitalize font-medium">{payment.paymentType}</span>
+                <span className="mx-2">•</span>
+                <span>{payment.paymentReceivedByName || 'Unknown'}</span>
+              </div>
+              <button
+                className="px-4 py-2 text-base font-medium text-red-700 bg-red-100 border border-red-300 rounded-md hover:bg-red-200 dark:bg-red-900/30 dark:text-red-200 dark:border-red-600 transition-colors self-start sm:self-center"
+                onClick={() => handleDeletePendingRequest(payment.transactionId)}
+              >
+                Delete Request
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
 const PackageViewer = () => {
   const {
     paymentData: {
@@ -120,96 +223,17 @@ const PackageViewer = () => {
           console.error('Error fetching change date rights:', error);
         });
     }
-  }, [chapterData]);
-
-  console.log({ calculationDate });
-
-  console.log({pendingPayments});
-  
+  }, [chapterData]);  
 
   return (
     <div className="rounded-sm border border-stroke bg-white p-3 shadow-default dark:border-strokedark dark:bg-boxdark sm:px-7.5 xl:pb-1">
-      {/* add alert if there are pending payments */}
-      {pendingPayments.length > 0 && (
-        <div className="mb-4">
-          <div className="flex items-center justify-between px-4 py-2 bg-yellow-100 rounded-md">
-            <p className="text-sm text-yellow-800 dark:text-yellow-200">
-              You have <strong>pending payments</strong>. Please contact admin
-              to approve requests to continue.
-            </p>
-            <button
-              className="px-3 py-1 text-sm font-semibold text-yellow-800 bg-yellow-300 rounded-md hover:bg-yellow-400 dark:text-yellow-200 dark:bg-yellow-400"
-              onClick={fetchAllData}
-            >
-              Refresh
-            </button>
-          </div>
-          <div className="mt-4">
-            {pendingPayments.map((payment) => (
-              <div
-                key={payment.transactionId}
-                className="mb-3 p-4 border border-yellow-300 rounded-lg bg-yellow-50 dark:bg-yellow-900/20"
-              >
-                {/* Header with Package Name and Status */}
-                <div className="flex justify-between items-center mb-3">
-                  <div>
-                    <h4 className="text-lg font-semibold text-yellow-900 dark:text-yellow-100">
-                      {payment.packageName}
-                    </h4>
-                    <p className="text-sm text-yellow-700 dark:text-yellow-300">
-                      {payment.packageFeeType} • {new Date(payment.paymentDate).toLocaleDateString()}
-                    </p>
-                  </div>
-                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-200">
-                    {payment.status.toUpperCase()}
-                  </span>
-                </div>
-
-                {/* Payment Summary - Single Row */}
-                <div className="flex flex-wrap gap-4 mb-3">
-                  <div className="flex items-center space-x-1">
-                    <span className="text-sm text-yellow-700 dark:text-yellow-300">Paid:</span>
-                    <span className="font-semibold text-green-700 dark:text-green-400">
-                      ₹{payment.paidAmount?.toLocaleString()}
-                    </span>
-                  </div>
-                  <div className="flex items-center space-x-1">
-                    <span className="text-sm text-yellow-700 dark:text-yellow-300">Original Payable Amount:</span>
-                    <span className="font-semibold text-blue-700 dark:text-blue-400">
-                      ₹{payment.payableAmount?.toLocaleString()}
-                    </span>
-                  </div>
-                  <div className="flex items-center space-x-1">
-                    <span className="text-sm text-yellow-700 dark:text-yellow-300">Balance:</span>
-                    <span className={`font-semibold ${
-                      payment.balanceAmount < 0 
-                        ? 'text-red-600 dark:text-red-400' 
-                        : 'text-green-600 dark:text-green-400'
-                    }`}>
-                      ₹{Math.abs(payment.balanceAmount)?.toLocaleString()} 
-                      {payment.balanceAmount < 0 ? ' Due' : ' Advance'}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Action Row */}
-                <div className="flex justify-between items-center pt-2 border-t border-yellow-200">
-                  <div className="text-sm text-yellow-700 dark:text-yellow-300">
-                    <span className="capitalize">{payment.paymentType}</span> • 
-                    <span className="ml-1">{payment.paymentReceivedByName || 'Unknown'}</span>
-                  </div>
-                  <button
-                    className="px-3 py-1 text-sm font-medium text-red-700 bg-red-100 border border-red-300 rounded hover:bg-red-200 dark:bg-red-900/30 dark:text-red-200 dark:border-red-600"
-                    onClick={() => handleDeletePendingRequest(payment.transactionId)}
-                  >
-                    Delete
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+      {/* Pending Payments Alert */}
+      <PendingPaymentsView 
+        pendingPayments={pendingPayments}
+        handleDeletePendingRequest={handleDeletePendingRequest}
+        fetchAllData={() => fetchAllData(selectedMember.value)}
+      />
+      
       <div className="flex justify-between items-start flex-wrap">
         <div>
           <div className="flex items-center space-x-4">
@@ -374,12 +398,12 @@ const CurrentDateTime = () => {
   }, []);
 
   return (
-    <p className="text-lg font-semibold text-gray-700 dark:text-gray-300">
+    <span className="text-lg font-semibold text-gray-700 dark:text-gray-300">
       {currentTime.getDate()}-{currentTime.getMonth() + 1}-
       {currentTime.getFullYear()} {currentTime.getHours()}:
       {currentTime.getMinutes().toString().padStart(2, '0')}:
       {currentTime.getSeconds().toString().padStart(2, '0')}
-    </p>
+    </span>
   );
 };
 
