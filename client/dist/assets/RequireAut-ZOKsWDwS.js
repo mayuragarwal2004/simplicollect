@@ -1,1 +1,0 @@
-import{b as o,a as u,j as t,O as n,q as i}from"./index-6elQxnHd.js";const c=({children:s})=>{const{isAuthenticated:a}=o(),e=u();return a?s||t.jsx(n,{}):t.jsx(i,{to:"/auth/signin",state:{from:e},replace:!0})};export{c as default};
