@@ -109,18 +109,32 @@ const searchMemberForChapterToAdd = async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
-const addMemberToChapter=async (req, res) => {
+const addMemberToChapter = async (req, res) => {
   const { chapterSlug, userId } = req.params;
   console.log("Adding member to chapter:", chapterSlug, userId);
   
-  const { role="member" } = req.body;
+  const { role, joinDate } = req.body;
 
   if (!userId || !role) {
-    return res.status(400).json({ error: "User ID and role are required" });
+    return res.status(400).json({ error: "User ID and roles are required" });
   }
 
   try {
-    const addedMember = await adminChapterMemberListModel.addMemberToChapter(chapterSlug, userId, role);
+    // Validate that we have at least one role
+    const roleIds = role.split(',').filter(Boolean);
+    
+    if (roleIds.length === 0) {
+      return res.status(400).json({ error: "At least one role ID is required" });
+    }
+
+    // Pass the roles as a comma-separated string directly
+    const addedMember = await adminChapterMemberListModel.addMemberToChapter(
+      chapterSlug, 
+      userId, 
+      role, // Pass the original comma-separated string
+      joinDate
+    );
+    
     res.json({ message: "Member added successfully", addedMember });
   } catch (error) {
     console.error("Error adding member to chapter:", error);

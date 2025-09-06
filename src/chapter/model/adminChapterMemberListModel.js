@@ -279,7 +279,7 @@ const searchMemberForChapterToAdd = async (searchQuery, chapterSlug) => {
     .limit(50);
 };
 
-const addMemberToChapter = async (chapterSlug, userId, role) => {
+const addMemberToChapter = async (chapterSlug, userId, roleIds, joinedDate) => {
   const chapter = await db("chapters")
     .select("chapterId")
     .where({ chapterSlug })
@@ -299,42 +299,60 @@ const addMemberToChapter = async (chapterSlug, userId, role) => {
   }
 
   const existingMapping = await db("member_chapter_mapping")
-    .where({ chapterId: chapter.chapterId, memberId: userId }) //joined
+    .where({ chapterId: chapter.chapterId, memberId: userId })
     .first();
 
   if (existingMapping && existingMapping.status === "joined") {
     throw new Error(`Member ID '${userId}' is already in this chapter`);
   }
-  const existingRole = await db("roles")
+
+  // Validate that all role IDs exist
+  const roleIdArray = roleIds.split(',').map(id => id.trim());
+  console.log({roleIds, roleIdArray});
+  const existingRoles = await db("roles")
     .select("roleId")
-    .where({ roleName: role })
-    .first();
-  if (!existingRole) {
-    throw new Error(`Role '${role}' does not exist`);
+    .whereIn("roleId", roleIdArray);
+
+  if (existingRoles.length !== roleIdArray.length) {
+    throw new Error('One or more invalid role IDs');
   }
-  const roleId = existingRole.roleId;
+
+  
 
   if (existingMapping && existingMapping.status === "left") {
     await db("member_chapter_mapping")
       .where({ chapterId: chapter.chapterId, memberId: userId })
-      .update({ status: "joined", leaveDate: null, roleIds: role });
+      .update({ 
+        status: "joined", 
+        leaveDate: null, 
+        roleIds: roleIds,
+        joinedDate: joinedDate || db.fn.now()
+      });
 
     return {
       message: "Member re-added successfully",
       chapterSlug,
       userId,
-      role,
+      roleIds,
+      joinedDate
     };
   }
 
   await db("member_chapter_mapping").insert({
     chapterId: chapter.chapterId,
     memberId: userId,
-    roleIds: roleId,
+    roleIds: roleIds,
     status: "joined",
+    joinedDate: joinedDate || db.fn.now()
   });
 
-  return { message: "Member added successfully", chapterSlug, userId, role };
+  return { 
+    message: "Member added successfully", 
+    chapterSlug, 
+    userId, 
+    roleIds,
+    joinedDate
+  };
 };
 
 const getAllFeatures = async () => {
