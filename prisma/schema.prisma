@@ -65,6 +65,7 @@ model chapters {
   meetings               meetings[]
   member_chapter_mapping member_chapter_mapping[]
   qrreceivers            qrreceivers[]
+  clusters               clusters[]
 
   @@index([organisationId], map: "fk_organisations")
 }
@@ -194,12 +195,15 @@ model member_chapter_mapping {
   status     member_chapter_mapping_status @default(joined)
   joinedDate DateTime?                     @db.Date
   leaveDate  DateTime?                     @db.Date
+  clusterId  String?                       @db.VarChar(255)
   members    members                       @relation(fields: [memberId], references: [memberId], onDelete: Cascade, onUpdate: NoAction, map: "member_chapter_mapping_ibfk_1")
   chapters   chapters                      @relation(fields: [chapterId], references: [chapterId], onDelete: Cascade, onUpdate: NoAction, map: "member_chapter_mapping_ibfk_2")
+  cluster    clusters?                     @relation(fields: [clusterId], references: [clusterId], onDelete: SetNull, onUpdate: NoAction)
 
   @@id([memberId, chapterId])
   @@index([chapterId], map: "chapterId")
   @@index([roleIds], map: "roleId")
+  @@index([clusterId])
 }
 
 model members {
@@ -356,6 +360,39 @@ model otp_verifications {
   @@index([member_id], map: "member_id")
 }
 
+model clusters {
+  clusterId    String    @id @db.VarChar(255)
+  clusterName  String    @db.VarChar(255)
+  description  String?   @db.Text
+  chapterId    String    @db.VarChar(255)
+  createdAt    DateTime  @default(now()) @db.DateTime(0)
+  updatedAt    DateTime  @default(now()) @db.DateTime(0)
+  isActive     Boolean   @default(true)
+  
+  // Relations
+  chapter      chapters  @relation(fields: [chapterId], references: [chapterId], onDelete: Cascade, onUpdate: NoAction)
+  members      member_chapter_mapping[]
+  packages     cluster_package_mapping[]
+
+  @@index([chapterId])
+  @@unique([chapterId, clusterName], name: "unique_cluster_per_chapter")
+}
+
+model cluster_package_mapping {
+  clusterId    String   @db.VarChar(255)
+  packageId    String   @db.VarChar(255)
+  addedAt      DateTime @default(now()) @db.DateTime(0)
+  removedAt    DateTime? @db.DateTime(0)
+  isActive     Boolean  @default(true)
+
+  // Relations
+  cluster      clusters @relation(fields: [clusterId], references: [clusterId], onDelete: Cascade, onUpdate: NoAction)
+  package      packages @relation(fields: [packageId], references: [packageId], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([clusterId, packageId])
+  @@index([packageId])
+}
+
 model packages {
   packageId                       String    @id @db.VarChar(255)
   termId                          String    @db.VarChar(255)
@@ -377,6 +414,9 @@ model packages {
   allowPackagePurchaseIfFeesPaid  Boolean?
   meetingIds                      String?   @db.LongText
   chapterId                       String?   @db.VarChar(255)
+
+  // Relations
+  clusters                        cluster_package_mapping[]
 
   @@index([chapterId], map: "chapterId")
 }
