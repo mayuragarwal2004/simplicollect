@@ -58,10 +58,24 @@ const getAllPackages = async () => {
 // ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 
 const getPackagesByChapterId = async (chapterId, memberId) => {
-  return db("packages as p")
+  const query = db("packages as p")
+    // Join with member_chapter_mapping to get member's cluster
+    .join("member_chapter_mapping as mcm", function() {
+      this.on("mcm.chapterId", "=", db.raw("?", [chapterId]))
+          .andOn("mcm.memberId", "=", db.raw("?", [memberId]))
+          .andOn("mcm.status", "=", db.raw("?", ["joined"]));
+    })
+    // Left join with cluster_package_mapping to get cluster-specific packages
+    .leftJoin("cluster_package_mapping as cpm", function() {
+      this.on("cpm.packageId", "=", "p.packageId")
+          .andOn("cpm.clusterId", "=", "mcm.clusterId")
+          .andOn("cpm.isActive", "=", db.raw("?", [true]));
+    })
+    // Left join with transactions for member's transaction history
     .leftJoin("transactions as t", function () {
       this.on("p.packageId", "t.packageId").andOn("t.memberId", db.raw("?", [memberId]));
     })
+    // Join with meetings for chapter's meetings
     .join("meetings as m", function () {
       this.on(
         "p.meetingIds",
@@ -70,23 +84,84 @@ const getPackagesByChapterId = async (chapterId, memberId) => {
       );
     })
     .distinct("p.packageId")
-    .where({ "m.chapterId": chapterId })
+    .where(function() {
+      this.where({ "m.chapterId": chapterId })
+          .andWhere(function() {
+            // Include packages if:
+            // 1. They are assigned to member's cluster (cluster_package_mapping exists)
+            // 2. OR They are not assigned to any cluster (no cluster restrictions)
+            this.whereNotNull("cpm.packageId")
+                .orWhereNotExists(function() {
+                  this.select("*")
+                      .from("cluster_package_mapping")
+                      .whereRaw("packageId = p.packageId")
+                      .andWhere("isActive", true);
+                });
+          });
+    })
     .orderBy("p.packagePayableStartDate", "asc")
     .select("t.*", "p.*");
+
+  return query;
 }
 
 // Fetch packages by chapterId, termId, and optionally memberId
 const getPackagesByChapterAndTerm = async (chapterId, termId, memberId) => {  
   let query = db("packages as p")
-    .leftJoin("transactions as t", function () {
-      this.on("p.packageId", "t.packageId");
-      if (memberId) this.andOn("t.memberId", db.raw("?", [memberId]));
-    })
-    .join("term as tm", "p.termId", "tm.termId")
-    .where({ "p.chapterId": chapterId, "p.termId": termId })
+    // Join with term table
+    .join("term as tm", "p.termId", "tm.termId");
+
+  if (memberId) {
+    // Join with member_chapter_mapping to get member's cluster if memberId is provided
+    query = query
+      .join("member_chapter_mapping as mcm", function() {
+        this.on("mcm.chapterId", "=", db.raw("?", [chapterId]))
+            .andOn("mcm.memberId", "=", db.raw("?", [memberId]))
+            .andOn("mcm.status", "=", db.raw("?", ["joined"]));
+      })
+      // Left join with cluster_package_mapping to get cluster-specific packages
+      .leftJoin("cluster_package_mapping as cpm", function() {
+        this.on("cpm.packageId", "=", "p.packageId")
+            .andOn("cpm.clusterId", "=", "mcm.clusterId")
+            .andOn("cpm.isActive", "=", db.raw("?", [true]));
+      })
+      // Left join with transactions for member's history
+      .leftJoin("transactions as t", function () {
+        this.on("p.packageId", "t.packageId")
+            .andOn("t.memberId", db.raw("?", [memberId]));
+      })
+      .where(function() {
+        this.where({ 
+          "p.chapterId": chapterId, 
+          "p.termId": termId 
+        })
+        .andWhere(function() {
+          // Include packages if:
+          // 1. They are assigned to member's cluster
+          // 2. OR They are not assigned to any cluster
+          this.whereNotNull("cpm.packageId")
+              .orWhereNotExists(function() {
+                this.select("*")
+                    .from("cluster_package_mapping")
+                    .whereRaw("packageId = p.packageId")
+                    .andWhere("isActive", true);
+              });
+        });
+      });
+  } else {
+    // If no memberId, just get all packages for the chapter and term
+    query = query
+      .leftJoin("transactions as t", "p.packageId", "t.packageId")
+      .where({ 
+        "p.chapterId": chapterId, 
+        "p.termId": termId 
+      });
+  }
+
+  return query
+    .distinct("p.packageId")
     .orderBy("p.packagePayableStartDate", "asc")
     .select("t.*", "p.*", "tm.termName", { termStatus: "tm.status" });
-  return query;
 };
 
 // Get all unique package parents for a chapter and optional term

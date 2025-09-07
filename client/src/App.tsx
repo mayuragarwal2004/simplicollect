@@ -18,8 +18,12 @@ import { useData } from './context/DataContext';
 
 // Lazy load all components
 const SignIn = lazy(() => import('./pages/Authentication/SignIn'));
-const OtpVerification = lazy(() => import('./pages/Authentication/OtpVerification'));
-const ForgotPassword = lazy(() => import('./pages/Authentication/ForgotPassword'));
+const OtpVerification = lazy(
+  () => import('./pages/Authentication/OtpVerification'),
+);
+const ForgotPassword = lazy(
+  () => import('./pages/Authentication/ForgotPassword'),
+);
 const AdminSignIn = lazy(() => import('./pages/Authentication/AdminSignIn'));
 const EOI = lazy(() => import('./pages/Visitor/EOI'));
 const Profile = lazy(() => import('./pages/Member/Profile'));
@@ -40,30 +44,71 @@ const TrackVisitor = lazy(() => import('./pages/Visitor/TrackVisitor'));
 const CapacitorTestPage = lazy(() => import('./pages/Test/CapacitorTestPage'));
 
 // Admin components
-const AdminOrganisationsPage = lazy(() => import('./pages/Admin/organisation/AdminOrganisationsTablePage'));
-const DashboardPage = lazy(() => import('./pages/Admin/Dashboard/DashboardPage'));
+const AdminOrganisationsPage = lazy(
+  () => import('./pages/Admin/organisation/AdminOrganisationsTablePage'),
+);
+const DashboardPage = lazy(
+  () => import('./pages/Admin/Dashboard/DashboardPage'),
+);
 const AdminPackage = lazy(() => import('./pages/Admin/Package/AdminPackage'));
-const AdminNotificationsPage = lazy(() => import('./pages/Admin/Notifications/AdminNotificationsPage'));
-const AdminContactQueriesPage = lazy(() => import('./pages/Admin/ContactQueries/AdminContactQueriesPage'));
-const AdminChaptersTablePage = lazy(() => import('./pages/Admin/chapters/AdminChaptersTablePage'));
-const AdminChapterLayout = lazy(() => import('./pages/Admin/chapters/AdminChapterLayout'));
-const AdminChapterDashboardPage = lazy(() => import('./pages/Admin/chapters/AdminChapterDashboardPage'));
-const AdminChapterMemberList = lazy(() => import('./pages/Admin/chapters/AdminChapterMemberList'));
-const ChapterRoles = lazy(() => import('./components/Admin/Chapter/CreateNew/ChapterRoles/ChapterRoles'));
-const AdminChapterSettings = lazy(() => import('./pages/Admin/chapters/AdminChapterSettings'));
-const AdminMembersTablePage = lazy(() => import('./pages/Admin/members/AdminMembersTablePage'));
+const AdminNotificationsPage = lazy(
+  () => import('./pages/Admin/Notifications/AdminNotificationsPage'),
+);
+const AdminContactQueriesPage = lazy(
+  () => import('./pages/Admin/ContactQueries/AdminContactQueriesPage'),
+);
+const AdminChaptersTablePage = lazy(
+  () => import('./pages/Admin/chapters/AdminChaptersTablePage'),
+);
+const AdminChapterLayout = lazy(
+  () => import('./pages/Admin/chapters/AdminChapterLayout'),
+);
+const AdminChapterDashboardPage = lazy(
+  () => import('./pages/Admin/chapters/AdminChapterDashboardPage'),
+);
+const AdminChapterMemberList = lazy(
+  () => import('./pages/Admin/chapters/AdminChapterMemberList'),
+);
+const AdminChaptersClustersPage = lazy(
+  () => import('./pages/Admin/chapters/AdminChaptersClustersPage'),
+);
+const AdminChapterClusterDetailsPage = lazy(
+  () => import('./pages/Admin/chapters/AdminChapterClusterDetailsPage'),
+);
+const ChapterRoles = lazy(
+  () =>
+    import('./components/Admin/Chapter/CreateNew/ChapterRoles/ChapterRoles'),
+);
+const AdminChapterSettings = lazy(
+  () => import('./pages/Admin/chapters/AdminChapterSettings'),
+);
+const AdminMembersTablePage = lazy(
+  () => import('./pages/Admin/members/AdminMembersTablePage'),
+);
 
 // Member components
-const PackageViewerPage = lazy(() => import('./pages/Member/Package/PackageViewerPage'));
+const PackageViewerPage = lazy(
+  () => import('./pages/Member/Package/PackageViewerPage'),
+);
 const MyLedger = lazy(() => import('./pages/Member/MyLedger'));
-const MemberFeeApproval = lazy(() => import('./pages/Member/MemberFeeApproval'));
+const MemberFeeApproval = lazy(
+  () => import('./pages/Member/MemberFeeApproval'),
+);
 const FeeReciever = lazy(() => import('./pages/Member/FeeReciever'));
 const Reports = lazy(() => import('./pages/Member/Reports'));
-const AcceptChapterPaymentPage = lazy(() => import('./pages/Member/FeeReceiver/AcceptChapterPaymentPage'));
+const AcceptChapterPaymentPage = lazy(
+  () => import('./pages/Member/FeeReceiver/AcceptChapterPaymentPage'),
+);
 const SwitchChapter = lazy(() => import('./pages/Member/SwitchChapter'));
 
 // Wrapper component for Suspense
-const SuspenseWrapper = ({ children, message }: { children: React.ReactNode; message?: string }) => (
+const SuspenseWrapper = ({
+  children,
+  message,
+}: {
+  children: React.ReactNode;
+  message?: string;
+}) => (
   <Suspense fallback={<SuspenseLoader message={message} />}>
     {children}
   </Suspense>
@@ -166,7 +211,7 @@ const routes = [
             ),
             children: [
               {
-                path: "dashboard",
+                path: 'dashboard',
                 element: (
                   <SuspenseWrapper message="Loading Chapter Dashboard">
                     <AdminChapterDashboardPage />
@@ -188,6 +233,27 @@ const routes = [
                     <ChapterRoles />
                   </SuspenseWrapper>
                 ),
+              },
+              {
+                path: 'clusters',
+                children: [
+                  {
+                    index: true,
+                    element: (
+                      <SuspenseWrapper message="Loading Clusters">
+                        <AdminChaptersClustersPage />
+                      </SuspenseWrapper>
+                    ),
+                  },
+                  {
+                    path: ':clusterId',
+                    element: (
+                      <SuspenseWrapper message="Loading Cluster">
+                        <AdminChapterClusterDetailsPage />
+                      </SuspenseWrapper>
+                    ),
+                  },
+                ],
               },
               {
                 path: 'settings',
@@ -428,7 +494,7 @@ const router = createBrowserRouter(routes);
 function App() {
   const [loadingLocal, setLoadingLocal] = useState<boolean>(true);
   const { loading } = useData();
-  
+
   // Initialize Capacitor push notifications for native platforms
   const capacitorNotifications = useCapacitorNotifications();
 
@@ -436,15 +502,15 @@ function App() {
   const appInstallBanner = useAppInstallBanner({
     appName: APP_CONFIG.appName,
     appStoreLinks: APP_CONFIG.storeLinks,
-    showDelay: (import.meta as any).env.DEV ? 
-      APP_CONFIG.installBanner.development.showDelay : 
-      APP_CONFIG.installBanner.showDelay,
+    showDelay: (import.meta as any).env.DEV
+      ? APP_CONFIG.installBanner.development.showDelay
+      : APP_CONFIG.installBanner.showDelay,
     hideAfterDays: APP_CONFIG.installBanner.hideAfterDays,
   });
 
   useEffect(() => {
     setTimeout(() => setLoadingLocal(false), 1000);
-    
+
     // Preload critical components for Capacitor apps
     if (Capacitor.isNativePlatform()) {
       // Preload the most commonly used screens
@@ -462,9 +528,9 @@ function App() {
       console.log('Capacitor notifications status:', {
         isSupported: capacitorNotifications.isSupported,
         isInitialized: capacitorNotifications.isInitialized,
-        error: capacitorNotifications.error
+        error: capacitorNotifications.error,
       });
-      
+
       console.log('App install banner status:', {
         showBanner: appInstallBanner.showBanner,
         deviceInfo: appInstallBanner.deviceInfo,
@@ -490,16 +556,17 @@ function App() {
         transition={Bounce}
       />
       <RouterProvider router={router} />
-      
+
       {/* App Install Banner for web users */}
-      {APP_CONFIG.features.enableAppInstallBanner && appInstallBanner.showBanner && (
-        <AppInstallBanner
-          appName={APP_CONFIG.appName}
-          onDownload={appInstallBanner.handleDownload}
-          onDismiss={appInstallBanner.dismissBanner}
-          deviceInfo={appInstallBanner.deviceInfo}
-        />
-      )}
+      {APP_CONFIG.features.enableAppInstallBanner &&
+        appInstallBanner.showBanner && (
+          <AppInstallBanner
+            appName={APP_CONFIG.appName}
+            onDownload={appInstallBanner.handleDownload}
+            onDismiss={appInstallBanner.dismissBanner}
+            deviceInfo={appInstallBanner.deviceInfo}
+          />
+        )}
     </>
   );
 }

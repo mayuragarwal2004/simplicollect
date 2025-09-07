@@ -7,8 +7,6 @@ import { useLocation } from 'react-router-dom';
 const AdminChapterLayout = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const lastSegment = location.pathname.split('/').pop();
-  console.log('lastSegment', lastSegment);
 
   const [currentTab, setCurrentTab] = useState('Dashboard');
 
@@ -16,29 +14,38 @@ const AdminChapterLayout = () => {
     {
       name: 'Dashboard',
       href: 'dashboard',
+      pattern: /\/dashboard\/?$/
     },
     {
       name: 'Member',
       href: 'member',
+      pattern: /\/member(\/.*)?$/
     },
     {
       name: 'Roles',
       href: 'roles',
+      pattern: /\/roles(\/.*)?$/
+    },
+    {
+      name: 'Clusters',
+      href: 'clusters',
+      pattern: /\/clusters(\/.*)?$/
     },
     {
       name: 'Settings',
       href: 'settings',
+      pattern: /\/settings(\/.*)?$/
     },
   ];
 
   useEffect(() => {
-    const foundTab = list.find((item) => item.href === lastSegment);
+    const foundTab = list.find((item) => item.pattern.test(location.pathname));
     if (foundTab) {
       setCurrentTab(foundTab.name);
     } else {
       setCurrentTab('Dashboard');
     }
-  }, [lastSegment]);
+  }, [location.pathname]);
 
   return (
     <div className="flex flex-col gap-4 p-4">

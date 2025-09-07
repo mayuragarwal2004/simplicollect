@@ -73,6 +73,7 @@ app.use("/api/admin/organisations", authenticateToken, AuthenticateAdmin, requir
 app.use("/api/admin/chapters", require("./src/chapter/route/adminChapterRoutes"));
 app.use("/api/admin/chapter-member-list", authenticateToken, AuthenticateAdmin, require("./src/chapter/route/adminChapterMemberListRoutes"));
 app.use("/api/admin/members", authenticateToken, AuthenticateAdmin, require("./src/member/route/adminMemberRoutes"));
+app.use("/api/clusters", authenticateToken, AuthenticateAdmin, require("./src/cluster/route/clusterRoutes"));
 
 app.use("/api/*", (req, res) => {
   res.status(404).send("Not Found - Please check the URL and try again");
