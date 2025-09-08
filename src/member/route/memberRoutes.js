@@ -17,6 +17,9 @@ router.get("/all", memberController.getAllMembersListController);
 // Search members (all, by email/phone/name)
 router.get("/search", memberController.searchMembersController);
 
+// Search members by chapter - more specific route
+router.get("/search/chapter/:chapterSlug", memberController.searchMembersByChapterController);
+
 // member list actions
 router.post("/balance_update", memberController.updateMemberBalanceController);
 

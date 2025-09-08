@@ -99,6 +99,26 @@ const getPackagesByChapterAndTermController = async (req, res) => {
   }
 };
 
+// Admin-only: Fetch ALL packages by chapterId and termId without cluster filtering
+const getAllPackagesByChapterAndTermAdminController = async (req, res) => {
+  const { chapterSlug, termId } = req.params;
+  try {
+    // Find chapter by slug first
+    const { findChapterBySlug } = require("../../chapter/model/chapterModel");
+    const chapter = await findChapterBySlug(chapterSlug);
+    
+    if (!chapter) {
+      return res.status(404).json({ error: "Chapter not found" });
+    }
+    
+    const packages = await Package.getAllPackagesByChapterAndTermAdmin(chapter.chapterId, termId);
+    res.json(packages);
+  } catch (error) {
+    console.error("Error fetching all packages by chapter and term:", error);
+    res.status(500).json({ error: "Failed to fetch packages" });
+  }
+};
+
 // Get all unique package parents for a chapter (optionally filtered by termId)
 const getPackageParentsByChapter = async (req, res) => {
   const { chapterId } = req.params;
@@ -133,6 +153,7 @@ module.exports = {
   fetchPendingMeetings,
   getPackagesByChapterController,
   getPackagesByChapterAndTermController,
+  getAllPackagesByChapterAndTermAdminController,
   getPackageParentsByChapter,
   getPackageParentsByChapterAndTerm,
 };

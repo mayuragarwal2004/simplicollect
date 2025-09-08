@@ -27,4 +27,9 @@ router.get("/:clusterId/packages", authenticateToken, AuthenticateAdmin, cluster
 router.post("/:clusterId/packages", authenticateToken, AuthenticateAdmin, clusterController.addPackageToCluster);
 router.delete("/:clusterId/packages/:packageId", authenticateToken, AuthenticateAdmin, clusterController.removePackageFromCluster);
 
+// Bulk operations for cluster management
+router.put("/bulk-update-members/:chapterSlug", authenticateToken, AuthenticateAdmin, clusterController.bulkUpdateMembers);
+router.put("/bulk-update-packages/:chapterSlug", authenticateToken, AuthenticateAdmin, clusterController.bulkUpdatePackages);
+router.get("/package-mappings/:chapterSlug/term/:termId", authenticateToken, AuthenticateAdmin, clusterController.getPackageMappings);
+
 module.exports = router;

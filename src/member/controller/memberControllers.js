@@ -228,6 +228,27 @@ const searchMembersController = async (req, res) => {
   }
 };
 
+const searchMembersByChapterController = async (req, res) => {
+  const { chapterSlug } = req.params;
+  const { query, includeWithoutCluster } = req.query;
+  
+  try {
+    const chapter = await chapterModel.findChapterBySlug(chapterSlug);
+    if (!chapter) {
+      return res.status(404).json({ message: "Chapter not found" });
+    }
+
+    const members = await memberModel.searchMembersByChapter(
+      chapter.chapterId, 
+      query || "", 
+      includeWithoutCluster === 'true'
+    );
+    res.json(members);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 module.exports = {
   getMemberById,
   addMember,
@@ -237,4 +258,5 @@ module.exports = {
   updateMemberRoleController,
   removeMemberController,
   searchMembersController,
+  searchMembersByChapterController,
 };

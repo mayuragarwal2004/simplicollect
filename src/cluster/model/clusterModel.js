@@ -255,6 +255,61 @@ const removePackageFromCluster = async (clusterId, packageId) => {
     .delete();
 };
 
+const bulkUpdateMembers = async (chapterId, updates) => {
+  // Process each update in a transaction
+  await db.transaction(async (trx) => {
+    for (const update of updates) {
+      const { memberId, clusterId } = update;
+      
+      // Update the member's cluster in member_chapter_mapping
+      await trx("member_chapter_mapping")
+        .where({
+          memberId,
+          chapterId,
+          status: "joined"
+        })
+        .update({
+          clusterId: clusterId || null
+        });
+    }
+  });
+};
+
+const bulkUpdatePackages = async (chapterId, updates) => {
+  // Process each update in a transaction
+  await db.transaction(async (trx) => {
+    for (const update of updates) {
+      const { packageId, clusterId, isActive } = update;
+      
+      // First, remove any existing mapping for this package-cluster combination
+      await trx("cluster_package_mapping")
+        .where({ packageId, clusterId })
+        .delete();
+      
+      // If isActive is true, insert the new mapping
+      if (isActive) {
+        await trx("cluster_package_mapping").insert({
+          packageId,
+          clusterId,
+          isActive: true
+        });
+      }
+    }
+  });
+};
+
+const getPackageMappings = async (chapterId, termId) => {
+  return db("cluster_package_mapping as cpm")
+    .join("packages as p", "cpm.packageId", "p.packageId")
+    .join("term as t", "p.termId", "t.termId")
+    .where({
+      "t.chapterId": chapterId,
+      "t.termId": termId,
+      "cpm.isActive": true
+    })
+    .select("cpm.*");
+};
+
 module.exports = {
   getClustersByChapterSlug,
   getClusterById,
@@ -267,5 +322,8 @@ module.exports = {
   removeMemberFromCluster,
   getClusterPackages,
   addPackageToCluster,
-  removePackageFromCluster
+  removePackageFromCluster,
+  bulkUpdateMembers,
+  bulkUpdatePackages,
+  getPackageMappings
 };

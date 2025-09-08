@@ -75,6 +75,9 @@ const AdminChaptersClustersPage = lazy(
 const AdminChapterClusterDetailsPage = lazy(
   () => import('./pages/Admin/chapters/AdminChapterClusterDetailsPage'),
 );
+const AdminChapterClustersManagePage = lazy(
+  () => import('./pages/Admin/chapters/AdminChapterClustersManagePage'),
+);
 const ChapterRoles = lazy(
   () =>
     import('./components/Admin/Chapter/CreateNew/ChapterRoles/ChapterRoles'),
@@ -242,6 +245,14 @@ const routes = [
                     element: (
                       <SuspenseWrapper message="Loading Clusters">
                         <AdminChaptersClustersPage />
+                      </SuspenseWrapper>
+                    ),
+                  },
+                  {
+                    path: 'manage',
+                    element: (
+                      <SuspenseWrapper message="Loading Cluster Management">
+                        <AdminChapterClustersManagePage />
                       </SuspenseWrapper>
                     ),
                   },

@@ -156,6 +156,56 @@ const removePackageFromCluster = async (req, res) => {
   }
 };
 
+const bulkUpdateMembers = async (req, res) => {
+  try {
+    const { chapterSlug } = req.params;
+    const { updates } = req.body;
+
+    const chapter = await findChapterBySlug(chapterSlug);
+    if (!chapter) {
+      return res.status(404).json({ error: "Chapter not found" });
+    }
+
+    await clusterModel.bulkUpdateMembers(chapter.chapterId, updates);
+    res.json({ message: "Member cluster assignments updated successfully" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+const bulkUpdatePackages = async (req, res) => {
+  try {
+    const { chapterSlug } = req.params;
+    const { updates } = req.body;
+
+    const chapter = await findChapterBySlug(chapterSlug);
+    if (!chapter) {
+      return res.status(404).json({ error: "Chapter not found" });
+    }
+
+    await clusterModel.bulkUpdatePackages(chapter.chapterId, updates);
+    res.json({ message: "Package cluster assignments updated successfully" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+const getPackageMappings = async (req, res) => {
+  try {
+    const { chapterSlug, termId } = req.params;
+
+    const chapter = await findChapterBySlug(chapterSlug);
+    if (!chapter) {
+      return res.status(404).json({ error: "Chapter not found" });
+    }
+
+    const mappings = await clusterModel.getPackageMappings(chapter.chapterId, termId);
+    res.json(mappings);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 module.exports = {
   getClustersByChapterSlug,
   createCluster,
@@ -167,5 +217,8 @@ module.exports = {
   removeMemberFromCluster,
   getClusterPackages,
   addPackageToCluster,
-  removePackageFromCluster
+  removePackageFromCluster,
+  bulkUpdateMembers,
+  bulkUpdatePackages,
+  getPackageMappings
 };

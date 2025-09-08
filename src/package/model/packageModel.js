@@ -164,6 +164,20 @@ const getPackagesByChapterAndTerm = async (chapterId, termId, memberId) => {
     .select("t.*", "p.*", "tm.termName", { termStatus: "tm.status" });
 };
 
+// Admin version: Get ALL packages by chapter and term without cluster filtering
+const getAllPackagesByChapterAndTermAdmin = async (chapterId, termId) => {  
+  return db("packages as p")
+    // Join with term table to ensure packages belong to the chapter's term
+    .join("term as tm", function() {
+      this.on("p.termId", "tm.termId")
+          .andOn("tm.chapterId", db.raw("?", [chapterId]));
+    })
+    .where({ "p.termId": termId })
+    .distinct("p.packageId")
+    .orderBy("p.packagePayableStartDate", "asc")
+    .select("p.*", "tm.termName", { termStatus: "tm.status" });
+};
+
 // Get all unique package parents for a chapter and optional term
 const getPackageParentsByChapter = async (chapterId, termId) => {
   let query = db("packages")
@@ -193,6 +207,7 @@ module.exports = {
   getPackagesByParentType,
   getPackagesByChapterId,
   getPackagesByChapterAndTerm,
+  getAllPackagesByChapterAndTermAdmin,
   getPackageParentsByChapter,
   getPackageParentsByChapterAndTerm,
 };

@@ -158,6 +158,39 @@ const searchMembers = async (query) => {
     );
 };
 
+// Search members by chapter with optional cluster filtering
+const searchMembersByChapter = async (chapterId, query = "", includeWithoutCluster = false) => {
+  let dbQuery = db("members as m")
+    .join("member_chapter_mapping as mcm", "m.memberId", "mcm.memberId")
+    .leftJoin("clusters as c", "mcm.clusterId", "c.clusterId")
+    .where({
+      "mcm.chapterId": chapterId,
+      "mcm.status": "joined"
+    });
+
+  if (query.trim() !== "") {
+    dbQuery = dbQuery.where(function () {
+      this.where("m.email", "like", `%${query}%`)
+        .orWhere("m.phoneNumber", "like", `%${query}%`)
+        .orWhere("m.firstName", "like", `%${query}%`)
+        .orWhere("m.lastName", "like", `%${query}%`)
+        .orWhere(db.raw("CONCAT(m.firstName, ' ', m.lastName) like ?", [`%${query}%`]));
+    });
+  }
+
+  return dbQuery.select(
+    "m.memberId",
+    "m.firstName",
+    "m.lastName",
+    "m.email",
+    "m.phoneNumber",
+    "mcm.clusterId",
+    "c.clusterName",
+    db.raw("CONCAT(m.firstName, ' ', m.lastName) as name"),
+    db.raw("m.phoneNumber as phone")
+  );
+};
+
 // Find member by phone number
 const findMemberByPhone = async (phoneNumber) => {
   return db("members").where("phoneNumber", phoneNumber).first();
@@ -232,6 +265,7 @@ module.exports = {
   updateMemberRoleModel,
   removeMemberFromChapter,
   searchMembers,
+  searchMembersByChapter,
   findMemberByPhone,
   getMemberChapterMapping,
   addOrUpdateMemberChapterMapping,
