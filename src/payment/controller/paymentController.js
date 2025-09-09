@@ -51,6 +51,8 @@ const addPayment = async (req, res) => {
 
   if (typeof paymentDetails.meetingIds === "string") {
     paymentDetails.meetingIds = JSON.parse(paymentDetails.meetingIds);
+  } else if (!Array.isArray(paymentDetails.meetingIds)) {
+    paymentDetails.meetingIds = []
   }
 
   paymentDetails.meetingIds.forEach((meetingId) => {
@@ -63,7 +65,10 @@ const addPayment = async (req, res) => {
 
   try {
     const result1 = await paymentModel.addTransaction(transactionTableData);
-    const result = await paymentModel.addPayment(newRecords);
+    let result = null;
+    if (newRecords.length > 0) {
+      result = await paymentModel.addPayment(newRecords);
+    }
 
     // Send notification to payment receiver if receiver ID is provided
     if (paymentDetails.paymentReceivedById) {
@@ -93,7 +98,11 @@ const addPayment = async (req, res) => {
       }
     }
 
-    res.json(result);
+    res.json({
+      message: "Payment added successfully",
+      transaction: result1,
+      payment: result,
+    });
   } catch (error) {
     console.log(error);
     res.status(500).json({ error: error.message });
