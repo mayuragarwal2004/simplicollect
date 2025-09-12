@@ -5,6 +5,7 @@ const paymentModel = require("../model/paymentModel");
 const paymentService = require("../service/paymentService");
 const { v4: uuidv4 } = require("uuid");
 const { sendPaymentReceivedNotification, sendPaymentApprovedNotification } = require("../../utils/notificationUtils");
+const { processInvoiceNotifications } = require("../service/backgroundJobProcessor");
 
 const addPayment = async (req, res) => {
   let {memberId} = req.body;
@@ -252,6 +253,15 @@ const approvePendingPaymentController = async (req, res) => {
       // If all succeeds, transaction commits automatically
       res.json({ success: true });
     });
+
+    // Process invoice notifications in background (non-blocking)
+    setImmediate(() => {
+      processInvoiceNotifications(transactionDetails)
+        .catch(error => {
+          console.error('Background invoice notification processing failed:', error);
+        });
+    });
+
   } catch (error) {
     console.error("Transaction Failed:", error);
     res

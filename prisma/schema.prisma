@@ -70,6 +70,18 @@ model chapters {
   @@index([organisationId], map: "fk_organisations")
 }
 
+model chapterConfig {
+  id                          String    @id @db.VarChar(255)
+  chapterId                   String    @unique(map: "chapterId") @db.VarChar(255)
+  sendTransactionUpdatesWAMsg Boolean?  @default(false)
+  sendTransactionUpdatesEmail Boolean?  @default(false)
+  isMeetingsEnabled           Boolean?  @default(true)
+  createdAt                   DateTime? @default(now()) @db.Timestamp(0)
+  updatedAt                   DateTime? @default(now()) @db.Timestamp(0)
+
+  @@index([chapterId], map: "idx_chapter_id")
+}
+
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 model contact_queries {
   queryId                                      String                    @id @db.VarChar(255)
@@ -216,6 +228,14 @@ model members {
   role                                                 String?                   @db.VarChar(255)
   superAdmin                                           Boolean?                  @default(false)
   test                                                 Boolean?                  @default(false)
+  companyName                                          String?                   @db.VarChar(255)
+  designation                                          String?                   @db.VarChar(255)
+  address                                              String?                   @db.Text
+  gstNumber                                            String?                   @db.VarChar(255)
+  city                                                 String?                   @db.VarChar(255)
+  state                                                String?                   @db.VarChar(255)
+  country                                              String?                   @db.VarChar(255)
+  profileImageLink                                     String?                   @db.VarChar(255)
   cashreceivers                                        cashreceivers[]
   contact_queries_contact_queries_assignedToTomembers  contact_queries[]         @relation("contact_queries_assignedToTomembers")
   contact_queries_contact_queries_submittedByTomembers contact_queries[]         @relation("contact_queries_submittedByTomembers")
@@ -361,33 +381,33 @@ model otp_verifications {
 }
 
 model clusters {
-  clusterId    String    @id @db.VarChar(255)
-  clusterName  String    @db.VarChar(255)
-  description  String?   @db.Text
-  chapterId    String    @db.VarChar(255)
-  createdAt    DateTime  @default(now()) @db.DateTime(0)
-  updatedAt    DateTime  @default(now()) @db.DateTime(0)
-  isActive     Boolean   @default(true)
-  
-  // Relations
-  chapter      chapters  @relation(fields: [chapterId], references: [chapterId], onDelete: Cascade, onUpdate: NoAction)
-  members      member_chapter_mapping[]
-  packages     cluster_package_mapping[]
+  clusterId   String   @id @db.VarChar(255)
+  clusterName String   @db.VarChar(255)
+  description String?  @db.Text
+  chapterId   String   @db.VarChar(255)
+  createdAt   DateTime @default(now()) @db.DateTime(0)
+  updatedAt   DateTime @default(now()) @db.DateTime(0)
+  isActive    Boolean  @default(true)
 
-  @@index([chapterId])
+  // Relations
+  chapter  chapters                  @relation(fields: [chapterId], references: [chapterId], onDelete: Cascade, onUpdate: NoAction)
+  members  member_chapter_mapping[]
+  packages cluster_package_mapping[]
+
   @@unique([chapterId, clusterName], name: "unique_cluster_per_chapter")
+  @@index([chapterId])
 }
 
 model cluster_package_mapping {
-  clusterId    String   @db.VarChar(255)
-  packageId    String   @db.VarChar(255)
-  addedAt      DateTime @default(now()) @db.DateTime(0)
-  removedAt    DateTime? @db.DateTime(0)
-  isActive     Boolean  @default(true)
+  clusterId String    @db.VarChar(255)
+  packageId String    @db.VarChar(255)
+  addedAt   DateTime  @default(now()) @db.DateTime(0)
+  removedAt DateTime? @db.DateTime(0)
+  isActive  Boolean   @default(true)
 
   // Relations
-  cluster      clusters @relation(fields: [clusterId], references: [clusterId], onDelete: Cascade, onUpdate: NoAction)
-  package      packages @relation(fields: [packageId], references: [packageId], onDelete: Cascade, onUpdate: NoAction)
+  cluster clusters @relation(fields: [clusterId], references: [clusterId], onDelete: Cascade, onUpdate: NoAction)
+  package packages @relation(fields: [packageId], references: [packageId], onDelete: Cascade, onUpdate: NoAction)
 
   @@id([clusterId, packageId])
   @@index([packageId])
@@ -416,7 +436,7 @@ model packages {
   chapterId                       String?   @db.VarChar(255)
 
   // Relations
-  clusters                        cluster_package_mapping[]
+  clusters cluster_package_mapping[]
 
   @@index([chapterId], map: "chapterId")
 }
@@ -671,9 +691,9 @@ enum chapters_meetingPeriodicity {
   weekly
   fortnightly
   monthly
-  bi_monthly    @map("bi-monthly")
+  bi_monthly  @map("bi-monthly")
   quaterly
-  six_monthly   @map("6-monthly")
+  six_monthly @map("6-monthly")
   yearly
 }
 
