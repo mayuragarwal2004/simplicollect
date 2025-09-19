@@ -19,7 +19,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { axiosInstance } from '../../../../utils/config';
 import { toast } from 'react-toastify';
 import { useParams } from 'react-router-dom';
-import { MultiSelect } from '@/components/ui/MultiSelect';
+import { MultiSelect } from '@/components/ui/multiSelect';
 
 export const MemberColumn = (allRoles) => [
   {

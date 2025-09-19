@@ -5,7 +5,7 @@ import { ChapterRoleTable } from './chapterRole-data-table/chapterRole-table';
 import { ChapterRoleColumns } from './chapterRole-data-table/chapterRole-column';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { MultiSelect } from '@/components/ui/MultiSelect';
+import { MultiSelect } from '@/components/ui/multiSelect';
 import { useParams } from 'react-router-dom';
 import {
   Dialog,

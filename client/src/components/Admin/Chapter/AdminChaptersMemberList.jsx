@@ -8,7 +8,7 @@ import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { MultiSelect } from '@/components/ui/MultiSelect';
+import { MultiSelect } from '@/components/ui/multiSelect';
 import AddMemberSearchDialog from './AddMemberSearchDialog';
 import SearchMembers from './SearchMembers';
 import {

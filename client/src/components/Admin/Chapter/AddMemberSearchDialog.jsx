@@ -9,7 +9,7 @@ import debounce from 'lodash.debounce';
 import { axiosInstance } from '../../../utils/config';
 import { useParams } from 'react-router-dom';
 import { DatePicker } from '@/components/ui/datepicker';
-import { MultiSelect } from '@/components/ui/MultiSelect';
+import { MultiSelect } from '@/components/ui/multiSelect';
 import { Separator } from '@/components/ui/separator';
 import { Card } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
