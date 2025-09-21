@@ -10,6 +10,7 @@ async function getTermsByChapter(req, res) {
         }
 
         let chapter = await chapterModel.findChapterById(chapterId);
+        
         if (!chapter) {
             chapter = await chapterModel.findChapterBySlug(chapterId);
             if (!chapter) {
@@ -17,8 +18,14 @@ async function getTermsByChapter(req, res) {
             }
             chapterId = chapter.chapterId;
         }
-            
+        console.log(`finding term of the chapter`);
+        console.log({ chapter });
+
+        console.log(chapterId);
+        
+        
         const terms = await termModel.getTermsByChapterId(chapterId);
+        console.log({ terms });
         res.json(terms);
     } catch (error) {
         res.status(500).json({ error: 'Failed to fetch terms', details: error.message });

@@ -1,4 +1,5 @@
 import React from 'react';
+import { formatCurrencyINR } from '../../../utils/currencyUtility';
 
 interface FeeApprovalDashboardProps {
   metaData: {
@@ -10,15 +11,6 @@ interface FeeApprovalDashboardProps {
   };
 }
 
-const formatter = new Intl.NumberFormat('en-IN', {
-  style: 'currency',
-  currency: 'INR',
-  minimumFractionDigits: 0,
-  maximumFractionDigits: 2,
-  notation: 'compact',
-  compactDisplay: 'long',
-});
-
 const FeeApprovalDashboard: React.FC<FeeApprovalDashboardProps> = ({ metaData }) => {
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
@@ -27,7 +19,7 @@ const FeeApprovalDashboard: React.FC<FeeApprovalDashboardProps> = ({ metaData })
           Total Collected
         </p>
         <p className="text-lg font-semibold dark:text-white">
-          {formatter.format(metaData.totalCollected)}
+          {formatCurrencyINR(metaData.totalCollected)}
         </p>
       </div>
       <div className="bg-yellow-100 dark:bg-yellow-700 p-4 rounded-md shadow">
@@ -35,7 +27,7 @@ const FeeApprovalDashboard: React.FC<FeeApprovalDashboardProps> = ({ metaData })
           Pending Approvals
         </p>
         <p className="text-lg font-semibold dark:text-white">
-          {formatter.format(metaData.pendingAmount)}
+          {formatCurrencyINR(metaData.pendingAmount)}
         </p>
       </div>
       <div className="bg-green-100 dark:bg-green-700 p-4 rounded-md shadow">
@@ -43,7 +35,7 @@ const FeeApprovalDashboard: React.FC<FeeApprovalDashboardProps> = ({ metaData })
           Approved Fees
         </p>
         <p className="text-lg font-semibold dark:text-white">
-          {formatter.format(metaData.approvedAmount)}
+          {formatCurrencyINR(metaData.approvedAmount)}
         </p>
       </div>
       <div className="bg-blue-100 dark:bg-blue-700 p-4 rounded-md shadow">
@@ -51,7 +43,7 @@ const FeeApprovalDashboard: React.FC<FeeApprovalDashboardProps> = ({ metaData })
           Transferred to Chapter
         </p>
         <p className="text-lg font-semibold dark:text-white">
-          {formatter.format(metaData.totalTransferredToChapter)}
+          {formatCurrencyINR(metaData.totalTransferredToChapter)}
         </p>
       </div>
     </div>

@@ -479,8 +479,8 @@ model receiver_chapter_transactions {
   senderName        String   @db.VarChar(255)
   approvedById      String?  @db.VarChar(255)
   approvedByName    String?  @db.VarChar(255)
-  payableAmount     Decimal  @db.Decimal(10, 2)
-  transferredAmount Decimal  @db.Decimal(10, 2)
+  payableAmount     BigInt?
+  transferredAmount BigInt?
   status            String?  @default("pending") @db.VarChar(255)
   createdAt         DateTime @default(now()) @db.Timestamp(0)
   updatedAt         DateTime @default(now()) @db.Timestamp(0)

@@ -2,18 +2,30 @@
 const db = require("../../config/db");
 
 const getCurrentReceivers = async (chapterId, date) => {
-  return db("fee_receivers")
-    .where("chapterId", chapterId)
-    .andWhere("enableDate", "<=", date)
-    .andWhere("disableDate", ">=", date)
-    .select("*");
+  return db("fee_receivers as fr")
+    .leftJoin("members as m", "fr.memberId", "m.memberId")
+    .where("fr.chapterId", chapterId)
+    .andWhere("fr.enableDate", "<=", date)
+    .andWhere("fr.disableDate", ">=", date)
+    .select(
+      "fr.*", 
+      "m.firstName", 
+      "m.lastName",
+      db.raw("CONCAT(m.firstName, ' ', COALESCE(m.lastName, '')) as memberName")
+    );
 };
 
 const getCashReceivers = async (chapterId) => {
-  return db("fee_receivers")
-    .where("paymentType", "cash")
-    .andWhere("chapterId", chapterId)
-    .select("*");
+  return db("fee_receivers as fr")
+    .leftJoin("members as m", "fr.memberId", "m.memberId")
+    .where("fr.paymentType", "cash")
+    .andWhere("fr.chapterId", chapterId)
+    .select(
+      "fr.*", 
+      "m.firstName", 
+      "m.lastName",
+      db.raw("CONCAT(m.firstName, ' ', COALESCE(m.lastName, '')) as memberName")
+    );
 };
 
 const addCashReceiver = async (data) => {
@@ -33,10 +45,16 @@ const addCashReceiver = async (data) => {
 };
 
 const getQRReceivers = async (chapterId) => {
-  return db("fee_receivers")
-    .where("paymentType", "online")
-    .andWhere("chapterId", chapterId)
-    .select("*");
+  return db("fee_receivers as fr")
+    .leftJoin("members as m", "fr.memberId", "m.memberId")
+    .where("fr.paymentType", "online")
+    .andWhere("fr.chapterId", chapterId)
+    .select(
+      "fr.*", 
+      "m.firstName", 
+      "m.lastName",
+      db.raw("CONCAT(m.firstName, ' ', COALESCE(m.lastName, '')) as memberName")
+    );
 };
 
 const addQRReceiver = async (data) => {
@@ -61,12 +79,18 @@ const addQRReceiver = async (data) => {
 const getAmountCollected = async (chapterId, date) => {
   const payments = await db("transactions as t")
     .join("packages as p", "t.packageId", "p.packageId")
+    .leftJoin("fee_receivers as fr", "t.paymentReceivedById", "fr.receiverId")
+    .leftJoin("members as m", "fr.memberId", "m.memberId")
     .where({ "p.chapterId": chapterId, "t.status": "approved" })
     .select(
       db.raw("t.paymentReceivedById as receiverId"),
-      db.raw("SUM(t.paidAmount) as totalAmountCollected")
+      db.raw("SUM(t.paidAmount) as totalAmountCollected"),
+      "m.firstName",
+      "m.lastName",
+      db.raw("CONCAT(m.firstName, ' ', COALESCE(m.lastName, '')) as memberName"),
+      "fr.receiverName"
     )
-    .groupBy("receiverId");
+    .groupBy("receiverId", "m.firstName", "m.lastName", "fr.receiverName");
   return payments;
 };
 const deleteCashReceiver = async (chapterId, receiverId) => {

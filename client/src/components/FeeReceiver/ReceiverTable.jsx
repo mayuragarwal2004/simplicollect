@@ -68,7 +68,7 @@ const ReceiverTable = ({
           <TableHeader>
             <TableRow>
               <TableHead>Receiver Name</TableHead>
-              <TableHead>Member ID</TableHead>
+              <TableHead>Member Name</TableHead>
               {isOnlineReceiver && (
                 <TableHead>QR Image</TableHead>
               )}
@@ -88,7 +88,7 @@ const ReceiverTable = ({
                   {receiver.receiverName}
                 </TableCell>
                 <TableCell className="text-muted-foreground">
-                  {receiver.memberId}
+                  {receiver.memberName}
                 </TableCell>
                 {isOnlineReceiver && (
                   <TableCell>
