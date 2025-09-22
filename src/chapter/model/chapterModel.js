@@ -19,6 +19,7 @@ const getAllChapters = async (memberId) => {
     .join("organisations", "chapters.organisationId", "organisations.organisationId")
     .joinRaw("JOIN roles ro ON FIND_IN_SET(ro.roleId, member_chapter_mapping.roleIds) > 0")
     .where("member_chapter_mapping.memberId", memberId)
+    .where("member_chapter_mapping.status", "joined")
     .select(
       "chapters.*",
       "organisations.organisationName",
