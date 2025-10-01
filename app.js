@@ -1,23 +1,23 @@
 const path = require("path");
 const express = require("express");
 const cors = require("cors");
-const authRoutes = require("./src/authentication/route/authRoutes");
-const visitorRoutes = require("./src/visitor/route/visitorRoutes");
-const chapterRoutes = require("./src/chapter/route/chapterRoutes");
-const memberRoutes = require("./src/member/route/memberRoutes");
-const rightsRoutes = require("./src/rights/route/rightsRoutes");
-const imageUploadRoutes = require("./src/imageUpload/route/imageUploadRoutes");
-const packageRoutes = require("./src/package/route/packageRoutes");
-const paymentRoutes = require("./src/payment/route/paymentRoutes");
-const feeReceiverRoutes = require("./src/feeReceiver/route/feeReceiverRoutes");
-const meetingRoutes = require("./src/meeting/route/meetingRoutes");
-const homepageRoutes = require("./src/homepage/route/homepageRoutes");
-const notificationRoutes = require("./src/notification/route/notificationRoutes");
-const contactRoutes = require("./src/contact/route/contactRoutes");
+const authRoutes = require("./src/routes/authentication/route/authRoutes");
+const visitorRoutes = require("./src/routes/visitor/route/visitorRoutes");
+const chapterRoutes = require("./src/routes/chapter/route/chapterRoutes");
+const memberRoutes = require("./src/routes/member/route/memberRoutes");
+const rightsRoutes = require("./src/routes/rights/route/rightsRoutes");
+const imageUploadRoutes = require("./src/routes/imageUpload/route/imageUploadRoutes");
+const packageRoutes = require("./src/routes/package/route/packageRoutes");
+const paymentRoutes = require("./src/routes/payment/route/paymentRoutes");
+const feeReceiverRoutes = require("./src/routes/feeReceiver/route/feeReceiverRoutes");
+const meetingRoutes = require("./src/routes/meeting/route/meetingRoutes");
+const homepageRoutes = require("./src/routes/homepage/route/homepageRoutes");
+const notificationRoutes = require("./src/routes/notification/route/notificationRoutes");
+const contactRoutes = require("./src/routes/contact/route/contactRoutes");
 
 const { authenticateToken, AuthenticateAdmin } = require("./src/middlewares/authMiddleware");
-require('./src/feeReceiver/cron/pendingRequestNotifier');
-require('./src/homepage/cron/statisticsCache');
+require('./src/routes/feeReceiver/cron/pendingRequestNotifier');
+require('./src/routes/homepage/cron/statisticsCache');
 const PORT = process.env.PORT || 5000;
 
 const app = express();
@@ -59,21 +59,21 @@ app.use("/api/packages", authenticateToken, packageRoutes);
 app.use("/api/payment", authenticateToken, paymentRoutes);
 app.use("/api/feeReceiver", authenticateToken, feeReceiverRoutes);
 app.use("/api/meetings", authenticateToken, meetingRoutes);
-app.use("/api/profile", authenticateToken, require("./src/profile/route/profileRoutes"));
+app.use("/api/profile", authenticateToken, require("./src/routes/profile/route/profileRoutes"));
 app.use("/api/notifications", authenticateToken, notificationRoutes);
 app.use("/api/contact", contactRoutes);
-app.use("/api/report",authenticateToken, require("./src/report/route/reportRoutes"));
-app.use("/api/term", authenticateToken, require("./src/term/route/termRoutes"));
-app.use("/api/chapter-payment", authenticateToken, require("./src/chapterPayment/route/chapterPaymentRoutes"));
-app.use("/api/visitor-history",authenticateToken, require("./src/visitorHistory/route/visitorHistoryRoutes"));
+app.use("/api/report",authenticateToken, require("./src/routes/report/route/reportRoutes"));
+app.use("/api/term", authenticateToken, require("./src/routes/term/route/termRoutes"));
+app.use("/api/chapter-payment", authenticateToken, require("./src/routes/chapterPayment/route/chapterPaymentRoutes"));
+app.use("/api/visitor-history",authenticateToken, require("./src/routes/visitorHistory/route/visitorHistoryRoutes"));
 
 // admin routes
-// app.use("/api/organisations", authenticateToken, require("./src/organisation/route/adminOrganisationRoutes"));
-app.use("/api/admin/organisations", authenticateToken, AuthenticateAdmin, require("./src/organisation/route/adminOrganisationRoutes"));
-app.use("/api/admin/chapters", require("./src/chapter/route/adminChapterRoutes"));
-app.use("/api/admin/chapter-member-list", authenticateToken, AuthenticateAdmin, require("./src/chapter/route/adminChapterMemberListRoutes"));
-app.use("/api/admin/members", authenticateToken, AuthenticateAdmin, require("./src/member/route/adminMemberRoutes"));
-app.use("/api/clusters", authenticateToken, AuthenticateAdmin, require("./src/cluster/route/clusterRoutes"));
+// app.use("/api/organisations", authenticateToken, require("./src/routes/organisation/route/adminOrganisationRoutes"));
+app.use("/api/admin/organisations", authenticateToken, AuthenticateAdmin, require("./src/routes/organisation/route/adminOrganisationRoutes"));
+app.use("/api/admin/chapters", require("./src/routes/chapter/route/adminChapterRoutes"));
+app.use("/api/admin/chapter-member-list", authenticateToken, AuthenticateAdmin, require("./src/routes/chapter/route/adminChapterMemberListRoutes"));
+app.use("/api/admin/members", authenticateToken, AuthenticateAdmin, require("./src/routes/member/route/adminMemberRoutes"));
+app.use("/api/clusters", authenticateToken, AuthenticateAdmin, require("./src/routes/cluster/route/clusterRoutes"));
 
 app.use("/api/*", (req, res) => {
   res.status(404).send("Not Found - Please check the URL and try again");
