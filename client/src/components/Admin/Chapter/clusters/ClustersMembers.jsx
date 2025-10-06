@@ -3,8 +3,14 @@ import { axiosInstance } from '@/utils/config';
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Save } from 'lucide-react';
+import { Search, Save, ChevronDown } from 'lucide-react';
 import { toast } from 'react-toastify';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Table,
   TableBody,
@@ -19,13 +25,33 @@ const ClustersMembers = ({ clusters, chapterSlug }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [memberClusters, setMemberClusters] = useState({});
   const [hasChanges, setHasChanges] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     fetchMembers();
   }, [chapterSlug]);
 
+  useEffect(() => {
+    // Re-initialize memberClusters when clusters change
+    if (members.length > 0 && clusters.length > 0) {
+      const mapping = {};
+      members.forEach(member => {
+        mapping[member.memberId] = {};
+        clusters.forEach(cluster => {
+          // Ensure both values are strings for comparison
+          const memberClusterId = member.clusterId ? String(member.clusterId) : null;
+          const clusterIdToCompare = String(cluster.clusterId);
+          mapping[member.memberId][cluster.clusterId] = memberClusterId === clusterIdToCompare;
+        });
+      });
+      setMemberClusters(mapping);
+    }
+  }, [clusters, members]);
+
   const fetchMembers = async () => {
     try {
+      setIsLoading(true);
       const response = await axiosInstance.get(`/api/member/search/chapter/${chapterSlug}?query=${searchTerm}&includeWithoutCluster=true`);
       setMembers(response.data);
       
@@ -34,12 +60,18 @@ const ClustersMembers = ({ clusters, chapterSlug }) => {
       response.data.forEach(member => {
         mapping[member.memberId] = {};
         clusters.forEach(cluster => {
-          mapping[member.memberId][cluster.clusterId] = member.clusterId === cluster.clusterId;
+          // Ensure both values are strings for comparison
+          const memberClusterId = member.clusterId ? String(member.clusterId) : null;
+          const clusterIdToCompare = String(cluster.clusterId);
+          mapping[member.memberId][cluster.clusterId] = memberClusterId === clusterIdToCompare;
         });
       });
       setMemberClusters(mapping);
+      setHasChanges(false); // Reset changes flag when fetching fresh data
     } catch (error) {
       toast.error('Failed to fetch members');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -66,8 +98,44 @@ const ClustersMembers = ({ clusters, chapterSlug }) => {
     });
   };
 
+  const handleSelectAllForCluster = (clusterId) => {
+    setMemberClusters(prev => {
+      const updated = { ...prev };
+      
+      // Assign all filtered members to this cluster
+      filteredMembers.forEach(member => {
+        if (updated[member.memberId]) {
+          // Uncheck all other clusters for this member
+          Object.keys(updated[member.memberId]).forEach(cId => {
+            updated[member.memberId][cId] = cId === clusterId;
+          });
+        }
+      });
+      
+      setHasChanges(true);
+      return updated;
+    });
+  };
+
+  const handleClearAllForCluster = (clusterId) => {
+    setMemberClusters(prev => {
+      const updated = { ...prev };
+      
+      // Remove all filtered members from this cluster
+      filteredMembers.forEach(member => {
+        if (updated[member.memberId]) {
+          updated[member.memberId][clusterId] = false;
+        }
+      });
+      
+      setHasChanges(true);
+      return updated;
+    });
+  };
+
   const saveChanges = async () => {
     try {
+      setIsSaving(true);
       const updates = [];
       
       Object.keys(memberClusters).forEach(memberId => {
@@ -98,6 +166,8 @@ const ClustersMembers = ({ clusters, chapterSlug }) => {
       fetchMembers();
     } catch (error) {
       toast.error('Failed to update member assignments');
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -105,6 +175,12 @@ const ClustersMembers = ({ clusters, chapterSlug }) => {
     member.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     member.phone?.includes(searchTerm)
   );
+
+  const getClusterMemberCount = (clusterId) => {
+    return filteredMembers.filter(member => 
+      memberClusters[member.memberId]?.[clusterId]
+    ).length;
+  };
 
   return (
     <div className="space-y-4">
@@ -123,9 +199,9 @@ const ClustersMembers = ({ clusters, chapterSlug }) => {
           Search
         </Button>
         {hasChanges && (
-          <Button onClick={saveChanges}>
+          <Button onClick={saveChanges} disabled={isSaving}>
             <Save className="mr-2 h-4 w-4" />
-            Save Changes
+            {isSaving ? 'Saving...' : 'Save Changes'}
           </Button>
         )}
       </div>
@@ -138,41 +214,81 @@ const ClustersMembers = ({ clusters, chapterSlug }) => {
               <TableHead className="w-32">Phone</TableHead>
               {clusters.map(cluster => (
                 <TableHead key={cluster.clusterId} className="text-center min-w-32">
-                  {cluster.clusterName}
+                  <div className="space-y-2 flex flex-col items-center">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button 
+                          variant="ghost" 
+                          className="font-medium p-0 h-auto hover:bg-gray-100 flex items-center gap-1"
+                        >
+                          {cluster.clusterName}
+                          <ChevronDown className="h-3 w-3" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="center">
+                        <DropdownMenuItem 
+                          onClick={() => handleSelectAllForCluster(cluster.clusterId)}
+                          className="cursor-pointer"
+                        >
+                          Select All
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          onClick={() => handleClearAllForCluster(cluster.clusterId)}
+                          className="cursor-pointer text-red-600 focus:text-red-600"
+                        >
+                          Unselect All
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                    <div className="text-xs text-gray-300">
+                      ({getClusterMemberCount(cluster.clusterId)} members)
+                    </div>
+                  </div>
                 </TableHead>
               ))}
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredMembers.map(member => (
-              <TableRow key={member.memberId}>
-                <TableCell className="font-medium">
-                  {member.name}
+            {isLoading ? (
+              <TableRow>
+                <TableCell colSpan={clusters.length + 2} className="text-center py-8">
+                  <div className="flex items-center justify-center space-x-2">
+                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
+                    <span>Loading members...</span>
+                  </div>
                 </TableCell>
-                <TableCell>
-                  {member.phone}
-                </TableCell>
-                {clusters.map(cluster => (
-                  <TableCell key={cluster.clusterId} className="text-center">
-                    <Checkbox
-                      checked={memberClusters[member.memberId]?.[cluster.clusterId] || false}
-                      onCheckedChange={(checked) => 
-                        handleClusterToggle(member.memberId, cluster.clusterId, checked)
-                      }
-                    />
-                  </TableCell>
-                ))}
               </TableRow>
-            ))}
+            ) : filteredMembers.length > 0 ? (
+              filteredMembers.map(member => (
+                <TableRow key={member.memberId}>
+                  <TableCell className="font-medium">
+                    {member.name}
+                  </TableCell>
+                  <TableCell>
+                    {member.phone}
+                  </TableCell>
+                  {clusters.map(cluster => (
+                    <TableCell key={cluster.clusterId} className="text-center">
+                      <Checkbox
+                        checked={Boolean(memberClusters[member.memberId]?.[cluster.clusterId])}
+                        onCheckedChange={(checked) => 
+                          handleClusterToggle(member.memberId, cluster.clusterId, checked)
+                        }
+                      />
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={clusters.length + 2} className="text-center py-8 text-gray-500">
+                  No members found. Try adjusting your search criteria.
+                </TableCell>
+              </TableRow>
+            )}
           </TableBody>
         </Table>
       </div>
-
-      {filteredMembers.length === 0 && (
-        <div className="text-center py-8 text-gray-500">
-          No members found. Try adjusting your search criteria.
-        </div>
-      )}
     </div>
   );
 };
