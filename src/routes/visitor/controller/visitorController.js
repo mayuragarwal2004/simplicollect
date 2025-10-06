@@ -47,11 +47,24 @@ const addVisitor = async (req, res) => {
 
 // Add feedback to an existing visitor
 const addFeedback = async (req, res) => {
-  const { visitorId, ...feedbackData } = req.body;
+  const feedbackData = req.body;
+  const { mobileNumber } = feedbackData;
+  
   try {
-    await visitorModel.addFeedback(visitorId, feedbackData);
+    // Find the visitor by phone number within the last 48 hours
+    const visitors = await visitorModel.findVisitorByPhoneAndTime(mobileNumber);
+    
+    if (visitors.length === 0) {
+      return res.status(404).json({ message: "Visitor not found within the last 48 hours" });
+    }
+    
+    const visitorId = visitors[0].visitorId;
+    
+    // Remove mobileNumber from feedbackData since we don't want to update it
+    const { mobileNumber: _, ...updateData } = feedbackData;
+    
+    await visitorModel.addFeedback(visitorId, updateData);
     res.json({ message: "Feedback added successfully" });
-    meetingId: feedbackData.meetingId 
 
   } catch (error) {
     res.status(500).json({ error: error.message });

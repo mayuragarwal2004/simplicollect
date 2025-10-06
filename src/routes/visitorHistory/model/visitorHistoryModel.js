@@ -1,7 +1,13 @@
 const db = require("../../../config/db");
+const { v4: uuidv4 } = require('uuid');
 
 const addHistory=async(data)=>{
-    return db("visitorHistory").insert({...data,createdAt:new Date()});
+    const historyData = {
+        historyId: uuidv4(),
+        ...data,
+        createdAt: new Date()
+    };
+    return db("visitorHistory").insert(historyData);
 }
 const getHistoryByVisitorId=async(visitorId)=>{
     return db("visitorHistory").where("visitorId", visitorId).orderBy("createdAt", "desc");

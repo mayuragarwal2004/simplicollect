@@ -251,6 +251,7 @@ model members {
   otp_verifications                                    otp_verifications[]
   push_subscriptions                                   push_subscriptions[]
   qrreceivers                                          qrreceivers[]
+  visitorHistory                                       visitorHistory[]
 }
 
 model members_log {
@@ -595,6 +596,9 @@ model visitors {
   paymentType             visitors_paymentType?
   createdAt               DateTime                @default(now()) @db.Timestamp(0)
 
+  // Relations
+  visitorHistory          visitorHistory[]
+
   @@index([assignedMemberId], map: "assignedMemberId")
   @@index([chapterId], map: "chapterId")
   @@index([meetingId], map: "fk_visitors_meetings")
@@ -695,6 +699,25 @@ enum chapters_meetingPeriodicity {
   quaterly
   six_monthly @map("6-monthly")
   yearly
+}
+
+model visitorHistory {
+  historyId String   @id @default(uuid()) @db.VarChar(255)
+  visitorId String   @db.VarChar(255)
+  memberId  String?  @db.VarChar(255)
+  type      String   @db.VarChar(50)  // call, note, email, whatsapp
+  to        String?  @db.VarChar(255) // phone number or email
+  title     String?  @db.VarChar(255)
+  content   String   @db.Text
+  createdAt DateTime @default(now()) @db.Timestamp(0)
+  updatedAt DateTime? @db.Timestamp(0)
+
+  // Foreign key relations
+  visitors visitors @relation(fields: [visitorId], references: [visitorId], onDelete: Cascade, onUpdate: NoAction)
+  members  members? @relation(fields: [memberId], references: [memberId], onDelete: SetNull, onUpdate: NoAction)
+
+  @@index([visitorId], map: "visitorId")
+  @@index([memberId], map: "memberId")
 }
 
 enum visitors_visitorStatus {

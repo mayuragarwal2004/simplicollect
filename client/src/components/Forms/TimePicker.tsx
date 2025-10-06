@@ -1,9 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { TextField } from '@mui/material';
-// import { TimePicker } from '@mui/x-date-pickers/TimePicker';
-// import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-// import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import { format } from 'date-fns';
 
 interface TimePickerProps {
   label?: string;
@@ -22,30 +17,42 @@ const MUI_TimePicker: React.FC<TimePickerProps> = ({
   initialValue = '',
   parentClassName = '',
 }) => {
-  const [selectedTime, setSelectedTime] = useState<Date | null>(initialValue ? new Date(`1970-01-01T${initialValue}:00`) : null);
+  const [selectedTime, setSelectedTime] = useState<string>(initialValue);
 
-  const handleTimeChange = (time: Date | null) => {
+  const handleTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const time = e.target.value;
     setSelectedTime(time);
-    if (time && onTimeChange) {
-      const formattedTime = format(time, timeFormat === '24' ? 'HH:mm' : 'hh:mm a');
-      onTimeChange(formattedTime);
+    
+    if (onTimeChange) {
+      if (timeFormat === '12') {
+        // Convert 24-hour format to 12-hour format
+        const [hours, minutes] = time.split(':');
+        const hour = parseInt(hours, 10);
+        const ampm = hour >= 12 ? 'PM' : 'AM';
+        const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+        onTimeChange(`${displayHour}:${minutes} ${ampm}`);
+      } else {
+        onTimeChange(time);
+      }
     }
   };
 
   return (
-    <div className={`${parentClassName}`}>
+    <div className={`mb-4.5 ${parentClassName}`}>
       {label && (
-        <label className="mb-3 mt-5 block text-black dark:text-white">
+        <label className="mb-2.5 mt-5 block text-black dark:text-white">
           {label}
         </label>
       )}
-      {/* <LocalizationProvider dateAdapter={AdapterDateFns}>
-        <TimePicker
-          label={placeholder}
+      <div className="relative">
+        <input
+          type="time"
           value={selectedTime}
           onChange={handleTimeChange}
+          placeholder={placeholder}
+          className="w-full rounded border border-stroke bg-transparent py-3 px-5 outline-none transition focus:border-primary active:border-primary dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary text-black dark:text-white"
         />
-      </LocalizationProvider> */}
+      </div>
     </div>
   );
 };
