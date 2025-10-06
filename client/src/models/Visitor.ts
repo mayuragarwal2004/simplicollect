@@ -18,6 +18,8 @@ export const columnConfig: ColumnConfig = {
   classification: { displayName: 'Classification', hidden: false },
 
   paymentAcceptedMemberId: { displayName: 'Payment Accepted By', hidden: true }, // Hidden - DataBase Features
+  paymentAcceptedByFirstName: { displayName: 'Payment Accepted By First Name', hidden: true }, // Hidden - DataBase Features  
+  paymentAcceptedByLastName: { displayName: 'Payment Accepted By Last Name', hidden: true }, // Hidden - DataBase Features
   paymentImageLink: { displayName: 'Payment Image', hidden: false },
   paymentAmount: { displayName: 'Payment Amount', hidden: false },
   paymentRecordedDate: { displayName: 'Payment Date', hidden: false },

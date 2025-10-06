@@ -42,7 +42,13 @@ interface InfoItemProps {
 const InfoItem: React.FC<InfoItemProps> = ({ icon, label, value, isHighlight = false }) => {
   const displayValue = React.useMemo(() => {
     if (value === null || value === undefined) return 'Not provided';
-    if (typeof value === 'boolean') return value ? 'Yes' : 'No';
+    if (typeof value === 'boolean') {
+      return value === true ? 'Yes' : 'No';
+    }
+    // Handle string boolean values
+    if (typeof value === 'string' && (value === 'Yes' || value === 'No')) {
+      return value;
+    }
     return String(value);
   }, [value]);
 
@@ -214,16 +220,6 @@ const ViewVisitor: React.FC<ViewVisitorProps> = ({
                   label="Classification" 
                   value={selectedVisitor.classification} 
                 />
-                <InfoItem 
-                  icon={<MapPin className="w-4 h-4" />} 
-                  label="Industry" 
-                  value={selectedVisitor.industry} 
-                />
-                <InfoItem 
-                  icon={<MessageSquare className="w-4 h-4" />} 
-                  label="How Heard About BNI" 
-                  value={selectedVisitor.heardAboutBni} 
-                />
               </CardContent>
             </Card>
           </div>
@@ -254,23 +250,20 @@ const ViewVisitor: React.FC<ViewVisitorProps> = ({
               <div className="grid gap-2 md:grid-cols-3">
                 <div className="flex items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-gray-800/50">
                   <span className="text-sm font-medium">Feel Welcome</span>
-                  {selectedVisitor.feelWelcome ? 
+                  {selectedVisitor.feelWelcome === "Yes" ? 
                     <Badge variant="default" className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100">Yes</Badge> : 
-                    <Badge variant="secondary">No</Badge>
+                    selectedVisitor.feelWelcome === "No" ?
+                    <Badge variant="destructive">No</Badge> :
+                    <Badge variant="outline" className="text-gray-500">Not answered</Badge>
                   }
                 </div>
                 <div className="flex items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-gray-800/50">
                   <span className="text-sm font-medium">Visited BNI Before</span>
-                  {selectedVisitor.visitedBniBefore ? 
+                  {selectedVisitor.visitedBniBefore === "Yes" ? 
                     <Badge variant="default" className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100">Yes</Badge> : 
-                    <Badge variant="secondary">No</Badge>
-                  }
-                </div>
-                <div className="flex items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-gray-800/50">
-                  <span className="text-sm font-medium">EOI Filled</span>
-                  {selectedVisitor.eoiFilled ? 
-                    <Badge variant="default" className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100">Yes</Badge> : 
-                    <Badge variant="secondary">No</Badge>
+                    selectedVisitor.visitedBniBefore === "No" ?
+                    <Badge variant="destructive">No</Badge> :
+                    <Badge variant="outline" className="text-gray-500">Not answered</Badge>
                   }
                 </div>
               </div>
@@ -310,7 +303,11 @@ const ViewVisitor: React.FC<ViewVisitorProps> = ({
                 <InfoItem 
                   icon={<Users className="w-4 h-4" />} 
                   label="Accepted By" 
-                  value={selectedVisitor.paymentAcceptedMemberId || 'Pending'} 
+                  value={
+                    selectedVisitor.paymentAcceptedMemberId 
+                      ? `${selectedVisitor.paymentAcceptedByFirstName || ''} ${selectedVisitor.paymentAcceptedByLastName || ''}`.trim() || selectedVisitor.paymentAcceptedMemberId
+                      : 'Pending'
+                  } 
                 />
               </div>
 

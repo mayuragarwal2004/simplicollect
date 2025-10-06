@@ -582,8 +582,8 @@ model visitors {
   feedbackComments        String?                 @db.Text
   nextStep                String?                 @db.Text
   arrivalTime             DateTime?               @db.Time(0)
-  feelWelcome             Boolean?
-  visitedBniBefore        Boolean?
+  feelWelcome             String?                 @db.VarChar(10)
+  visitedBniBefore        String?                 @db.VarChar(10)
   referralGroup           Boolean?
   referralGroupExperience String?                 @db.Text
   eoiFilled               Boolean?                @default(false)

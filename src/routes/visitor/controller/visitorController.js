@@ -95,19 +95,41 @@ const verifyVisitorLink = async (req, res) => {
 };
 const visitorList = async (req, res) => {
   const { chapterId } = req.params;
-  const {meetingId,date,startDate,endDate} = req.query;
+  const {meetingId,date,startDate,endDate,sortBy,sortOrder} = req.query;
   try {
-    let query=db("visitors").where("chapterId",chapterId);
+    let query = db("visitors")
+      .leftJoin("members", "visitors.paymentAcceptedMemberId", "members.memberId")
+      .where("visitors.chapterId", chapterId)
+      .select(
+        "visitors.*",
+        "members.firstName as paymentAcceptedByFirstName",
+        "members.lastName as paymentAcceptedByLastName"
+      );
+    
     if(meetingId){
-      query=query.where("meetingId",meetingId);
+      query=query.where("visitors.meetingId",meetingId);
     }
     if(startDate&&endDate){
-      query=query.whereBeetween("chapterVisitDate",[startDate,endDate]);
+      query=query.whereBetween("visitors.chapterVisitDate",[startDate,endDate]);
     }
     if(date){
-      
+      query=query.where("visitors.chapterVisitDate",date);
     }
-    const visitors=await query.select("*");
+
+    // Add sorting
+    if(sortBy && sortOrder) {
+      const validSortColumns = ['chapterVisitDate', 'firstName', 'lastName', 'paymentRecordedDate', 'createdAt'];
+      const validSortOrders = ['asc', 'desc'];
+      
+      if(validSortColumns.includes(sortBy) && validSortOrders.includes(sortOrder)) {
+        query = query.orderBy(`visitors.${sortBy}`, sortOrder);
+      }
+    } else {
+      // Default sorting by visit date descending
+      query = query.orderBy('visitors.chapterVisitDate', 'desc');
+    }
+    
+    const visitors=await query;
     res.json(visitors);
   } catch (error) {
     res.status(500).json({ error: error.message });
