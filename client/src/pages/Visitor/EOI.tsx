@@ -101,9 +101,12 @@ const EOI: React.FC = () => {
 
         // Then fetch meetings for this chapter
         const meetingsResponse = await axiosInstance(`/api/visitor/getChapterMeetings/${chapterResult.chapterId}`);
-        const meetingsResult = await meetingsResponse.json();
+        const meetingsResult = await meetingsResponse.data;
+
+        console.log({ meetingsResponse, meetingsResult });
         
-        if (meetingsResponse.ok) {
+        
+        if (meetingsResponse.status === 200) {
           const formatMeetingDate = (dateString: string) => {
             const date = new Date(dateString);
             return date.toLocaleDateString('en-US', {

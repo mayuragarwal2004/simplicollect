@@ -3,11 +3,13 @@ import React, { SelectHTMLAttributes } from 'react';
 interface SelectGroupOneProps extends SelectHTMLAttributes<HTMLSelectElement> {
   label?: string;
   name?: string;
-  options: Array<{ label: string; value: string }>;
+  options: Array<{ label: string; value: string; disabled?: boolean }>;
   placeholder?: string;
   parentClassName?: string;
   value: string; // Accepts selected value from props
   onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void; // External change handler
+  status?: 'error' | 'success' | 'default';
+  errorMessage?: string;
 }
 
 const SelectGroupOne: React.FC<SelectGroupOneProps> = ({
@@ -19,10 +21,24 @@ const SelectGroupOne: React.FC<SelectGroupOneProps> = ({
   parentClassName = '',
   value,
   onChange,
+  status = 'default',
+  errorMessage = '',
   ...props
 }) => {
   // Determine if an option is selected based on the value prop
   const isOptionSelected = value !== '';
+
+  // Determine border color based on status
+  const getBorderColor = () => {
+    switch (status) {
+      case 'error':
+        return 'border-red-500 focus:border-red-500 active:border-red-500';
+      case 'success':
+        return 'border-green-500 focus:border-green-500 active:border-green-500';
+      default:
+        return 'border-stroke focus:border-primary active:border-primary dark:border-form-strokedark dark:focus:border-primary';
+    }
+  };
 
   return (
     <div className={`mb-4.5 ${parentClassName}`}>
@@ -36,7 +52,7 @@ const SelectGroupOne: React.FC<SelectGroupOneProps> = ({
           value={value}
           name={name}
           onChange={onChange} // Use external onChange handler
-          className={`relative z-20 w-full appearance-none rounded border border-stroke bg-transparent py-3 px-5 outline-none transition focus:border-primary active:border-primary dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary ${
+          className={`relative z-20 w-full appearance-none rounded border bg-transparent py-3 px-5 outline-none transition dark:bg-form-input ${getBorderColor()} ${
             isOptionSelected ? 'text-black dark:text-white' : ''
           } ${className}`}
           {...props}
@@ -45,7 +61,12 @@ const SelectGroupOne: React.FC<SelectGroupOneProps> = ({
             {placeholder}
           </option>
           {options.map((option) => (
-            <option key={option.value} value={option.value} className="text-body dark:text-bodydark">
+            <option 
+              key={option.value} 
+              value={option.value} 
+              disabled={option.disabled} 
+              className="text-body dark:text-bodydark"
+            >
               {option.label}
             </option>
           ))}
@@ -70,6 +91,9 @@ const SelectGroupOne: React.FC<SelectGroupOneProps> = ({
           </svg>
         </span>
       </div>
+      {status === 'error' && errorMessage && (
+        <p className="text-red-500 text-sm mt-1">{errorMessage}</p>
+      )}
     </div>
   );
 };

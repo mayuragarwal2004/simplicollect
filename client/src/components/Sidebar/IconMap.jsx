@@ -1,4 +1,4 @@
-import { HandCoins, Settings, UserPen, Users, UsersRound, User, Layers, LayoutDashboard, Bell } from 'lucide-react';
+import { HandCoins, Settings, UserPen, Users, UsersRound, User, Layers, LayoutDashboard, Bell, Send } from 'lucide-react';
 import { Money, Article } from '@phosphor-icons/react';
 
 const iconMap = {
@@ -13,6 +13,7 @@ const iconMap = {
   Money: <Money size={32} />,
   Article: <Article size={32} />,
   Notifications: <Bell />,
+  Send: <Send />
 };
 
 export default iconMap;
