@@ -157,6 +157,17 @@ const PackageViewer = () => {
 
   const [changeMemberRights, setChangeMemberRights] = useState(false);
   const [changeDateRights, setChangeDateRights] = useState(false);
+  const [accordionOpen, setAccordionOpen] = useState(() => {
+    // Enhanced localStorage with error handling for mobile environments
+    try {
+      const stored = localStorage.getItem('packageViewer-additionalSettings-accordion');
+      return stored || '';
+    } catch (error) {
+      // Fallback for environments where localStorage might not be available
+      console.warn('localStorage not available:', error);
+      return '';
+    }
+  });
 
   useEffect(() => {
     if (memberData?.memberId && !selectedMember.value) {
@@ -225,6 +236,19 @@ const PackageViewer = () => {
     }
   }, [chapterData]);  
 
+  // Handle accordion state change and persist to localStorage
+  const handleAccordionChange = (value) => {
+    setAccordionOpen(value);
+    
+    // Enhanced localStorage with error handling for mobile environments
+    try {
+      localStorage.setItem('packageViewer-additionalSettings-accordion', value);
+    } catch (error) {
+      // Fallback for environments where localStorage might not be available
+      console.warn('localStorage write failed:', error);
+    }
+  };  
+
   return (
     <div className="rounded-sm border border-stroke bg-white p-3 shadow-default dark:border-strokedark dark:bg-boxdark sm:px-7.5 xl:pb-1">
       {/* Pending Payments Alert */}
@@ -245,7 +269,12 @@ const PackageViewer = () => {
             </p>
           </div>
           {(changeDateRights || changeMemberRights) && (
-            <Accordion type="single" collapsible>
+            <Accordion 
+              type="single" 
+              collapsible 
+              value={accordionOpen}
+              onValueChange={handleAccordionChange}
+            >
               <AccordionItem value="item-1">
                 <AccordionTrigger>Additional Settings</AccordionTrigger>
                 {/* add border */}

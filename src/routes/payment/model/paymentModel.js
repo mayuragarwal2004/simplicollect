@@ -1,13 +1,15 @@
 const db = require("../../../config/db");
 const { v4: uuidv4 } = require("uuid");
 
-const addTransaction = async (data) => {
-  return db("transactions").insert(data);
+const addTransaction = async (data, trx = null) => {
+  const query = trx ? trx("transactions") : db("transactions");
+  return query.insert(data);
 };
 
-const addPayment = async (newRecords) => {
+const addPayment = async (newRecords, trx = null) => {
   try {
-    const result = await db("members_meeting_mapping").insert(newRecords);
+    const query = trx ? trx("members_meeting_mapping") : db("members_meeting_mapping");
+    const result = await query.insert(newRecords);
     return result;
   } catch (error) {
     throw error;
@@ -162,9 +164,10 @@ const addBalance = async (balanceList, trx) => {
   }
 };
 
-const updateBalance = async (balanceList) => {
+const updateBalance = async (balanceList, trx = null) => {
   for (const { memberId, chapterId, balance } of balanceList) {
-    await db("member_chapter_mapping").where({ memberId, chapterId }).update({
+    const query = trx ? trx("member_chapter_mapping") : db("member_chapter_mapping");
+    await query.where({ memberId, chapterId }).update({
       balance, // Directly set balance
     });
   }

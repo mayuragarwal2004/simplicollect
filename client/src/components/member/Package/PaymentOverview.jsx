@@ -41,7 +41,7 @@ const PaymentOverview = ({
     },
     setPaymentData,
   } = usePaymentData();
-  const { chapterData } = useData();
+  const { memberData, chapterData } = useData();
 
   const [paymentDate] = useState(new Date().toLocaleDateString()); // Current date
   const [showMeetings, setShowMeetings] = useState(false); // Toggle meeting details
@@ -51,6 +51,10 @@ const PaymentOverview = ({
 
   const [amountPaid, setAmountPaid] = useState(selectedPackage.totalAmount); // Amount paid by the member
   const [minimumPayable, setMinimumPayable] = useState(0); // Minimum payable amount
+  const [autoApprove, setAutoApprove] = useState(() => {
+    // Default to true only if the receiver is the same as the current member
+    return selectedReceiverObject?.memberId === memberData?.memberId;
+  });
 
   useEffect(() => {
     if (selectedPackage.meetingIds && chapterMeetings) {
@@ -92,6 +96,18 @@ const PaymentOverview = ({
       }
     }
   }, [selectedReceiverObject, selectedPackage, feeReceiverSwitch]);
+
+  // Update auto-approve when receiver changes
+  useEffect(() => {
+    const shouldAutoApprove =
+      selectedReceiverObject?.memberId === memberData?.memberId;
+    setAutoApprove(shouldAutoApprove);
+    // Store auto-approve state in payment data
+    setPaymentData((prev) => ({
+      ...prev,
+      autoApprove: shouldAutoApprove,
+    }));
+  }, [selectedReceiverObject, memberData, setPaymentData]);
 
   useEffect(() => {
     if (chapterData) {
@@ -200,11 +216,38 @@ const PaymentOverview = ({
                 className="h-5" // Increased size of the switch
               />
               <Label className="text-lg">
-                {selectedReceiverObject?.receiverFeeOptionalMessage || 'Would you like to pay the receiver fee? (charges applicable)'}
+                {selectedReceiverObject?.receiverFeeOptionalMessage ||
+                  'Would you like to pay the receiver fee? (charges applicable)'}
               </Label>{' '}
               {/* Increased text size */}
             </div>
           )}
+
+        {/* Auto Approve Switch - Only show if receiver is the current member */}
+        {selectedReceiverObject?.memberId === memberData?.memberId && (
+          <div className="flex items-center space-x-4 my-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+            <Switch
+              checked={autoApprove}
+              onCheckedChange={(checked) => {
+                setAutoApprove(checked);
+                setPaymentData((prev) => ({
+                  ...prev,
+                  autoApprove: checked,
+                }));
+              }}
+              className="h-5"
+            />
+            <div>
+              <Label className="text-lg font-medium text-blue-800">
+                Auto Approve Payment
+              </Label>
+              <p className="text-sm text-blue-600">
+                (Payment will be automatically approved since you are the
+                receiver)
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* Meetings Included */}
         <div className="mb-4">
@@ -365,6 +408,7 @@ const PaymentOverview = ({
                   (parseInt(selectedPackage.totalAmount) || 0) +
                   (parseInt(receiverFeeAmount) || 0) +
                   (parseInt(platformFeeAmount) || 0),
+                autoApprove: autoApprove,
               }));
               setStep(3);
             }}

@@ -31,6 +31,7 @@ const PackageFinalAmountInput = ({ setStep, handlePackagePayModalClose }) => {
       platformFeeAmount,
       totalPayableAmount,
       selectedMemberId,
+      autoApprove,
     },
     fetchAllData,
   } = usePaymentData();
@@ -89,6 +90,7 @@ const PackageFinalAmountInput = ({ setStep, handlePackagePayModalClose }) => {
       paymentImageLink: paymentProofLink,
       paymentReceivedById: selectedReceiverObject?.memberId || '',
       paymentReceivedByName: selectedReceiverObject?.receiverName || '',
+      autoApprove: autoApprove || false, // Include auto-approve status
     };
     const response = await axiosInstance
       .post('/api/payment/addPayment', paymentDetails)

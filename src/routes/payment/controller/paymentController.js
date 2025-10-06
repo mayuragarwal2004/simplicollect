@@ -15,6 +15,7 @@ const addPayment = async (req, res) => {
   console.log({ check: req.user });
 
   const paymentDetails = req.body;
+  const { autoApprove } = paymentDetails; // Extract autoApprove flag
 
   const transactionTableData = {
     transactionId: uuidv4(),
@@ -24,7 +25,7 @@ const addPayment = async (req, res) => {
     transactionDate: new Date(),
     transactionType: paymentDetails.transactionType || "Package Payment",
     payableAmount: paymentDetails.payableAmount,
-    status: "pending",
+    status: autoApprove ? "approved" : "pending", // Set status based on autoApprove
     statusUpdateDate: new Date(),
 
     payableAmount: paymentDetails.payableAmount || 0,
@@ -46,6 +47,12 @@ const addPayment = async (req, res) => {
     paymentImageLink: paymentDetails.paymentImageLink || "",
     paymentReceivedById: paymentDetails.paymentReceivedById || "",
     paymentReceivedByName: paymentDetails.paymentReceivedByName || "",
+    
+    // Add approval details if auto-approved
+    ...(autoApprove && {
+      approvedById: memberId,
+      approvedByName: paymentDetails.paymentReceivedByName || "",
+    })
   };
   // make data to insert in db table of members_meeting_mapping
   const newRecords = [];
@@ -65,44 +72,82 @@ const addPayment = async (req, res) => {
   });
 
   try {
-    const result1 = await paymentModel.addTransaction(transactionTableData);
-    let result = null;
-    if (newRecords.length > 0) {
-      result = await paymentModel.addPayment(newRecords);
-    }
-
-    // Send notification to payment receiver if receiver ID is provided
-    if (paymentDetails.paymentReceivedById) {
-      try {
-        // Get sender member details for notification
-        const senderMember = await memberModel.findMemberById(memberId);
-        const senderName = senderMember ? `${senderMember.firstName} ${senderMember.lastName}` : 'Unknown Member';
-        
-        // Get chapter details for notification
-        const chapterQuery = await db('chapters').where('chapterId', paymentDetails.chapterId).first();
-        const chapterName = chapterQuery ? chapterQuery.chapterName : 'Unknown Chapter';
-
-        // Send notification to fee receiver
-        await sendPaymentReceivedNotification(
-          paymentDetails.paymentReceivedById,
-          {
-            ...paymentDetails,
-            transactionId: transactionTableData.transactionId,
-            paidAmount: paymentDetails.paidAmount
-          },
-          senderName,
-          chapterName
-        );
-      } catch (notificationError) {
-        console.error('Error sending payment notification:', notificationError);
-        // Don't fail the payment process if notification fails
+    // Use database transaction to ensure data consistency
+    await db.transaction(async (trx) => {
+      // Step 1: Add the transaction
+      const result1 = await paymentModel.addTransaction(transactionTableData, trx);
+      let result = null;
+      
+      // Step 2: Add meeting mappings if any
+      if (newRecords.length > 0) {
+        result = await paymentModel.addPayment(newRecords, trx);
       }
-    }
 
-    res.json({
-      message: "Payment added successfully",
-      transaction: result1,
-      payment: result,
+      // Step 3: If auto-approved, handle approval logic
+      if (autoApprove) {
+        // Set isPaid to true for auto-approved payments
+        await paymentModel.setIsPaid([transactionTableData.transactionId], trx);
+        
+        // Update member balance
+        if (transactionTableData.balanceAmount !== 0) {
+          const balanceUpdate = [{
+            memberId,
+            chapterId: paymentDetails.chapterId,
+            balance: transactionTableData.balanceAmount,
+          }];
+          await paymentModel.updateBalance(balanceUpdate, trx);
+        }
+      }
+
+      // Step 4: Send notifications
+      if (paymentDetails.paymentReceivedById) {
+        try {
+          // Get sender member details for notification
+          const senderMember = await memberModel.findMemberById(memberId);
+          const senderName = senderMember ? `${senderMember.firstName} ${senderMember.lastName}` : 'Unknown Member';
+          
+          // Get chapter details for notification
+          const chapterQuery = await db('chapters').where('chapterId', paymentDetails.chapterId).first();
+          const chapterName = chapterQuery ? chapterQuery.chapterName : 'Unknown Chapter';
+
+          if (autoApprove) {
+            // Send payment approved notification for auto-approved payments
+            await sendPaymentApprovedNotification(
+              memberId, // Send to the member who made the payment
+              {
+                transactionId: transactionTableData.transactionId,
+                paidAmount: paymentDetails.paidAmount,
+                chapterId: paymentDetails.chapterId
+              },
+              senderName, // Auto-approved by themselves
+              chapterName
+            );
+          } else {
+            // Send payment received notification to fee receiver
+            await sendPaymentReceivedNotification(
+              paymentDetails.paymentReceivedById,
+              {
+                ...paymentDetails,
+                transactionId: transactionTableData.transactionId,
+                paidAmount: paymentDetails.paidAmount
+              },
+              senderName,
+              chapterName
+            );
+          }
+        } catch (notificationError) {
+          console.error('Error sending payment notification:', notificationError);
+          // Don't fail the payment process if notification fails
+        }
+      }
+
+      // Return results
+      res.json({
+        message: autoApprove ? "Payment added and auto-approved successfully" : "Payment added successfully",
+        transaction: result1,
+        payment: result,
+        autoApproved: autoApprove || false,
+      });
     });
   } catch (error) {
     console.log(error);
