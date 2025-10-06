@@ -5,7 +5,8 @@ import { QRCodeCanvas } from 'qrcode.react';
 const ShareForm: React.FC = () => {
   const [copied, setCopied] = useState(false);
   const { chapterData } = useData();
-  const link = `http://${window.location.host}/eoi/${chapterData?.chapterSlug}`;
+  const protocol = window.location.protocol;
+  const link = `${protocol}//${window.location.host}/eoi/${chapterData?.chapterSlug}`;
   const qrRef = useRef<HTMLDivElement>(null);
 
   const handleCopy = () => {
