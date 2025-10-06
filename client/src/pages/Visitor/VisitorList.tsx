@@ -49,6 +49,8 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 
+import { DateRange as CalendarDateRange } from 'react-day-picker';
+
 type ViewMode = 'meeting' | 'date' | 'dateRange';
 type DateRange = { from?: Date; to?: Date };
 
@@ -261,7 +263,15 @@ const VisitorList: React.FC = () => {
       ]} />
       <Card className="p-6 shadow-default">
         <Dialog open={backDropOpen} onOpenChange={setBackDropOpen}>
-          <DialogContent className="sm:max-w-[425px]">
+          <DialogContent className={`${
+            selectedAction === 'view_edit' 
+              ? 'sm:max-w-4xl max-h-[90vh] overflow-y-auto w-[95vw] sm:w-full' 
+              : selectedAction === 'delete'
+              ? 'sm:max-w-2xl max-h-[90vh] overflow-y-auto w-[95vw] sm:w-full'
+              : selectedAction === 'accept_payment'
+              ? 'sm:max-w-lg max-h-[90vh] overflow-y-auto w-[95vw] sm:w-full'
+              : 'sm:max-w-[425px] w-[95vw] sm:w-full'
+          }`}>
             {selectedAction === 'accept_payment' && (
               <AcceptPayment
                 setBackDropOpen={setBackDropOpen}
@@ -417,7 +427,7 @@ const VisitorList: React.FC = () => {
                   <PopoverContent className="w-auto p-0" align="start">
                     <Calendar
                       mode="range"
-                      selected={dateRange}
+                      selected={dateRange as CalendarDateRange}
                       onSelect={(range) => setDateRange(range || {})}
                       numberOfMonths={width > 768 ? 2 : 1}
                     />
@@ -519,7 +529,7 @@ const VisitorList: React.FC = () => {
                 </TableRow>
               ) : (
                 filteredVisitors.map((visitor) => (
-                  <TableRow key={visitor.visitorId}>
+                  <TableRow key={String(visitor.visitorId || Math.random())}>
                     <TableCell>
                       <div className="font-medium">
                         {visitor.firstName} {visitor.lastName}
@@ -615,7 +625,7 @@ const VisitorList: React.FC = () => {
               </Card>
             ) : (
               filteredVisitors.map((visitor) => (
-                <Card key={visitor.visitorId} className="p-4">
+                <Card key={String(visitor.visitorId || Math.random())} className="p-4">
                   <div className="flex justify-between items-start">
                     <div>
                       <h4 className="font-medium">
