@@ -9,6 +9,7 @@ const db = knex({
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
     port: process.env.DB_PORT,
+    connectTimeout: 20000, // 20 seconds
   },
 });
 
