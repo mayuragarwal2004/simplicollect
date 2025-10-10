@@ -10,9 +10,11 @@ import Papa from 'papaparse';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { useData } from '../../../context/DataContext';
+import { useDownload } from '../../../utils/downloadManager';
 
 const MemberLedgerReport = () => {
     const location = useLocation()
+    const { downloadCSV, downloadPDF } = useDownload();
     const [reports, setReports] = useState([]);
     const [loading, setLoading] = useState(true);
     const { chapterData } = useData();
@@ -68,15 +70,12 @@ const MemberLedgerReport = () => {
         );
     };
 
-    const exportCSV = () => {
-        const csvData = reports.map((report) => {
-            let row = {};
+    const exportCSV = async () => {
+        const csvData = reports.map(row => {
+            const newRow = {};
             columnLabels.forEach(({ label, key }) => {
                 if (selectedColumns.includes(label)) {
-                    row[label] =
-                        key === 'name'
-                            ? `${report.firstName} ${report.lastName}`
-                            : report[key];
+                    newRow[label] = row[key];
                 }
             });
             return row;
@@ -84,16 +83,14 @@ const MemberLedgerReport = () => {
 
         const csv = Papa.unparse(csvData);
         const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.setAttribute('download', 'MemberLedgerReport.csv');
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+        
+        await downloadCSV(blob, 'MemberLedgerReport.csv', {
+            showSuccessToast: true,
+            allowShare: true,
+        });
     };
 
-    const exportPDF = () => {
+    const exportPDF = async () => {
         const doc = new jsPDF();
         doc.text('Member Transactions Report', 20, 10);
         const tableColumn = columnLabels
@@ -112,7 +109,12 @@ const MemberLedgerReport = () => {
             body: tableRows,
         });
 
-        doc.save('MemberLedgerReport.pdf');
+        // Convert PDF to blob and use download manager
+        const pdfBlob = doc.output('blob');
+        await downloadPDF(pdfBlob, 'MemberLedgerReport.pdf', {
+            showSuccessToast: true,
+            allowShare: true,
+        });
     };
 
     return (

@@ -10,9 +10,11 @@ import Papa from 'papaparse';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { useData } from '../../../context/DataContext';
+import { useDownload } from '../../../utils/downloadManager';
 
 const ReportC = () => {
   const location = useLocation();
+  const { downloadCSV, downloadPDF } = useDownload();
   const [reportData, setReportData] = useState([]);
   const [loading, setLoading] = useState(true);
   const { chapterData } = useData();
@@ -61,7 +63,7 @@ const ReportC = () => {
     );
   };
 
-  const exportCSV = () => {
+  const exportCSV = async () => {
     const csvData = reports.map((report) => {
       let row = {};
       columnLabels.forEach(({ label, key }) => {
@@ -77,16 +79,14 @@ const ReportC = () => {
 
     const csv = Papa.unparse(csvData);
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', 'report.csv');
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    
+    await downloadCSV(blob, 'report.csv', {
+      showSuccessToast: true,
+      allowShare: true,
+    });
   };
 
-  const exportPDF = () => {
+  const exportPDF = async () => {
     const doc = new jsPDF();
     doc.text('Member Transactions Report', 20, 10);
     const tableColumn = columnLabels
@@ -105,7 +105,12 @@ const ReportC = () => {
       body: tableRows,
     });
 
-    doc.save('report.pdf');
+    // Convert PDF to blob and use download manager
+    const pdfBlob = doc.output('blob');
+    await downloadPDF(pdfBlob, 'report.pdf', {
+      showSuccessToast: true,
+      allowShare: true,
+    });
   };
 
 

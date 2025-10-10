@@ -28,6 +28,7 @@ import { format } from 'date-fns';
 import { saveAs } from 'file-saver';
 import { Button } from '@/components/ui/button'; // Assuming you're using shadcn button
 import { toast } from 'react-toastify';
+import { useDownload } from '../../../utils/downloadManager';
 
 const periodOptions = [
   { value: 'weekly', label: 'Weekly' },
@@ -37,6 +38,7 @@ const periodOptions = [
 
 const MemberPaymentSummaryReport = () => {
   const { chapterData } = useData();
+  const { downloadFromResponse } = useDownload();
   const [termOptions, setTermOptions] = useState([]);
   const [selectedTerm, setSelectedTerm] = useState('');
   const [selectedPeriod, setSelectedPeriod] = useState('monthly');
@@ -116,23 +118,16 @@ const MemberPaymentSummaryReport = () => {
         { params, responseType: 'blob' },
       );
 
-      if (response.status !== 200) {
-        toast.error('Error exporting data');
-        return;
-      }
+      const filename = 'Member_Payment_Summary_Report.xlsx';
+      
+      await downloadFromResponse(response, filename, {
+        showSuccessToast: true,
+        allowShare: true,
+      });
 
-      toast.success('Data exported successfully');
-
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', `Member_Payment_Summary_Report.xlsx`);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
     } catch (error) {
-      toast.error('Error exporting data');
       console.error('Error exporting data:', error);
+      // Error toast is handled by downloadManager
     } finally {
       setExportLoading(false);
     }

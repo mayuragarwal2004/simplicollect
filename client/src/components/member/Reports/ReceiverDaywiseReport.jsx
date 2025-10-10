@@ -21,14 +21,17 @@ import {
 } from '@/components/ui/table';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useDownload } from '../../../utils/downloadManager';
 
 const ReceiverDaywiseReport = () => {
   const { chapterData } = useData();
+  const { downloadFromResponse } = useDownload();
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [open, setOpen] = useState(false);
   const [jsonData, setJsonData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [exportLoading, setExportLoading] = useState(false);
 
   const fetchJsonData = async () => {
     try {
@@ -51,6 +54,7 @@ const ReceiverDaywiseReport = () => {
   };
 
   const handleExportData = async () => {
+    setExportLoading(true);
     try {
       const formattedDate = format(selectedDate, 'yyyy-MM-dd');
       const response = await axiosInstance.get(
@@ -61,26 +65,18 @@ const ReceiverDaywiseReport = () => {
         },
       );
 
-      if (response.status !== 200) {
-        toast.error('Error exporting data');
-        return;
-      }
+      const filename = `ReceiverDaywiseReport-${formattedDate}.xlsx`;
+      
+      await downloadFromResponse(response, filename, {
+        showSuccessToast: true,
+        allowShare: true,
+      });
 
-      toast.success('Data exported successfully');
-
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute(
-        'download',
-        `ReceiverDaywiseReport-${formattedDate}.xlsx`,
-      );
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
     } catch (error) {
-      toast.error('Error exporting data');
       console.error('Error exporting data:', error);
+      // Error toast is handled by downloadManager
+    } finally {
+      setExportLoading(false);
     }
   };
 
@@ -122,9 +118,9 @@ const ReceiverDaywiseReport = () => {
 
         <Button
           onClick={handleExportData}
-          disabled={jsonData?.data.transactions.length === 0}
+          disabled={exportLoading || jsonData?.data.transactions.length === 0}
         >
-          Export Data
+          {exportLoading ? 'Exporting...' : 'Export Data'}
         </Button>
       </div>
 

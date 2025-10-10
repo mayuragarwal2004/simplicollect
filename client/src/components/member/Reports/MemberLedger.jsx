@@ -7,9 +7,11 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { MemberLedgerReportTable } from './memberLedgerDataTable/MemberLedgerReportTable';
 import { MemberLedgerReportcolumn } from './memberLedgerDataTable/MemberLedgerReportcolumn';
 import ChooseMember from '../ChooseMemberPopoverCommand';
+import { useDownload } from '../../../utils/downloadManager';
 
 const ReceiverDaywiseReport = () => {
   const { chapterData } = useData();
+  const { downloadFromResponse } = useDownload();
   const [members, setMembers] = useState([]);
   const [filteredMembers, setFilteredMembers] = useState([]); // Filtered list
   const [selectedMember, setSelectedMember] = useState(null);
@@ -17,6 +19,7 @@ const ReceiverDaywiseReport = () => {
   const [searchQuery, setSearchQuery] = useState(''); // Search query
   const [ledgerData, setLedgerData] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [exportLoading, setExportLoading] = useState(false);
 
   const fetchMembers = async () => {
     try {
@@ -71,6 +74,7 @@ const ReceiverDaywiseReport = () => {
       return;
     }
 
+    setExportLoading(true);
     try {
       const response = await axiosInstance.get(
         `/api/report/${chapterData?.chapterId}/member-ledger`,
@@ -80,27 +84,18 @@ const ReceiverDaywiseReport = () => {
         },
       );
 
-      if (response.status !== 200) {
-        toast.error('Error exporting data');
-        return;
-      }
+      const filename = `${selectedMember.label} - ${new Date().toLocaleString()} - Member Ledger.xlsx`;
+      
+      await downloadFromResponse(response, filename, {
+        showSuccessToast: true,
+        allowShare: true,
+      });
 
-      toast.success('Data exported successfully');
-
-      // Download blob
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute(
-        'download',
-        `${selectedMember.label} - ${new Date().toLocaleString()} - Member Ledger.xlsx`,
-      );
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
     } catch (error) {
-      toast.error('Error exporting data');
       console.error('Error exporting data:', error);
+      // Error toast is handled by downloadManager
+    } finally {
+      setExportLoading(false);
     }
   };
 
@@ -133,7 +128,9 @@ const ReceiverDaywiseReport = () => {
           selectedMember={selectedMember}
           setSelectedMember={setSelectedMember}
         />
-        <Button onClick={handleExportData}>Export Data</Button>
+        <Button onClick={handleExportData} disabled={exportLoading || !selectedMember}>
+          {exportLoading ? 'Exporting...' : 'Export Data'}
+        </Button>
       </div>
       {loading ? (
         <Skeleton className="h-10 w-full mb-4" />
