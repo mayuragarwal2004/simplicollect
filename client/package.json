@@ -15,8 +15,8 @@
     "cap:ios": "npm run cap:sync && npx cap open ios",
     "cap:run:android": "npm run cap:sync && npx cap run android",
     "cap:run:ios": "npm run cap:sync && npx cap run ios",
-    "cap:run:android:dev": "npm run cap:sync && npx cap run android --livereload",
-    "cap:run:ios:dev": "npm run cap:sync && npx cap run ios --livereload"
+    "cap:run:android:dev": "npm run cap:sync && npx cap run android --live-reload",
+    "cap:run:ios:dev": "npm run cap:sync && npx cap run ios --live-reload"
   },
   "author": "Mayur Agarwal <mayur.m.agarwal@gmail.com> (https://simpliumtechnologies.com/)",
   "dependencies": {
