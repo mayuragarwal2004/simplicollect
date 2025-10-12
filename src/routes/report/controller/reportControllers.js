@@ -330,6 +330,10 @@ const getMemberLedgerController = async (req, res) => {
 
     worksheet = await convertMemberLedgerToExcel(worksheet, ledgerData);
 
+    // Get the member name from the ledger data for the filename
+    const memberName = ledgerData.memberName || 'Member';
+    const fileName = req.query.fileName || `${memberName} - Member Ledger.xlsx`;
+
     // 4. Set headers for download
     res.setHeader(
       "Content-Type",
@@ -337,7 +341,7 @@ const getMemberLedgerController = async (req, res) => {
     );
     res.setHeader(
       "Content-Disposition",
-      "attachment; filename=ReceiverDaywiseReport.xlsx"
+      `attachment; filename="${fileName}"`
     );
 
     // 5. Write the workbook to response
