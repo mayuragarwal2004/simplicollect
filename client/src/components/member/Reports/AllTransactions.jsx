@@ -30,6 +30,8 @@ import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { CalendarIcon } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
+import { useDownload } from '../../../utils/downloadManager';
+import { DownloadSuccessDialog } from '@/components/ui/download-dialog';
 
 const AllTransactions = () => {
   const location = useLocation();
@@ -53,6 +55,12 @@ const AllTransactions = () => {
   const [selectedColumns, setSelectedColumns] = useState(
     columnLabels.map(({ label }) => label),
   );
+
+  const {
+    downloadFromResponse,
+    downloadDialogState,
+    closeDownloadDialog,
+  } = useDownload();
 
   useEffect(() => {
     console.log('helo');
@@ -115,26 +123,7 @@ const AllTransactions = () => {
         },
       );
 
-      // Create a blob and download link
-      const blob = new Blob([response.data], {
-        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      });
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-
-      // You can customize the filename
-      link.setAttribute(
-        'download',
-        `Member Transactions Report ${format(new Date(fromDate), 'dd/MM/yyyy')} - ${format(new Date(toDate), 'dd/MM/yyyy')}.xlsx`,
-      );
-      document.body.appendChild(link);
-      link.click();
-
-      // Cleanup
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-
+      downloadFromResponse(response, `Member Transactions Report ${format(new Date(fromDate), 'dd-MM-yyyy')} - ${format(new Date(toDate), 'dd-MM-yyyy')}.xlsx`);
       toast.success('Excel file downloaded successfully.');
     } catch (error) {
       console.error('Error exporting Excel:', error);
@@ -166,24 +155,7 @@ const AllTransactions = () => {
         },
       );
 
-      // Create a blob and download link
-      const blob = new Blob([response.data], { type: 'application/pdf' });
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-
-      // Customize the filename if needed
-      link.setAttribute(
-        'download',
-        `Member Transactions Report ${format(new Date(fromDate), 'dd/MM/yyyy')} - ${format(new Date(toDate), 'dd/MM/yyyy')}.pdf`,
-      );
-      document.body.appendChild(link);
-      link.click();
-
-      // Cleanup
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-
+      downloadFromResponse(response, `Member Transactions Report ${format(new Date(fromDate), 'dd-MM-yyyy')} - ${format(new Date(toDate), 'dd-MM-yyyy')}.pdf`);
       toast.success('PDF file downloaded successfully.');
     } catch (err) {
       console.error('Error exporting PDF:', err);
@@ -191,8 +163,20 @@ const AllTransactions = () => {
     }
   };
 
+  const handleShare = async () => {
+    if (downloadDialogState.shareCallback) {
+      await downloadDialogState.shareCallback();
+    }
+  };
+
   return (
     <div className="p-6">
+      <DownloadSuccessDialog
+        isOpen={downloadDialogState.isOpen}
+        onClose={closeDownloadDialog}
+        filename={downloadDialogState.filename}
+        onShare={handleShare}
+      />
       <h2 className="text-2xl font-semibold mb-4">
         Member Transactions Report
       </h2>

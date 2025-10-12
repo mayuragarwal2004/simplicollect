@@ -11,10 +11,17 @@ import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { useData } from '../../../context/DataContext';
 import { useDownload } from '../../../utils/downloadManager';
+import { DownloadSuccessDialog } from '@/components/ui/download-dialog';
 
 const MemberLedgerReport = () => {
-    const location = useLocation()
-    const { downloadCSV, downloadPDF } = useDownload();
+    const location = useLocation();
+    const { 
+        downloadCSV, 
+        downloadPDF, 
+        downloadFromResponse, 
+        downloadDialogState, 
+        closeDownloadDialog 
+    } = useDownload();
     const [reports, setReports] = useState([]);
     const [loading, setLoading] = useState(true);
     const { chapterData } = useData();
@@ -117,8 +124,20 @@ const MemberLedgerReport = () => {
         });
     };
 
+    const handleShare = async () => {
+        if (downloadDialogState.shareCallback) {
+            await downloadDialogState.shareCallback();
+        }
+    };
+
     return (
         <div className="p-6">
+            <DownloadSuccessDialog
+                isOpen={downloadDialogState.isOpen}
+                onClose={closeDownloadDialog}
+                filename={downloadDialogState.filename}
+                onShare={handleShare}
+            />
             <h2 className="text-2xl font-semibold mb-4">
                 Member Ledger Report
             </h2>

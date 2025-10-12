@@ -29,6 +29,7 @@ import { saveAs } from 'file-saver';
 import { Button } from '@/components/ui/button'; // Assuming you're using shadcn button
 import { toast } from 'react-toastify';
 import { useDownload } from '../../../utils/downloadManager';
+import { DownloadSuccessDialog } from '@/components/ui/download-dialog';
 
 const periodOptions = [
   { value: 'weekly', label: 'Weekly' },
@@ -38,7 +39,11 @@ const periodOptions = [
 
 const MemberPaymentSummaryReport = () => {
   const { chapterData } = useData();
-  const { downloadFromResponse } = useDownload();
+  const { 
+    downloadFromResponse, 
+    downloadDialogState, 
+    closeDownloadDialog 
+  } = useDownload();
   const [termOptions, setTermOptions] = useState([]);
   const [selectedTerm, setSelectedTerm] = useState('');
   const [selectedPeriod, setSelectedPeriod] = useState('monthly');
@@ -133,8 +138,20 @@ const MemberPaymentSummaryReport = () => {
     }
   };
 
+  const handleShare = async () => {
+    if (downloadDialogState.shareCallback) {
+      await downloadDialogState.shareCallback();
+    }
+  };
+
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
+      <DownloadSuccessDialog
+        isOpen={downloadDialogState.isOpen}
+        onClose={closeDownloadDialog}
+        filename={downloadDialogState.filename}
+        onShare={handleShare}
+      />
       <h2 className="text-title-md2 font-semibold text-black dark:text-white">
         Member Payment Summary Report
       </h2>

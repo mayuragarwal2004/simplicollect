@@ -8,10 +8,12 @@ import { MemberLedgerReportTable } from './memberLedgerDataTable/MemberLedgerRep
 import { MemberLedgerReportcolumn } from './memberLedgerDataTable/MemberLedgerReportcolumn';
 import ChooseMember from '../ChooseMemberPopoverCommand';
 import { useDownload } from '../../../utils/downloadManager';
+import { format } from 'date-fns';
+import { DownloadSuccessDialog } from '@/components/ui/download-dialog';
 
-const ReceiverDaywiseReport = () => {
+const MemberLedger = () => {
   const { chapterData } = useData();
-  const { downloadFromResponse } = useDownload();
+  const { downloadFromResponse, downloadDialogState, closeDownloadDialog } = useDownload();
   const [members, setMembers] = useState([]);
   const [filteredMembers, setFilteredMembers] = useState([]); // Filtered list
   const [selectedMember, setSelectedMember] = useState(null);
@@ -71,30 +73,61 @@ const ReceiverDaywiseReport = () => {
   const handleExportData = async () => {
     if (!selectedMember) {
       toast.error('Please select a member');
+      console.error('[MemberLedger] Export attempted without selecting member');
       return;
     }
 
     setExportLoading(true);
     try {
+      console.log('[MemberLedger] Starting export for member:', JSON.stringify({
+        memberId: selectedMember.value,
+        memberName: selectedMember.label,
+        chapterId: chapterData?.chapterId
+      }));
+
+      // Generate filename before the request
+      const fileName = `${selectedMember.label} - ${format(new Date(), 'dd-MM-yyyy')} - Member Ledger.xlsx`;
+      console.log('[MemberLedger] Generated filename:', fileName);
+      
       const response = await axiosInstance.get(
         `/api/report/${chapterData?.chapterId}/member-ledger`,
         {
-          params: { memberId: selectedMember.value },
-          responseType: 'blob',
+          params: { 
+            memberId: selectedMember.value
+          },
+          responseType: 'blob'
         },
       );
 
-      const filename = `${selectedMember.label} - ${new Date().toLocaleString()} - Member Ledger.xlsx`;
+      console.log('[MemberLedger] Received response:', JSON.stringify({
+        status: response.status,
+        contentType: response.headers['content-type'],
+        contentLength: response.data.size,
+      }));
+
+      console.log('[MemberLedger] About to download file:', fileName);
       
-      await downloadFromResponse(response, filename, {
+      console.log('[MemberLedger] Attempting download with filename:', fileName);
+      await downloadFromResponse(response, fileName, {
         showSuccessToast: true,
         allowShare: true,
       });
 
+      console.log('[MemberLedger] Download completed successfully with filename:', downloadDialogState.fileName);
+
     } catch (error) {
-      console.error('Error exporting data:', error);
+      console.error('[MemberLedger] Export failed:', JSON.stringify({
+        error: error.message,
+        stack: error.stack,
+        memberInfo: {
+          memberId: selectedMember?.value,
+          memberName: selectedMember?.label
+        },
+        chapterId: chapterData?.chapterId
+      }));
       // Error toast is handled by downloadManager
     } finally {
+      console.log('[MemberLedger] Export process completed');
       setExportLoading(false);
     }
   };
@@ -115,6 +148,12 @@ const ReceiverDaywiseReport = () => {
     } catch (error) {
       toast.error('Error fetching ledger data');
       setLoading(false);
+    }
+  };
+
+  const handleShare = async () => {
+    if (downloadDialogState.shareCallback) {
+      await downloadDialogState.shareCallback();
     }
   };
 
@@ -147,8 +186,14 @@ const ReceiverDaywiseReport = () => {
           state={{ pagination: { pageSize: 10, pageIndex: 0 } }}
         />
       ) : null}
+      <DownloadSuccessDialog
+        isOpen={downloadDialogState.isOpen}
+        onClose={closeDownloadDialog}
+        filename={downloadDialogState.filename || downloadDialogState.fileName}
+        onShare={handleShare}
+      />
     </div>
   );
 };
 
-export default ReceiverDaywiseReport;
+export default MemberLedger;

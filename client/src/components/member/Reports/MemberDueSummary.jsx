@@ -30,6 +30,8 @@ import {
   SelectGroup,
   SelectLabel,
 } from '@/components/ui/select';
+import { useDownload } from '../../../utils/downloadManager';
+import { DownloadSuccessDialog } from '@/components/ui/download-dialog';
 
 const MemberDueSummary = () => {
   const location = useLocation();
@@ -43,6 +45,12 @@ const MemberDueSummary = () => {
   const [packageParentOptions, setPackageParentOptions] = useState([]);
   const [selectedTerm, setSelectedTerm] = useState('');
   const [selectedPackageParent, setSelectedPackageParent] = useState('');
+
+  const { 
+    downloadFromResponse, 
+    downloadDialogState, 
+    closeDownloadDialog 
+  } = useDownload();
 
   // Extracting query parameters
   const rows = searchParams.get('rows') || 10;
@@ -196,8 +204,20 @@ const MemberDueSummary = () => {
     selectedPackageParent,
   ]);
 
+  const handleShare = async () => {
+    if (downloadDialogState.shareCallback) {
+      await downloadDialogState.shareCallback();
+    }
+  };
+
   return (
     <div className="space-y-4">
+      <DownloadSuccessDialog
+        isOpen={downloadDialogState.isOpen}
+        onClose={closeDownloadDialog}
+        filename={downloadDialogState.filename}
+        onShare={handleShare}
+      />
       <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
         <h1 className="text-2xl font-bold">Member Due Summary Report</h1>
       </div>
@@ -272,14 +292,7 @@ const MemberDueSummary = () => {
                 `/api/report/${chapterData.chapterId}/all-members-excel?termId=${selectedTerm}`,
                 { responseType: 'blob' },
               );
-              const url = window.URL.createObjectURL(new Blob([response.data]));
-              const link = document.createElement('a');
-              link.href = url;
-              link.setAttribute('download', 'all-members-report.xlsx');
-              document.body.appendChild(link);
-              link.click();
-              link.parentNode.removeChild(link);
-              window.URL.revokeObjectURL(url);
+              downloadFromResponse(response, 'all-members-report.xlsx');
             } catch (error) {
               console.error('Failed to download Excel file:', error);
             }

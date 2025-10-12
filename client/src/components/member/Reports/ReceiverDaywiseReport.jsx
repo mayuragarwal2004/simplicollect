@@ -22,10 +22,15 @@ import {
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useDownload } from '../../../utils/downloadManager';
+import { DownloadSuccessDialog } from '@/components/ui/download-dialog';
 
 const ReceiverDaywiseReport = () => {
   const { chapterData } = useData();
-  const { downloadFromResponse } = useDownload();
+  const { 
+    downloadFromResponse, 
+    downloadDialogState, 
+    closeDownloadDialog
+  } = useDownload();
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [open, setOpen] = useState(false);
   const [jsonData, setJsonData] = useState(null);
@@ -86,8 +91,21 @@ const ReceiverDaywiseReport = () => {
     }
   }, [selectedDate, chapterData]);
 
+  const handleShare = async () => {
+    if (downloadDialogState.shareCallback) {
+      await downloadDialogState.shareCallback();
+    }
+  };
+
   return (
     <div className="flex flex-col gap-4 mt-5">
+      {/* Download Success Dialog */}
+      <DownloadSuccessDialog
+        isOpen={downloadDialogState.isOpen}
+        onClose={closeDownloadDialog}
+        filename={downloadDialogState.filename}
+        onShare={handleShare}
+      />
       <div className="flex items-center gap-4">
         <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>
