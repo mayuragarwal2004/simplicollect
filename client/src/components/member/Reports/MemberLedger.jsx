@@ -79,15 +79,8 @@ const MemberLedger = () => {
 
     setExportLoading(true);
     try {
-      console.log('[MemberLedger] Starting export for member:', JSON.stringify({
-        memberId: selectedMember.value,
-        memberName: selectedMember.label,
-        chapterId: chapterData?.chapterId
-      }));
-
-      // Generate filename before the request
+      // Start export for member
       const fileName = `${selectedMember.label} - ${format(new Date(), 'dd-MM-yyyy')} - Member Ledger.xlsx`;
-      console.log('[MemberLedger] Generated filename:', fileName);
       
       const response = await axiosInstance.get(
         `/api/report/${chapterData?.chapterId}/member-ledger`,
@@ -99,21 +92,10 @@ const MemberLedger = () => {
         },
       );
 
-      console.log('[MemberLedger] Received response:', JSON.stringify({
-        status: response.status,
-        contentType: response.headers['content-type'],
-        contentLength: response.data.size,
-      }));
-
-      console.log('[MemberLedger] About to download file:', fileName);
-      
-      console.log('[MemberLedger] Attempting download with filename:', fileName);
       await downloadFromResponse(response, fileName, {
         showSuccessToast: true,
         allowShare: true,
       });
-
-      console.log('[MemberLedger] Download completed successfully with filename:', downloadDialogState.fileName);
 
     } catch (error) {
       console.error('[MemberLedger] Export failed:', JSON.stringify({
@@ -127,7 +109,6 @@ const MemberLedger = () => {
       }));
       // Error toast is handled by downloadManager
     } finally {
-      console.log('[MemberLedger] Export process completed');
       setExportLoading(false);
     }
   };

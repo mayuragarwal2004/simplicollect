@@ -7,9 +7,13 @@ import { MemberLedgerReportTable } from '../Reports/memberLedgerDataTable/Member
 import { MemberLedgerReportcolumn } from '../Reports/memberLedgerDataTable/MemberLedgerReportcolumn';
 import { Button } from '@/components/ui/button';
 import { toast } from 'react-toastify';
+import { useDownload } from '@/utils/downloadManager';
+import { format } from 'date-fns';
+import { DownloadSuccessDialog } from '@/components/ui/download-dialog';
 
 const MyLedgerComponent = () => {
   const { chapterData } = useData();
+  const { downloadFromResponse, downloadDialogState, closeDownloadDialog } = useDownload();
   const [ledgerData, setLedgerData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -30,34 +34,32 @@ const MyLedgerComponent = () => {
 
   const handleExportData = async () => {
     try {
+      const fileName = `My Ledger - ${format(new Date(), 'dd-MM-yyyy')}.xlsx`;
+      
       const response = await axiosInstance.get(
         `/api/report/${chapterData?.chapterId}/member-ledger`,
         {
-          responseType: 'blob',
+          responseType: 'blob'
         },
       );
 
-      if (response.status !== 200) {
-        toast.error('Error exporting data');
-        return;
-      }
+      await downloadFromResponse(response, fileName, {
+        showSuccessToast: true,
+        allowShare: true,
+      });
 
-      toast.success('Data exported successfully');
-
-      // Download blob
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute(
-        'download',
-        `${''} - ${new Date().toLocaleString()} - Member Ledger.xlsx`,
-      );
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
     } catch (error) {
-      toast.error('Error exporting data');
-      console.error('Error exporting data:', error);
+      console.error('[MyLedger] Export failed:', JSON.stringify({
+        error: error.message,
+        stack: error.stack,
+        chapterId: chapterData?.chapterId
+      }));
+    }
+  };
+
+  const handleShare = async () => {
+    if (downloadDialogState.shareCallback) {
+      await downloadDialogState.shareCallback();
     }
   };
 
@@ -85,8 +87,15 @@ const MyLedgerComponent = () => {
           state={{ pagination: { pageSize: 10, pageIndex: 0 } }}
         />
       )}
+      <DownloadSuccessDialog
+        isOpen={downloadDialogState.isOpen}
+        onClose={closeDownloadDialog}
+        filename={downloadDialogState.filename || downloadDialogState.fileName}
+        onShare={handleShare}
+      />
     </div>
   );
 };
+
 
 export default MyLedgerComponent;

@@ -63,15 +63,12 @@ const AllTransactions = () => {
   } = useDownload();
 
   useEffect(() => {
-    console.log('helo');
-
     if (!chapterData) return;
     getReportData();
   }, [chapterData, rows, page, location.search]);
 
   const getReportData = () => {
     if (!chapterData.chapterId) return;
-    console.log('helo 2');
 
     axiosInstance
       .get(
