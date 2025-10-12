@@ -27,10 +27,16 @@ const DefaultLayout: React.FC<DefaultLayoutProps> = ({ admin = false }) => {
   }, [chapterData, allChaptersData, isAuthenticated]);
 
   return (
-    <div className="dark:bg-boxdark-2 dark:text-bodydark">
+    <div className="dark:bg-boxdark-2 dark:text-bodydark" style={{
+      minHeight: '100vh',
+      boxSizing: 'border-box',
+    }}>
       {/* choose chapter */}
       <Backdrop
-        sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}
+        sx={{ 
+          color: '#fff', 
+          zIndex: (theme) => theme.zIndex.drawer + 1
+        }}
         open={backDropOpen}
         onClick={() => {}}
       >
@@ -57,25 +63,29 @@ const DefaultLayout: React.FC<DefaultLayoutProps> = ({ admin = false }) => {
       </Backdrop>
 
       {/* <!-- ===== Page Wrapper Start ===== --> */}
-      <div className="flex h-screen overflow-hidden">
+      <div className="flex h-screen overflow-hidden fixed inset-0">
         {/* <!-- ===== Sidebar Start ===== --> */}
         {isAuthenticated && (
-          <Sidebar
-            sidebarOpen={sidebarOpen}
-            admin={admin}
-            setSidebarOpen={setSidebarOpen}
-          />
+          <div className="h-full">
+            <Sidebar
+              sidebarOpen={sidebarOpen}
+              admin={admin}
+              setSidebarOpen={setSidebarOpen}
+            />
+          </div>
         )}
         {/* <!-- ===== Sidebar End ===== --> */}
 
         {/* <!-- ===== Content Area Start ===== --> */}
-        <div className="relative flex flex-1 flex-col overflow-y-auto overflow-x-hidden">
+        <div className="relative flex flex-1 flex-col min-h-screen overflow-hidden">
           {/* <!-- ===== Header Start ===== --> */}
-          <Header sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
+          <div style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
+            <Header sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
+          </div>
           {/* <!-- ===== Header End ===== --> */}
 
           {/* <!-- ===== Main Content Start ===== --> */}
-          <main>
+          <main className="flex-1 overflow-y-auto">
             <div className="mx-auto max-w-screen-2xl p-4 md:p-6 2xl:p-10">
               {currentOutlet}
             </div>

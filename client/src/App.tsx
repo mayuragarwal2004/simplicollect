@@ -552,7 +552,15 @@ function App() {
   return loadingLocal ? (
     <SuspenseLoader message="Initializing SimpliCollect..." showLogo={true} />
   ) : (
-    <>
+    <div
+      style={{
+        paddingLeft: 'env(safe-area-inset-left, 0px)',
+        paddingRight: 'env(safe-area-inset-right, 0px)',
+        minHeight: '100vh',
+        boxSizing: 'border-box',
+        background: 'inherit',
+      }}
+    >
       <ToastContainer
         position="top-right"
         autoClose={5000}
@@ -565,6 +573,7 @@ function App() {
         pauseOnHover
         theme="light"
         transition={Bounce}
+        style={{ marginTop: '24px' }}
       />
       <RouterProvider router={router} />
 
@@ -578,7 +587,7 @@ function App() {
             deviceInfo={appInstallBanner.deviceInfo}
           />
         )}
-    </>
+    </div>
   );
 }
 
