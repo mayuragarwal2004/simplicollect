@@ -178,18 +178,6 @@ const getAllPackagesByChapterAndTermAdmin = async (chapterId, termId) => {
     .select("p.*", "tm.termName", { termStatus: "tm.status" });
 };
 
-// Get all unique package parents for a chapter and optional term
-const getPackageParentsByChapter = async (chapterId, termId) => {
-  let query = db("packages")
-    .where({ chapterId })
-    .whereNotNull("packageParent");
-  if (termId) {
-    query = query.andWhere({ termId });
-  }
-  const result = await query.distinct("packageParent");
-  return result.map((row) => row.packageParent);
-};
-
 // Get all unique package parents for a chapter and term (both required)
 const getPackageParentsByChapterAndTerm = async (chapterId, termId) => {
   if (!chapterId || !termId) throw new Error('chapterId and termId are required');
@@ -208,6 +196,5 @@ module.exports = {
   getPackagesByChapterId,
   getPackagesByChapterAndTerm,
   getAllPackagesByChapterAndTermAdmin,
-  getPackageParentsByChapter,
   getPackageParentsByChapterAndTerm,
 };

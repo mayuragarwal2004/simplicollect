@@ -15,4 +15,7 @@ router.get('/admin/all/:chapterSlug/term/:termId', authenticateToken, Authentica
 // Route to get all unique package parents for a chapter and term (both required)
 router.get("/parents/:chapterId", packageController.getPackageParentsByChapterAndTerm);
 
+// Route to get packages by chapter, term, and package parent
+router.get("/:chapterId", packageController.getPackagesByChapterTermAndParent);
+
 module.exports = router;

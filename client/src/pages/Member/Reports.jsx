@@ -1,4 +1,5 @@
 import React from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import Breadcrumbs from '../../components/Breadcrumbs/Breadcrumb';
 import {
   Select,
@@ -63,7 +64,16 @@ const reportComponents = [
 ];
 
 const Reports = () => {
-  const [reportType, setReportType] = React.useState('');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
+  
+  // Get report type from URL query parameter or default to empty
+  const reportType = searchParams.get('type') || '';
+
+  // Function to update report type
+  const handleReportTypeChange = (value) => {
+    setSearchParams({ type: value });
+  };
 
   // Flatten all reports for lookup
   const allReports = reportComponents.flatMap((group) => group.reports);
@@ -83,7 +93,7 @@ const Reports = () => {
         <div>
           <Select
             value={reportType}
-            onValueChange={(value) => setReportType(value)}
+            onValueChange={handleReportTypeChange}
             className="w-full"
           >
             <SelectTrigger className="w-[280px]">

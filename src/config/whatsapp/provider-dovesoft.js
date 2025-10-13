@@ -69,6 +69,8 @@ const sendWhatsAppMessageByDovesoft = async (type, phoneNumber, data) => {
 };
 
 const sendUtilityTemplateByDovesoft = async (phoneNumber, templateData) => {
+  console.log({ phoneNumber, templateData: JSON.stringify(templateData) });
+
   try {
     const response = await axios.post(
       "https://api.dovesoft.io//REST/directApi/message",
@@ -82,7 +84,7 @@ const sendUtilityTemplateByDovesoft = async (phoneNumber, templateData) => {
             code: templateData.languageCode || "en",
             policy: "deterministic",
           },
-          components: templateData.components
+          components: templateData.components,
         },
       },
       {
@@ -93,7 +95,11 @@ const sendUtilityTemplateByDovesoft = async (phoneNumber, templateData) => {
         },
       }
     );
-    return { ok: true, message: "Template message sent successfully", data: response.data };
+    return {
+      ok: true,
+      message: "Template message sent successfully",
+      data: response.data,
+    };
   } catch (error) {
     return {
       ok: false,

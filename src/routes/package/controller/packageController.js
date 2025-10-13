@@ -1,9 +1,6 @@
 // controllers/packageController.js
 const Package = require("../model/packageModel");
-const {
-  getPendingMeetings,
-  approveMeeting,
-} = require("../model/packageModel");
+const { getPendingMeetings, approveMeeting } = require("../model/packageModel");
 
 const getAllPackages = async (req, res) => {
   try {
@@ -91,7 +88,11 @@ const getPackagesByChapterAndTermController = async (req, res) => {
     memberId = req.user.memberId; // Use the memberId from the request context
   }
   try {
-    const packages = await Package.getPackagesByChapterAndTerm(chapterId, termId, memberId);
+    const packages = await Package.getPackagesByChapterAndTerm(
+      chapterId,
+      termId,
+      memberId
+    );
     res.json(packages);
   } catch (error) {
     console.error("Error fetching packages by chapter and term:", error);
@@ -106,28 +107,19 @@ const getAllPackagesByChapterAndTermAdminController = async (req, res) => {
     // Find chapter by slug first
     const { findChapterBySlug } = require("../../chapter/model/chapterModel");
     const chapter = await findChapterBySlug(chapterSlug);
-    
+
     if (!chapter) {
       return res.status(404).json({ error: "Chapter not found" });
     }
-    
-    const packages = await Package.getAllPackagesByChapterAndTermAdmin(chapter.chapterId, termId);
+
+    const packages = await Package.getAllPackagesByChapterAndTermAdmin(
+      chapter.chapterId,
+      termId
+    );
     res.json(packages);
   } catch (error) {
     console.error("Error fetching all packages by chapter and term:", error);
     res.status(500).json({ error: "Failed to fetch packages" });
-  }
-};
-
-// Get all unique package parents for a chapter (optionally filtered by termId)
-const getPackageParentsByChapter = async (req, res) => {
-  const { chapterId } = req.params;
-  const { termId } = req.query;
-  try {
-    const parents = await require("../model/packageModel").getPackageParentsByChapter(chapterId, termId);
-    res.json(parents);
-  } catch (error) {
-    res.status(500).json({ error: "Failed to fetch package parents" });
   }
 };
 
@@ -136,13 +128,54 @@ const getPackageParentsByChapterAndTerm = async (req, res) => {
   const { chapterId } = req.params;
   const { termId } = req.query;
   if (!chapterId || !termId) {
-    return res.status(400).json({ error: 'chapterId and termId are required' });
+    return res.status(400).json({ error: "chapterId and termId are required" });
   }
   try {
-    const parents = await require("../model/packageModel").getPackageParentsByChapterAndTerm(chapterId, termId);
+    const parents =
+      await require("../model/packageModel").getPackageParentsByChapterAndTerm(
+        chapterId,
+        termId
+      );
     res.json(parents);
   } catch (error) {
     res.status(500).json({ error: "Failed to fetch package parents" });
+  }
+};
+
+// Get packages by chapterId, termId, and packageParent
+const getPackagesByChapterTermAndParent = async (req, res) => {
+  const { chapterId } = req.params;
+  const { termId, packageParent } = req.query;
+
+  if (!chapterId || !termId || !packageParent) {
+    return res.status(400).json({
+      success: false,
+      error: "chapterId, termId, and packageParent are required",
+    });
+  }
+
+  try {
+    const db = require("../../../config/db");
+
+    const packages = await db("packages")
+      .select("packageId", "packageName", "packageFeeAmount", "packageParent")
+      .where({
+        chapterId: chapterId,
+        termId: termId,
+        packageParent: packageParent,
+      })
+      .orderBy("packageName", "asc");
+
+    res.json({
+      success: true,
+      data: packages,
+    });
+  } catch (error) {
+    console.error("Error fetching packages:", error);
+    res.status(500).json({
+      success: false,
+      error: "Failed to fetch packages",
+    });
   }
 };
 
@@ -154,6 +187,6 @@ module.exports = {
   getPackagesByChapterController,
   getPackagesByChapterAndTermController,
   getAllPackagesByChapterAndTermAdminController,
-  getPackageParentsByChapter,
   getPackageParentsByChapterAndTerm,
+  getPackagesByChapterTermAndParent,
 };
