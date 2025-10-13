@@ -63,7 +63,7 @@ const sendDuesNotification = async (req, res) => {
       if (!member.phoneNumber || !member.dueAmount) continue;
 
       const templateData = {
-        templateName: "payment_remind",
+        templateName: "pay_due_remind",
         languageCode: "en",
         components: [
           {
