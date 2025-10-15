@@ -3,7 +3,7 @@ import { NavLink, useLocation } from 'react-router-dom';
 import SidebarLinkGroup from './SidebarLinkGroup';
 import Logo from '../../images/logo/logo.svg';
 import { ChevronDown, PanelLeftClose, Repeat } from 'lucide-react';
-import iconMap from './IconMap';
+import * as LucideIcons from 'lucide-react';
 import { useData } from '../../context/DataContext';
 import { axiosInstance } from '../../utils/config';
 import { useAuth } from '../../context/AuthContext';
@@ -82,6 +82,12 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen, admin }: SidebarProps) => {
   const [rightsData, setRightsData] = useState<any>([]);
   const location = useLocation();
   const { pathname } = location;
+
+  const getIcon = (iconName: string) => {
+    // Cast to any first to avoid TypeScript errors with the dynamic import
+    const Icon = (LucideIcons as any)[iconName];
+    return Icon ? <Icon size={20} /> : null;
+  };
 
   const trigger = useRef<any>(null);
   const sidebar = useRef<any>(null);
@@ -209,7 +215,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen, admin }: SidebarProps) => {
                                   : setSidebarExpanded(true);
                               }}
                             >
-                              {iconMap[item.icon]}
+                              {getIcon(item.icon)}
                               {item.title}
                               <ChevronDown
                                 className={`absolute right-4 top-1/2 -translate-y-1/2 ${
@@ -255,7 +261,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen, admin }: SidebarProps) => {
                           'bg-graydark dark:bg-meta-4'
                         }`}
                       >
-                        {iconMap[item.icon]}
+                        {getIcon(item.icon)}
                         {item.links[0].title}
                       </NavLink>
                     </li>

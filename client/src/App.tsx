@@ -42,6 +42,7 @@ const CookiePolicy = lazy(() => import('./pages/CookiePolicy'));
 const ContactUsPage = lazy(() => import('./pages/Contact/ContactUsPage'));
 const TrackVisitor = lazy(() => import('./pages/Visitor/TrackVisitor'));
 const CapacitorTestPage = lazy(() => import('./pages/Test/CapacitorTestPage'));
+const PaymentDueBroadcast = lazy(() => import('./components/member/Reports/PaymentDueBroadcast'));
 
 // Admin components
 const AdminOrganisationsPage = lazy(
@@ -434,6 +435,14 @@ const routes = [
             element: (
               <SuspenseWrapper message="Loading Reports">
                 <Reports />
+              </SuspenseWrapper>
+            ),
+          },
+          {
+            path: 'payment-due-broadcast',
+            element: (
+              <SuspenseWrapper message="Loading Payment Due Broadcast">
+                <PaymentDueBroadcast />
               </SuspenseWrapper>
             ),
           },

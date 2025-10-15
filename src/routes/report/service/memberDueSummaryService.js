@@ -10,14 +10,9 @@ const ExcelJS = require("exceljs");
 async function extractMemberDueSummaryData(
   chapterId,
   termId,
-  { page = 0, rows = 10000 } = {}
+  { packageParent } = {}
 ) {
-  const { data: chapterMembers, totalRecords } = await memberModel.getMembers(
-    chapterId,
-    "",
-    page,
-    rows
-  );
+  const chapterMembers = await memberModel.getAllMembers(chapterId);
   for (let i = 0; i < chapterMembers.length; i++) {
     const member = chapterMembers[i];
     const packageData = await packageModel.getPackagesByChapterAndTerm(
@@ -40,9 +35,12 @@ async function extractMemberDueSummaryData(
       );
       packageData[j].calculatedResult = calculatedResult;
     }
-    chapterMembers[i].packageData = packageData;
+    // Filter package data if packageParent is specified
+    chapterMembers[i].packageData = packageParent 
+      ? packageData.filter(pkg => pkg.packageParent === packageParent)
+      : packageData;
   }
-  return { data: chapterMembers, totalRecords };
+  return { data: chapterMembers };
 }
 
 // Service to convert member due summary data to Excel

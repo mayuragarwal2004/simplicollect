@@ -65,6 +65,7 @@ app.use("/api/contact", contactRoutes);
 app.use("/api/report",authenticateToken, require("./src/routes/report/route/reportRoutes"));
 app.use("/api/term", authenticateToken, require("./src/routes/term/route/termRoutes"));
 app.use("/api/chapter-payment", authenticateToken, require("./src/routes/chapterPayment/route/chapterPaymentRoutes"));
+app.use("/api/broadcast", authenticateToken, require("./src/routes/broadcast/route/broadcastRoutes"));
 app.use("/api/visitor-history",authenticateToken, require("./src/routes/visitorHistory/route/visitorHistoryRoutes"));
 
 // admin routes
