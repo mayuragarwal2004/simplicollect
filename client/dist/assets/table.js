@@ -1,1 +1,16 @@
-import{r as s,j as o,d as l}from"./index.js";const r=s.forwardRef(({className:e,...a},t)=>o.jsx("div",{className:"relative w-full overflow-auto",children:o.jsx("table",{ref:t,className:l("w-full caption-bottom text-sm",e),...a})}));r.displayName="Table";const d=s.forwardRef(({className:e,...a},t)=>o.jsx("thead",{ref:t,className:l("[&_tr]:border-b bg-blue-900",e),...a}));d.displayName="TableHeader";const b=s.forwardRef(({className:e,...a},t)=>o.jsx("tbody",{ref:t,className:l("[&_tr:last-child]:border-0",e),...a}));b.displayName="TableBody";const m=s.forwardRef(({className:e,...a},t)=>o.jsx("tfoot",{ref:t,className:l("border-t bg-muted/50 font-medium [&>tr]:last:border-b-0",e),...a}));m.displayName="TableFooter";const c=s.forwardRef(({className:e,...a},t)=>o.jsx("tr",{ref:t,className:l("border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted",e),...a}));c.displayName="TableRow";const i=s.forwardRef(({className:e,...a},t)=>o.jsx("th",{ref:t,className:l("h-10 px-2 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px] px-4 py-2 bg-newprimaryColor text-white font-raleway",e),...a}));i.displayName="TableHead";const f=s.forwardRef(({className:e,...a},t)=>o.jsx("td",{ref:t,className:l("p-2 align-middle [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]",e),...a}));f.displayName="TableCell";const n=s.forwardRef(({className:e,...a},t)=>o.jsx("caption",{ref:t,className:l("mt-4 text-sm text-muted-foreground",e),...a}));n.displayName="TableCaption";export{r as T,d as a,c as b,i as c,b as d,f as e};
+import{p as e}from"./index.js";/**
+ * @license lucide-react v0.473.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */const c=[["circle",{cx:"12",cy:"12",r:"10",key:"1mglay"}],["path",{d:"M8 12h8",key:"1wcyev"}],["path",{d:"M12 8v8",key:"napkw2"}]],h=e("CirclePlus",c);/**
+ * @license lucide-react v0.473.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */const a=[["path",{d:"M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z",key:"1a8usu"}],["path",{d:"m15 5 4 4",key:"1mk7zo"}]],s=e("Pencil",a);/**
+ * @license lucide-react v0.473.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */const t=[["path",{d:"M12 3v18",key:"108xh3"}],["rect",{width:"18",height:"18",x:"3",y:"3",rx:"2",key:"afitv7"}],["path",{d:"M3 9h18",key:"1pudct"}],["path",{d:"M3 15h18",key:"5xshup"}]],d=e("Table",t);export{h as C,s as P,d as T};
