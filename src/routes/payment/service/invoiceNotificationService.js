@@ -21,7 +21,7 @@ const sendPaymentInvoiceNotifications = async (transactionData, memberData, chap
 
   try {
     // Generate invoice PDF and upload to S3
-    const invoiceUrl = await generateAndUploadInvoice(transactionData, memberData, chapterData);
+    const invoiceUrl = await generateAndUploadInvoice(transactionData, memberData, chapterData,chapterConfig);
     results.invoiceGenerated = true;
     results.invoiceUrl = invoiceUrl;
 

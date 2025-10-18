@@ -10,7 +10,7 @@ const db = require('../../../config/db');
  * @param {Object} chapterData - Chapter details
  * @returns {Promise<string>} S3 URL of the generated invoice
  */
-const generateAndUploadInvoice = async (transactionData, memberData, chapterData) => {
+const generateAndUploadInvoice = async (transactionData, memberData, chapterData,chapterConfig) => {
   try {
     // Create PDF document
     const doc = new PDFDocument({ margin: 50 });
@@ -20,7 +20,7 @@ const generateAndUploadInvoice = async (transactionData, memberData, chapterData
     doc.on('data', buffers.push.bind(buffers));
     
     // Generate PDF content
-    await generateInvoicePDF(doc, transactionData, memberData, chapterData);
+    await generateInvoicePDF(doc, transactionData, memberData, chapterData, chapterConfig);
     
     // End the document
     doc.end();
@@ -34,7 +34,10 @@ const generateAndUploadInvoice = async (transactionData, memberData, chapterData
     
     // Upload to S3
     const fileName = `invoices/${chapterData.chapterSlug}/${transactionData.transactionId}.pdf`;
+    console.log("filename is",fileName)
     const uploadResult = await uploadToS3(fileName, pdfBuffer);
+    
+    console.log("uploadResult", uploadResult)
     
     if (uploadResult.success) {
       return uploadResult.imageUrl;
@@ -50,8 +53,9 @@ const generateAndUploadInvoice = async (transactionData, memberData, chapterData
 /**
  * Generate PDF content for invoice
  */
-const generateInvoicePDF = async (doc, transactionData, memberData, chapterData) => {
+const generateInvoicePDF = async (doc, transactionData, memberData, chapterData, chapterConfig) => {
   // Colors
+  
   const primaryColor = '#2563eb';
   const secondaryColor = '#64748b';
   const successColor = '#059669';
@@ -69,10 +73,10 @@ const generateInvoicePDF = async (doc, transactionData, memberData, chapterData)
   doc.rect(50, 100, 500, 80)
      .strokeColor('#e5e7eb')
      .stroke();
-  
+     console.log("this is:",chapterConfig)
   doc.fillColor('#000')
      .fontSize(12)
-     .text(`Invoice #: ${transactionData.transactionId}`, 60, 115)
+     .text(`Invoice #: ${chapterConfig.invoicePrefix} ${chapterConfig.invoiceCount}`, 60, 115)
      .text(`Date: ${new Date(transactionData.paymentDate).toLocaleDateString('en-IN')}`, 60, 135)
      .text(`Chapter: ${chapterData.chapterName}`, 300, 115)
      .text(`Status: PAID`, 300, 135);
@@ -86,10 +90,11 @@ const generateInvoicePDF = async (doc, transactionData, memberData, chapterData)
      .fontSize(12)
      .text(`${memberData.firstName} ${memberData.lastName}`, 50, 225)
      .text(`Email: ${memberData.email || 'N/A'}`, 50, 245)
-     .text(`Phone: ${memberData.phoneNumber || 'N/A'}`, 50, 265);
-  
+     .text(`Phone: ${memberData.phoneNumber || 'N/A'}`, 50, 265)
+     .text(`GSTIN: ${memberData.gstin || 'N/A'}`, 50, 285)
+     .text(`Address: ${memberData.address || 'N/A'}`, 50, 305);
   // Payment details table
-  const tableTop = 320;
+  const tableTop = 355;
   doc.fontSize(16)
      .fillColor(primaryColor)
      .text('PAYMENT DETAILS:', 50, tableTop - 25);

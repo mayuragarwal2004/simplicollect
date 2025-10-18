@@ -75,6 +75,19 @@ const processInvoiceNotifications = async (transactionDetails) => {
 
     // Wait for all notifications to complete
     const results = await Promise.allSettled(notificationPromises);
+    // Update each transaction with its invoice URL if available
+    results.forEach(async (result, index) => {
+      if (result.status === 'fulfilled' && result.value?.invoiceUrl) {
+        const transactionId = transactionDetails[index].transactionId;
+        const updatechanges = await db('transactions')
+          .where('transactionId', transactionId)
+          .update({ invoiceURL: result.value.invoiceUrl });
+      }
+    });
+    
+    console.log("transactionID",transactionDetails.map(t=>t.transactionId));
+    
+
     console.log('All invoice notifications processed:', results);
 
   } catch (error) {

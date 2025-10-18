@@ -80,8 +80,15 @@ model chapterConfig {
   createdAt                   DateTime? @default(now()) @db.Timestamp(0)
   updatedAt                   DateTime? @default(now()) @db.Timestamp(0)
 
+  // new columns
+  invoicePrefix               String?   @db.Text
+  invoiceCount                Int?      @default(0)
+  invoiceHTMLTemplate         String?   @db.Text
+  metaData                    Json?     @default("{}")
+
   @@index([chapterId], map: "idx_chapter_id")
 }
+
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 model contact_queries {
@@ -209,6 +216,7 @@ model member_chapter_mapping {
   joinedDate DateTime?                     @db.Date
   leaveDate  DateTime?                     @db.Date
   clusterId  String?                       @db.VarChar(255)
+   metaData   Json?                        @default("{}")
   members    members                       @relation(fields: [memberId], references: [memberId], onDelete: Cascade, onUpdate: NoAction, map: "member_chapter_mapping_ibfk_1")
   chapters   chapters                      @relation(fields: [chapterId], references: [chapterId], onDelete: Cascade, onUpdate: NoAction, map: "member_chapter_mapping_ibfk_2")
   cluster    clusters?                     @relation(fields: [clusterId], references: [clusterId], onDelete: SetNull, onUpdate: NoAction)
@@ -578,6 +586,7 @@ model transactions {
   paidAmount                       BigInt?
   userRemarks                      String?                   @db.Text
   systemRemarks                    String?                   @db.Text
+  invoiceURL                       String?                   @db.Text
   status                           String?                   @db.VarChar(255)
   statusUpdateDate                 DateTime?                 @db.Date
   paymentType                      String?                   @db.VarChar(255)
