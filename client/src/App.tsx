@@ -103,6 +103,7 @@ const Reports = lazy(() => import('./pages/Member/Reports'));
 const AcceptChapterPaymentPage = lazy(
   () => import('./pages/Member/FeeReceiver/AcceptChapterPaymentPage'),
 );
+const ExpenseTracker=lazy(() => import('./pages/Member/expenseTracker/tracking'));
 const SwitchChapter = lazy(() => import('./pages/Member/SwitchChapter'));
 
 // Wrapper component for Suspense
@@ -451,6 +452,14 @@ const routes = [
             element: (
               <SuspenseWrapper message="Loading Profile">
                 <Profile />
+              </SuspenseWrapper>
+            ),
+          },
+          {
+            path: 'expense-tracker',
+            element: (
+              <SuspenseWrapper message="Loading Expense Tracker">
+                <ExpenseTracker />
               </SuspenseWrapper>
             ),
           },

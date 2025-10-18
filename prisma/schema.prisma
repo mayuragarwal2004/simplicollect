@@ -67,6 +67,7 @@ model chapters {
   qrreceivers            qrreceivers[]
   clusters               clusters[]
   BroadcastHistory       BroadcastHistory[]
+  expenses               Expense[]
 
   @@index([organisationId], map: "fk_organisations")
 }
@@ -196,6 +197,7 @@ model meetings {
   disabled                Boolean?                  @default(false)
   chapters                chapters                  @relation(fields: [chapterId], references: [chapterId], onDelete: Cascade, onUpdate: NoAction, map: "meetings_ibfk_1")
   members_meeting_mapping members_meeting_mapping[] @ignore
+  expenses                Expense[]
 
   @@index([chapterId], map: "chapterId")
 }
@@ -255,6 +257,9 @@ model members {
   visitorHistory                                       visitorHistory[]
   BroadcastHistory                                     BroadcastHistory[]
   BroadcastMemberHistory                               BroadcastMemberHistory[]
+  expensesMade                                         Expense[]                 @relation("ExpenseMadeBy")
+  expensesCreated                                      Expense[]                 @relation("ExpenseCreatedBy")
+  expensesUpdated                                      Expense[]                 @relation("ExpenseUpdatedBy")
 }
 
 model members_log {
@@ -763,6 +768,40 @@ model visitorHistory {
 
   @@index([visitorId], map: "visitorId")
   @@index([memberId], map: "memberId")
+}
+
+model Expense {
+  id                  String    @id @default(cuid())
+  eventName           String
+  vendorName          String?
+  amount              Float
+  notes               String?
+  fileUploadURL       String?
+  reimburseCompleted  Boolean   @default(false)
+  reimbursedDate      DateTime?
+  logs                Json?
+
+  chapterId           String
+  chapter             chapters   @relation(fields: [chapterId], references: [chapterId])
+
+  meetingId           String?
+  meeting             meetings?  @relation(fields: [meetingId], references: [meetingId])
+
+  expenseByMemberId   String
+  expenseBy           members    @relation("ExpenseMadeBy", fields: [expenseByMemberId], references: [memberId])
+
+  createdById         String
+  createdBy           members    @relation("ExpenseCreatedBy", fields: [createdById], references: [memberId])
+
+  updatedById         String?
+  updatedBy           members?   @relation("ExpenseUpdatedBy", fields: [updatedById], references: [memberId])
+
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  @@index([chapterId])
+  @@index([meetingId])
+  @@index([expenseByMemberId])
 }
 
 enum visitors_visitorStatus {
