@@ -13,15 +13,19 @@ const processInvoiceNotifications = async (transactionDetails) => {
 
   try {
     // Get chapter configuration
-    const chapterConfig = await db('chapterConfig')
-      .where('chapterId', transactionDetails[0]?.chapterId)
-      .first();
+    const chapterConfig = await db('chapterConfig') 
+    .where('chapterId', transactionDetails[0]?.chapterId) 
+    .first();
 
     if (!chapterConfig || 
         (!chapterConfig.sendTransactionUpdatesWAMsg && !chapterConfig.sendTransactionUpdatesEmail)) {
       console.log('Invoice notifications disabled for this chapter');
       return;
     }
+
+    await db('chapterConfig')
+    .where('chapterId', chapterConfig.chapterId)
+    .update({ invoiceCount: chapterConfig.invoiceCount + 1 });
 
     // Get chapter details
     const chapterData = await db('chapters')
@@ -47,9 +51,14 @@ const processInvoiceNotifications = async (transactionDetails) => {
         }
 
         // Get member details
-        const memberData = await db('members')
-          .where('memberId', transaction.memberId)
-          .first();
+        const memberData = await db('members as m')
+            .join('member_chapter_mapping as mm', function () {
+              this.on('m.memberId', '=', 'mm.memberId')
+                .andOn('mm.chapterId', '=', db.raw('?', [transaction.chapterId]));
+            })
+            .where('m.memberId', transaction.memberId)
+            .select('m.*', 'mm.metaData')
+            .first();
 
         if (!memberData) {
           console.error(`Member ${transaction.memberId} not found`);
@@ -75,6 +84,26 @@ const processInvoiceNotifications = async (transactionDetails) => {
 
     // Wait for all notifications to complete
     const results = await Promise.allSettled(notificationPromises);
+    // Update each transaction with its invoice URL if available
+    results.forEach(async (result, index) => {
+      if (result.status === 'fulfilled' && result.value?.invoiceUrl) {
+        const transactionId = transactionDetails[index].transactionId;
+        const updatechanges = await db('transactions')
+          .where('transactionId', transactionId)
+          .update({ invoiceURL: result.value.invoiceUrl });
+      }
+    });
+    // saving the invoice name in transactions table
+    const invoiceName = `${chapterConfig.invoicePrefix}${chapterConfig.invoiceCount}`;
+
+    // Update the first transaction
+    await db('transactions')
+      .where('transactionId', transactionDetails[0].transactionId)
+      .update({ invoiceName });
+    
+    console.log("transactionID",transactionDetails.map(t=>t.transactionId));
+    
+
     console.log('All invoice notifications processed:', results);
 
   } catch (error) {
