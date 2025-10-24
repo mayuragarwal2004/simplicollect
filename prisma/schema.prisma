@@ -587,6 +587,7 @@ model transactions {
   userRemarks                      String?                   @db.Text
   systemRemarks                    String?                   @db.Text
   invoiceURL                       String?                   @db.Text
+  invoiceName                      String?                   @db.Text
   status                           String?                   @db.VarChar(255)
   statusUpdateDate                 DateTime?                 @db.Date
   paymentType                      String?                   @db.VarChar(255)

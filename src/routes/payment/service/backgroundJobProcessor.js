@@ -13,15 +13,19 @@ const processInvoiceNotifications = async (transactionDetails) => {
 
   try {
     // Get chapter configuration
-    const chapterConfig = await db('chapterConfig')
-      .where('chapterId', transactionDetails[0]?.chapterId)
-      .first();
+    const chapterConfig = await db('chapterConfig') 
+    .where('chapterId', transactionDetails[0]?.chapterId) 
+    .first();
 
     if (!chapterConfig || 
         (!chapterConfig.sendTransactionUpdatesWAMsg && !chapterConfig.sendTransactionUpdatesEmail)) {
       console.log('Invoice notifications disabled for this chapter');
       return;
     }
+
+    await db('chapterConfig')
+    .where('chapterId', chapterConfig.chapterId)
+    .update({ invoiceCount: chapterConfig.invoiceCount + 1 });
 
     // Get chapter details
     const chapterData = await db('chapters')
@@ -47,9 +51,14 @@ const processInvoiceNotifications = async (transactionDetails) => {
         }
 
         // Get member details
-        const memberData = await db('members')
-          .where('memberId', transaction.memberId)
-          .first();
+        const memberData = await db('members as m')
+            .join('member_chapter_mapping as mm', function () {
+              this.on('m.memberId', '=', 'mm.memberId')
+                .andOn('mm.chapterId', '=', db.raw('?', [transaction.chapterId]));
+            })
+            .where('m.memberId', transaction.memberId)
+            .select('m.*', 'mm.metaData')
+            .first();
 
         if (!memberData) {
           console.error(`Member ${transaction.memberId} not found`);
@@ -84,6 +93,13 @@ const processInvoiceNotifications = async (transactionDetails) => {
           .update({ invoiceURL: result.value.invoiceUrl });
       }
     });
+    // saving the invoice name in transactions table
+    const invoiceName = `${chapterConfig.invoicePrefix}${chapterConfig.invoiceCount}`;
+
+    // Update the first transaction
+    await db('transactions')
+      .where('transactionId', transactionDetails[0].transactionId)
+      .update({ invoiceName });
     
     console.log("transactionID",transactionDetails.map(t=>t.transactionId));
     
