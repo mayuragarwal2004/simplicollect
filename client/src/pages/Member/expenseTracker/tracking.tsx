@@ -17,8 +17,16 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useAuth } from "@/context/AuthContext";
-import { axiosInstance } from '../../../utils/config';
+import { useData } from "@/context/DataContext";
+import { axiosInstance } from "../../../utils/config";
 import { toast } from "react-toastify";
 
 type Expense = {
@@ -33,6 +41,7 @@ type Expense = {
   chapterId: string;
   meetingId: string | null;
   expenseByMemberId: string;
+  category: string;
   createdAt: string;
   updatedAt: string;
   expenseBy: {
@@ -41,25 +50,49 @@ type Expense = {
   };
 };
 
+type ChapterMember = {
+  memberId: string;
+  firstName: string;
+  lastName: string;
+};
+
+type Meeting = {
+  meetingId: string;
+  meetingName: string;
+  meetingDate: string;
+};
+
 const ExpenseTracker: React.FC = () => {
-  const { isAuthenticated } = useAuth();
   const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [chapterMembers, setChapterMembers] = useState<ChapterMember[]>([]);
+  const [meetings, setMeetings] = useState<Meeting[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
-    const { user } = useAuth();
-  // TODO: Replace with actual role check from user object
-  const isTreasurer = useMemo(() => user?.roles?.includes("Treasurer") || true, [user]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { isAuthenticated } = useAuth();
+  const { memberData, chapterData } = useData();
+  // console.log("memberData:", memberData);
+  // console.log("chapterData:", chapterData);
+  const isTreasurer = useMemo(
+    () => memberData?.role?.includes("treasurer"),
+    [memberData]
+  );
 
+  const [selectedMeetingId, setSelectedMeetingId] = useState<string>("");
   const [newEventName, setNewEventName] = useState("");
   const [newVendorName, setNewVendorName] = useState("");
   const [newAmount, setNewAmount] = useState("");
   const [newNotes, setNewNotes] = useState("");
+  const [newCategory, setNewCategory] = useState("OTHER");
   const [newFile, setNewFile] = useState<File | null>(null);
+  const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null);
 
   const fetchExpenses = async () => {
-    if (!isAuthenticated) return;
+    if (!isAuthenticated || !memberData) return;
     try {
-      const endpoint = isTreasurer ? `/api/expense/chapter/${user.chapterId}` : `/api/expense/member/${user.memberId}`;
+      const endpoint = isTreasurer
+        ? `/api/expense/chapter/${chapterData.chapterId}`
+        : `/api/expense/member/${memberData.memberId}`;
       const response = await axiosInstance.get(endpoint);
       if (response.data && response.data.length > 0) {
         setExpenses(response.data);
@@ -76,9 +109,10 @@ const ExpenseTracker: React.FC = () => {
             fileUploadURL: null,
             reimburseCompleted: true,
             reimbursedDate: "2025-10-15T10:00:00.000Z",
-            chapterId: user.chapterId,
+            chapterId: memberData.chapterId,
             meetingId: "some-meeting-id",
             expenseByMemberId: "some-member-id",
+            category: "Food",
             createdAt: "2025-10-10T14:30:00.000Z",
             updatedAt: "2025-10-15T10:00:00.000Z",
             expenseBy: { firstName: "John", lastName: "Doe" },
@@ -92,9 +126,10 @@ const ExpenseTracker: React.FC = () => {
             fileUploadURL: null,
             reimburseCompleted: false,
             reimbursedDate: null,
-            chapterId: user.chapterId,
+            chapterId: memberData.chapterId,
             meetingId: "some-meeting-id-2",
             expenseByMemberId: "another-member-id",
+            category: "Rental",
             createdAt: "2025-10-05T11:00:00.000Z",
             updatedAt: "2025-10-05T11:00:00.000Z",
             expenseBy: { firstName: "Jane", lastName: "Smith" },
@@ -115,8 +150,9 @@ const ExpenseTracker: React.FC = () => {
           fileUploadURL: null,
           reimburseCompleted: true,
           reimbursedDate: "2025-10-15T10:00:00.000Z",
-          chapterId: user.chapterId,
+          chapterId: memberData.chapterId,
           meetingId: "some-meeting-id",
+          category: "Food",
           expenseByMemberId: "some-member-id",
           createdAt: "2025-10-10T14:30:00.000Z",
           updatedAt: "2025-10-15T10:00:00.000Z",
@@ -131,8 +167,9 @@ const ExpenseTracker: React.FC = () => {
           fileUploadURL: null,
           reimburseCompleted: false,
           reimbursedDate: null,
-          chapterId: user.chapterId,
+          chapterId: memberData.chapterId,
           meetingId: "some-meeting-id-2",
+          category: "Rental",
           expenseByMemberId: "another-member-id",
           createdAt: "2025-10-05T11:00:00.000Z",
           updatedAt: "2025-10-05T11:00:00.000Z",
@@ -142,25 +179,73 @@ const ExpenseTracker: React.FC = () => {
     }
   };
 
+  const fetchChapterMembers = async () => {
+    try {
+      const response = await axiosInstance.get('/api/member/all', {
+        params: { chapterId: chapterData?.chapterId },
+      });
+      setChapterMembers(response.data);
+      // setFilteredMembers(response.data); // Initialize filtered list
+    } catch (error) {
+      toast.error('Error fetching members');
+    }
+  };
+
+  const fetchMeetings = async () => {
+    if (chapterData?.chapterId) {
+      try {
+        const response = await axiosInstance.get(
+          `/api/meetings/${chapterData.chapterId}`
+        );
+        setMeetings(response.data);
+      } catch (error) {
+        console.error("Failed to fetch meetings:", error);
+        toast.error("Could not load meetings for the chapter.");
+      }
+    }
+  };
+
   useEffect(() => {
-    fetchExpenses();
-  }, [user, isTreasurer]);
+    if (memberData) {
+      fetchExpenses();
+      fetchChapterMembers();
+      fetchMeetings();
+    }
+  }, [memberData, isTreasurer]);
+
+  // Effect to handle event name default when meeting is selected
+  useEffect(() => {
+    if (selectedMeetingId && selectedMeetingId !== "none") {
+      setNewEventName("Chapter Meeting");
+    } else if (selectedMeetingId === "none") {
+      setNewEventName("");
+    }
+  }, [selectedMeetingId]);
 
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user) return;
+    if (!memberData) return;
+
+    const expenseByMemberId = isTreasurer ? selectedMemberId : memberData.memberId;
+
+    if (!expenseByMemberId) {
+      toast.error("Please select a member.");
+      return;
+    }
 
     const expenseData = {
       eventName: newEventName,
       vendorName: newVendorName,
       amount: parseFloat(newAmount),
       notes: newNotes,
-      chapterId: user.chapterId,
-      expenseByMemberId: user.memberId,
-      // TODO: Add meetingId if applicable
+      category: newCategory,
+      meetingId: selectedMeetingId === "none" || !selectedMeetingId ? null : selectedMeetingId,
+      chapterId: memberData.chapterId,
+      expenseByMemberId: expenseByMemberId,
     };
 
     try {
+      setIsSubmitting(true);
       if (editingExpense) {
         // Update logic
         await axiosInstance.put(`/api/expense/${editingExpense.id}`, expenseData);
@@ -176,24 +261,32 @@ const ExpenseTracker: React.FC = () => {
     } catch (error) {
       console.error("Failed to save expense:", error);
       toast.error("Failed to save expense.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const resetForm = () => {
+    setSelectedMeetingId("");
     setNewEventName("");
     setNewVendorName("");
     setNewAmount("");
     setNewNotes("");
+    setNewCategory("OTHER");
     setNewFile(null);
     setEditingExpense(null);
+    setSelectedMemberId(null);
   };
 
   const openEditDialog = (expense: Expense) => {
     setEditingExpense(expense);
+    setSelectedMeetingId(expense.meetingId || "none");
     setNewEventName(expense.eventName);
     setNewVendorName(expense.vendorName || "");
     setNewAmount(expense.amount.toString());
     setNewNotes(expense.notes || "");
+    setNewCategory(expense.category || "OTHER");
+    setSelectedMemberId(expense.expenseByMemberId);
     setIsDialogOpen(true);
   };
 
@@ -210,31 +303,97 @@ const ExpenseTracker: React.FC = () => {
               <DialogTitle>{editingExpense ? "Edit Expense" : "Add New Expense"}</DialogTitle>
             </DialogHeader>
             <form onSubmit={handleFormSubmit} className="space-y-4">
+              {isTreasurer && (
+                <div>
+                  <Label htmlFor="member">Expense By</Label>
+                  <Select
+                    value={selectedMemberId || ""}
+                    onValueChange={setSelectedMemberId}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a member" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="chapter"><b>{chapterData.chapterName}</b></SelectItem>
+                        {chapterMembers.map((member) => (
+                        <SelectItem key={member.memberId} value={member.memberId}>
+                          {member.firstName} {member.lastName}
+                        </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
               <div>
-                <Label htmlFor="eventName">Event/Expense Name</Label>
-                <Input id="eventName" value={newEventName} onChange={(e) => setNewEventName(e.target.value)} required />
+                <Label htmlFor="meeting">Meeting</Label>
+                <Select
+                  value={selectedMeetingId}
+                  onValueChange={setSelectedMeetingId}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a meeting or none" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">No specific meeting</SelectItem>
+                    {meetings.map((meeting) => (
+                      <SelectItem key={meeting.meetingId} value={meeting.meetingId}>
+                        {meeting.meetingName} - {new Date(meeting.meetingDate).toLocaleDateString()}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="eventName">Event Name</Label>
+                <Input 
+                  id="eventName" 
+                  value={newEventName} 
+                  onChange={(e) => setNewEventName(e.target.value)} 
+                  placeholder={selectedMeetingId === "none" || !selectedMeetingId ? "Enter event name" : "Chapter Meeting"}
+                  required 
+                />
+              </div>
+              <div>
+                <Label htmlFor="category">Category</Label>
+                <Select
+                  value={newCategory}
+                  onValueChange={setNewCategory}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="FOOD">Food</SelectItem>
+                    <SelectItem value="TRANSPORT">Transport</SelectItem>
+                    <SelectItem value="VENUE_RENTAL">Venue Rental</SelectItem>
+                    <SelectItem value="PRINTING_AND_STATIONERY">Printing & Stationery</SelectItem>
+                    <SelectItem value="OTHER">Other</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <div>
                 <Label htmlFor="amount">Amount</Label>
                 <Input id="amount" type="number" value={newAmount} onChange={(e) => setNewAmount(e.target.value)} required />
               </div>
-              {isTreasurer && (
-                <>
-                  <div>
-                    <Label htmlFor="vendorName">Vendor Name</Label>
-                    <Input id="vendorName" value={newVendorName} onChange={(e) => setNewVendorName(e.target.value)} />
-                  </div>
-                  <div>
-                    <Label htmlFor="notes">Notes</Label>
-                    <Input id="notes" value={newNotes} onChange={(e) => setNewNotes(e.target.value)} />
-                  </div>
-                  <div>
-                    <Label htmlFor="fileUpload">File Upload</Label>
-                    <Input id="fileUpload" type="file" onChange={(e) => setNewFile(e.target.files ? e.target.files[0] : null)} />
-                  </div>
-                </>
-              )}
-              <Button type="submit">{editingExpense ? "Update" : "Save"} Expense</Button>
+              <div>
+                <Label htmlFor="vendorName">Vendor Name</Label>
+                <Input id="vendorName" value={newVendorName} onChange={(e) => setNewVendorName(e.target.value)} />
+              </div>
+              <div>
+                <Label htmlFor="notes">Notes</Label>
+                <Input id="notes" value={newNotes} onChange={(e) => setNewNotes(e.target.value)} />
+              </div>
+              <div>
+                <Label htmlFor="fileUpload">File Upload</Label>
+                <Input id="fileUpload" type="file" onChange={(e) => setNewFile(e.target.files ? e.target.files[0] : null)} />
+              </div>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting
+                  ? "Saving..."
+                  : editingExpense
+                  ? "Update Expense"
+                  : "Save Expense"}
+              </Button>
             </form>
           </DialogContent>
         </Dialog>

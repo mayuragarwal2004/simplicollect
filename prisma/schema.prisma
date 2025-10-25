@@ -58,6 +58,7 @@ model chapters {
   platformFee            Decimal?                    @db.Decimal(10, 2)
   platformFeeType        String?                     @db.VarChar(255)
   platformFeeCase        String?                     @db.Char(255)
+  amountPools            Json?                       @default("{\"general_pool\": {\"amount\": 1000, \"name\": \"General Pool\"}}") @db.Json
   cashreceivers          cashreceivers[]
   chapter_log            chapter_log[]
   organisations          organisations               @relation(fields: [organisationId], references: [organisationId], onDelete: Cascade, onUpdate: NoAction, map: "fk_organisations")
@@ -780,6 +781,7 @@ model Expense {
   reimburseCompleted  Boolean   @default(false)
   reimbursedDate      DateTime?
   logs                Json?
+  category            String @default("OTHER") @db.VarChar(50)
 
   chapterId           String
   chapter             chapters   @relation(fields: [chapterId], references: [chapterId])
